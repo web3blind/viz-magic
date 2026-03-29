@@ -61,26 +61,45 @@ var CombatSystem = (function() {
         // Calculate creature defense
         var creatureDefense = GameFormulas.calculateDefense(creatureStats.res, creatureLevel);
 
-        // Player damage to creature
-        var damageToCreature = GameFormulas.calculateDamage(playerAttack, creatureDefense);
-
-        // Creature counter-attack
-        var creatureAttack = _creatureAttackFromHash(blockHash, creatureStats, creatureLevel);
-
-        // Player defense
+        // Multi-round combat: exchange blows until someone falls
         var playerRes = CharacterSystem.getTotalStat(player, 'res');
         var playerDefense = GameFormulas.calculateDefense(playerRes, player.level);
 
-        // Stonewarden passive: -20% incoming damage
-        if (player.className === 'stonewarden') {
-            creatureAttack = Math.floor(creatureAttack * 800 / 1000);
+        var creatureHpLeft = creatureStats.hp;
+        var playerHpLeft = player.hp;
+        var totalDamageToCreature = 0;
+        var totalDamageToPlayer = 0;
+        var rounds = 0;
+        var maxRounds = 20; // safety cap
+
+        while (creatureHpLeft > 0 && playerHpLeft > 0 && rounds < maxRounds) {
+            // Player hits creature
+            var roundDmgToCreature = GameFormulas.calculateDamage(playerAttack, creatureDefense);
+            if (roundDmgToCreature < 1) roundDmgToCreature = 1; // minimum 1 damage per round
+            creatureHpLeft -= roundDmgToCreature;
+            totalDamageToCreature += roundDmgToCreature;
+
+            if (creatureHpLeft <= 0) break; // creature dies first
+
+            // Creature hits player (vary attack per round using hash + round offset)
+            var creatureAttack = _creatureAttackFromHash(blockHash, creatureStats, creatureLevel + rounds);
+            if (player.className === 'stonewarden') {
+                creatureAttack = Math.floor(creatureAttack * 800 / 1000);
+            }
+            var roundDmgToPlayer = GameFormulas.calculateDamage(creatureAttack, playerDefense);
+            if (roundDmgToPlayer < 1) roundDmgToPlayer = 1;
+            playerHpLeft -= roundDmgToPlayer;
+            totalDamageToPlayer += roundDmgToPlayer;
+
+            rounds++;
         }
 
-        var damageToPlayer = GameFormulas.calculateDamage(creatureAttack, playerDefense);
+        var damageToCreature = totalDamageToCreature;
+        var damageToPlayer = totalDamageToPlayer;
 
         // Determine outcome
-        var victory = damageToCreature >= creatureStats.hp;
-        var hpRemaining = Math.max(0, player.hp - damageToPlayer);
+        var victory = creatureHpLeft <= 0;
+        var hpRemaining = Math.max(0, playerHpLeft);
 
         // Calculate XP
         var xpGained = 0;
