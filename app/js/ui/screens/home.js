@@ -37,7 +37,7 @@ var HomeScreen = (function() {
                         ' \u2022 ' + t('home_level') + ' ' + character.level + '</p>' +
                     ProgressBar.create({id:'hp-bar', label:'HP', value:character.hp, max:character.maxHp, color:'#e53935'}) +
                     ProgressBar.create({id:'xp-bar', label:'XP', value:xpCurrent, max:xpNeeded, color:'#ffc107'}) +
-                    ProgressBar.create({id:'mana-bar', label:t('home_mana'), value:10000, max:10000, color:'#2196f3'}) +
+                    ProgressBar.create({id:'mana-bar', label:t('home_mana'), value:0, max:10000, color:'#2196f3'}) +
                 '</section>' +
 
                 // Season indicator
@@ -73,6 +73,16 @@ var HomeScreen = (function() {
             bossAlert.addEventListener('click', function() {
                 SoundManager.play('tap');
                 Helpers.EventBus.emit('navigate', 'world-boss');
+            });
+        }
+
+        // Fetch real mana from blockchain
+        if (user) {
+            VizAccount.getAccount(user, function(err, accountData) {
+                if (!err && accountData) {
+                    var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
+                    ProgressBar.update('mana-bar', currentEnergy, 10000);
+                }
             });
         }
     }

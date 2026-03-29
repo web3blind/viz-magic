@@ -62,15 +62,16 @@ var GameFormulas = (function() {
 
     /**
      * Calculate XP required for a given level.
-     * XP for level N = 1000 * N^1.5 (integer approximation)
+     * Lv2=1000, Lv3=1150, Lv4=1300, Lv5=1450... gentle acceleration.
      * @param {number} level
      * @returns {number} XP required
      */
     function xpForLevel(level) {
         if (level <= 1) return 0;
-        // N^1.5 = N * sqrt(N)
-        var sqrtN = Math.floor(Math.sqrt(level * 1000000)); // x1000 precision
-        return Math.floor(1000 * level * sqrtN / 1000);
+        // Base 1000 for Lv2, +100-200 per level with gentle acceleration
+        var base = 800 + level * 100;
+        var bonus = (level > 2) ? (level - 2) * 50 : 0;
+        return base + bonus;
     }
 
     /**

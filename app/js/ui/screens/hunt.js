@@ -102,65 +102,92 @@ var HuntScreen = (function() {
         var btn = Helpers.$('btn-attack');
         btn.disabled = true;
 
-        // Simulate combat with a pseudo block hash
         var user = VizAccount.getCurrentUser();
         var ch = StateEngine.getCharacter(user) || CharacterSystem.createCharacter(user || 'demo', 'Demo Mage', 'embercaster');
         var creature = GameCreatures.getCreature(selectedCreature);
         var spell = GameSpells.getSpell(selectedSpell);
 
-        // Generate pseudo block hash for demo
-        var pseudoHash = Date.now().toString(16) + Math.random().toString(16).substring(2);
-        while (pseudoHash.length < 40) pseudoHash += '0';
-
-        var result = CombatSystem.resolveHunt(ch, creature, spell, pseudoHash, 0, 10000);
-
-        // BUG FIX: Persist XP and loot to state
-        if (result.victory) {
-            CharacterSystem.addXp(ch, result.xpGained);
-
-            var state = StateEngine.getState();
-            if (!state.inventories[user]) state.inventories[user] = [];
-            for (var li = 0; li < result.loot.length; li++) {
-                var lootItem = ItemSystem.createItem(
-                    result.loot[li].type,
-                    user,
-                    result.loot[li].rarity,
-                    0,
-                    '',
-                    true
-                );
-                state.inventories[user].push(lootItem);
+        // Get real energy from blockchain
+        VizAccount.getAccount(user, function(err, accountData) {
+            var playerEnergy = 10000; // fallback
+            if (!err && accountData) {
+                playerEnergy = VizAccount.calculateCurrentEnergy(accountData);
             }
-        }
 
-        SoundManager.play(result.victory ? 'victory' : 'defeat');
-        SoundManager.vibrate(result.victory ? 'medium' : 'triple');
-        A11y.announceCombatResult(result, creature.name);
+            // Check if enough mana
+            if (playerEnergy < spell.manaCost) {
+                resultEl.innerHTML = '<p class="error">' + t('hunt_not_enough_mana') + '</p>';
+                btn.disabled = false;
+                return;
+            }
 
-        var html = '<div class="combat-result ' + (result.victory ? 'victory' : 'defeat') + '">';
-        html += '<h2>' + (result.victory ? t('hunt_victory') : t('hunt_defeat')) + '</h2>';
-        html += '<p>' + creature.name + ' (Lv' + result.creatureLevel + ')</p>';
-        if (result.critical) html += '<p class="critical">\u26A1 Critical Hit!</p>';
-        html += '<p>Damage dealt: ' + result.damageDealt + '</p>';
-        html += '<p>Damage taken: ' + result.damageTaken + '</p>';
-        if (result.victory) {
-            html += '<p>' + t('hunt_xp_gained') + ': ' + result.xpGained + '</p>';
-            if (result.loot.length > 0) {
-                html += '<h3>' + t('hunt_loot') + '</h3>';
-                for (var i = 0; i < result.loot.length; i++) {
-                    html += '<p class="' + Helpers.rarityClass(result.loot[i].rarity) + '">' +
-                        ItemSystem.getRarityInfo(result.loot[i].rarity).symbol + ' ' + result.loot[i].name + '</p>';
+            // Generate pseudo block hash for demo
+            var pseudoHash = Date.now().toString(16) + Math.random().toString(16).substring(2);
+            while (pseudoHash.length < 40) pseudoHash += '0';
+
+            var result = CombatSystem.resolveHunt(ch, creature, spell, pseudoHash, 0, playerEnergy);
+
+            // Broadcast to blockchain (fire and forget, optimistic UI)
+            VizBroadcast.huntAction(
+                selectedCreature,
+                ch.currentZone || 'commons_first_light',
+                selectedSpell,
+                spell.manaCost,
+                '', // no NPC account for solo hunts
+                function(broadcastErr) {
+                    if (broadcastErr) console.log('Hunt broadcast error:', broadcastErr);
+                    else console.log('Hunt broadcast success');
+                }
+            );
+
+            // Persist XP and loot to state
+            if (result.victory) {
+                CharacterSystem.addXp(ch, result.xpGained);
+
+                var state = StateEngine.getState();
+                if (!state.inventories[user]) state.inventories[user] = [];
+                for (var li = 0; li < result.loot.length; li++) {
+                    var lootItem = ItemSystem.createItem(
+                        result.loot[li].type,
+                        user,
+                        result.loot[li].rarity,
+                        0,
+                        '',
+                        true
+                    );
+                    state.inventories[user].push(lootItem);
                 }
             }
-        }
-        html += '<button class="btn btn-primary" id="btn-hunt-again">' + t('hunt_again') + '</button>';
-        html += '<button class="btn btn-secondary" id="btn-hunt-home">' + t('hunt_home') + '</button>';
-        html += '</div>';
 
-        resultEl.innerHTML = html;
+            SoundManager.play(result.victory ? 'victory' : 'defeat');
+            SoundManager.vibrate(result.victory ? 'medium' : 'triple');
+            A11y.announceCombatResult(result, creature.name);
 
-        Helpers.$('btn-hunt-again').addEventListener('click', function() { render(); });
-        Helpers.$('btn-hunt-home').addEventListener('click', function() { Helpers.EventBus.emit('navigate', 'home'); });
+            var html = '<div class="combat-result ' + (result.victory ? 'victory' : 'defeat') + '">';
+            html += '<h2>' + (result.victory ? t('hunt_victory') : t('hunt_defeat')) + '</h2>';
+            html += '<p>' + creature.name + ' (Lv' + result.creatureLevel + ')</p>';
+            if (result.critical) html += '<p class="critical">\u26A1 Critical Hit!</p>';
+            html += '<p>Damage dealt: ' + result.damageDealt + '</p>';
+            html += '<p>Damage taken: ' + result.damageTaken + '</p>';
+            if (result.victory) {
+                html += '<p>' + t('hunt_xp_gained') + ': ' + result.xpGained + '</p>';
+                if (result.loot.length > 0) {
+                    html += '<h3>' + t('hunt_loot') + '</h3>';
+                    for (var i = 0; i < result.loot.length; i++) {
+                        html += '<p class="' + Helpers.rarityClass(result.loot[i].rarity) + '">' +
+                            ItemSystem.getRarityInfo(result.loot[i].rarity).symbol + ' ' + result.loot[i].name + '</p>';
+                    }
+                }
+            }
+            html += '<button class="btn btn-primary" id="btn-hunt-again">' + t('hunt_again') + '</button>';
+            html += '<button class="btn btn-secondary" id="btn-hunt-home">' + t('hunt_home') + '</button>';
+            html += '</div>';
+
+            resultEl.innerHTML = html;
+
+            Helpers.$('btn-hunt-again').addEventListener('click', function() { render(); });
+            Helpers.$('btn-hunt-home').addEventListener('click', function() { Helpers.EventBus.emit('navigate', 'home'); });
+        });
     }
 
     return { render: render };
