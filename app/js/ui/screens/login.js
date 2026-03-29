@@ -97,16 +97,25 @@ var LoginScreen = (function() {
             // Check if character exists (has Grimoire)
             var grimoire = VizAccount.parseGrimoire(accountData);
             if (grimoire && grimoire.class) {
-                // Restore character in StateEngine from grimoire
+                // Restore character in StateEngine from grimoire (checkpoint has priority)
                 var state = StateEngine.getState();
                 if (!state.characters[account]) {
                     var character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class);
                     if (character) {
+                        // Restore level/xp from Grimoire cache
+                        if (grimoire.level && grimoire.level > 1) {
+                            character.level = grimoire.level;
+                            character.xp = grimoire.xp || 0;
+                            character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
+                            character.maxHp = character.hp;
+                        }
                         state.characters[account] = character;
                         state.inventories[account] = state.inventories[account] || [];
                         state.quests[account] = state.quests[account] || (typeof QuestSystem !== 'undefined' ? QuestSystem.createPlayerQuestState() : {});
-                        console.log('Character restored from grimoire (login):', grimoire.name, grimoire.class);
+                        console.log('Character restored from grimoire (login):', grimoire.name, grimoire.class, 'Lv' + character.level, 'XP:' + character.xp);
                     }
+                } else {
+                    console.log('Character already in state from checkpoint, keeping checkpoint data');
                 }
                 // Existing character — go to home
                 Helpers.EventBus.emit('navigate', 'home');

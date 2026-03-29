@@ -62,18 +62,31 @@ var App = (function() {
                         if (grimoire && grimoire.class && grimoire.name) {
                             // Recreate character in StateEngine from on-chain data
                             var state = StateEngine.getState();
-                            var character = CharacterSystem.createCharacter(user, grimoire.name, grimoire.class);
-                            if (character) {
-                                state.characters[user] = character;
-                                state.inventories[user] = state.inventories[user] || [];
-                                if (!state.quests) state.quests = {};
-                                if (!state.quests[user]) {
-                                    state.quests[user] = (typeof QuestSystem !== 'undefined')
-                                        ? QuestSystem.createPlayerQuestState()
-                                        : { active: [], completed: [], dailyProphecyDay: 0 };
+                            // If checkpoint already has this character (from IndexedDB), keep it
+                            if (!state.characters[user]) {
+                                var character = CharacterSystem.createCharacter(user, grimoire.name, grimoire.class);
+                                if (character) {
+                                    // Restore level/xp from Grimoire cache hint
+                                    if (grimoire.level && grimoire.level > 1) {
+                                        character.level = grimoire.level;
+                                        character.xp = grimoire.xp || 0;
+                                        character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
+                                        character.maxHp = character.hp;
+                                    }
+                                    state.characters[user] = character;
                                 }
-                                console.log('Character restored from grimoire:', grimoire.name, grimoire.class);
+                            } else {
+                                console.log('Character already in state from checkpoint, keeping checkpoint data');
                             }
+                            state.inventories[user] = state.inventories[user] || [];
+                            if (!state.quests) state.quests = {};
+                            if (!state.quests[user]) {
+                                state.quests[user] = (typeof QuestSystem !== 'undefined')
+                                    ? QuestSystem.createPlayerQuestState()
+                                    : { active: [], completed: [], dailyProphecyDay: 0 };
+                            }
+                            var ch = state.characters[user];
+                            console.log('Character restored: ' + (ch ? ch.name + ' Lv' + ch.level + ' XP:' + ch.xp : 'none'));
                             navigateTo('home');
                         } else {
                             // No grimoire on chain — send to onboarding

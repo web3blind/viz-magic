@@ -183,9 +183,9 @@ var HuntScreen = (function() {
             var result = CombatSystem.resolveHunt(ch, creature, spell, fateEntropy, finalBlockNum, playerEnergy);
 
             // Apply results to local state
+            var state = StateEngine.getState();
             if (result.victory) {
                 CharacterSystem.addXp(ch, result.xpGained);
-                var state = StateEngine.getState();
                 if (!state.inventories[user]) state.inventories[user] = [];
                 for (var li = 0; li < result.loot.length; li++) {
                     var lootItem = ItemSystem.createItem(
@@ -196,10 +196,40 @@ var HuntScreen = (function() {
                 if (typeof QuestSystem !== 'undefined' && state.quests && state.quests[user]) {
                     QuestSystem.updateQuestProgress(state.quests[user], 'hunt', { target: selectedCreature, count: 1 });
                 }
+            } else {
+                // Defeat: partial XP (25%)
+                var defeatXp = Math.floor(GameFormulas.huntXp(ch.level, result.creatureLevel, creature.baseXp || 50) / 4);
+                if (defeatXp > 0) CharacterSystem.addXp(ch, defeatXp);
             }
 
             ch.hp = result.hpRemaining;
             if (ch.hp <= 0) ch.hp = 0;
+
+            // Update head block in state
+            state.headBlock = finalBlockNum;
+
+            // Persist to IndexedDB checkpoint (survives page reload)
+            CheckpointSystem.saveCheckpoint('global', finalBlockNum, state, function(saveErr) {
+                if (saveErr) {
+                    console.log('Checkpoint save error:', saveErr);
+                } else {
+                    console.log('State checkpointed at block', finalBlockNum, '— XP:', ch.xp, 'Lv:', ch.level);
+                }
+            });
+
+            // Update Grimoire on chain (cache hint for level/xp)
+            VizAccount.updateGrimoire({
+                class: ch.className,
+                name: ch.name,
+                level: ch.level,
+                xp: ch.xp
+            }, function(grimErr) {
+                if (grimErr) {
+                    console.log('Grimoire update error (non-fatal):', grimErr);
+                } else {
+                    console.log('Grimoire updated on chain: Lv', ch.level, 'XP', ch.xp);
+                }
+            });
 
             SoundManager.play(result.victory ? 'victory' : 'defeat');
             SoundManager.vibrate(result.victory ? 'medium' : 'triple');
