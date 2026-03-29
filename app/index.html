@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0d1117">
+    <meta name="description" content="Viz Magic — browser RPG built on the VIZ blockchain">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Viz Magic</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+</head>
+<body>
+    <!-- Connection status banner -->
+    <div id="connection-status" role="status" aria-live="polite"></div>
+
+    <!-- Screen: Landing -->
+    <main id="screen-landing" class="screen active" role="main" aria-hidden="false" aria-label="Landing">
+    </main>
+
+    <!-- Screen: Login -->
+    <section id="screen-login" class="screen" aria-hidden="true" aria-label="Login">
+    </section>
+
+    <!-- Screen: Onboarding -->
+    <main id="screen-onboarding" class="screen" role="main" aria-hidden="true" aria-label="Onboarding">
+    </main>
+
+    <!-- Screen: Home -->
+    <main id="screen-home" class="screen" role="main" aria-hidden="true" aria-label="Home">
+    </main>
+
+    <!-- Screen: Character -->
+    <main id="screen-character" class="screen" role="main" aria-hidden="true" aria-label="Character">
+    </main>
+
+    <!-- Screen: Hunt -->
+    <main id="screen-hunt" class="screen" role="main" aria-hidden="true" aria-label="Hunt">
+    </main>
+
+    <!-- Screen: Inventory -->
+    <main id="screen-inventory" class="screen" role="main" aria-hidden="true" aria-label="Inventory">
+    </main>
+
+    <!-- Screen: Chronicle -->
+    <main id="screen-chronicle" class="screen" role="main" aria-hidden="true" aria-label="Chronicle">
+    </main>
+
+    <!-- Screen: Duel -->
+    <main id="screen-duel" class="screen" role="main" aria-hidden="true" aria-label="Duel">
+    </main>
+
+    <!-- Screen: Arena -->
+    <main id="screen-arena" class="screen" role="main" aria-hidden="true" aria-label="Arena">
+    </main>
+
+    <!-- Screen: Guild Hall -->
+    <section id="screen-guild" class="screen" role="main" aria-hidden="true" aria-label="Guild Hall">
+    </section>
+
+    <!-- Screen: World Map -->
+    <section id="screen-map" class="screen" role="main" aria-hidden="true" aria-label="World Map">
+    </section>
+
+    <!-- Screen: Marketplace (Bazaar) -->
+    <section id="screen-marketplace" class="screen" role="main" aria-hidden="true" aria-label="Marketplace">
+    </section>
+
+    <!-- Screen: Crafting & Enchanting -->
+    <section id="screen-crafting" class="screen" role="main" aria-hidden="true" aria-label="Crafting">
+    </section>
+
+    <!-- Screen: Quests -->
+    <section id="screen-quests" class="screen" role="main" aria-hidden="true" aria-label="Quests">
+    </section>
+
+    <!-- Screen: World Boss -->
+    <section id="screen-world-boss" class="screen" role="main" aria-hidden="true" aria-label="World Boss">
+    </section>
+
+    <!-- Screen: Settings -->
+    <section id="screen-settings" class="screen" role="main" aria-hidden="true" aria-label="Settings">
+    </section>
+
+    <!-- Bottom navigation -->
+    <nav id="bottom-nav" role="navigation" aria-label="Main navigation"></nav>
+
+    <!-- Modal overlay -->
+    <div id="modal-overlay" role="presentation">
+        <div id="modal-container"></div>
+    </div>
+
+    <!-- VIZ blockchain library -->
+    <script src="lib/viz.min.js"></script>
+
+    <!-- Config -->
+    <script src="js/config.js"></script>
+
+    <!-- I18n -->
+    <script src="js/i18n/ru.js"></script>
+    <script src="js/i18n/en.js"></script>
+
+    <!-- Utilities -->
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/crypto.js"></script>
+    <script src="js/utils/a11y.js"></script>
+
+    <!-- Blockchain layer -->
+    <script src="js/blockchain/connection.js"></script>
+    <script src="js/blockchain/account.js"></script>
+    <script src="js/blockchain/broadcast.js"></script>
+    <script src="js/blockchain/invite.js"></script>
+
+    <!-- Protocols -->
+    <script src="js/protocols/vm-protocol.js"></script>
+    <script src="js/protocols/duel-protocol.js"></script>
+    <script src="js/protocols/guild-protocol.js"></script>
+    <script src="js/protocols/voice.js"></script>
+    <script src="js/protocols/market-protocol.js"></script>
+
+    <!-- Game data -->
+    <script src="js/data/creatures.js"></script>
+    <script src="js/data/spells.js"></script>
+    <script src="js/data/recipes.js"></script>
+    <script src="js/data/regions.js"></script>
+    <script src="js/data/quests.js"></script>
+
+    <!-- Game engine -->
+    <script src="js/engine/types.js"></script>
+    <script src="js/engine/formulas.js"></script>
+    <script src="js/engine/character.js"></script>
+    <script src="js/engine/items.js"></script>
+    <script src="js/engine/combat.js"></script>
+    <script src="js/engine/duel.js"></script>
+    <script src="js/engine/duel-state.js"></script>
+    <script src="js/engine/validator.js"></script>
+    <script src="js/engine/guild.js"></script>
+    <script src="js/engine/territory.js"></script>
+    <script src="js/engine/crafting.js"></script>
+    <script src="js/engine/enchanting.js"></script>
+    <script src="js/engine/marketplace.js"></script>
+    <script src="js/engine/checkpoint.js"></script>
+    <script src="js/engine/block-processor.js"></script>
+    <script src="js/engine/world-events.js"></script>
+    <script src="js/engine/world-boss.js"></script>
+    <script src="js/engine/quest-system.js"></script>
+    <script src="js/engine/loci.js"></script>
+    <script src="js/engine/npc-framework.js"></script>
+    <script src="js/engine/state-engine.js"></script>
+
+    <!-- UI Components -->
+    <script src="js/ui/sound.js"></script>
+    <script src="js/ui/components/progress-bar.js"></script>
+    <script src="js/ui/components/toast.js"></script>
+    <script src="js/ui/components/modal.js"></script>
+    <script src="js/ui/components/nav.js"></script>
+    <script src="js/ui/components/battle-narrator.js"></script>
+
+    <!-- UI Screens -->
+    <script src="js/ui/screens/landing.js"></script>
+    <script src="js/ui/screens/login.js"></script>
+    <script src="js/ui/screens/onboarding.js"></script>
+    <script src="js/ui/screens/home.js"></script>
+    <script src="js/ui/screens/character.js"></script>
+    <script src="js/ui/screens/hunt.js"></script>
+    <script src="js/ui/screens/inventory.js"></script>
+    <script src="js/ui/screens/chronicle.js"></script>
+    <script src="js/ui/screens/duel.js"></script>
+    <script src="js/ui/screens/arena.js"></script>
+    <script src="js/ui/screens/guild.js"></script>
+    <script src="js/ui/screens/map.js"></script>
+    <script src="js/ui/screens/marketplace.js"></script>
+    <script src="js/ui/screens/crafting.js"></script>
+    <script src="js/ui/screens/quests.js"></script>
+    <script src="js/ui/screens/world-boss.js"></script>
+    <script src="js/ui/screens/settings.js"></script>
+
+    <!-- Main App Controller (must be last) -->
+    <script src="js/ui/app.js"></script>
+</body>
+</html>
