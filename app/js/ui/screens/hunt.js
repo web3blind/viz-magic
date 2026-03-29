@@ -14,6 +14,14 @@ var HuntScreen = (function() {
 
         var user = VizAccount.getCurrentUser();
         var ch = StateEngine.getCharacter(user);
+
+        // Auto-restore HP between hunts (rest at camp)
+        if (ch && ch.hp <= 0 && ch.maxHp) {
+            ch.hp = ch.maxHp;
+        } else if (ch && ch.hp <= 0) {
+            ch.hp = GameFormulas.calculateMaxHp(ch.className, ch.level, CharacterSystem.getTotalStat(ch, 'res'));
+            ch.maxHp = ch.hp;
+        }
         var zone = (ch && ch.currentZone) || 'commons_first_light';
         var creatures = GameCreatures.getCreaturesForZone(zone);
         var spells = ch ? GameSpells.getAvailableSpells(ch.className, ch.level) : [];
@@ -104,6 +112,12 @@ var HuntScreen = (function() {
 
         var user = VizAccount.getCurrentUser();
         var ch = StateEngine.getCharacter(user) || CharacterSystem.createCharacter(user || 'demo', 'Demo Mage', 'embercaster');
+
+        // Ensure HP is restored before combat (rest between hunts)
+        if (ch && ch.hp <= 0) {
+            ch.hp = ch.maxHp || GameFormulas.calculateMaxHp(ch.className, ch.level, CharacterSystem.getTotalStat(ch, 'res'));
+            if (!ch.maxHp) ch.maxHp = ch.hp;
+        }
         var creature = GameCreatures.getCreature(selectedCreature);
         var spell = GameSpells.getSpell(selectedSpell);
 
