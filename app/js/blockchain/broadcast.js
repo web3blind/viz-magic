@@ -103,17 +103,18 @@ var VizBroadcast = (function() {
     }
 
     /**
-     * Send a hunt action — combines custom op + award to NPC when the target account exists.
-     * Solo/demo hunt settlement is intentionally disabled here because fairness-critical
-     * mana spending and rewards must remain auditable on-chain.
+     * Send a hunt action — records hunt on chain + awards mana to the creature's author.
+     * Each creature has an `author` field — the VIZ account of the developer who created it.
+     * When a player hunts, an award operation is sent to that author as a reward for their
+     * contribution. If no author is set, the hunt is still recorded but no mana is spent.
      * @param {string} creatureId - creature identifier
      * @param {string} zone - zone identifier
      * @param {string} spellId - spell used
      * @param {number} manaCost - mana to spend (energy basis points)
-     * @param {string} npcAccount - NPC creature account on chain
+     * @param {string} authorAccount - VIZ account of the creature's author
      * @param {Function} callback - (err, result)
      */
-    function huntAction(creatureId, zone, spellId, manaCost, npcAccount, callback) {
+    function huntAction(creatureId, zone, spellId, manaCost, authorAccount, callback) {
         var actionData = {
             t: cfg.ACTION_TYPES.HUNT,
             d: {
@@ -130,14 +131,13 @@ var VizBroadcast = (function() {
                 return;
             }
 
-            // If NPC account exists on chain, also send award (mana spend)
-            // If NPC account doesn't exist, hunt still recorded — award is optional
-            if (npcAccount) {
-                award(npcAccount, manaCost, 0, '', [], function(awardErr, awardResult) {
+            // Send award to creature author — this is how developers earn from their content.
+            // Hunt succeeds regardless of award result — the VM action is the proof of the hunt.
+            if (authorAccount) {
+                award(authorAccount, manaCost, 0, '', [], function(awardErr, awardResult) {
                     if (awardErr) {
-                        console.log('Hunt award to NPC failed (hunt action still recorded):', awardErr);
+                        console.log('Hunt award to author failed (hunt action still recorded):', awardErr);
                     }
-                    // Hunt succeeds regardless of award result — the VM action is the proof
                     callback(null, { action: result, award: awardResult || null });
                 });
             } else {

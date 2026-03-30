@@ -148,7 +148,7 @@ var HuntScreen = (function() {
                 ch.currentZone || 'commons_first_light',
                 selectedSpell,
                 spell.manaCost,
-                creature.npcAccount || '',
+                creature.author || '',
                 function(broadcastErr, broadcastResult) {
                     if (broadcastErr) {
                         console.log('Hunt broadcast error:', broadcastErr);

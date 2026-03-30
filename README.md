@@ -72,6 +72,55 @@ The app connects to the VIZ blockchain through one of the available nodes:
 - `https://api.viz.world/`
 - `https://node.viz.cx/`
 
+## For developers — add content and earn
+
+Viz Magic is built so any developer can extend the game world and earn rewards for their contributions via the VIZ blockchain.
+
+### How contributor economics work
+
+Every creature, zone, and game object has an `author` field — the VIZ account name of the developer who created it. When a player hunts a creature, the game automatically sends an `award` operation to the creature author's account. The author receives a share of VIZ emission proportional to the number of awards received, which converts into SHARES (network influence).
+
+Flow:
+1. Player spends mana (energy) — an `award` is sent to the creature's author
+2. The author accumulates rewards in their VIZ account
+3. SHARES grow → network influence grows → passive income via delegation
+
+### How to add your own creature
+
+Open `app/js/data/creatures.js` and add an object to `CREATURES`:
+
+```js
+my_creature: {
+    id: 'my_creature',
+    name: 'My Creature',
+    school: 'aqua',          // ignis / aqua / terra / ventus / umbra
+    author: 'your-viz-account',  // ← your VIZ account here
+    minLevel: 2,
+    maxLevel: 6,
+    baseHp: 20,
+    basePot: 10,
+    baseRes: 5,
+    baseSwf: 8,
+    baseXp: 40,
+    zone: 'commons_first_light',
+    lootTable: [
+        { itemType: 'water_crystal', name: 'Water Crystal', dropRate: 300 }
+    ]
+}
+```
+
+The `author` field is your VIZ account name. Every time a player hunts your creature, the award goes to that account.
+
+### What else you can contribute
+
+- **Creatures** (`app/js/data/creatures.js`) — new enemies with unique stats
+- **Spells** (`app/js/data/spells.js`) — new magic schools and effects
+- **Zones** (`app/js/data/regions.js`) — new game regions
+- **Quests** (`app/js/data/quests.js`) — quest chains and storylines
+- **Items and recipes** (`app/js/data/recipes.js`) — crafting and loot
+
+Submit a Pull Request — add your creatures with your `author` VIZ account and start earning from the first player who hunts them.
+
 ## Tech stack
 
 - Pure HTML / CSS / JavaScript — no frameworks, no build step

@@ -1,6 +1,12 @@
 /**
  * Viz Magic — Creature Definitions
  * 3 starter creature types for PvE encounters.
+ *
+ * Each creature has an `author` field — the VIZ account of the developer
+ * who created this creature. When a player hunts this creature, the game
+ * sends an award (mana spend) to the author's account as a reward for
+ * their contribution. Add your own creatures and set `author` to your
+ * VIZ account name to earn rewards.
  */
 var GameCreatures = (function() {
     'use strict';
@@ -10,7 +16,7 @@ var GameCreatures = (function() {
             id: 'ember_wisp',
             name: 'Ember Wisp',
             school: 'ignis',
-            npcAccount: 'vm-npc-elder-sage',
+            author: 'denis-skripnik',
             minLevel: 1,
             maxLevel: 5,
             baseHp: 12,
@@ -28,7 +34,7 @@ var GameCreatures = (function() {
             id: 'hollow_shade',
             name: 'Hollow Shade',
             school: 'umbra',
-            npcAccount: 'vm-npc-gate-sentinel',
+            author: 'denis-skripnik',
             minLevel: 3,
             maxLevel: 8,
             baseHp: 25,
@@ -47,7 +53,7 @@ var GameCreatures = (function() {
             id: 'thornvine',
             name: 'Thornvine',
             school: 'terra',
-            npcAccount: 'vm-npc-elder-sage',
+            author: 'denis-skripnik',
             minLevel: 5,
             maxLevel: 10,
             baseHp: 40,
