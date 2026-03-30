@@ -374,6 +374,13 @@ var LangEN = {
     guild_patronage_success: 'Patronage established!',
     guild_patronage_error: 'Delegation failed.',
     guild_patronage_no_active_key: 'ACTIVE key required for delegation.',
+    guild_active_key_section: 'Active Key',
+    guild_active_key_needed: '🔐 An active key is required for SHARES delegation. Stored in browser only.',
+    guild_active_key_label: 'Active Key (WIF)',
+    guild_active_key_save: 'Save',
+    guild_active_key_saved: 'Active key saved',
+    guild_active_key_invalid: 'Invalid active key.',
+    guild_active_key_clear: 'Remove',
 
     // Ranks
     rank_founder: 'Founder',

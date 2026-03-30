@@ -374,6 +374,13 @@ var LangRU = {
     guild_patronage_success: 'Покровительство установлено!',
     guild_patronage_error: 'Ошибка делегирования.',
     guild_patronage_no_active_key: 'Нужен АКТИВНЫЙ ключ для делегирования.',
+    guild_active_key_section: 'Активный ключ',
+    guild_active_key_needed: '🔐 Для делегирования SHARES нужен активный ключ. Он хранится только в браузере.',
+    guild_active_key_label: 'Активный ключ (WIF)',
+    guild_active_key_save: 'Сохранить',
+    guild_active_key_saved: 'Активный ключ сохранён',
+    guild_active_key_invalid: 'Неверный активный ключ.',
+    guild_active_key_clear: 'Удалить',
 
     // Ranks
     rank_founder: 'Основатель',

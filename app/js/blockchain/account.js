@@ -132,6 +132,83 @@ var VizAccount = (function() {
     }
 
     /**
+     * Get the active key for current user (optional, required for delegation)
+     * @returns {string|null}
+     */
+    function getActiveKey() {
+        if (!currentUser || !users[currentUser]) return null;
+        return users[currentUser].active_key || null;
+    }
+
+    /**
+     * Check if active key is saved for current user
+     * @returns {boolean}
+     */
+    function hasActiveKey() {
+        return !!getActiveKey();
+    }
+
+    /**
+     * Save active key after validating against chain.
+     * @param {string} activeKey - WIF private active key
+     * @param {Function} callback - (err)
+     */
+    function saveActiveKey(activeKey, callback) {
+        if (!currentUser || !users[currentUser]) {
+            callback(new Error('not_logged_in'));
+            return;
+        }
+        activeKey = activeKey.trim();
+        if (!activeKey) {
+            callback(new Error('empty_key'));
+            return;
+        }
+
+        // Validate against chain active_authority
+        getAccount(currentUser, function(err, account) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            var keyAuths = (account.active_authority && account.active_authority.key_auths) || [];
+            var threshold = account.active_authority ? account.active_authority.weight_threshold : 1;
+            var valid = false;
+
+            for (var i = 0; i < keyAuths.length; i++) {
+                if (keyAuths[i][1] >= threshold) {
+                    try {
+                        if (viz.auth.wifIsValid(activeKey, keyAuths[i][0])) {
+                            valid = true;
+                            break;
+                        }
+                    } catch(e) {
+                        // invalid format
+                    }
+                }
+            }
+
+            if (!valid) {
+                callback(new Error('invalid_active_key'));
+                return;
+            }
+
+            users[currentUser].active_key = activeKey;
+            _saveSession();
+            callback(null);
+        });
+    }
+
+    /**
+     * Remove saved active key for current user
+     */
+    function clearActiveKey() {
+        if (!currentUser || !users[currentUser]) return;
+        delete users[currentUser].active_key;
+        _saveSession();
+    }
+
+    /**
      * Get full account data from chain
      * @param {string} accountName
      * @param {Function} callback - (err, account)
@@ -269,6 +346,10 @@ var VizAccount = (function() {
         parseGrimoire: parseGrimoire,
         updateGrimoire: updateGrimoire,
         calculateCurrentEnergy: calculateCurrentEnergy,
-        getEffectiveShares: getEffectiveShares
+        getEffectiveShares: getEffectiveShares,
+        getActiveKey: getActiveKey,
+        hasActiveKey: hasActiveKey,
+        saveActiveKey: saveActiveKey,
+        clearActiveKey: clearActiveKey
     };
 })();

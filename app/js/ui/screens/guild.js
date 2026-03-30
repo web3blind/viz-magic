@@ -58,9 +58,12 @@ var GuildScreen = (function() {
         html += '</header>';
 
         // Your rank
-        html += '<div class="guild-my-rank" aria-label="' + t('guild_your_rank') + '">';
+        html += '<div class=\"guild-my-rank\" aria-label=\"' + t('guild_your_rank') + '\">';
         html += GuildSystem.RANK_ICONS[myMember.rank] + ' ' + t('rank_' + myMember.rank);
         html += '</div>';
+
+        // Active key section (required for delegation / patronage)
+        html += _renderActiveKeySection();
 
         // Quest Board
         html += '<section class="guild-quests" aria-label="' + t('guild_quest_board') + '">';
@@ -188,6 +191,7 @@ var GuildScreen = (function() {
 
         container.innerHTML = html;
         _bindGuildEvents(container, guild, user);
+        _bindActiveKeyEvents(container);
     }
 
     /**
@@ -232,9 +236,13 @@ var GuildScreen = (function() {
             html += '</section>';
         }
 
+        // Active key section
+        html += _renderActiveKeySection();
+
         html += '</div>';
         container.innerHTML = html;
         _bindNoGuildEvents(container);
+        _bindActiveKeyEvents(container);
     }
 
     /**
@@ -433,6 +441,64 @@ var GuildScreen = (function() {
         });
 
         Helpers.$('modal-cancel').addEventListener('click', function() { Modal.hide(); });
+    }
+
+    /**
+     * Render active key section.
+     * Shows a notice + input if active key is not saved,
+     * or a "saved" badge if it is.
+     */
+    function _renderActiveKeySection() {
+        var html = '<section class="guild-active-key" aria-label="' + t('guild_active_key_section') + '">';
+        if (VizAccount.hasActiveKey()) {
+            html += '<div class="active-key-status active-key-ok">';
+            html += '<span class="active-key-icon" aria-hidden="true">🔑</span> ';
+            html += '<span>' + t('guild_active_key_saved') + '</span>';
+            html += ' <button class="btn btn-sm btn-secondary" id="btn-clear-active-key">' + t('guild_active_key_clear') + '</button>';
+            html += '</div>';
+        } else {
+            html += '<div class="active-key-status active-key-missing">';
+            html += '<p class="active-key-notice">' + t('guild_active_key_needed') + '</p>';
+            html += '<label class="input-label" for="input-active-key">' + t('guild_active_key_label') + '</label>';
+            html += '<input type="password" class="input-field" id="input-active-key" placeholder="5J..." autocomplete="off">';
+            html += '<button class="btn btn-primary btn-sm" id="btn-save-active-key">' + t('guild_active_key_save') + '</button>';
+            html += '</div>';
+        }
+        html += '</section>';
+        return html;
+    }
+
+    /**
+     * Bind active key form events
+     */
+    function _bindActiveKeyEvents(container) {
+        var saveBtn = container.querySelector('#btn-save-active-key');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function() {
+                var input = container.querySelector('#input-active-key');
+                var key = input ? input.value.trim() : '';
+                if (!key) return;
+                saveBtn.disabled = true;
+                VizAccount.saveActiveKey(key, function(err) {
+                    saveBtn.disabled = false;
+                    if (err) {
+                        Toast.error(t('guild_active_key_invalid'));
+                    } else {
+                        Toast.success(t('guild_active_key_saved'));
+                        SoundManager.play('success');
+                        render(); // refresh to show saved badge
+                    }
+                });
+            });
+        }
+
+        var clearBtn = container.querySelector('#btn-clear-active-key');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                VizAccount.clearActiveKey();
+                render();
+            });
+        }
     }
 
     /**
