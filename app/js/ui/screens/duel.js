@@ -87,6 +87,9 @@ var DuelScreen = (function() {
         duelState.challengeData = challengeData || null;
         duelState.phase = 'pre';
 
+        // Try to restore secret from localStorage (survives page reload)
+        _restoreSecret();
+
         // If this is an accept flow from arena, go directly to seal phase
         if (challengeData && challengeData.source === 'arena_accept' && combatRef) {
             duelState.phase = 'seal';
@@ -94,6 +97,33 @@ var DuelScreen = (function() {
         }
 
         Helpers.EventBus.emit('navigate', 'duel');
+    }
+
+    /**
+     * Restore duel secret from localStorage after page reload.
+     */
+    function _restoreSecret() {
+        try {
+            var secretKey = VizMagicConfig.STORAGE_PREFIX + 'duel_secret';
+            var saved = localStorage.getItem(secretKey);
+            if (!saved) return;
+            var data = JSON.parse(saved);
+            // Only restore if it matches current duel context
+            if (data && data.secret && data.secret.hash) {
+                if ((!duelState.combatRef && data.opponent === duelState.opponent) ||
+                    (duelState.combatRef && data.combatRef === duelState.combatRef)) {
+                    duelState.strategySecret = data.secret;
+                    duelState.selectedIntent = data.secret.intent;
+                    duelState.currentRound = data.round || 1;
+                    if (duelState.combatRef) {
+                        duelState.phase = 'waiting';
+                    }
+                    console.log('Duel secret restored from localStorage for round', data.round || 1);
+                }
+            }
+        } catch(e) {
+            console.log('Could not restore duel secret:', e);
+        }
     }
 
     function _renderPreDuel(el) {
@@ -282,6 +312,19 @@ var DuelScreen = (function() {
                 salt: salt,
                 hash: hash
             };
+
+            // Persist secret to localStorage so it survives page reload
+            try {
+                var secretKey = VizMagicConfig.STORAGE_PREFIX + 'duel_secret';
+                localStorage.setItem(secretKey, JSON.stringify({
+                    opponent: duelState.opponent,
+                    combatRef: duelState.combatRef,
+                    round: duelState.currentRound,
+                    secret: duelState.strategySecret
+                }));
+            } catch(e) {
+                console.log('Could not persist duel secret:', e);
+            }
 
             // Accept flow: broadcast accept with strategy hash
             if (duelState.pendingAction === 'accept' && duelState.combatRef) {
