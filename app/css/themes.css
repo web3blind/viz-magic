@@ -9,10 +9,8 @@
     --color-surface-2: #f0f3f6;
     --color-text: #1f2328;
     --color-text-muted: #656d76;
-    --color-primary: #b8860b;
+    --color-primary: #8b6508;
     --color-primary-glow: rgba(184, 134, 11, 0.2);
-    --color-interactive: #00a86b;
-    --color-interactive-glow: rgba(0, 168, 107, 0.3);
     --color-accent: #0969da;
     --color-success: #1a7f37;
     --color-error: #cf222e;
@@ -20,5 +18,5 @@
     --color-border: #d0d7de;
 }
 
-[data-theme="light"] .btn-primary { color: #000; }
-[data-theme="light"] .progress-text { color: var(--color-text); }
+[data-theme="light"] .btn-primary { color: #fff; }
+[data-theme="light"] .progress-text { color: #333; }

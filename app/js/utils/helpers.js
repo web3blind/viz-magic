@@ -209,6 +209,10 @@ var Helpers = (function() {
         return colors[school] || '#9e9e9e';
     }
 
+    function schoolClass(school) {
+        return school ? 'school-' + school : '';
+    }
+
     return {
         EventBus: EventBus,
         $: $,
@@ -226,6 +230,7 @@ var Helpers = (function() {
         bpToPercent: bpToPercent,
         rarityClass: rarityClass,
         classIcon: classIcon,
-        schoolColor: schoolColor
+        schoolColor: schoolColor,
+        schoolClass: schoolClass
     };
 })();

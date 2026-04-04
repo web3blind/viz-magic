@@ -59,7 +59,7 @@ var CharacterScreen = (function() {
                 var desc = t(descKey);
                 // Fall back to English description if i18n key not found
                 if (!desc || desc === descKey) desc = spell.description;
-                html += '<div class="spell-item" style="border-left:3px solid ' + Helpers.schoolColor(spell.school) + '">' +
+                html += '<div class="spell-item ' + Helpers.schoolClass(spell.school) + '">' +
                     '<strong>' + spell.name + '</strong><br>' +
                     '<small>' + desc + '</small>' +
                     '</div>';

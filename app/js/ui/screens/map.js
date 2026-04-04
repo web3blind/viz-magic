@@ -22,14 +22,6 @@ var MapScreen = (function() {
     };
 
     /** School colors for territory display */
-    var SCHOOL_COLORS = {
-        ignis:  '#f85149',
-        aqua:   '#58a6ff',
-        terra:  '#3fb950',
-        ventus: '#d29922',
-        umbra:  '#a371f7'
-    };
-
     function render() {
         var container = Helpers.$('screen-map');
         if (!container) return;
@@ -89,10 +81,9 @@ var MapScreen = (function() {
                 benefits = TerritorySystem.getTerritoryBenefits(territory, myGuild.id);
             }
 
-            var schoolColor = region.school ? (SCHOOL_COLORS[region.school] || 'var(--color-border)') : 'var(--color-border)';
+            var schoolCls = region.school ? Helpers.schoolClass(region.school) : '';
 
-            html += '<section class="region-card' + (isCurrent ? ' region-current' : '') + '" ';
-            html += 'style="border-left-color:' + schoolColor + '" ';
+            html += '<section class="region-card' + (isCurrent ? ' region-current' : '') + ' ' + schoolCls + '" ';
             html += 'role="listitem" aria-label="' + region.name + '">';
 
             // Region header

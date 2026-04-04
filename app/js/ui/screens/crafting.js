@@ -165,7 +165,7 @@ var CraftingScreen = (function() {
         var rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
         for (var r = 0; r < rarities.length; r++) {
             var rInfo = ItemSystem.getRarityInfo(r);
-            html += '<span class="outcome-rarity" style="color:' + rInfo.color + '">' +
+            html += '<span class="outcome-rarity rarity-color-' + rarities[r] + '">' +
                     rInfo.symbol + ' ' + t('rarity_' + rarities[r]) + '</span> ';
         }
         html += '</div>';
@@ -211,7 +211,7 @@ var CraftingScreen = (function() {
         var html = '<div class="craft-result craft-reveal-anim" role="alert">';
         html += '<h2>' + t('craft_success') + '</h2>';
         html += '<div class="craft-result-item ' + Helpers.rarityClass(item.rarity) + '">';
-        html += '<div class="result-rarity" style="color:' + rarityInfo.color + '">' +
+        html += '<div class="result-rarity rarity-color-' + rarityInfo.name + '">' +
                 rarityInfo.symbol + ' ' + rarityName + '</div>';
         html += '<div class="result-name">' + Helpers.escapeHtml(name) + '</div>';
 

@@ -127,7 +127,7 @@ var MarketplaceScreen = (function() {
         var html = '<div class="market-listing-card ' + rarityClass + '" role="listitem" data-listing="' + listing.ref + '">';
         html += '<div class="listing-header">';
         html += '<span class="listing-name">' + Helpers.escapeHtml(itemName) + '</span>';
-        html += '<span class="listing-rarity" style="color:' + rarityInfo.color + '">' + rarityInfo.symbol + ' ' + rarityName + '</span>';
+        html += '<span class="listing-rarity rarity-color-' + rarityInfo.name + '">' + rarityInfo.symbol + ' ' + rarityName + '</span>';
         html += '</div>';
 
         // Stats
@@ -212,7 +212,7 @@ var MarketplaceScreen = (function() {
                 var sName = t('item_' + sItem.type) || sItem.type.replace(/_/g, ' ');
                 var sRarity = ItemSystem.getRarityInfo(sItem.rarity);
                 html += '<div class="market-sell-item ' + Helpers.rarityClass(sItem.rarity) + '" role="listitem" data-item="' + sItem.id + '">';
-                html += '<span class="sell-item-name" style="color:' + sRarity.color + '">' + sRarity.symbol + ' ' + Helpers.escapeHtml(sName) + '</span>';
+                html += '<span class="sell-item-name rarity-color-' + sRarity.name + '">' + sRarity.symbol + ' ' + Helpers.escapeHtml(sName) + '</span>';
                 html += '<div class="sell-item-controls">';
                 html += '<label for="price-' + sItem.id + '" class="sr-only">' + t('market_set_price') + '</label>';
                 html += '<input type="number" id="price-' + sItem.id + '" class="input-field sell-price-input" min="1" placeholder="' + t('market_price_placeholder') + '" aria-label="' + t('market_set_price') + '">';
