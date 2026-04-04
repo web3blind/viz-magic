@@ -67,7 +67,45 @@ var GameCreatures = (function() {
                 { itemType: 'cloth_robe',    name: 'Cloth Robe',    dropRate: 100 },
                 { itemType: 'oak_wand',      name: 'Oak Wand',      dropRate: 80 }
             ]
-        }
+        },
+        echo_guardian: {
+           id: 'echo_guardian',
+           name: 'Echo Guardian',
+           school: 'terra',
+           author: 'inov8', 
+           minLevel: 5,
+           maxLevel: 12,
+           baseHp: 60,
+           basePot: 16,
+           baseRes: 14,
+           baseSwf: 8,
+           baseXp: 95,
+           zone: 'commons_first_light',
+           lootTable: [
+                { itemType: 'ancient_shard', name: 'Ancient Echo Shard', dropRate: 300 },
+                { itemType: 'stone_tablet',  name: 'Weathered Stone Tablet', dropRate: 140 },
+                { itemType: 'spirit_tunic',  name: 'Spirit Tunic', dropRate: 70 }
+           ]
+        },
+        cyber_ghoul: {
+          id: 'cyber_ghoul',
+          name: 'Cyber Ghoul',
+          school: 'umbra', 
+          author: 'inov8', 
+          minLevel: 7,
+          maxLevel: 14,
+          baseHp: 55,
+          basePot: 18,
+          baseRes: 10,
+          baseSwf: 9,
+          baseXp: 110,
+          zone: 'commons_first_light',
+          lootTable: [
+                { itemType: 'data_core', name: 'Corrupted Data Core', dropRate: 320 },
+                { itemType: 'nano_patch', name: 'Nano Patch', dropRate: 180 },
+                { itemType: 'optic_cloak', name: 'Optic Cloak', dropRate: 60 }
+           ]
+        }        
     };
 
     /**
