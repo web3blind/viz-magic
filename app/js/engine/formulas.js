@@ -237,6 +237,18 @@ var GameFormulas = (function() {
     }
 
     /**
+     * Calculate XP from Armageddon — exactly 100x normal hunt XP.
+     * Uses full mana (10000 bp) for 100x the XP of a standard 1% (100 bp) hit.
+     * @param {number} playerLevel
+     * @param {number} creatureLevel
+     * @param {number} creatureBaseXp
+     * @returns {number} XP gained
+     */
+    function armageddonXp(playerLevel, creatureLevel, creatureBaseXp) {
+        return huntXp(playerLevel, creatureLevel, creatureBaseXp) * 100;
+    }
+
+    /**
      * Calculate stat points from level-up
      * @param {number} level - new level
      * @param {string} className
@@ -284,6 +296,7 @@ var GameFormulas = (function() {
         elementModifier: elementModifier,
         isCriticalHit: isCriticalHit,
         huntXp: huntXp,
+        armageddonXp: armageddonXp,
         levelUpStats: levelUpStats
     };
 })();

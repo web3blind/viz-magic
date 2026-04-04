@@ -211,6 +211,22 @@ var GameRecipes = (function() {
             levelReq: 8,
             classReq: null,
             locationReq: null
+        },
+        armageddon_stone: {
+            id: 'armageddon_stone',
+            nameKey: 'recipe_armageddon_stone',
+            resultType: 'armageddon_stone',
+            outputTemplate: 'armageddon_stone',
+            category: 'relic',
+            materials: [
+                { type: 'echo_shards',  quantity: 3 },
+                { type: 'fire_dust',    quantity: 5 },
+                { type: 'shadow_shard', quantity: 3 }
+            ],
+            manaCost: 500,
+            levelReq: 10,
+            classReq: null,
+            locationReq: null
         }
     };
 

@@ -149,6 +149,14 @@ var LangRU = {
     hunt_equip_now: 'Экипировать сейчас',
     hunt_mana_cost: 'Стоит {cost} маны',
     hunt_not_enough_mana: 'Маны мало. Подожди восстановления.',
+    hunt_armageddon_title: 'Армагеддон',
+    hunt_armageddon_desc: 'Потратить 100% маны для получения 100x XP. Требует артефакт Камень Армагеддона.',
+    hunt_armageddon_no_stone: 'Для этого нужен Камень Армагеддона.',
+    hunt_armageddon_no_mana: 'Армагеддон требует полной маны (100%). Подождите полного восстановления.',
+    hunt_armageddon_confirm: 'Я понимаю, что после запуска Армагеддона не смогу играть, пока мана не восстановится полностью (~5 дней).',
+    hunt_armageddon_launch: 'UNLEASH ARMAGEDDON !!!',
+    hunt_armageddon_victory: 'АРМАГЕДДОН!',
+    hunt_armageddon_xp: 'Получено XP (Армагеддон)',
 
     // Inventory
     inv_title: 'Сумка',

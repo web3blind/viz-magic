@@ -149,6 +149,14 @@ var LangEN = {
     hunt_equip_now: 'Equip now',
     hunt_mana_cost: 'Costs {cost} Mana',
     hunt_not_enough_mana: 'Not enough Mana. Wait for regeneration.',
+    hunt_armageddon_title: 'Armageddon',
+    hunt_armageddon_desc: 'Consume 100% Mana for 100x XP. Requires Armageddon Stone artifact.',
+    hunt_armageddon_no_stone: 'You need an Armageddon Stone to use this ability.',
+    hunt_armageddon_no_mana: 'Armageddon requires full Mana (100%). Wait for full regeneration.',
+    hunt_armageddon_confirm: 'I understand that after using Armageddon I will not be able to play until my Mana fully regenerates (~5 days).',
+    hunt_armageddon_launch: 'UNLEASH ARMAGEDDON !!!',
+    hunt_armageddon_victory: 'ARMAGEDDON!',
+    hunt_armageddon_xp: 'XP gained (Armageddon)',
 
     // Inventory
     inv_title: 'Bag',

@@ -121,7 +121,8 @@ var VizMagicConfig = (function() {
         CHAR_ATTUNE:    'char.attune',
         MOVE:           'move',
         // Combat
-        HUNT:           'hunt',
+        HUNT:                'hunt',
+        HUNT_ARMAGEDDON:     'hunt.armageddon',
         CHALLENGE:      'challenge',
         ACCEPT:         'accept',
         COMMIT:         'commit',

@@ -63,9 +63,10 @@ var GameCreatures = (function() {
             baseXp: 75,
             zone: 'commons_first_light',
             lootTable: [
-                { itemType: 'thorn_essence', name: 'Thorn Essence', dropRate: 300 },
-                { itemType: 'cloth_robe',    name: 'Cloth Robe',    dropRate: 100 },
-                { itemType: 'oak_wand',      name: 'Oak Wand',      dropRate: 80 }
+                { itemType: 'thorn_essence',    name: 'Thorn Essence',    dropRate: 300 },
+                { itemType: 'cloth_robe',       name: 'Cloth Robe',       dropRate: 100 },
+                { itemType: 'oak_wand',         name: 'Oak Wand',         dropRate: 80 },
+                { itemType: 'armageddon_stone', name: 'Armageddon Stone', dropRate: 5 }
             ]
         }
     };

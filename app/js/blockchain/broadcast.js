@@ -147,6 +147,40 @@ var VizBroadcast = (function() {
     }
 
     /**
+     * Send an Armageddon hunt action — spends 100% mana for 100x XP.
+     * Records the action on chain and awards mana to the creature's author.
+     * @param {string} creatureId - creature identifier
+     * @param {string} zone - zone identifier
+     * @param {string} stoneId - ID of the armageddon_stone item being consumed
+     * @param {number} manaCost - mana to spend (always 10000 bp)
+     * @param {string} authorAccount - VIZ account of the creature's author
+     * @param {Function} callback - (err, result)
+     */
+    function armageddonAction(creatureId, zone, stoneId, manaCost, authorAccount, callback) {
+        var actionData = VMProtocol.createArmageddonAction(creatureId, zone, stoneId || '');
+
+        // Broadcast the game action (VM custom op — records armageddon on chain)
+        gameAction(actionData, function(err, result) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // Send award to creature author (full mana spend)
+            if (authorAccount) {
+                award(authorAccount, manaCost, 0, '', [], function(awardErr, awardResult) {
+                    if (awardErr) {
+                        console.log('Armageddon award to author failed (action still recorded):', awardErr);
+                    }
+                    callback(null, { action: result, award: awardResult || null });
+                });
+            } else {
+                callback(null, { action: result, award: null });
+            }
+        });
+    }
+
+    /**
      * Update account metadata (Grimoire)
      * @param {string} jsonMetadata - JSON string
      * @param {Function} callback
@@ -233,6 +267,7 @@ var VizBroadcast = (function() {
         custom: custom,
         gameAction: gameAction,
         huntAction: huntAction,
+        armageddonAction: armageddonAction,
         updateMetadata: updateMetadata,
         chroniclePost: chroniclePost,
         delegateShares: delegateShares,

@@ -139,6 +139,24 @@ var VMProtocol = (function() {
     }
 
     /**
+     * Create an Armageddon hunt action (full mana spend for 100x XP)
+     * @param {string} creatureId
+     * @param {string} zone
+     * @param {string} stoneItemId - ID of the armageddon_stone item being consumed
+     * @returns {Object}
+     */
+    function createArmageddonAction(creatureId, zone, stoneItemId) {
+        return {
+            t: AT.HUNT_ARMAGEDDON,
+            d: {
+                creature: creatureId,
+                zone: zone,
+                stone: stoneItemId
+            }
+        };
+    }
+
+    /**
      * Create a character attunement action (class selection / initial setup)
      * @param {string} className
      * @param {string} displayName
@@ -481,6 +499,7 @@ var VMProtocol = (function() {
         isVEOperation: isVEOperation,
         getSender: getSender,
         createHuntAction: createHuntAction,
+        createArmageddonAction: createArmageddonAction,
         createCharAttuneAction: createCharAttuneAction,
         createEquipAction: createEquipAction,
         createRestAction: createRestAction,

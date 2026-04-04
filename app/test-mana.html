@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Mana Percent Test</title>
+<script src="js/config.js"></script>
+<script src="js/i18n/ru.js"></script>
+<script src="js/i18n/en.js"></script>
+<script src="js/utils/helpers.js"></script>
+<script src="js/ui/components/progress-bar.js"></script>
+<style>
+body { background:#1a1a2e; color:#e0e0ff; font-family:sans-serif; padding:20px; }
+.test-pass { color:#4caf50; }
+.test-fail { color:#f44336; }
+.demo { margin:20px 0; background:#252540; padding:16px; border-radius:8px; }
+</style>
+</head>
+<body>
+<h1>🧪 Mana Display Test</h1>
+
+<div id="unit-tests"></div>
+
+<h2>Визуальный демо</h2>
+<div class="demo" id="demo-bars"></div>
+
+<h2>Стоимость заклинаний</h2>
+<div class="demo" id="demo-spells"></div>
+
+<script>
+// === Unit Tests ===
+var tests = [
+    { input: 0,     expected: '0.00%',   label: '0 bp = 0.00%' },
+    { input: 1,     expected: '0.01%',   label: '1 bp = 0.01%' },
+    { input: 100,   expected: '1.00%',   label: '100 bp = 1.00%' },
+    { input: 300,   expected: '3.00%',   label: '300 bp = 3.00%' },
+    { input: 900,   expected: '9.00%',   label: '900 bp = 9.00%' },
+    { input: 1500,  expected: '15.00%',  label: '1500 bp = 15.00%' },
+    { input: 3000,  expected: '30.00%',  label: '3000 bp = 30.00%' },
+    { input: 4000,  expected: '40.00%',  label: '4000 bp = 40.00%' },
+    { input: 5000,  expected: '50.00%',  label: '5000 bp = 50.00%' },
+    { input: 7500,  expected: '75.00%',  label: '7500 bp = 75.00%' },
+    { input: 10000, expected: '100.00%', label: '10000 bp = 100.00%' },
+];
+
+var html = '<h2>Unit Tests: bpToPercent()</h2>';
+var passed = 0, failed = 0;
+tests.forEach(function(t) {
+    var result = Helpers.bpToPercent(t.input);
+    var ok = result === t.expected;
+    if (ok) passed++; else failed++;
+    html += '<div class="test-' + (ok ? 'pass' : 'fail') + '">' +
+        (ok ? '✓' : '✗') + ' ' + t.label +
+        (ok ? '' : ' → got: "' + result + '"') +
+        '</div>';
+});
+html += '<p><strong>' + passed + '/' + (passed+failed) + ' tests passed</strong></p>';
+document.getElementById('unit-tests').innerHTML = html;
+
+// === Visual Demo: Progress Bar ===
+var demoHtml = '';
+var testValues = [0, 1000, 2500, 5000, 7500, 10000];
+testValues.forEach(function(val) {
+    var pct = val / 100; // 0–100
+    demoHtml += ProgressBar.create({
+        id: 'bar-' + val,
+        label: 'Мана (' + Helpers.bpToPercent(val) + ')',
+        value: pct,
+        max: 100,
+        color: '#2196f3'
+    });
+});
+document.getElementById('demo-bars').innerHTML = demoHtml;
+
+// === Spell costs demo ===
+var spells = [
+    { name: 'Огненный болт',  manaCost: 100 },
+    { name: 'Тёмная молния',  manaCost: 900 },
+    { name: 'Каменная шкура', manaCost: 3000 },
+    { name: 'Лунный удар',    manaCost: 1500 },
+    { name: 'Инферно',        manaCost: 5000 },
+];
+var spellHtml = '';
+spells.forEach(function(s) {
+    spellHtml += '<div style="margin:8px 0; padding:8px; border-left:3px solid #2196f3">' +
+        '<strong>' + s.name + '</strong> — ' +
+        '<span style="color:#2196f3">' + Helpers.bpToPercent(s.manaCost) + ' Мана</span>' +
+        ' <small style="color:#888">(было: ' + s.manaCost + ' / 10000)</small>' +
+        '</div>';
+});
+document.getElementById('demo-spells').innerHTML = spellHtml;
+</script>
+</body>
+</html>

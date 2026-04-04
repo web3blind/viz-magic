@@ -6,6 +6,7 @@ var HuntScreen = (function() {
 
     var selectedCreature = null;
     var selectedSpell = null;
+    var stoneItemId = null;
 
     function render() {
         var t = Helpers.t;
@@ -14,6 +15,7 @@ var HuntScreen = (function() {
 
         var user = VizAccount.getCurrentUser();
         var ch = StateEngine.getCharacter(user);
+        var state = StateEngine.getState();
 
         // Auto-restore HP between hunts (rest at camp)
         if (ch && ch.hp <= 0 && ch.maxHp) {
@@ -57,7 +59,39 @@ var HuntScreen = (function() {
         }
 
         html += '</div>' +
-            '<button class="btn btn-primary btn-large" id="btn-attack" disabled>' + t('hunt_attack') + '</button>' +
+            '<button class="btn btn-primary btn-large" id="btn-attack" disabled>' + t('hunt_attack') + '</button>';
+
+        // --- Armageddon section ---
+        stoneItemId = null;
+        var hasStone = false;
+        if (user && state && state.inventories && state.inventories[user]) {
+            var inv = state.inventories[user];
+            for (var ai = 0; ai < inv.length; ai++) {
+                if (inv[ai] && inv[ai].type === 'armageddon_stone' && !inv[ai].consumed) {
+                    hasStone = true;
+                    stoneItemId = inv[ai].id;
+                    break;
+                }
+            }
+        }
+
+        var armageddonSectionHtml = '<div class="armageddon-section" style="margin-top:24px;border:2px solid #c0392b;border-radius:8px;padding:16px;">' +
+            '<h2 style="color:#c0392b;">&#9888;&#65039; ' + t('hunt_armageddon_title') + ' !!!</h2>' +
+            '<p>' + t('hunt_armageddon_desc') + '</p>';
+
+        if (!hasStone) {
+            armageddonSectionHtml += '<p style="color:#888;">' + t('hunt_armageddon_no_stone') + '</p>';
+        } else {
+            armageddonSectionHtml += '<label style="display:block;margin:12px 0;">' +
+                '<input type="checkbox" id="armageddon-confirm-cb"> ' +
+                t('hunt_armageddon_confirm') + '</label>' +
+                '<button class="btn" id="btn-armageddon" disabled ' +
+                'style="background:#c0392b;color:#fff;font-weight:bold;width:100%;">' +
+                t('hunt_armageddon_launch') + '</button>';
+        }
+        armageddonSectionHtml += '</div>';
+
+        html += armageddonSectionHtml +
             '<div id="hunt-result" aria-live="assertive"></div>' +
             '</div>';
 
@@ -97,6 +131,19 @@ var HuntScreen = (function() {
         }
 
         Helpers.$('btn-attack').addEventListener('click', _doHunt);
+
+        // Armageddon confirm checkbox and launch button
+        var armaCb = el.querySelector('#armageddon-confirm-cb');
+        var armaBtn = el.querySelector('#btn-armageddon');
+        if (armaCb && armaBtn) {
+            armaCb.addEventListener('change', function() {
+                armaBtn.disabled = !armaCb.checked;
+            });
+            armaBtn.addEventListener('click', function() {
+                if (!armaCb.checked) return;
+                _doArmageddon(stoneItemId);
+            });
+        }
     }
 
     function _checkReady() {
@@ -168,6 +215,120 @@ var HuntScreen = (function() {
                     _resolveHuntFromBlock(blockNum, ch, creature, spell, playerEnergy, user, resultEl, t);
                 }
             );
+        });
+    }
+
+    function _doArmageddon(stoneId) {
+        var t = Helpers.t;
+        var resultEl = Helpers.$('hunt-result');
+
+        var user = VizAccount.getCurrentUser();
+        var ch = StateEngine.getCharacter(user) || CharacterSystem.createCharacter(user || 'demo', 'Demo Mage', 'embercaster');
+
+        if (!selectedCreature) {
+            resultEl.innerHTML = '<p class="error">' + t('hunt_choose_creature') + '</p>';
+            return;
+        }
+        var creature = GameCreatures.getCreature(selectedCreature);
+        if (!creature) return;
+
+        VizAccount.getAccount(user, function(err, accountData) {
+            var playerEnergy = 0;
+            if (!err && accountData) {
+                playerEnergy = VizAccount.calculateCurrentEnergy(accountData);
+            }
+
+            if (playerEnergy < 10000) {
+                resultEl.innerHTML = '<p class="error">' + t('hunt_armageddon_no_mana') + '</p>';
+                return;
+            }
+
+            // Disable button to prevent double-click
+            var armaBtn = Helpers.$('btn-armageddon');
+            if (armaBtn) armaBtn.disabled = true;
+
+            VizBroadcast.armageddonAction(
+                selectedCreature,
+                ch.currentZone || 'commons_first_light',
+                stoneId || '',
+                10000,
+                creature.author || '',
+                function(broadcastErr, broadcastResult) {
+                    if (broadcastErr) {
+                        resultEl.innerHTML = '<p class="error">' + t('hunt_blocked_text') + '</p>';
+                        if (armaBtn) armaBtn.disabled = false;
+                        return;
+                    }
+
+                    var blockNum = 0;
+                    if (broadcastResult && broadcastResult.action) {
+                        blockNum = broadcastResult.action.block_num || 0;
+                    }
+
+                    _resolveArmageddonFromBlock(blockNum, ch, creature, playerEnergy, user, stoneId, resultEl, t);
+                }
+            );
+        });
+    }
+
+    function _resolveArmageddonFromBlock(blockNum, ch, creature, playerEnergy, user, stoneId, resultEl, t) {
+        var _doResolve = function(fateEntropy, finalBlockNum) {
+            var xp = GameFormulas.armageddonXp(ch.level, creature.minLevel, creature.baseXp || 25);
+
+            // Apply XP (level-up cascade is handled by addXp)
+            var xpResult = CharacterSystem.addXp(ch, xp);
+
+            // Consume the armageddon stone from inventory
+            var state = StateEngine.getState();
+            if (state.inventories && state.inventories[user]) {
+                var inv = state.inventories[user];
+                for (var i = 0; i < inv.length; i++) {
+                    if (inv[i] && inv[i].id === stoneId) {
+                        inv[i].consumed = true;
+                        break;
+                    }
+                }
+            }
+
+            // Save checkpoint
+            state.headBlock = finalBlockNum;
+            CheckpointSystem.saveCheckpoint('global', finalBlockNum, state, function() {});
+
+            // Update Grimoire
+            VizAccount.updateGrimoire({ class: ch.className, name: ch.name, level: ch.level, xp: ch.xp }, function() {});
+
+            SoundManager.play('victory');
+            SoundManager.vibrate('triple');
+
+            var resultHtml = '<div class="combat-result victory">' +
+                '<h2 style="color:#c0392b;">&#9888;&#65039; ' + t('hunt_armageddon_victory') + '</h2>' +
+                '<p>' + creature.name + '</p>' +
+                '<p>' + t('hunt_armageddon_xp') + ': <strong>' + xp + '</strong></p>';
+            if (xpResult && xpResult.levelsGained > 0) {
+                resultHtml += '<p>&#127881; ' + t('char_level_up') + ' &#8594; Lv ' + ch.level + '</p>';
+            }
+            resultHtml += '<button class="btn btn-secondary" id="btn-hunt-home">' + t('hunt_home') + '</button>' +
+                '</div>';
+            resultEl.innerHTML = resultHtml;
+            _bindResultActions();
+        };
+
+        viz.api.getBlock(blockNum, function(err, block) {
+            if (err || !block) {
+                viz.api.getDynamicGlobalProperties(function(err2, dgp) {
+                    if (err2 || !dgp) {
+                        resultEl.innerHTML = '<p class="error">' + t('error_network') + '</p>';
+                        return;
+                    }
+                    viz.api.getBlock(dgp.head_block_number, function(err3, b) {
+                        var entropy = (!err3 && b) ? (b.witness_signature || b.previous || '') : '';
+                        _doResolve(entropy, dgp.head_block_number);
+                    });
+                });
+                return;
+            }
+            var entropy = block.witness_signature || block.previous || '';
+            _doResolve(entropy, blockNum);
         });
     }
 
