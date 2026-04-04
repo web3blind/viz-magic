@@ -3,21 +3,36 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-    --color-bg: #0d1117;
-    --color-surface: #161b22;
-    --color-surface-2: #21262d;
-    --color-text: #e6edf3;
-    --color-text-muted: #8b949e;
+    /* === VoltAgent Design System === */
+    --color-bg: #050507;
+    --color-surface: #101010;
+    --color-surface-2: #1a1a1a;
+    --color-text: #f2f2f2;
+    --color-text-muted: #b8b3b0;
+    /* --color-primary: золото (магия/лор) */
     --color-primary: #d4a843;
     --color-primary-glow: rgba(212, 168, 67, 0.3);
-    --color-accent: #58a6ff;
+    /* --color-interactive: изумруд (UI кнопки, ссылки, фокус) */
+    --color-interactive: #00d992;
+    --color-interactive-glow: rgba(0, 217, 146, 0.3);
+    --color-accent: #4cb3d4;
     --color-success: #3fb950;
     --color-error: #f85149;
-    --color-warning: #d29922;
-    --color-border: #30363d;
-    --radius: 12px;
-    --radius-sm: 8px;
-    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --color-warning: #ffba00;
+    --color-border: #3d3a39;
+    /* Редкости */
+    --rarity-common: #9e9e9e;
+    --rarity-uncommon: #4caf50;
+    --rarity-rare: #2196f3;
+    --rarity-epic: #9c27b0;
+    --rarity-legendary: #ffc107;
+    /* Радиусы VoltAgent */
+    --radius: 8px;
+    --radius-sm: 6px;
+    --radius-pill: 9999px;
+    /* Тени VoltAgent */
+    --shadow: rgba(92, 88, 85, 0.2) 0px 0px 15px;
+    --shadow-high: rgba(0,0,0,0.7) 0px 20px 60px;
     --transition: 0.2s ease;
     --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --touch-target: 48px;
@@ -41,6 +56,12 @@ body {
 /* SR Only */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
+/* === VoltAgent Glow Pulse Animation === */
+@keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(0,217,146,0.3), 0 0 20px rgba(0,217,146,0.1); }
+    50% { box-shadow: 0 0 20px rgba(0,217,146,0.5), 0 0 40px rgba(0,217,146,0.2); }
+}
+
 /* Buttons */
 .btn {
     display: inline-flex; align-items: center; justify-content: center;
@@ -50,7 +71,7 @@ body {
     transition: all var(--transition); text-decoration: none;
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 }
-.btn:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+.btn:focus-visible { outline: 3px solid var(--color-interactive); outline-offset: 2px; }
 .btn-primary { background: var(--color-primary); color: #000; }
 .btn-primary:hover { filter: brightness(1.1); }
 .btn-primary:active { transform: scale(0.97); }
@@ -58,7 +79,7 @@ body {
 .btn-secondary { background: var(--color-surface-2); color: var(--color-text); border: 1px solid var(--color-border); }
 .btn-secondary:hover { background: var(--color-border); }
 .btn-large { padding: 16px 32px; font-size: 1.125rem; min-width: 200px; }
-.btn-glow { box-shadow: 0 0 20px var(--color-primary-glow), 0 0 40px var(--color-primary-glow); }
+.btn-glow { box-shadow: 0 0 20px rgba(0, 217, 146, 0.4), 0 0 40px rgba(0, 217, 146, 0.2); animation: glow-pulse 3s ease-in-out infinite; }
 
 /* Input fields */
 .input-label { display: block; margin-bottom: 4px; font-weight: 600; color: var(--color-text-muted); }
@@ -68,7 +89,7 @@ body {
     color: var(--color-text); font-size: 1rem; min-height: var(--touch-target);
     transition: border-color var(--transition);
 }
-.input-field:focus { outline: none; border-color: var(--color-primary); }
+.input-field:focus { outline: none; border-color: var(--color-interactive); }
 .input-feedback { margin-top: 4px; font-size: 0.875rem; min-height: 1.5em; }
 .input-feedback.success { color: var(--color-success); }
 .input-feedback.error { color: var(--color-error); }
@@ -77,11 +98,11 @@ body {
 .landing { text-align: center; max-width: 480px; margin: 0 auto; }
 .landing-hero { padding: 60px 0 40px; }
 .landing-title { margin-bottom: 24px; }
-.title-glow { font-size: 2.5rem; font-weight: 700; color: var(--color-primary); text-shadow: 0 0 30px var(--color-primary-glow); }
+.title-glow { font-size: 2.5rem; font-weight: 700; color: var(--color-primary); text-shadow: 0 0 30px rgba(0, 217, 146, 0.4), 0 0 60px rgba(0, 217, 146, 0.15); }
 .landing-text { margin-bottom: 32px; }
 .landing-text p { margin-bottom: 8px; font-size: 1.1rem; opacity: 0.9; }
 .landing-login-link { margin-top: 16px; }
-.landing-login-link a { color: var(--color-accent); text-decoration: none; }
+.landing-login-link a { color: var(--color-interactive); text-decoration: none; }
 .landing-login-link a:hover { text-decoration: underline; }
 .landing-cards { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 32px 0; }
 .feature-card {
@@ -144,7 +165,7 @@ body {
 .progress-fill { height: 100%; transition: width 0.3s ease; border-radius: 10px; }
 .progress-text {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 0.75rem; font-weight: 600; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    font-size: 0.75rem; font-weight: 600; color: var(--color-text); text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 /* Character sheet */
@@ -169,8 +190,9 @@ body {
     border-radius: var(--radius-sm); padding: 12px 16px; cursor: pointer;
     min-height: var(--touch-target); transition: all var(--transition);
 }
+.creature-card:hover { border-color: var(--color-interactive); box-shadow: 0 0 8px var(--color-interactive-glow); }
 .creature-card.selected { border-color: var(--color-primary); background: rgba(212,168,67,0.1); }
-.creature-card:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+.creature-card:focus-visible { outline: 3px solid var(--color-interactive); outline-offset: 2px; }
 .creature-level { color: var(--color-text-muted); font-size: 0.85rem; }
 .spell-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .spell-btn {
@@ -178,8 +200,9 @@ body {
     border-radius: var(--radius-sm); padding: 12px; cursor: pointer;
     text-align: center; min-height: 64px; transition: all var(--transition);
 }
+.spell-btn:hover { border-color: var(--color-interactive); box-shadow: 0 0 8px var(--color-interactive-glow); }
 .spell-btn.selected { border-color: var(--color-primary); background: rgba(212,168,67,0.1); }
-.spell-btn:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+.spell-btn:focus-visible { outline: 3px solid var(--color-interactive); outline-offset: 2px; }
 .spell-cost { font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 4px; }
 #btn-attack { display: block; width: 100%; margin-top: 20px; }
 
@@ -199,11 +222,11 @@ body {
     background: var(--color-surface); padding: 12px; border-radius: var(--radius-sm);
     border-left: 3px solid var(--color-border); min-height: var(--touch-target);
 }
-.rarity-common { border-left-color: #9e9e9e; }
-.rarity-uncommon { border-left-color: #4caf50; }
-.rarity-rare { border-left-color: #2196f3; }
-.rarity-epic { border-left-color: #9c27b0; }
-.rarity-legendary { border-left-color: #ffc107; }
+.rarity-common { border-left-color: var(--rarity-common); }
+.rarity-uncommon { border-left-color: var(--rarity-uncommon); }
+.rarity-rare { border-left-color: var(--rarity-rare); }
+.rarity-epic { border-left-color: var(--rarity-epic); }
+.rarity-legendary { border-left-color: var(--rarity-legendary); }
 .item-name { flex: 1; text-transform: capitalize; }
 .item-badge { color: var(--color-primary); font-weight: 700; }
 .item-volatile { color: var(--color-warning); }
@@ -242,8 +265,9 @@ body {
 /* Bottom navigation */
 #bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
-    display: none; background: var(--color-surface);
-    border-top: 1px solid var(--color-border);
+    display: none; background: rgba(5, 5, 7, 0.95);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid #3d3a39;
     padding: 4px 0; z-index: 100;
     padding-bottom: env(safe-area-inset-bottom);
 }
@@ -251,11 +275,11 @@ body {
 .nav-tab {
     flex: 1; display: flex; flex-direction: column; align-items: center;
     padding: 8px 4px; background: none; border: none; cursor: pointer;
-    color: var(--color-text-muted); font-size: 0.7rem;
+    color: var(--color-text-muted); font-size: 0.8rem;
     min-height: var(--touch-target); transition: color var(--transition);
 }
-.nav-tab.active { color: var(--color-primary); }
-.nav-tab:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+.nav-tab.active { color: var(--color-interactive); border-top: 2px solid var(--color-interactive); }
+.nav-tab:focus-visible { outline: 2px solid var(--color-interactive); outline-offset: -2px; }
 .nav-icon { font-size: 1.25rem; margin-bottom: 2px; }
 
 /* Toast */
@@ -267,8 +291,8 @@ body {
 }
 .toast.show { opacity: 1; transform: translateX(0); }
 .toast-info { background: var(--color-surface-2); border: 1px solid var(--color-border); }
-.toast-success { background: #1a4d2e; border: 1px solid var(--color-success); }
-.toast-error { background: #4d1a1a; border: 1px solid var(--color-error); }
+.toast-success { background: #0d2b1a; border: 1px solid var(--color-interactive); border-left: 3px solid var(--color-interactive); }
+.toast-error { background: #4d1a1a; border: 1px solid var(--color-error); border-left: 3px solid var(--color-error); }
 
 /* Modal */
 #modal-overlay {
@@ -339,7 +363,7 @@ body {
 .spell-card.sealed .spell-card-hint { opacity: 0; }
 .spell-card-icon { font-size: 2rem; }
 .spell-card-name { font-size: 0.95rem; font-weight: 600; }
-.spell-card-hint { font-size: 0.7rem; color: var(--color-text-muted); }
+.spell-card-hint { font-size: 0.8rem; color: var(--color-text-muted); }
 
 /* Seal animation */
 @keyframes sealFlip {
@@ -448,7 +472,7 @@ body {
 .arena-table tr:hover { background: var(--color-surface); }
 .arena-row-me { background: rgba(212,168,67,0.1) !important; }
 .arena-challenge-btn { font-size: 0.8rem; padding: 4px 8px; }
-.btn-sm { padding: 6px 12px; font-size: 0.85rem; min-height: 36px; }
+.btn-sm { padding: 6px 12px; font-size: 0.85rem; min-height: 44px; }
 
 .arena-history-entry {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -679,12 +703,12 @@ body {
     border: 1px solid var(--color-border); padding: 16px;
     border-left: 4px solid var(--color-border); transition: all var(--transition);
 }
-.market-listing-card.rarity-common { border-left-color: #9e9e9e; }
-.market-listing-card.rarity-uncommon { border-left-color: #4caf50; }
-.market-listing-card.rarity-rare { border-left-color: #2196f3; }
-.market-listing-card.rarity-epic { border-left-color: #9c27b0; }
+.market-listing-card.rarity-common { border-left-color: var(--rarity-common); }
+.market-listing-card.rarity-uncommon { border-left-color: var(--rarity-uncommon); }
+.market-listing-card.rarity-rare { border-left-color: var(--rarity-rare); }
+.market-listing-card.rarity-epic { border-left-color: var(--rarity-epic); }
 .market-listing-card.rarity-legendary {
-    border-left-color: #ffc107;
+    border-left-color: var(--rarity-legendary);
     box-shadow: 0 0 8px rgba(255,193,7,0.2);
 }
 
@@ -805,11 +829,11 @@ body {
     background: var(--color-surface); border-radius: var(--radius);
     border: 2px solid var(--color-border);
 }
-.craft-result-item.rarity-common { border-color: #9e9e9e; }
-.craft-result-item.rarity-uncommon { border-color: #4caf50; }
-.craft-result-item.rarity-rare { border-color: #2196f3; }
-.craft-result-item.rarity-epic { border-color: #9c27b0; box-shadow: 0 0 15px rgba(156,39,176,0.3); }
-.craft-result-item.rarity-legendary { border-color: #ffc107; box-shadow: 0 0 20px rgba(255,193,7,0.4); }
+.craft-result-item.rarity-common { border-color: var(--rarity-common); }
+.craft-result-item.rarity-uncommon { border-color: var(--rarity-uncommon); }
+.craft-result-item.rarity-rare { border-color: var(--rarity-rare); }
+.craft-result-item.rarity-epic { border-color: var(--rarity-epic); box-shadow: 0 0 15px rgba(156,39,176,0.3); }
+.craft-result-item.rarity-legendary { border-color: var(--rarity-legendary); box-shadow: 0 0 20px rgba(255,193,7,0.4); }
 .result-rarity { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
 .result-name { font-size: 1.3rem; font-weight: 600; margin-bottom: 12px; text-transform: capitalize; }
 .result-stats { display: flex; flex-direction: column; gap: 4px; }
@@ -839,11 +863,11 @@ body {
 /* ==========================================
    Rarity border utilities (full border variant)
    ========================================== */
-.rarity-border-common { border-color: #9e9e9e; }
-.rarity-border-uncommon { border-color: #4caf50; }
-.rarity-border-rare { border-color: #2196f3; }
-.rarity-border-epic { border-color: #9c27b0; }
-.rarity-border-legendary { border-color: #ffc107; }
+.rarity-border-common { border-color: var(--rarity-common); }
+.rarity-border-uncommon { border-color: var(--rarity-uncommon); }
+.rarity-border-rare { border-color: var(--rarity-rare); }
+.rarity-border-epic { border-color: var(--rarity-epic); }
+.rarity-border-legendary { border-color: var(--rarity-legendary); }
 
 /* ==========================================
    Phase 5: World Events, Boss, Quests, Loci, Settings
@@ -1174,14 +1198,14 @@ body {
 .help-section {
     margin-bottom: 20px;
     padding: 14px 16px;
-    background: var(--color-surface, #161b22);
+    background: var(--color-surface, #101010);
     border-radius: 8px;
-    border-left: 3px solid var(--color-accent, #f0c040);
+    border-left: 3px solid var(--color-interactive, #00d992);
 }
 .help-section h2 {
     font-size: 1em;
     margin: 0 0 6px 0;
-    color: var(--color-accent, #f0c040);
+    color: var(--color-interactive, #00d992);
 }
 .help-section p {
     margin: 0;
@@ -1204,6 +1228,6 @@ body {
 .help-tip-btn:hover,
 .help-tip-btn:focus {
     opacity: 1;
-    outline: 2px solid var(--color-accent, #f0c040);
+    outline: 2px solid var(--color-interactive, #00d992);
     border-radius: 50%;
 }
