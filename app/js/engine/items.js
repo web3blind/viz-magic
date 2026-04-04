@@ -135,6 +135,16 @@ var ItemSystem = (function() {
             category: CATEGORIES.SCROLL,
             slot: null,
             baseStats: {}
+        },
+        echo_shards: {
+            category: CATEGORIES.MATERIAL,
+            slot: null,
+            baseStats: {}
+        },
+        armageddon_stone: {
+            category: CATEGORIES.RELIC,
+            slot: SLOTS.ACCESSORY,
+            baseStats: {}
         }
     };
 

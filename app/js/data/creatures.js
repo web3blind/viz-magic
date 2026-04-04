@@ -46,7 +46,8 @@ var GameCreatures = (function() {
             lootTable: [
                 { itemType: 'shadow_shard',  name: 'Shadow Shard',  dropRate: 350 },
                 { itemType: 'health_scroll', name: 'Health Scroll', dropRate: 200 },
-                { itemType: 'lucky_charm',   name: 'Lucky Charm',   dropRate: 50 }
+                { itemType: 'lucky_charm',   name: 'Lucky Charm',   dropRate: 50 },
+                { itemType: 'echo_shards',   name: 'Echo Shards',   dropRate: 120 }
             ]
         },
         thornvine: {
