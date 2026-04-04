@@ -77,7 +77,7 @@ var GuildScreen = (function() {
                 html += '<li class="guild-quest-item">';
                 html += '<div class="quest-name">' + _esc(quest.name) + '</div>';
                 html += '<div class="progress-bar" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100">';
-                html += '<div class="progress-fill" style="width:' + pct + '%;background:var(--color-primary)"></div>';
+                html += '<div class="progress-fill" style="width:' + pct + '%"></div>';
                 html += '<span class="progress-text">' + quest.progress + '/' + quest.target + '</span>';
                 html += '</div>';
                 html += '</li>';

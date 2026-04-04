@@ -200,7 +200,7 @@ var QuestsScreen = (function() {
             html += '<div class="quest-objective">' +
                 '<span class="obj-label">' + t('quest_obj_' + obj.type) + (obj.target ? ' (' + obj.target + ')' : '') + '</span>' +
                 '<div class="progress-bar" role="progressbar" aria-valuenow="' + obj.current + '" aria-valuemax="' + obj.required + '">' +
-                    '<div class="progress-fill" style="width:' + pct + '%;background:var(--color-primary)"></div>' +
+                    '<div class="progress-fill" style="width:' + pct + '%"></div>' +
                     '<span class="progress-text">' + obj.current + '/' + obj.required + '</span>' +
                 '</div>' +
             '</div>';

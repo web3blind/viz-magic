@@ -50,9 +50,8 @@ var HuntScreen = (function() {
 
         for (var j = 0; j < spells.length; j++) {
             var s = spells[j];
-            html += '<button class="spell-btn" data-id="' + s.id + '" role="radio" aria-checked="false" ' +
-                'aria-label="' + s.name + '. ' + t('hunt_mana_cost', {cost: Helpers.bpToPercent(s.manaCost)}) + '" ' +
-                'style="border-color:' + Helpers.schoolColor(s.school) + '">' +
+            html += '<button class="spell-btn ' + Helpers.schoolClass(s.school) + '" data-id="' + s.id + '" role="radio" aria-checked="false" ' +
+                'aria-label="' + s.name + '. ' + t('hunt_mana_cost', {cost: Helpers.bpToPercent(s.manaCost)}) + '">' +
                 '<span class="spell-name">' + s.name + '</span>' +
                 '<span class="spell-cost">' + Helpers.bpToPercent(s.manaCost) + ' ' + t('home_mana') + '</span>' +
                 '</button>';
@@ -75,8 +74,8 @@ var HuntScreen = (function() {
             }
         }
 
-        var armageddonSectionHtml = '<div class="armageddon-section" style="margin-top:24px;border:2px solid #c0392b;border-radius:8px;padding:16px;">' +
-            '<h2 style="color:#c0392b;">&#9888;&#65039; ' + t('hunt_armageddon_title') + ' !!!' +
+        var armageddonSectionHtml = '<div class="armageddon-section">' +
+            '<h2>&#9888;&#65039; ' + t('hunt_armageddon_title') + ' !!!' +
             '<button class="help-tip-btn" aria-label="' + t('help_tip_armageddon') + '" ' +
             'title="' + t('help_tip_armageddon') + '" ' +
             'onclick="Helpers.EventBus.emit(\'navigate\', \'help\')">❓</button>' +
@@ -84,13 +83,12 @@ var HuntScreen = (function() {
             '<p>' + t('hunt_armageddon_desc') + '</p>';
 
         if (!hasStone) {
-            armageddonSectionHtml += '<p style="color:#888;">' + t('hunt_armageddon_no_stone') + '</p>';
+            armageddonSectionHtml += '<p class="armageddon-note">' + t('hunt_armageddon_no_stone') + '</p>';
         } else {
-            armageddonSectionHtml += '<label style="display:block;margin:12px 0;">' +
+            armageddonSectionHtml += '<label class="armageddon-label">' +
                 '<input type="checkbox" id="armageddon-confirm-cb"> ' +
                 t('hunt_armageddon_confirm') + '</label>' +
-                '<button class="btn" id="btn-armageddon" disabled ' +
-                'style="background:#c0392b;color:#fff;font-weight:bold;width:100%;">' +
+                '<button class="btn btn-danger" id="btn-armageddon" disabled style="width:100%">' +
                 t('hunt_armageddon_launch') + '</button>';
         }
         armageddonSectionHtml += '</div>';
@@ -299,7 +297,7 @@ var HuntScreen = (function() {
             SoundManager.vibrate('triple');
 
             var resultHtml = '<div class="combat-result victory">' +
-                '<h2 style="color:#c0392b;">&#9888;&#65039; ' + t('hunt_armageddon_victory') + '</h2>' +
+                '<h2 style="color:var(--color-error)">&#9888;&#65039; ' + t('hunt_armageddon_victory') + '</h2>' +
                 '<p>' + creature.name + '</p>' +
                 '<p>' + t('hunt_armageddon_xp') + ': <strong>' + xp + '</strong></p>';
             if (xpResult && xpResult.levelsGained > 0) {
