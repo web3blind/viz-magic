@@ -27,7 +27,10 @@ var SoundManager = (function() {
      * @param {string} soundId
      */
     function play(soundId) {
-        if (!enabled || !audioCtx) return;
+        if (!enabled) return;
+        // Lazily initialize on first play call — this always happens inside a user gesture
+        if (!audioCtx) init();
+        if (!audioCtx) return;
         if (audioCtx.state === 'suspended') {
             audioCtx.resume();
         }
@@ -658,11 +661,21 @@ var SoundManager = (function() {
         }
     }
 
+    /**
+     * Return the shared AudioContext (or null if not yet initialized).
+     * Used by BattleNarrator to avoid creating a second context.
+     * @returns {AudioContext|null}
+     */
+    function getAudioContext() {
+        return audioCtx;
+    }
+
     return {
         init: init,
         play: play,
         setEnabled: setEnabled,
         setVolume: setVolume,
-        vibrate: vibrate
+        vibrate: vibrate,
+        getAudioContext: getAudioContext
     };
 })();

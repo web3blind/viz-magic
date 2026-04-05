@@ -8,7 +8,6 @@ var BattleNarrator = (function() {
 
     var enabled = false;
     var narratorEl = null;
-    var audioCtx = null;
 
     /**
      * Initialize the Battle Narrator.
@@ -89,25 +88,26 @@ var BattleNarrator = (function() {
         if (!enabled) return;
 
         try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+            // Reuse the shared AudioContext from SoundManager — never create a new one
+            // here, because Android blocks AudioContext creation outside a user gesture.
+            var ctx = (typeof SoundManager !== 'undefined') ? SoundManager.getAudioContext() : null;
+            if (!ctx) return;
+
+            if (ctx.state === 'suspended') {
+                ctx.resume();
             }
 
-            var osc = audioCtx.createOscillator();
-            var gain = audioCtx.createGain();
-            var panner = audioCtx.createStereoPanner();
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            var panner = ctx.createStereoPanner();
 
             osc.connect(gain);
             gain.connect(panner);
-            panner.connect(audioCtx.destination);
+            panner.connect(ctx.destination);
 
-            osc.frequency.value = freq || 440;
             osc.type = 'sine';
 
-            // Spatial panning: enemy=center-up (0), player=slightly right (0.3)
+            // Spatial panning: enemy=center (0), player=slightly right (0.3)
             switch (position) {
                 case 'enemy':
                     panner.pan.value = 0;
@@ -124,10 +124,10 @@ var BattleNarrator = (function() {
                     break;
             }
 
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.15);
+            osc.stop(ctx.currentTime + 0.15);
         } catch(e) {
             // Silently fail if audio not available
         }

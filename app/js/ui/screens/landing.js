@@ -53,8 +53,8 @@ var LandingScreen = (function() {
             '</div>';
 
         Helpers.$('btn-begin').addEventListener('click', function() {
+            SoundManager.init();  // must be first — creates AudioContext inside user gesture
             SoundManager.play('tap');
-            SoundManager.init();
             Helpers.EventBus.emit('navigate', 'onboarding');
         });
         Helpers.$('btn-login-link').addEventListener('click', function(e) {
