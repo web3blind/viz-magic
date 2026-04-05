@@ -333,6 +333,20 @@ var LangRU = {
     // Navigation (new)
     nav_map: 'Карта',
     nav_guild: 'Гильдия',
+    nav_leaderboard: 'Рейтинг',
+
+    // Leaderboard
+    leaderboard_title: 'Рейтинг Магов',
+    leaderboard_rank: 'Место',
+    leaderboard_player: 'Маг',
+    leaderboard_level: 'Ур.',
+    leaderboard_xp: 'Опыт',
+    leaderboard_hunts: 'Охот',
+    leaderboard_empty: 'Никто ещё не охотился. Будь первым!',
+    leaderboard_you: 'Ты',
+    leaderboard_your_rank: 'Твоё место: {rank}',
+    leaderboard_not_ranked: 'Ты пока не в рейтинге. Иди на охоту!',
+    narrator_leaderboard_rank: 'Твоё место в рейтинге: {rank} из {total}.',
 
     // Guild
     guild_title: 'Гильдия',

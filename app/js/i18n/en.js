@@ -333,6 +333,20 @@ var LangEN = {
     // Navigation (new)
     nav_map: 'Map',
     nav_guild: 'Guild',
+    nav_leaderboard: 'Ranks',
+
+    // Leaderboard
+    leaderboard_title: 'Mage Rankings',
+    leaderboard_rank: 'Rank',
+    leaderboard_player: 'Mage',
+    leaderboard_level: 'Lvl',
+    leaderboard_xp: 'XP',
+    leaderboard_hunts: 'Hunts',
+    leaderboard_empty: 'No hunters yet. Be the first!',
+    leaderboard_you: 'You',
+    leaderboard_your_rank: 'Your rank: {rank}',
+    leaderboard_not_ranked: 'Not ranked yet. Go hunt!',
+    narrator_leaderboard_rank: 'Your leaderboard rank: {rank} of {total}.',
 
     // Guild
     guild_title: 'Guild',

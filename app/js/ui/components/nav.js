@@ -17,7 +17,8 @@ var NavComponent = (function() {
             { id: 'guild',       icon: '\uD83D\uDEE1\uFE0F', label: t('nav_guild') },
             { id: 'marketplace', icon: '\uD83C\uDFEA', label: t('nav_bazaar') },
             { id: 'character',   icon: '🧙', label: t('nav_character') },
-            { id: 'help',        icon: '❓', label: t('nav_help') }
+            { id: 'help',        icon: '❓', label: t('nav_help') },
+            { id: 'leaderboard', icon: '\uD83C\uDFC6', label: t('nav_leaderboard') }
         ];
 
         var html = '';

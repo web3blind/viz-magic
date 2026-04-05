@@ -1234,3 +1234,99 @@ body {
     outline: 2px solid var(--color-accent, #f0c040);
     border-radius: 50%;
 }
+
+/* =============================================
+   Leaderboard Screen
+   ============================================= */
+.leaderboard-your-rank {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--color-accent, #f0c040);
+    margin: 0.5rem 1rem 0.25rem;
+    font-weight: 600;
+}
+
+.leaderboard-not-ranked {
+    color: var(--color-text-secondary, #aaa);
+    font-weight: 400;
+}
+
+.leaderboard-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--color-text-secondary, #aaa);
+    font-size: 0.95rem;
+}
+
+.leaderboard-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0.5rem 0.5rem 1rem;
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.leaderboard-table thead th {
+    background: var(--color-surface, #1a1a2e);
+    color: var(--color-text-secondary, #aaa);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    padding: 0.5rem 0.4rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border, #333);
+    white-space: nowrap;
+}
+
+.leaderboard-table thead th.leaderboard-cell-rank,
+.leaderboard-table tbody .leaderboard-cell-rank {
+    text-align: center;
+    width: 2.5rem;
+}
+
+.leaderboard-table thead th.leaderboard-cell-level,
+.leaderboard-table thead th.leaderboard-cell-xp,
+.leaderboard-table thead th.leaderboard-cell-hunts,
+.leaderboard-table tbody .leaderboard-cell-level,
+.leaderboard-table tbody .leaderboard-cell-xp,
+.leaderboard-table tbody .leaderboard-cell-hunts {
+    text-align: right;
+    width: 3.5rem;
+}
+
+.leaderboard-row td {
+    padding: 0.55rem 0.4rem;
+    border-bottom: 1px solid var(--color-border, #333);
+    vertical-align: middle;
+}
+
+.leaderboard-row:last-child td {
+    border-bottom: none;
+}
+
+.leaderboard-row--me td {
+    background: rgba(240, 192, 64, 0.08);
+}
+
+.leaderboard-name {
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.leaderboard-you-badge {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    background: var(--color-accent, #f0c040);
+    color: #000;
+    font-size: 0.7rem;
+    font-weight: 700;
+    vertical-align: middle;
+    line-height: 1.4;
+}

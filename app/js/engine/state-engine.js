@@ -29,8 +29,54 @@ var StateEngine = (function() {
             quests: {},       // account → playerQuestState
             loci: {},         // id → locus
             season: null,
-            activeEvents: []
+            activeEvents: [],
+            // Leaderboard: top-100 players sorted by xp desc
+            leaderboard: []   // [{account, name, level, xp, hunts, updatedBlock}]
         };
+    }
+
+    /**
+     * Update leaderboard entry for a player after XP gain.
+     * Keeps top 100 entries sorted by XP descending.
+     * @param {string} account
+     * @param {Object} character
+     * @param {number} blockNum
+     */
+    function _updateLeaderboard(account, character, blockNum) {
+        if (!worldState.leaderboard) worldState.leaderboard = [];
+
+        var entry = null;
+        var idx = -1;
+        for (var i = 0; i < worldState.leaderboard.length; i++) {
+            if (worldState.leaderboard[i].account === account) {
+                entry = worldState.leaderboard[i];
+                idx = i;
+                break;
+            }
+        }
+
+        if (!entry) {
+            entry = { account: account, name: account, level: 1, xp: 0, hunts: 0, updatedBlock: blockNum };
+            worldState.leaderboard.push(entry);
+            idx = worldState.leaderboard.length - 1;
+        }
+
+        entry.name = character.name || account;
+        entry.level = character.level || 1;
+        entry.xp = character.xp || 0;
+        entry.hunts = (entry.hunts || 0) + 1;
+        entry.updatedBlock = blockNum;
+
+        // Sort descending by xp, then level
+        worldState.leaderboard.sort(function(a, b) {
+            if (b.xp !== a.xp) return b.xp - a.xp;
+            return b.level - a.level;
+        });
+
+        // Keep only top 100
+        if (worldState.leaderboard.length > 100) {
+            worldState.leaderboard = worldState.leaderboard.slice(0, 100);
+        }
     }
 
     /**
@@ -386,6 +432,11 @@ var StateEngine = (function() {
             QuestSystem.updateQuestProgress(worldState.quests[sender], 'hunt', { target: data.creature, count: 1 });
         }
 
+        // Leaderboard: update on victory
+        if (result.victory) {
+            _updateLeaderboard(sender, character, blockNum);
+        }
+
         return [{
             type: result.victory ? 'hunt_victory' : 'hunt_defeat',
             account: sender,
@@ -435,6 +486,9 @@ var StateEngine = (function() {
         var xpResult = CharacterSystem.addXp(character, xp);
 
         character.lastHuntBlock = blockNum;
+
+        // Leaderboard: armageddon always succeeds, update entry
+        _updateLeaderboard(sender, character, blockNum);
 
         return [{
             type: 'armageddon_used',
@@ -1018,6 +1072,16 @@ var StateEngine = (function() {
         worldState = _createEmptyState();
     }
 
+    /**
+     * Get the current leaderboard (top 100 by XP).
+     * Returns a copy so callers cannot mutate internal state.
+     * @returns {Array}
+     */
+    function getLeaderboard() {
+        if (!worldState.leaderboard) return [];
+        return worldState.leaderboard.slice();
+    }
+
     return {
         init: init,
         processBlock: processBlock,
@@ -1025,6 +1089,7 @@ var StateEngine = (function() {
         getState: getState,
         getCharacter: getCharacter,
         getInventory: getInventory,
+        getLeaderboard: getLeaderboard,
         processHuntResult: processHuntResult,
         processArmageddonResult: processArmageddonResult,
         reset: reset
