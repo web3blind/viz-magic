@@ -10,14 +10,17 @@ var HelpScreen = (function() {
         if (!el) return;
 
         var sections = [
-            { key: 'mana',        icon: '✨' },
-            { key: 'hunt',        icon: '⚔️' },
-            { key: 'armageddon',  icon: '⚠️' },
-            { key: 'crafting',    icon: '🔨' },
-            { key: 'marketplace', icon: '🏪' },
-            { key: 'classes',     icon: '🧙' },
-            { key: 'shares',      icon: '💎' },
-            { key: 'blockchain',  icon: '⛓️' }
+            { key: 'mana',        icon: '\u2728' },
+            { key: 'hp',          icon: '\u2764\uFE0F' },
+            { key: 'hunt',        icon: '\u2694\uFE0F' },
+            { key: 'armageddon',  icon: '\u26A0\uFE0F' },
+            { key: 'crafting',    icon: '\uD83D\uDD28' },
+            { key: 'marketplace', icon: '\uD83C\uDFEA' },
+            { key: 'leaderboard', icon: '\uD83C\uDFC6' },
+            { key: 'narrator',    icon: '\uD83D\uDD0A' },
+            { key: 'classes',     icon: '\uD83E\uDDD9' },
+            { key: 'shares',      icon: '\uD83D\uDC8E' },
+            { key: 'blockchain',  icon: '\u26D3\uFE0F' }
         ];
 
         var html = '<div class="help-screen">' +

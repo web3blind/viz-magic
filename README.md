@@ -1,134 +1,104 @@
 # Viz Magic
 
-<p align="center">
-🔮⚔️🛡️🌿
-<br>
-<a href="README-ru.md">Русская версия</a> - <b>English version</b>
-</p>
+Browser RPG built on the [VIZ blockchain](https://viz.world). Every action — hunt, craft, duel, trade — is a permanent on-chain record. Outcomes are derived from block hashes: no server, no cheating.
 
-Viz Magic is a decentralized browser-based RPG (dApp) running entirely on the [VIZ blockchain](https://github.com/VIZ-Blockchain/viz-cpp-node/). It is built on three open protocols — [VM (Viz Magic)](vm-protocol-specification.md), VE (Viz Events), and [V (Voice)](https://github.com/VIZ-Blockchain/Free-Speech-Project/blob/master/specification.md) — using VIZ custom operations to record all game actions on-chain.
+## Play
 
-No server is required. All game logic is deterministic and client-side. The app is a static web page (HTML/JS/CSS) that can be opened directly from files or hosted on any web server. It works offline via Service Worker and is installable as a PWA.
+Open `app/index.html` in any modern browser, or serve the `app/` folder locally:
 
-## How it works
-
-Every game action — hunting creatures, dueling other players, crafting items, trading on the marketplace — is an **Inscription**: a JSON object written to the VIZ blockchain as a custom operation. Character data is stored in the account's `json_metadata` under the key `vm`, forming a public **Grimoire** (character sheet) readable by any client.
-
-The blockchain itself provides game mechanics:
-
-| VIZ Mechanic | Game Mechanic |
-|---|---|
-| SHARES (stake) | **Magic Core** — soul-bound power |
-| Liquid VIZ | **Viz Essence** — tradeable currency |
-| Energy (0–10000 bp) | **Mana** — channeling capacity |
-| Award operation | **Spellcasting** — attacks, heals, buffs |
-| custom_sequence (VM) | **Inscriptions** — all game actions |
-| Account json_metadata | **Grimoire** — public character sheet |
-| Block hash | **Fate Entropy** — unpredictable outcomes |
-| Block number | **Aetheric Tick** — time (1 tick ≈ 3 sec) |
-| Delegation | **Patron Bond** — power lending |
-| Beneficiaries | **Ritual Circles** — reward splits |
-
-Outcomes (hunt loot, duel resolution, crafting quality) are derived deterministically from block hashes, ensuring fairness without any server-side randomness.
-
-## Protocols
-
-The game uses three protocols on VIZ custom operations:
-
-- **VM** (Viz Magic) — all game actions: character attunement, hunting, duels, crafting, marketplace, guilds, sieges, quests, world bosses. See the [VM Protocol Specification](vm-protocol-specification.md).
-- **VE** (Viz Events) — mutable game state: enchanting, item consumption, edits. Based on the [Voice Events](https://github.com/VIZ-Blockchain/Free-Speech-Project/blob/master/events-specification.md) extension.
-- **V** (Voice) — social layer for the Realm Chronicle: posts, replies, shares. Uses the [Voice protocol](https://github.com/VIZ-Blockchain/Free-Speech-Project/blob/master/specification.md).
-
-## Game features
-
-- **4 character classes**: Stonewarden (terra/tank), Embercaster (ignis/DPS), Moonrunner (evasion), Bloomsage (healer)
-- **5 magic schools**: Ignis, Aqua, Terra, Ventus, Umbra with a dominance wheel
-- **PvE**: Hunt creatures across zones, earn XP and loot
-- **PvP**: Commit-reveal duels (strike/guard/weave/mend), best of 3, with auto-mode
-- **Armageddon**: Spend 100% mana for 100× XP — requires a rare Armageddon Stone artifact (drops from Thornvine Lv5+, or craft from Echo Shards × 3 + Shadow Shard × 3 + Fire Dust × 5 at level 10). Full confirmation flow protects against accidental use. Each use is recorded on-chain for verifiable authenticity.
-- **Crafting**: Combine materials into equipment
-- **Marketplace**: List, buy, and trade items on-chain
-- **Guilds**: Create guilds, declare wars, siege territories
-- **Quests**: Daily prophecies and storyline quests
-- **World events**: Seasons, world bosses, Weave Surges
-- **Items**: 5 rarity tiers (Common → Legendary)
-- **Realm Chronicle**: Social posts via the Voice protocol
-- **Leveling**: XP system with soft cap at level 50
-- **Mana display**: Shown as a percentage (0.00%–100.00%) across all UI screens; internal blockchain values remain in basis points (0–10000)
-- **i18n**: Full Russian and English support
-- **Accessibility**: WCAG 2.1, screen reader support, keyboard navigation
-- **PWA**: Installable, works offline
-
-## How to use
-
-1. Open `app/index.html` in a browser — directly from files or via any web server.
-2. Sign in with your VIZ account using a regular private key.
-3. Attune your character (choose a class) and begin your journey.
-
-### VIZ nodes
-
-The app connects to the VIZ blockchain through one of the available nodes:
-
-- `wss://solox.world/ws`
-- `https://viz.lexa.host/`
-- `https://api.viz.world/`
-- `https://node.viz.cx/`
-
-## For developers — add content and earn
-
-Viz Magic is built so any developer can extend the game world and earn rewards for their contributions via the VIZ blockchain.
-
-### How contributor economics work
-
-Every creature, zone, and game object has an `author` field — the VIZ account name of the developer who created it. When a player hunts a creature, the game automatically sends an `award` operation to the creature author's account. The author receives a share of VIZ emission proportional to the number of awards received, which converts into SHARES (network influence).
-
-Flow:
-1. Player spends mana (energy) — an `award` is sent to the creature's author
-2. The author accumulates rewards in their VIZ account
-3. SHARES grow → network influence grows → passive income via delegation
-
-### How to add your own creature
-
-Open `app/js/data/creatures.js` and add an object to `CREATURES`:
-
-```js
-my_creature: {
-    id: 'my_creature',
-    name: 'My Creature',
-    school: 'aqua',          // ignis / aqua / terra / ventus / umbra
-    author: 'your-viz-account',  // ← your VIZ account here
-    minLevel: 2,
-    maxLevel: 6,
-    baseHp: 20,
-    basePot: 10,
-    baseRes: 5,
-    baseSwf: 8,
-    baseXp: 40,
-    zone: 'commons_first_light',
-    lootTable: [
-        { itemType: 'water_crystal', name: 'Water Crystal', dropRate: 300 }
-    ]
-}
+```bash
+cd app && npx serve -p 8765
 ```
 
-The `author` field is your VIZ account name. Every time a player hunts your creature, the award goes to that account.
+## Core Mechanics
 
-### What else you can contribute
+### Mana
+Mana is your energy (0–100%). Every spell costs mana. Regenerates automatically — full recovery takes ~5 days. Displayed as a percentage (1.00% = 100 basis points on-chain).
 
-- **Creatures** (`app/js/data/creatures.js`) — new enemies with unique stats
-- **Spells** (`app/js/data/spells.js`) — new magic schools and effects
-- **Zones** (`app/js/data/regions.js`) — new game regions
-- **Quests** (`app/js/data/quests.js`) — quest chains and storylines
-- **Items and recipes** (`app/js/data/recipes.js`) — crafting and loot
+### HP & Recovery
+HP does not regenerate to full automatically. Passive regen slowly restores up to **30% of max HP** (+1 HP every 500 blocks, ~4 min). Full recovery:
+- Visit the **Hunt screen** (camp rest)
+- Use a **Health Scroll** (craftable or dropped by creatures)
 
-Submit a Pull Request — add your creatures with your `author` VIZ account and start earning from the first player who hunts them.
+### Hunting
+Choose a creature and a spell, then attack. Victory earns XP and loot. Defeat gives 25% XP. Loot is volatile — save it in a safe zone.
 
-## Tech stack
+### Armageddon
+Spend 100% mana for 100× normal XP. Requires an **Armageddon Stone** artifact.
+- Drop: Thornvine Lv5+ (0.5% chance)
+- Craft: Echo Shards ×3 + Shadow Shard ×3 + Fire Dust ×5 at level 10 (costs 5% mana)
 
-- Pure HTML / CSS / JavaScript — no frameworks, no build step
-- [viz-js-lib](https://github.com/nicholasgasior/viz-js-lib) — VIZ blockchain interaction
-- Service Worker — offline support and caching
-- Web App Manifest — PWA installability
+### Crafting
+Open the **Crafting tab** (🔨), pick a recipe, tap Craft. Materials are consumed. Quality depends on your INT stat and block entropy.
+
+### Marketplace
+Browse → buy listed items. Sell → list your items for Seals of the World. Trade → direct item transfer.
+
+### Leaderboard
+The **Rankings tab** (🏆) shows the top 100 mages by XP. Updates automatically as you hunt.
+
+### Classes
+| Class | Element | Role |
+|---|---|---|
+| Stonewarden | Terra | Tank |
+| Embercaster | Ignis | Burst DPS |
+| Moonrunner | Umbra | Evasion |
+| Bloomsage | Aqua | Healer |
+
+### SHARES & Magic Core
+Your VIZ stake (SHARES) adds a bonus to all stats: `floor(shares^0.3) / 5`. SHARES are never lost in battle.
+
+## Accessibility
+
+Viz Magic is built with blind and low-vision players in mind.
+
+### Battle Narrator
+Announces all combat events via screen reader (aria-live). Enable in **Settings → Battle Narrator**. Also plays short spatial audio tones to indicate positions (enemy / player). Compatible with TalkBack on Android.
+
+### Screen Reader Support
+- All interactive elements have aria-labels
+- Navigation uses `role="tablist"` / `role="tab"`
+- Leaderboard table uses `role="grid"` with `aria-current` on the current player row
+- Modals and toasts use live regions
+
+## Architecture
+
+```
+VIZ Blockchain (custom_sequence ops)
+        ↓
+BlockProcessor → StateEngine._processGameAction()
+        ↓
+worldState  (characters / inventories / guilds / leaderboard / …)
+        ↓
+IndexedDB checkpoint (CheckpointSystem)
+        ↓
+UI screens (hunt.js / leaderboard.js / crafting.js / …)
+```
+
+**Key rule:** all state mutations go through `state-engine.js`. Never mutate `worldState` directly from UI.
+
+## File Map
+
+| What | Where |
+|---|---|
+| Action types | `app/js/config.js` → `ACTION_TYPES` |
+| State engine | `app/js/engine/state-engine.js` |
+| Formulas | `app/js/engine/formulas.js` |
+| Item templates | `app/js/engine/items.js` |
+| Creature loot tables | `app/js/data/creatures.js` |
+| Recipes | `app/js/data/recipes.js` |
+| Battle Narrator | `app/js/ui/components/battle-narrator.js` |
+| Leaderboard screen | `app/js/ui/screens/leaderboard.js` |
+| Hunt screen | `app/js/ui/screens/hunt.js` |
+| Crafting screen | `app/js/ui/screens/crafting.js` |
+| i18n EN | `app/js/i18n/en.js` |
+| i18n RU | `app/js/i18n/ru.js` |
+
+## Development
+
+ES5 only (`var`, `function(){}`, no `let`/`const`/arrow functions). No build step — plain JS files loaded via `<script>` tags.
+
+Test account: `dream-world`
 
 ## License
 

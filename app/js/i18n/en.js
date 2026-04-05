@@ -811,6 +811,9 @@ var LangEN = {
     help_section_mana: 'Mana',
     help_mana_text: 'Mana is your energy (0–100%). Every spell costs mana. Full regeneration takes ~5 days. Shown as a percentage — 1.00% = 100 basis points on the blockchain.',
 
+    help_section_hp: 'HP & Recovery',
+    help_hp_text: 'HP is your health. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 500 blocks, ~4 min). Full recovery: visit the Hunt screen (camp rest) or use a Health Scroll (craftable or dropped by creatures).',
+
     help_section_hunt: 'Hunting',
     help_hunt_text: 'Choose a creature and a spell, then attack. Victory earns XP and loot. Defeat gives 25% XP. Loot is volatile — bank it in a safe zone to keep it.',
 
@@ -822,6 +825,12 @@ var LangEN = {
 
     help_section_marketplace: 'Marketplace',
     help_marketplace_text: 'Browse → buy listed items. Sell → list your items for Seals of the World. Trade → direct item transfer to another mage.',
+
+    help_section_leaderboard: 'Leaderboard',
+    help_leaderboard_text: 'The Rankings screen (trophy tab) shows the top 100 mages by XP. Your current rank is shown at the top. The table updates automatically as you hunt.',
+
+    help_section_narrator: 'Battle Narrator',
+    help_narrator_text: 'The Battle Narrator announces all combat events via your screen reader (aria-live). Enable it in Settings. It also plays short audio tones to indicate enemy and player positions. Designed for blind and low-vision players.',
 
     help_section_classes: 'Classes',
     help_classes_text: 'Stonewarden (Terra) — tank. Embercaster (Ignis) — burst DPS. Moonrunner (Umbra) — evasion. Bloomsage (Aqua) — healer. Each class has unique spells and stat growth.',
