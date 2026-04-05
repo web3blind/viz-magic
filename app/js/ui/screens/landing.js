@@ -8,10 +8,15 @@ var LandingScreen = (function() {
         var t = Helpers.t;
         var el = Helpers.$('screen-landing');
         if (!el) return;
+        var currentLang = Helpers.getCurrentLang ? Helpers.getCurrentLang() : 'ru';
 
         el.innerHTML =
             '<div class="landing">' +
                 '<header class="landing-hero" role="banner">' +
+                    '<div class="landing-lang-switch" role="group" aria-label="Language switcher">' +
+                        '<button class="btn btn-sm' + (currentLang === 'ru' ? ' btn-primary' : ' btn-secondary') + '" id="landing-lang-ru" aria-pressed="' + (currentLang === 'ru') + '" aria-label="Переключить язык на русский">RU</button>' +
+                        '<button class="btn btn-sm' + (currentLang === 'en' ? ' btn-primary' : ' btn-secondary') + '" id="landing-lang-en" aria-pressed="' + (currentLang === 'en') + '" aria-label="Switch language to English">EN</button>' +
+                    '</div>' +
                     '<h1 class="landing-title" aria-label="Viz Magic">' +
                         '<span class="title-glow">Viz Magic</span>' +
                     '</h1>' +
@@ -61,6 +66,18 @@ var LandingScreen = (function() {
             e.preventDefault();
             console.log('Login link clicked, navigating to login screen');
             Helpers.EventBus.emit('navigate', 'login');
+        });
+        var btnRu = Helpers.$('landing-lang-ru');
+        var btnEn = Helpers.$('landing-lang-en');
+        if (btnRu) btnRu.addEventListener('click', function() {
+            Helpers.setLang('ru');
+            SoundManager.play('tap');
+            render();
+        });
+        if (btnEn) btnEn.addEventListener('click', function() {
+            Helpers.setLang('en');
+            SoundManager.play('tap');
+            render();
         });
     }
 

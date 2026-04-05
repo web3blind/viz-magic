@@ -66,13 +66,31 @@ var Helpers = (function() {
     }
 
     /**
+     * Detect browser language on first launch.
+     * English browsers default to EN, all others to RU.
+     * User manual selection in localStorage always wins.
+     * @returns {string} 'ru' or 'en'
+     */
+    function detectBrowserLang() {
+        try {
+            var langs = navigator.languages && navigator.languages.length
+                ? navigator.languages
+                : [navigator.language || navigator.userLanguage || 'ru'];
+            for (var i = 0; i < langs.length; i++) {
+                var code = String(langs[i] || '').toLowerCase();
+                if (code.indexOf('en') === 0) return 'en';
+                if (code.indexOf('ru') === 0) return 'ru';
+            }
+        } catch (e) {}
+        return 'ru';
+    }
+
+    /**
      * Get current language strings
      * @returns {Object}
      */
     function lang() {
-        var saved = localStorage.getItem(VizMagicConfig.STORAGE_PREFIX + 'lang');
-        if (saved === 'en') return LangEN;
-        return LangRU; // Default to Russian
+        return getCurrentLang() === 'en' ? LangEN : LangRU;
     }
 
     /**
@@ -80,7 +98,11 @@ var Helpers = (function() {
      * @param {string} code - 'ru' or 'en'
      */
     function setLang(code) {
-        localStorage.setItem(VizMagicConfig.STORAGE_PREFIX + 'lang', code);
+        var normalized = code === 'en' ? 'en' : 'ru';
+        localStorage.setItem(VizMagicConfig.STORAGE_PREFIX + 'lang', normalized);
+        try {
+            document.documentElement.lang = normalized;
+        } catch (e) {}
     }
 
     /**
@@ -88,7 +110,16 @@ var Helpers = (function() {
      * @returns {string} 'ru' or 'en'
      */
     function getCurrentLang() {
-        return localStorage.getItem(VizMagicConfig.STORAGE_PREFIX + 'lang') || 'ru';
+        var key = VizMagicConfig.STORAGE_PREFIX + 'lang';
+        var saved = localStorage.getItem(key);
+        if (saved === 'en' || saved === 'ru') return saved;
+
+        var detected = detectBrowserLang();
+        localStorage.setItem(key, detected);
+        try {
+            document.documentElement.lang = detected;
+        } catch (e) {}
+        return detected;
     }
 
     /**
