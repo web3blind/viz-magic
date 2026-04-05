@@ -138,6 +138,35 @@ var StateEngine = (function() {
             events = events.concat(timeoutEvents);
         }
 
+        // Passive HP regeneration: +1 HP per HP_REGEN_RATE blocks, up to HP_REGEN_CAP_PCT% of maxHp
+        var hpRegenRate = cfg.HP_REGEN.HP_REGEN_RATE;
+        var hpRegenCapPct = cfg.HP_REGEN.HP_REGEN_CAP_PCT;
+        for (var regenAcct in worldState.characters) {
+            if (worldState.characters.hasOwnProperty(regenAcct)) {
+                var regenChar = worldState.characters[regenAcct];
+                // Skip fallen characters
+                if (regenChar.fallenUntilBlock && regenChar.fallenUntilBlock > blockNum) {
+                    continue;
+                }
+                var regenCap = Math.floor(regenChar.maxHp * hpRegenCapPct / 100);
+                // Skip characters already at or above regen cap
+                if (regenChar.hp >= regenCap) {
+                    continue;
+                }
+                // Initialize lastRegenBlock if missing
+                if (!regenChar.lastRegenBlock) {
+                    regenChar.lastRegenBlock = blockNum;
+                    continue;
+                }
+                var blocksSinceRegen = blockNum - regenChar.lastRegenBlock;
+                var hpToRegen = Math.floor(blocksSinceRegen / hpRegenRate);
+                if (hpToRegen > 0) {
+                    regenChar.hp = Math.min(regenChar.hp + hpToRegen, regenCap);
+                    regenChar.lastRegenBlock = blockNum;
+                }
+            }
+        }
+
         // Check guild war expiry
         if (typeof GuildSystem !== 'undefined' && worldState.guilds) {
             for (var gid in worldState.guilds) {

@@ -33,6 +33,12 @@ var VizMagicConfig = (function() {
         MIN_BLESS_COST: 1                    // Minimum mana for blessing (0.01%)
     };
 
+    /** HP passive regeneration constants */
+    var HP_REGEN = {
+        HP_REGEN_RATE: 500,      // blocks per +1 HP
+        HP_REGEN_CAP_PCT: 30     // max % of maxHp that passive regen can reach
+    };
+
     /** Block timing */
     var BLOCK = {
         TIME_SECONDS: 3,                     // 1 block = ~3 seconds (Aetheric Tick)
@@ -197,6 +203,7 @@ var VizMagicConfig = (function() {
         APP_VERSION: APP_VERSION,
         STORAGE_PREFIX: STORAGE_PREFIX,
         ENERGY: ENERGY,
+        HP_REGEN: HP_REGEN,
         BLOCK: BLOCK,
         CLASSES: CLASSES,
         SCHOOLS: SCHOOLS,
