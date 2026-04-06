@@ -92,7 +92,13 @@ var DailyLeaderboard = (function() {
 
                 var headBlock = dgp.head_block_number;
                 var targetStart = Math.max(1, headBlock - WINDOW_BLOCKS + 1);
+                var hasResumeBuild = !_snapshot.ready && _snapshot.buildInProgress && _snapshot.windowStartBlock === targetStart && _snapshot.windowEndBlock === headBlock;
                 var needsFullBuild = !_snapshot.ready || !_snapshot.windowEndBlock || !_snapshot.characters;
+
+                if (hasResumeBuild) {
+                    _resumeBuild(targetStart, headBlock, callback);
+                    return;
+                }
 
                 if (needsFullBuild) {
                     _buildWindow(targetStart, headBlock, callback);
@@ -114,6 +120,7 @@ var DailyLeaderboard = (function() {
         _setSnapshot({
             loading: true,
             ready: false,
+            buildInProgress: true,
             progressPct: 0,
             statusText: Helpers.t('leaderboard_loading_status', { percent: 0 }),
             windowStartBlock: startBlock,
@@ -125,19 +132,71 @@ var DailyLeaderboard = (function() {
         });
 
         DailyLeaderboardStorage.clearAll(function() {
+            _persistProgressMeta(startBlock, endBlock, startBlock - 1, 0, {}, {}, function() {
+                var ctx = {
+                    startBlock: startBlock,
+                    endBlock: endBlock,
+                    totalBlocks: Math.max(1, endBlock - startBlock + 1),
+                    players: {},
+                    characters: {},
+                    processedBlocks: 0
+                };
+
+                _scanRange(ctx, startBlock, endBlock, function(err) {
+                    _loading = false;
+                    if (err) {
+                        callback(err, _snapshot);
+                        return;
+                    }
+                    _finalizeSnapshot(ctx, startBlock, endBlock, callback);
+                });
+            });
+        });
+    }
+
+    function _resumeBuild(startBlock, endBlock, callback) {
+        _loading = true;
+        DailyLeaderboardStorage.getBlockContributionsInRange(startBlock, endBlock, function(err, blocks) {
+            if (err) {
+                _loading = false;
+                _buildWindow(startBlock, endBlock, callback);
+                return;
+            }
+
+            var resumedPlayers = _cloneObject(_snapshot.players || {});
+            var highestScanned = _snapshot.lastScannedBlock || (startBlock - 1);
+            if ((!_snapshot.players || !Object.keys(_snapshot.players).length) && blocks && blocks.length) {
+                resumedPlayers = {};
+                for (var i = 0; i < blocks.length; i++) {
+                    _reapplyBlockContribution(resumedPlayers, blocks[i]);
+                    if ((blocks[i].blockNum || 0) > highestScanned) highestScanned = blocks[i].blockNum || highestScanned;
+                }
+            }
+
+            var processedBlocks = Math.max(0, highestScanned - startBlock + 1);
             var ctx = {
                 startBlock: startBlock,
                 endBlock: endBlock,
                 totalBlocks: Math.max(1, endBlock - startBlock + 1),
-                players: {},
-                characters: {},
-                processedBlocks: 0
+                players: resumedPlayers,
+                characters: _cloneObject(_snapshot.characters || {}),
+                processedBlocks: processedBlocks
             };
 
-            _scanRange(ctx, startBlock, endBlock, function(err) {
+            _setSnapshot({
+                loading: true,
+                ready: false,
+                buildInProgress: true,
+                players: resumedPlayers,
+                characters: ctx.characters,
+                progressPct: Math.max(0, Math.min(100, Math.floor(processedBlocks * 100 / ctx.totalBlocks))),
+                statusText: Helpers.t('leaderboard_loading_status', { percent: Math.max(0, Math.min(100, Math.floor(processedBlocks * 100 / ctx.totalBlocks))) })
+            });
+
+            _scanRange(ctx, highestScanned + 1, endBlock, function(scanErr) {
                 _loading = false;
-                if (err) {
-                    callback(err, _snapshot);
+                if (scanErr) {
+                    callback(scanErr, _snapshot);
                     return;
                 }
                 _finalizeSnapshot(ctx, startBlock, endBlock, callback);
@@ -419,11 +478,27 @@ var DailyLeaderboard = (function() {
         }
     }
 
+    function _reapplyBlockContribution(players, blockContrib) {
+        if (!blockContrib || !blockContrib.players) return;
+        for (var account in blockContrib.players) {
+            if (!blockContrib.players.hasOwnProperty(account)) continue;
+            var entry = blockContrib.players[account];
+            if (!players[account]) {
+                players[account] = { account: account, name: (entry && entry.name) || account, xp24h: 0, hunts24h: 0, lastSeenBlock: blockContrib.blockNum || 0 };
+            }
+            players[account].name = (entry && entry.name) || players[account].name || account;
+            players[account].xp24h += (entry && entry.xp) || 0;
+            players[account].hunts24h += (entry && entry.hunts) || 0;
+            players[account].lastSeenBlock = blockContrib.blockNum || players[account].lastSeenBlock || 0;
+        }
+    }
+
     function _finalizeSnapshot(ctx, startBlock, endBlock, callback) {
         var rows = _buildRows(ctx.players || {});
         var meta = {
             ready: true,
             loading: false,
+            buildInProgress: false,
             progressPct: 100,
             statusText: '',
             windowStartBlock: startBlock,
@@ -467,10 +542,15 @@ var DailyLeaderboard = (function() {
         var pct = Math.max(0, Math.min(100, Math.floor(ctx.processedBlocks * 100 / ctx.totalBlocks)));
         _setSnapshot({
             loading: true,
+            buildInProgress: !_snapshot.ready,
             progressPct: pct,
             lastScannedBlock: currentBlock,
             statusText: Helpers.t('leaderboard_loading_status', { percent: pct })
         });
+
+        if (!_snapshot.ready && (ctx.processedBlocks % 25 === 0 || currentBlock >= ctx.endBlock)) {
+            _persistProgressMeta(ctx.startBlock, ctx.endBlock, currentBlock, pct, ctx.players, ctx.characters, function() {});
+        }
     }
 
     function _setSnapshot(patch) {
@@ -485,6 +565,7 @@ var DailyLeaderboard = (function() {
         var snapshot = _emptySnapshot();
         snapshot = _merge(snapshot, meta || {});
         snapshot.ready = !!snapshot.ready;
+        snapshot.buildInProgress = !!snapshot.buildInProgress && !snapshot.ready;
         snapshot.loading = false;
         snapshot.players = snapshot.players || {};
         snapshot.characters = snapshot.characters || {};
@@ -511,6 +592,26 @@ var DailyLeaderboard = (function() {
     function _cloneObject(input) {
         if (!input) return {};
         return JSON.parse(JSON.stringify(input));
+    }
+
+    function _persistProgressMeta(startBlock, endBlock, lastScannedBlock, progressPct, players, characters, callback) {
+        callback = callback || function() {};
+        DailyLeaderboardStorage.setMeta({
+            ready: false,
+            loading: false,
+            buildInProgress: true,
+            progressPct: progressPct || 0,
+            statusText: Helpers.t('leaderboard_loading_status', { percent: progressPct || 0 }),
+            windowStartBlock: startBlock,
+            windowEndBlock: endBlock,
+            lastScannedBlock: lastScannedBlock,
+            lastUpdatedAt: Date.now(),
+            players: players || {},
+            characters: characters || {},
+            rows: _buildRows(players || {})
+        }, function() {
+            callback();
+        });
     }
 
     return {
