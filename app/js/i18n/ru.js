@@ -494,6 +494,7 @@ var LangRU = {
     market_price_placeholder: 'Цена',
     market_list_item: 'Выставить',
     market_listed: 'Товар выставлен на базар!',
+    market_pending_listing: 'ожидает подтверждения',
     market_list_error: 'Не удалось выставить товар.',
     market_invalid_price: 'Укажите корректную цену.',
     market_login_required: 'Войдите в Мир, чтобы использовать базар.',

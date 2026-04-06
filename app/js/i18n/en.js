@@ -494,6 +494,7 @@ var LangEN = {
     market_price_placeholder: 'Price',
     market_list_item: 'List',
     market_listed: 'Item listed on the bazaar!',
+    market_pending_listing: 'pending confirmation',
     market_list_error: 'Failed to list item.',
     market_invalid_price: 'Enter a valid price.',
     market_login_required: 'Enter the World to use the bazaar.',

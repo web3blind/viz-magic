@@ -10,6 +10,7 @@ var MarketplaceScreen = (function() {
     var currentCategory = '';
     var searchQuery = '';
     var selectedItem = null;
+    var pendingListings = {};
 
     /**
      * Render the marketplace screen
@@ -99,7 +100,7 @@ var MarketplaceScreen = (function() {
         var filters = {};
         if (currentCategory) filters.category = currentCategory;
         if (searchQuery) filters.search = searchQuery;
-        var listings = MarketplaceEngine.getListings(filters);
+        var listings = _getDisplayListings(filters);
 
         html += '<div class="market-listings" role="list" aria-label="' + t('market_listings') + '">';
         if (listings.length === 0) {
@@ -178,7 +179,7 @@ var MarketplaceScreen = (function() {
         var sellableItems = [];
         for (var i = 0; i < inventory.length; i++) {
             var item = inventory[i];
-            if (!item.consumed && !item.equipped && !item.listed) {
+            if (!item.consumed && !item.equipped && !item.listed && !_isPendingItem(item.id)) {
                 sellableItems.push(item);
             }
         }
@@ -186,7 +187,7 @@ var MarketplaceScreen = (function() {
         html += '<h2>' + t('market_sell_title') + '</h2>';
 
         // Active listings
-        var myListings = MarketplaceEngine.getListings({ seller: user });
+        var myListings = _getDisplayListings({ seller: user });
         if (myListings.length > 0) {
             html += '<div class="market-my-listings">';
             html += '<h3>' + t('market_active_listings') + '</h3>';
@@ -194,9 +195,12 @@ var MarketplaceScreen = (function() {
                 var mListing = myListings[ml];
                 var mName = t('item_' + mListing.itemType) || mListing.itemType.replace(/_/g, ' ');
                 html += '<div class="market-my-listing">';
-                html += '<span>' + Helpers.escapeHtml(mName) + ' — ' + mListing.price + ' ' + t('market_seals') + '</span>';
-                html += '<button class="btn btn-sm btn-secondary market-cancel-btn" data-listing="' + mListing.ref + '">' +
-                        t('market_cancel_listing') + '</button>';
+                html += '<span>' + Helpers.escapeHtml(mName) + ' — ' + mListing.price + ' ' + t('market_seals') +
+                        (mListing.pending ? ' (' + t('market_pending_listing') + ')' : '') + '</span>';
+                if (!mListing.pending) {
+                    html += '<button class="btn btn-sm btn-secondary market-cancel-btn" data-listing="' + mListing.ref + '">' +
+                            t('market_cancel_listing') + '</button>';
+                }
                 html += '</div>';
             }
             html += '</div>';
@@ -249,7 +253,7 @@ var MarketplaceScreen = (function() {
             var inv = StateEngine.getInventory(user);
             for (var i = 0; i < inv.length; i++) {
                 var item = inv[i];
-                if (!item.consumed && !item.equipped && !item.listed) {
+                if (!item.consumed && !item.equipped && !item.listed && !_isPendingItem(item.id)) {
                     var name = t('item_' + item.type) || item.type.replace(/_/g, ' ');
                     html += '<option value="' + item.id + '">' + name + '</option>';
                 }
@@ -338,7 +342,7 @@ var MarketplaceScreen = (function() {
      */
     function _handleBuy(listingRef) {
         var t = Helpers.t;
-        var listings = MarketplaceEngine.getListings();
+        var listings = _getDisplayListings();
         var listing = null;
         for (var i = 0; i < listings.length; i++) {
             if (listings[i].ref === listingRef) {
@@ -415,16 +419,113 @@ var MarketplaceScreen = (function() {
         }
 
         SoundManager.play('tap');
-        MarketProtocol.broadcastList(itemId, price, 0, function(err) {
+        MarketProtocol.broadcastList(itemId, price, 0, function(err, result) {
             if (err) {
                 Toast.error(t('market_list_error'));
                 SoundManager.play('error');
             } else {
+                _addPendingListing(itemId, price, result);
                 Toast.success(t('market_listed'));
                 SoundManager.play('success');
                 render();
             }
         });
+    }
+
+    function _getDisplayListings(filters) {
+        var listings = MarketplaceEngine.getListings(filters || {});
+        _prunePendingListings(listings);
+
+        var merged = listings.slice();
+        for (var ref in pendingListings) {
+            if (!pendingListings.hasOwnProperty(ref)) continue;
+            var pending = pendingListings[ref];
+            if (!_matchesFilters(pending, filters || {})) continue;
+            merged.push(pending);
+        }
+
+        merged.sort(function(a, b) {
+            return a.price - b.price;
+        });
+        return merged;
+    }
+
+    function _matchesFilters(listing, filters) {
+        filters = filters || {};
+        if (filters.category) {
+            var template = ItemSystem.getItemTemplate(listing.itemType);
+            if (!template || template.category !== filters.category) return false;
+        }
+        if (filters.seller && listing.seller !== filters.seller) return false;
+        if (filters.maxPrice && listing.price > filters.maxPrice) return false;
+        if (filters.search) {
+            var searchLower = filters.search.toLowerCase();
+            var typeLower = listing.itemType.toLowerCase().replace(/_/g, ' ');
+            if (typeLower.indexOf(searchLower) === -1) return false;
+        }
+        return true;
+    }
+
+    function _isPendingItem(itemId) {
+        for (var ref in pendingListings) {
+            if (pendingListings.hasOwnProperty(ref) && pendingListings[ref].itemRef === itemId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function _addPendingListing(itemId, price, result) {
+        var user = typeof VizAccount !== 'undefined' ? VizAccount.getCurrentUser() : '';
+        var inventory = StateEngine.getInventory(user) || [];
+        var item = null;
+        for (var i = 0; i < inventory.length; i++) {
+            if (inventory[i].id === itemId) {
+                item = inventory[i];
+                break;
+            }
+        }
+        if (!item || !user) return;
+
+        var blockNum = (result && result.block_num) || 0;
+        var ref = (blockNum ? String(blockNum) : 'pending') + '_' + item.id;
+        pendingListings[ref] = {
+            ref: ref,
+            itemRef: item.id,
+            itemType: item.type,
+            itemRarity: item.rarity,
+            itemStats: item.stats ? _copyStats(item.stats) : {},
+            seller: user,
+            price: price | 0,
+            listedBlock: blockNum || 0,
+            expiresBlock: 0,
+            state: 'active',
+            buyer: null,
+            soldBlock: 0,
+            pending: true
+        };
+    }
+
+    function _prunePendingListings(actualListings) {
+        var actualByItem = {};
+        for (var i = 0; i < actualListings.length; i++) {
+            actualByItem[actualListings[i].itemRef] = true;
+        }
+        for (var ref in pendingListings) {
+            if (!pendingListings.hasOwnProperty(ref)) continue;
+            if (actualByItem[pendingListings[ref].itemRef]) {
+                delete pendingListings[ref];
+            }
+        }
+    }
+
+    function _copyStats(stats) {
+        var copy = {};
+        if (!stats) return copy;
+        for (var key in stats) {
+            if (stats.hasOwnProperty(key)) copy[key] = stats[key];
+        }
+        return copy;
     }
 
     /**

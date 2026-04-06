@@ -10,7 +10,12 @@ var InventoryScreen = (function() {
         if (!el) return;
 
         var user = VizAccount.getCurrentUser();
-        var items = StateEngine.getInventory(user) || [];
+        var allItems = StateEngine.getInventory(user) || [];
+        var items = [];
+        for (var ai = 0; ai < allItems.length; ai++) {
+            if (allItems[ai].consumed || allItems[ai].listed) continue;
+            items.push(allItems[ai]);
+        }
 
         var html = '<div class="inventory-screen"><h1>' + t('inv_title') + '</h1>';
 

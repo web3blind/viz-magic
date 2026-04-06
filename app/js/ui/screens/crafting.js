@@ -339,8 +339,10 @@ var CraftingScreen = (function() {
             for (var co = 0; co < consumables.length; co++) {
                 var conItem = consumables[co];
                 var conName = t('item_' + conItem.type) || conItem.type.replace(/_/g, ' ');
+                var conRarity = ItemSystem.getRarityInfo(conItem.rarity);
+                var conRarityName = t('rarity_' + conRarity.name);
                 html += '<div class="consumable-item" role="listitem">';
-                html += '<span>' + Helpers.escapeHtml(conName) + '</span>';
+                html += '<span>' + conRarity.symbol + ' ' + Helpers.escapeHtml(conName) + ' — ' + Helpers.escapeHtml(conRarityName) + ' — #' + Helpers.escapeHtml(conItem.id) + '</span>';
                 html += '<button class="btn btn-sm btn-primary consume-btn" data-item="' + conItem.id + '">' +
                         t('inv_use') + '</button>';
                 html += '</div>';
