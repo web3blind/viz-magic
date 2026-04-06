@@ -12,7 +12,7 @@ var GameSpells = (function() {
             name: 'Stone Wall',
             school: 'terra',
             className: 'stonewarden',
-            manaCost: 100,       // 1% energy
+            manaCost: 10,        // 0.1% energy
             levelReq: 1,
             multiplier: 800,     // x1000: 0.8x damage, but defensive
             intent: 'guard',

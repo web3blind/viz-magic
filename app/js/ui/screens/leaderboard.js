@@ -7,16 +7,36 @@
 var LeaderboardScreen = (function() {
     'use strict';
 
+    var _unsubscribe = null;
+
     function render() {
+        var el = Helpers.$('screen-leaderboard');
+        if (!el) return;
+
+        if (_unsubscribe) {
+            _unsubscribe();
+            _unsubscribe = null;
+        }
+
+        _renderFromSnapshot(DailyLeaderboard.getSnapshot());
+        _unsubscribe = DailyLeaderboard.subscribe(function(snapshot) {
+            if (App.getCurrentScreen && App.getCurrentScreen() !== 'leaderboard') return;
+            _renderFromSnapshot(snapshot);
+        });
+
+        DailyLeaderboard.ensureLoaded(function() {});
+    }
+
+    function _renderFromSnapshot(snapshot) {
         var t = Helpers.t;
         var el = Helpers.$('screen-leaderboard');
         if (!el) return;
 
-        var rows = typeof StateEngine !== 'undefined' ? StateEngine.getLeaderboard() : [];
+        snapshot = snapshot || {};
+        var rows = snapshot.rows || [];
         var currentUser = typeof VizAccount !== 'undefined' ? VizAccount.getCurrentUser() : null;
-
-        // Find current player's rank (1-based)
         var myRank = -1;
+
         for (var i = 0; i < rows.length; i++) {
             if (rows[i].account === currentUser) {
                 myRank = i + 1;
@@ -24,7 +44,6 @@ var LeaderboardScreen = (function() {
             }
         }
 
-        // Announce rank via BattleNarrator for screen reader users
         if (typeof BattleNarrator !== 'undefined' && BattleNarrator.isEnabled()) {
             if (myRank > 0) {
                 BattleNarrator.announce(
@@ -36,25 +55,36 @@ var LeaderboardScreen = (function() {
             }
         }
 
-        // Your rank banner
         var rankBanner = '';
         if (myRank > 0) {
             rankBanner = '<p class="leaderboard-your-rank" aria-live="polite">' +
                 t('leaderboard_your_rank', { rank: myRank }) + '</p>';
-        } else if (currentUser) {
+        } else if (currentUser && rows.length > 0) {
             rankBanner = '<p class="leaderboard-your-rank leaderboard-not-ranked" aria-live="polite">' +
                 t('leaderboard_not_ranked') + '</p>';
         }
 
-        // Empty state
+        var statusHtml = '';
+        if (snapshot.loading) {
+            statusHtml = '<div class="leaderboard-empty" role="status" aria-live="polite">' +
+                Helpers.escapeHtml(snapshot.statusText || t('leaderboard_loading_status', { percent: snapshot.progressPct || 0 })) +
+                '</div>';
+        } else if (snapshot.lastUpdatedAt) {
+            statusHtml = '<p class="leaderboard-your-rank" aria-live="polite">' +
+                t('leaderboard_window_label', { blocks: DailyLeaderboard.WINDOW_BLOCKS }) +
+                '</p>';
+        }
+
         if (!rows.length) {
             el.innerHTML =
                 '<div class="screen-header"><h2>' + t('leaderboard_title') + '</h2></div>' +
-                '<div class="leaderboard-empty" role="status">' + t('leaderboard_empty') + '</div>';
+                statusHtml +
+                '<div class="leaderboard-empty" role="status">' +
+                    (snapshot.loading ? '' : t('leaderboard_empty')) +
+                '</div>';
             return;
         }
 
-        // Build table rows
         var tableRows = '';
         for (var j = 0; j < rows.length; j++) {
             var row = rows[j];
@@ -76,8 +106,8 @@ var LeaderboardScreen = (function() {
                         '<span class="leaderboard-name">' + Helpers.escapeHtml(row.name || row.account) + '</span>' +
                         youBadge +
                     '</td>' +
-                    '<td class="leaderboard-cell-level" aria-label="' + t('leaderboard_level') + ' ' + row.level + '">' +
-                        row.level +
+                    '<td class="leaderboard-cell-level" aria-label="' + t('leaderboard_window_col') + '">' +
+                        '24h' +
                     '</td>' +
                     '<td class="leaderboard-cell-xp" aria-label="' + t('leaderboard_xp') + ' ' + row.xp + '">' +
                         _formatNumber(row.xp) +
@@ -93,13 +123,14 @@ var LeaderboardScreen = (function() {
                 '<h2 id="leaderboard-heading">' + t('leaderboard_title') + '</h2>' +
             '</div>' +
             rankBanner +
+            statusHtml +
             '<div class="leaderboard-table-wrap">' +
                 '<table class="leaderboard-table" role="grid" aria-labelledby="leaderboard-heading">' +
                     '<thead>' +
                         '<tr>' +
                             '<th scope="col" class="leaderboard-cell-rank">' + t('leaderboard_rank') + '</th>' +
                             '<th scope="col" class="leaderboard-cell-player">' + t('leaderboard_player') + '</th>' +
-                            '<th scope="col" class="leaderboard-cell-level">' + t('leaderboard_level') + '</th>' +
+                            '<th scope="col" class="leaderboard-cell-level">' + t('leaderboard_window_col') + '</th>' +
                             '<th scope="col" class="leaderboard-cell-xp">' + t('leaderboard_xp') + '</th>' +
                             '<th scope="col" class="leaderboard-cell-hunts">' + t('leaderboard_hunts') + '</th>' +
                         '</tr>' +
@@ -109,9 +140,6 @@ var LeaderboardScreen = (function() {
             '</div>';
     }
 
-    /**
-     * Format large numbers with spaces: 1234567 → "1 234 567"
-     */
     function _formatNumber(n) {
         return String(n || 0).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
     }
