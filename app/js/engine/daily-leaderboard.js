@@ -7,8 +7,8 @@ var DailyLeaderboard = (function() {
     'use strict';
 
     var WINDOW_BLOCKS = 28800;
-    var BATCH_SIZE = 20;
-    var YIELD_MS = 20;
+    var BATCH_SIZE = 50;
+    var YIELD_MS = 5;
     var _initialized = false;
     var _loading = false;
     var _subscribers = [];
@@ -131,7 +131,6 @@ var DailyLeaderboard = (function() {
                 totalBlocks: Math.max(1, endBlock - startBlock + 1),
                 players: {},
                 characters: {},
-                characterFetchCache: {},
                 processedBlocks: 0
             };
 
@@ -160,7 +159,6 @@ var DailyLeaderboard = (function() {
             totalBlocks: Math.max(1, headBlock - _snapshot.windowEndBlock),
             players: _cloneObject(_snapshot.players || {}),
             characters: _cloneObject(_snapshot.characters || {}),
-            characterFetchCache: {},
             processedBlocks: 0
         };
 
@@ -258,101 +256,105 @@ var DailyLeaderboard = (function() {
             blockNum: processed.blockNum,
             players: {}
         };
-        var index = 0;
 
-        function nextAction() {
-            if (index >= vmActions.length) {
-                DailyLeaderboardStorage.putBlockContribution(blockContrib, function() {
-                    callback(null);
-                });
-                return;
+        _primeCharactersForActions(ctx, vmActions, function() {
+            for (var i = 0; i < vmActions.length; i++) {
+                _applyVmAction(ctx, processed, vmActions[i], blockContrib);
             }
 
-            var vmAction = vmActions[index++];
-            _applyVmAction(ctx, processed, vmAction, blockContrib, nextAction);
-        }
-
-        nextAction();
-    }
-
-    function _applyVmAction(ctx, processed, vmAction, blockContrib, callback) {
-        var sender = vmAction.sender;
-        var action = vmAction.action;
-
-        _ensureCharacter(ctx, sender, action, function() {
-            if (!action) {
-                callback();
-                return;
-            }
-
-            if (action.type === VizMagicConfig.ACTION_TYPES.CHAR_ATTUNE) {
-                _handleCharAttune(ctx, sender, action.data || {});
-                callback();
-                return;
-            }
-
-            if (action.type === VizMagicConfig.ACTION_TYPES.HUNT) {
-                _handleHunt(ctx, sender, action.data || {}, processed, blockContrib);
-                callback();
-                return;
-            }
-
-            if (action.type === VizMagicConfig.ACTION_TYPES.HUNT_ARMAGEDDON) {
-                _handleArmageddon(ctx, sender, action.data || {}, processed, blockContrib);
-                callback();
-                return;
-            }
-
-            callback();
+            DailyLeaderboardStorage.putBlockContribution(blockContrib, function() {
+                callback(null);
+            });
         });
     }
 
-    function _ensureCharacter(ctx, account, action, callback) {
+    function _applyVmAction(ctx, processed, vmAction, blockContrib) {
+        var sender = vmAction.sender;
+        var action = vmAction.action;
+
+        if (!action) return;
+
+        if (action.type === VizMagicConfig.ACTION_TYPES.CHAR_ATTUNE) {
+            _handleCharAttune(ctx, sender, action.data || {});
+            return;
+        }
+
+        if (action.type === VizMagicConfig.ACTION_TYPES.HUNT) {
+            _handleHunt(ctx, sender, action.data || {}, processed, blockContrib);
+            return;
+        }
+
+        if (action.type === VizMagicConfig.ACTION_TYPES.HUNT_ARMAGEDDON) {
+            _handleArmageddon(ctx, sender, action.data || {}, processed, blockContrib);
+        }
+    }
+
+    function _primeCharactersForActions(ctx, vmActions, callback) {
         callback = callback || function() {};
-        if (!account) {
-            callback();
-            return;
+
+        var accountsToFetch = [];
+        var seen = {};
+
+        for (var i = 0; i < vmActions.length; i++) {
+            var sender = vmActions[i].sender;
+            var action = vmActions[i].action;
+            if (!sender || ctx.characters[sender] || seen[sender]) continue;
+
+            if (action && action.type === VizMagicConfig.ACTION_TYPES.CHAR_ATTUNE && action.data && action.data.class) {
+                _handleCharAttune(ctx, sender, action.data);
+                continue;
+            }
+
+            seen[sender] = true;
+            accountsToFetch.push(sender);
         }
-        if (ctx.characters[account]) {
+
+        if (!accountsToFetch.length) {
             callback();
             return;
         }
 
-        if (action && action.type === VizMagicConfig.ACTION_TYPES.CHAR_ATTUNE && action.data && action.data.class) {
-            _handleCharAttune(ctx, account, action.data);
-            callback();
-            return;
-        }
-
-        if (ctx.characterFetchCache[account] === 'pending') {
-            setTimeout(function() { _ensureCharacter(ctx, account, action, callback); }, 25);
-            return;
-        }
-
-        ctx.characterFetchCache[account] = 'pending';
-        VizAccount.getAccount(account, function(err, accountData) {
-            var character = null;
-            if (!err && accountData) {
-                var grimoire = VizAccount.parseGrimoire(accountData);
-                if (grimoire && grimoire.class) {
-                    character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class);
-                    if (character) {
-                        character.level = grimoire.level || character.level;
-                        character.xp = grimoire.xp || 0;
-                        character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
-                        character.maxHp = character.hp;
+        viz.api.getAccounts(accountsToFetch, function(err, response) {
+            var byName = {};
+            var i;
+            if (!err && response && response.length) {
+                for (i = 0; i < response.length; i++) {
+                    if (response[i] && response[i].name) {
+                        byName[response[i].name] = response[i];
                     }
                 }
             }
 
-            if (!character) {
-                character = CharacterSystem.createCharacter(account, account, 'embercaster');
+            for (i = 0; i < accountsToFetch.length; i++) {
+                _hydrateCharacter(ctx, accountsToFetch[i], byName[accountsToFetch[i]] || null);
             }
 
-            ctx.characters[account] = character;
-            ctx.characterFetchCache[account] = 'done';
             callback();
         });
+    }
+
+    function _hydrateCharacter(ctx, account, accountData) {
+        if (!account || ctx.characters[account]) return;
+
+        var character = null;
+        if (accountData) {
+            var grimoire = VizAccount.parseGrimoire(accountData);
+            if (grimoire && grimoire.class) {
+                character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class);
+                if (character) {
+                    character.level = grimoire.level || character.level;
+                    character.xp = grimoire.xp || 0;
+                    character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
+                    character.maxHp = character.hp;
+                }
+            }
+        }
+
+        if (!character) {
+            character = CharacterSystem.createCharacter(account, account, 'embercaster');
+        }
+
+        ctx.characters[account] = character;
     }
 
     function _handleCharAttune(ctx, account, data) {
