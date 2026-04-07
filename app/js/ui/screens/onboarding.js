@@ -48,6 +48,7 @@ var OnboardingScreen = (function() {
         }
 
         html += '</div>' +
+            _renderPathPortrait(t) +
             '<div class="onboarding-buttons">' +
                 '<button class="btn btn-secondary" id="btn-class-back">' + t('onboarding_back') + '</button>' +
                 '<button class="btn btn-primary" id="btn-class-next" ' + (selectedClass ? '' : 'disabled') + '>' + t('onboarding_next') + '</button>' +
@@ -79,6 +80,20 @@ var OnboardingScreen = (function() {
             SoundManager.play('transition');
             _createCharacterAndFinish();
         });
+    }
+
+    function _renderPathPortrait(t) {
+        if (!selectedClass) {
+            return '<section class="class-portrait-card" aria-live="polite">' +
+                '<h2>' + t('onboarding_path_portrait_title') + '</h2>' +
+                '<p class="onboarding-text">' + t('onboarding_path_portrait_empty') + '</p>' +
+            '</section>';
+        }
+
+        return '<section class="class-portrait-card" aria-live="polite">' +
+            '<h2>' + t('onboarding_path_portrait_title') + ': ' + t('class_' + selectedClass) + '</h2>' +
+            '<p class="onboarding-text">' + t('class_' + selectedClass + '_portrait') + '</p>' +
+        '</section>';
     }
 
     function _createCharacterAndFinish() {
