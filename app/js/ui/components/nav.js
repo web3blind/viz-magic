@@ -14,6 +14,7 @@ var NavComponent = (function() {
         var tabs = [
             { id: 'home',        icon: '\uD83C\uDFE0', label: t('nav_home') },
             { id: 'hunt',        icon: '\u2694\uFE0F',  label: t('nav_hunt') },
+            { id: 'map',         icon: '\uD83D\uDDFA\uFE0F', label: t('nav_map') },
             { id: 'guild',       icon: '\uD83D\uDEE1\uFE0F', label: t('nav_guild') },
             { id: 'marketplace', icon: '\uD83C\uDFEA', label: t('nav_bazaar') },
             { id: 'crafting',    icon: '\uD83D\uDD28', label: t('nav_crafting') },

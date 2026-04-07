@@ -53,6 +53,7 @@ var HomeScreen = (function() {
                     '<div class="action-grid">' +
                         _tile('hunt', '\u2694\uFE0F', t('home_quick_hunt')) +
                         _tile('quests', '\uD83D\uDCDC', t('nav_quests')) +
+                        _tile('map', '\uD83D\uDDFA\uFE0F', t('nav_map')) +
                         _tile('inventory', '\uD83C\uDF92', t('home_bag')) +
                         _tile('chronicle', '\uD83D\uDCDD', t('home_chronicle')) +
                         _tile('character', '\uD83E\uDDD9', t('nav_character')) +
