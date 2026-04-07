@@ -50,7 +50,7 @@ var GameSpells = (function() {
             name: 'Firebolt',
             school: 'ignis',
             className: 'embercaster',
-            manaCost: 100,
+            manaCost: 10,
             levelReq: 1,
             multiplier: 1200,    // 1.2x
             intent: 'strike',
@@ -88,7 +88,7 @@ var GameSpells = (function() {
             name: 'Shadow Step',
             school: 'umbra',
             className: 'moonrunner',
-            manaCost: 100,
+            manaCost: 10,
             levelReq: 1,
             multiplier: 1000,    // 1.0x + 20% crit
             intent: 'weave',
@@ -126,7 +126,7 @@ var GameSpells = (function() {
             name: 'Binding Vine',
             school: 'aqua',
             className: 'bloomsage',
-            manaCost: 100,
+            manaCost: 10,
             levelReq: 1,
             multiplier: 800,     // 0.8x damage, but debuffs
             intent: 'weave',
