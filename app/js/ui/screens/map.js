@@ -7,6 +7,7 @@ var MapScreen = (function() {
     'use strict';
 
     var t = Helpers.t;
+    var pendingTravel = null;
 
     /** Region emoji icons */
     var REGION_ICONS = {
@@ -29,7 +30,13 @@ var MapScreen = (function() {
         var user = VizAccount.getCurrentUser();
         var state = StateEngine.getState();
         var character = state.characters ? state.characters[user] : null;
-        var currentZone = character ? character.currentZone : 'commons_first_light';
+        var confirmedZone = character ? character.currentZone : 'commons_first_light';
+        if (pendingTravel && pendingTravel.account === user && pendingTravel.to === confirmedZone) {
+            pendingTravel = null;
+        }
+        var currentZone = (pendingTravel && pendingTravel.account === user)
+            ? pendingTravel.to
+            : confirmedZone;
         var myGuild = null;
         if (user && state.guilds) {
             myGuild = GuildSystem.findGuildByMember(state.guilds, user);
@@ -140,6 +147,8 @@ var MapScreen = (function() {
                 html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + '">';
                 html += '\uD83D\uDEB6 ' + t('map_travel') + ' (' + t('map_travel_cost') + ')';
                 html += '</button>';
+            } else if (pendingTravel && pendingTravel.account === user && regionId === pendingTravel.to) {
+                html += '<div class="region-benefits">⏳ ' + t('loading') + '</div>';
             }
 
             html += '</section>';
@@ -194,6 +203,7 @@ var MapScreen = (function() {
             if (err) {
                 Toast.error(t('error_network'));
             } else {
+                pendingTravel = { account: user, from: character ? character.currentZone : '', to: regionId, at: Date.now() };
                 Toast.success(t('map_traveled') + ' ' + region.name);
                 SoundManager.play('transition');
                 render();
