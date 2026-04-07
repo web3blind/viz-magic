@@ -143,6 +143,9 @@ var LangEN = {
     // Hunt
     hunt_title: 'Hunt',
     hunt_choose_creature: 'Choose your prey',
+    hunt_no_creatures_here: 'There are currently no huntable creatures in this location.',
+    hunt_no_creatures_hint: 'Open the map and return to The Commons of First Light, or wait until creatures appear in this region.',
+    hunt_return_to_commons: 'Return to First Light',
     hunt_choose_spell: 'Choose a spell',
     hunt_attack: 'Attack',
     hunt_victory: 'Victory!',

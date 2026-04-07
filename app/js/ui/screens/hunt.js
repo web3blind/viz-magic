@@ -33,19 +33,30 @@ var HuntScreen = (function() {
 
         var html = '<div class="hunt-screen">' +
             '<h1>' + t('hunt_title') + '</h1>' +
-            '<h2>' + t('hunt_choose_creature') + '</h2>' +
-            '<div class="creature-list" role="radiogroup" aria-label="' + t('hunt_choose_creature') + '">';
+            '<h2>' + t('hunt_choose_creature') + '</h2>';
 
-        for (var i = 0; i < creatures.length; i++) {
-            var c = creatures[i];
-            html += '<button class="creature-card" data-id="' + c.id + '" role="radio" aria-checked="false" ' +
-                'aria-label="' + c.name + '. Level ' + c.minLevel + ' to ' + c.maxLevel + '">' +
-                '<span class="creature-name">' + c.name + '</span>' +
-                '<span class="creature-level">Lv ' + c.minLevel + '-' + c.maxLevel + '</span>' +
-                '</button>';
+        if (!creatures.length) {
+            html += '<div class="creature-list" role="status" aria-live="polite">' +
+                '<p class="empty-state">' + t('hunt_no_creatures_here') + '</p>' +
+                '<p class="quest-desc">' + t('hunt_no_creatures_hint') + '</p>' +
+                '<button class="btn btn-secondary" id="btn-return-commons">' + t('hunt_return_to_commons') + '</button>' +
+            '</div>';
+        } else {
+            html += '<div class="creature-list" role="radiogroup" aria-label="' + t('hunt_choose_creature') + '">';
+
+            for (var i = 0; i < creatures.length; i++) {
+                var c = creatures[i];
+                html += '<button class="creature-card" data-id="' + c.id + '" role="radio" aria-checked="false" ' +
+                    'aria-label="' + c.name + '. Level ' + c.minLevel + ' to ' + c.maxLevel + '">' +
+                    '<span class="creature-name">' + c.name + '</span>' +
+                    '<span class="creature-level">Lv ' + c.minLevel + '-' + c.maxLevel + '</span>' +
+                    '</button>';
+            }
+
+            html += '</div>';
         }
 
-        html += '</div><h2>' + t('hunt_choose_spell') + '</h2>' +
+        html += '<h2>' + t('hunt_choose_spell') + '</h2>' +
             '<div class="spell-grid" role="radiogroup" aria-label="' + t('hunt_choose_spell') + '">';
 
         for (var j = 0; j < spells.length; j++) {
@@ -133,6 +144,13 @@ var HuntScreen = (function() {
         }
 
         Helpers.$('btn-attack').addEventListener('click', _doHunt);
+
+        var returnBtn = Helpers.$('btn-return-commons');
+        if (returnBtn) {
+            returnBtn.addEventListener('click', function() {
+                Helpers.EventBus.emit('navigate', 'map');
+            });
+        }
 
         // Armageddon confirm checkbox and launch button
         var armaCb = el.querySelector('#armageddon-confirm-cb');

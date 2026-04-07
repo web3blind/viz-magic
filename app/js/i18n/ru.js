@@ -143,6 +143,9 @@ var LangRU = {
     // Hunt
     hunt_title: 'Охота',
     hunt_choose_creature: 'Выбери добычу',
+    hunt_no_creatures_here: 'В этой локации сейчас нет доступной добычи для охоты.',
+    hunt_no_creatures_hint: 'Откройте карту и вернитесь в The Commons of First Light или дождитесь появления существ в этом регионе.',
+    hunt_return_to_commons: 'Вернуться в First Light',
     hunt_choose_spell: 'Выбери заклинание',
     hunt_attack: 'Атаковать',
     hunt_victory: 'Победа!',

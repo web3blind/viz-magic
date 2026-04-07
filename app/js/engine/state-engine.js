@@ -368,7 +368,9 @@ var StateEngine = (function() {
 
         worldState.characters[sender] = character;
         worldState.inventories[sender] = [];
-        worldState.quests[sender] = worldState.quests[sender] || _createDefaultQuestState();
+        worldState.quests[sender] = worldState.quests[sender] || (typeof QuestSystem !== 'undefined'
+            ? QuestSystem.createPlayerQuestState()
+            : { active: [], completed: [], dailyProphecyDay: 0 });
 
         // Give starter equipment based on class
         var starterItems = _getStarterItems(data.class, sender, blockNum);
