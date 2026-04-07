@@ -34,9 +34,7 @@ var MapScreen = (function() {
         if (pendingTravel && pendingTravel.account === user && pendingTravel.to === confirmedZone) {
             pendingTravel = null;
         }
-        var currentZone = (pendingTravel && pendingTravel.account === user)
-            ? pendingTravel.to
-            : confirmedZone;
+        var currentZone = confirmedZone;
         var myGuild = null;
         if (user && state.guilds) {
             myGuild = GuildSystem.findGuildByMember(state.guilds, user);
@@ -53,6 +51,11 @@ var MapScreen = (function() {
             var curRegion = GameRegions.getRegion(currentZone);
             var curName = curRegion ? curRegion.name : currentZone;
             html += '<p class="map-current-location">' + t('map_current') + ': <strong>' + curName + '</strong></p>';
+            if (pendingTravel && pendingTravel.account === user) {
+                var pendingRegion = GameRegions.getRegion(pendingTravel.to);
+                var pendingName = pendingRegion ? pendingRegion.name : pendingTravel.to;
+                html += '<p class="map-siege-alert" role="status">⏳ ' + t('map_pending_travel_to') + ' <strong>' + pendingName + '</strong></p>';
+            }
         }
 
         // Active sieges summary
@@ -148,7 +151,7 @@ var MapScreen = (function() {
                 html += '\uD83D\uDEB6 ' + t('map_travel') + ' (' + t('map_travel_cost') + ')';
                 html += '</button>';
             } else if (pendingTravel && pendingTravel.account === user && regionId === pendingTravel.to) {
-                html += '<div class="region-benefits">⏳ ' + t('loading') + '</div>';
+                html += '<div class="region-benefits">⏳ ' + t('map_pending_travel_short') + '</div>';
             }
 
             html += '</section>';

@@ -447,6 +447,8 @@ var LangRU = {
     map_tax: 'Налог',
     map_travel: 'Путешествовать',
     map_travel_to: 'Путешествовать в',
+    map_pending_travel_to: 'Переход ожидает подтверждения в',
+    map_pending_travel_short: 'Переход ожидает подтверждения',
     map_travel_cost: '1 Мана',
     map_traveled: 'Вы прибыли в',
     map_level_too_low: 'Ваш уровень слишком низок для этого региона.',

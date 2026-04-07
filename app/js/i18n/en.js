@@ -447,6 +447,8 @@ var LangEN = {
     map_tax: 'Tax',
     map_travel: 'Travel',
     map_travel_to: 'Travel to',
+    map_pending_travel_to: 'Travel pending confirmation to',
+    map_pending_travel_short: 'Travel pending confirmation',
     map_travel_cost: '1 Mana',
     map_traveled: 'You arrived at',
     map_level_too_low: 'Your level is too low for this region.',
