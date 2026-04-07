@@ -27,6 +27,8 @@ var LangEN = {
     login_button: 'Enter the Realm',
     login_connecting: 'Connecting to the Realm...',
     login_back: '← Back to main page',
+    login_register_hint: 'If you do not have a VIZ account yet, register at start.viz.world',
+    onboarding_existing_account_notice: 'VIZ account found: {account}. No character is awakened yet — choose your path of magic.',
     error_empty_account: 'Enter your mage name.',
     error_no_mage_name: 'Enter your mage name.',
     error_empty_key: 'Enter your Magic Word.',

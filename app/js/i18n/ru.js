@@ -27,6 +27,8 @@ var LangRU = {
     login_button: 'Войти в Мир',
     login_connecting: 'Связь с Миром устанавливается...',
     login_back: '← Вернуться на главную',
+    login_register_hint: 'Если аккаунта VIZ ещё нет, зарегистрируйтесь на start.viz.world',
+    onboarding_existing_account_notice: 'Аккаунт VIZ найден: {account}. Персонаж ещё не пробуждён — выберите путь магии.',
     error_empty_account: 'Введи имя мага.',
     error_no_mage_name: 'Введи имя мага.',
     error_empty_key: 'Введи Магическое Слово.',

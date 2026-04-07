@@ -35,6 +35,7 @@ var LoginScreen = (function() {
                         t('login_button') +
                     '</button>' +
                 '</form>' +
+                '<p class="login-subtitle">' + t('login_register_hint') + ': <a href="https://start.viz.world" target="_blank" rel="noopener noreferrer">start.viz.world</a></p>' +
                 '<p class="login-back">' +
                     '<a href="#" id="btn-login-back">' + t('login_back') + '</a>' +
                 '</p>' +
@@ -97,40 +98,34 @@ var LoginScreen = (function() {
             // Check if character exists (has Grimoire)
             var grimoire = VizAccount.parseGrimoire(accountData);
             if (grimoire && grimoire.class) {
-                // Restore character in StateEngine from grimoire (checkpoint has priority)
-                var state = StateEngine.getState();
-                if (!state.characters[account]) {
-                    var character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class);
-                    if (character) {
-                        // Restore level/xp from Grimoire cache
-                        if (grimoire.level && grimoire.level > 1) {
-                            character.level = grimoire.level;
-                            character.xp = grimoire.xp || 0;
-                            character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
-                            character.maxHp = character.hp;
-                        }
-
-                        // Sync Magic Core from on-chain SHARES with heavy compression.
-                        // This keeps SHARES meaningful but prevents whales from becoming unbeatable.
-                        var effectiveShares = VizAccount.getEffectiveShares(accountData);
-                        var cappedShares = Math.min(effectiveShares, 1000000000000); // cap at 1,000,000 SHARES (6 decimals)
-                        CharacterSystem.updateCoreBonus(character, cappedShares);
-
-                        state.characters[account] = character;
-                        state.inventories[account] = state.inventories[account] || [];
-                        state.quests[account] = state.quests[account] || (typeof QuestSystem !== 'undefined' ? QuestSystem.createPlayerQuestState() : {});
-                        console.log('Character restored from grimoire (login):', grimoire.name, grimoire.class, 'Lv' + character.level, 'XP:' + character.xp, 'Core:' + character.coreBonus);
-                    }
-                } else {
-                    console.log('Character already in state from checkpoint, keeping checkpoint data');
-                }
-                // Existing character — go to home
+                _restoreCharacterFromGrimoire(account, accountData, grimoire);
                 Helpers.EventBus.emit('navigate', 'home');
             } else {
-                // No character yet — go to onboarding (class selection)
+                OnboardingScreen.startForAccount(account);
                 Helpers.EventBus.emit('navigate', 'onboarding');
             }
         });
+    }
+
+    function _restoreCharacterFromGrimoire(account, accountData, grimoire) {
+        var state = StateEngine.getState();
+        if (!state.characters[account]) {
+            var character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class);
+            if (character) {
+                if (grimoire.level && grimoire.level > 1) {
+                    character.level = grimoire.level;
+                    character.xp = grimoire.xp || 0;
+                    character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
+                    character.maxHp = character.hp;
+                }
+                var effectiveShares = VizAccount.getEffectiveShares(accountData);
+                var cappedShares = Math.min(effectiveShares, 1000000000000);
+                CharacterSystem.updateCoreBonus(character, cappedShares);
+                state.characters[account] = character;
+            }
+        }
+        state.inventories[account] = state.inventories[account] || [];
+        state.quests[account] = state.quests[account] || (typeof QuestSystem !== 'undefined' ? QuestSystem.createPlayerQuestState() : {});
     }
 
     return { render: render };

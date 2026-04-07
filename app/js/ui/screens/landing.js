@@ -29,9 +29,6 @@ var LandingScreen = (function() {
                     '<button class="btn btn-primary btn-glow btn-large" id="btn-begin">' +
                         t('landing_cta') +
                     '</button>' +
-                    '<p class="landing-login-link">' +
-                        '<a href="#" id="btn-login-link">' + t('landing_login') + ' \u2192</a>' +
-                    '</p>' +
                 '</header>' +
                 '<section class="landing-cards" aria-label="Features">' +
                     '<div class="feature-card">' +
@@ -60,11 +57,6 @@ var LandingScreen = (function() {
         Helpers.$('btn-begin').addEventListener('click', function() {
             SoundManager.init();  // must be first — creates AudioContext inside user gesture
             SoundManager.play('tap');
-            Helpers.EventBus.emit('navigate', 'onboarding');
-        });
-        Helpers.$('btn-login-link').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Login link clicked, navigating to login screen');
             Helpers.EventBus.emit('navigate', 'login');
         });
         var btnRu = Helpers.$('landing-lang-ru');
