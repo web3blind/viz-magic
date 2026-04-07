@@ -150,6 +150,7 @@ var HomeScreen = (function() {
                 '<div class="prophecy-info">' +
                     '<h3>' + t('home_daily_prophecy') + '</h3>' +
                     '<p>' + t(prophecy.titleKey) + '</p>' +
+                    '<p><small>' + t('quest_daily_help_text') + '</small></p>' +
                     '<span class="prophecy-reward">\u2B50 ' + (prophecy.rewards ? prophecy.rewards.xp : 0) + ' XP</span>' +
                 '</div>' +
             '</div>' +

@@ -29,6 +29,7 @@ var CharacterScreen = (function() {
                     '<p>' + t('class_' + ch.className) + ' \u2022 ' + t('home_level') + ' ' + ch.level + '</p></div>' +
                 '</div>' +
                 ProgressBar.create({label:'HP', value:ch.hp, max:ch.maxHp, color:'#e53935'}) +
+                '<p class="quest-desc">' + t('char_hp_explainer') + '</p>' +
                 '<h2>' + t('char_stats') + '</h2>' +
                 '<div class="stats-list">' +
                     _statRow(t('char_potency'), totalPot) +

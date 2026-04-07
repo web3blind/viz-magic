@@ -712,8 +712,12 @@ var LangEN = {
     quest_obj_craft: 'Craft items',
     quest_obj_duel: 'Win duels',
     quest_obj_explore: 'Visit regions',
+    quest_obj_explore_detail: 'Visit {count} different regions via the world map.',
     quest_obj_social: 'Social actions',
+    quest_obj_bless_detail: 'Bless other mages {count} times via the Chronicle.',
     quest_obj_territory: 'Territory actions',
+    quest_obj_territory_detail: 'Contribute to a siege {count} time(s).',
+    quest_obj_enchant_detail: 'Enchant {count} item with a rune stone.',
 
     // Quest names
     quest_hunt_wisps_title: 'Hunt Ember Wisps',
@@ -726,8 +730,11 @@ var LangEN = {
     quest_win_duel_desc: 'Win a duel in the Arena.',
     quest_visit_regions_title: 'Traveler',
     quest_visit_regions_desc: 'Visit 3 different regions.',
+    quest_visit_regions_hint: 'Any 3 different regions currently count when you travel through the world map.',
     quest_blessings_title: 'Generous Spirit',
-    quest_blessings_desc: 'Receive 5 Blessings from other mages.',
+    quest_blessings_desc: 'Bless 5 other mages through the Chronicle.',
+    quest_blessings_hint: 'Open the Chronicle and press “Bless” on other mages\' entries.',
+    quest_generic_hint: 'Hint: the full explanation is in the Guide.',
     quest_hunt_session_title: 'Seasoned Hunter',
     quest_hunt_session_desc: 'Kill 10 creatures in one session.',
     quest_enchant_item_title: 'Rune Magic',
@@ -742,6 +749,7 @@ var LangEN = {
     quest_daily_hunt_desc: 'Hunt creatures today.',
     quest_daily_bless: 'Daily Blessings',
     quest_daily_bless_desc: 'Bless other mages today.',
+    quest_daily_help_text: 'Accept the daily prophecy first, then complete its goal. For blessings, open the Chronicle and bless other mages.',
     quest_daily_craft: 'Daily Craft',
     quest_daily_craft_desc: 'Craft an item today.',
     quest_daily_duel: 'Daily Duel',
@@ -817,7 +825,10 @@ var LangEN = {
     help_mana_text: 'Mana is your energy (0–100%). Every spell costs mana. Full regeneration takes ~5 days. Shown as a percentage — 1.00% = 100 basis points on the blockchain.',
 
     help_section_hp: 'HP & Recovery',
-    help_hp_text: 'HP is your health. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 500 blocks, ~4 min). Full recovery: visit the Hunt screen (camp rest) or use a Health Scroll (craftable or dropped by creatures).',
+    help_hp_text: 'HP is your health. Max HP grows from your level, class, and Resilience: base 100 + level × 10 + RES × 3, then your class multiplier is applied. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 500 blocks, ~4 min). Full recovery: visit the Hunt screen (camp rest) or use a Health Scroll (craftable or dropped by creatures).',
+
+    help_section_quests: 'Quests & Prophecies',
+    help_quests_text: 'Regular quests are accepted in the Quests screen. “Traveler” currently means visiting 3 different regions via the world map. The Daily Prophecy must also be accepted first, then completed. If it tells you to bless others, do that in the Chronicle with the “Bless” button on other mages\' entries.',
 
     help_section_hunt: 'Hunting',
     help_hunt_text: 'Choose a creature and a spell, then attack. Victory earns XP and loot. Defeat gives 25% XP. Loot is volatile — bank it in a safe zone to keep it.',
@@ -848,6 +859,7 @@ var LangEN = {
 
     help_tip_mana: 'Mana regenerates ~1% per 1.2 hours. Plan your actions accordingly.',
     help_tip_armageddon: 'Armageddon Stone: drop from Thornvine Lv5+ or craft at level 10.',
+    char_hp_explainer: 'HP grows from level, Resilience, and class. Full formula is in the Guide.',
     help_close: 'Got it'
 };
 

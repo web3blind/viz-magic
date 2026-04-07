@@ -125,14 +125,15 @@ var QuestsScreen = (function() {
                 '<h2>' + t('home_daily_prophecy') + '</h2>' +
             '</div>' +
             '<h3>' + t(prophecy.titleKey) + '</h3>' +
-            '<p class="prophecy-desc">' + t(prophecy.descriptionKey) + '</p>';
+            '<p class="prophecy-desc">' + t(prophecy.descriptionKey) + '</p>' +
+            '<p class="quest-desc">' + t('quest_daily_help_text') + '</p>';
 
         // Objectives
         html += '<div class="prophecy-objectives">';
         for (var i = 0; i < prophecy.objectives.length; i++) {
             var obj = prophecy.objectives[i];
             html += '<div class="quest-objective">' +
-                t('quest_obj_' + obj.type) + ': ' + obj.required +
+                _describeObjective(obj, t) +
             '</div>';
         }
         html += '</div>';
@@ -198,7 +199,7 @@ var QuestsScreen = (function() {
             var obj = quest.objectives[i];
             var pct = Math.floor((obj.current / obj.required) * 100);
             html += '<div class="quest-objective">' +
-                '<span class="obj-label">' + t('quest_obj_' + obj.type) + (obj.target ? ' (' + obj.target + ')' : '') + '</span>' +
+                '<span class="obj-label">' + _describeObjective(obj, t) + '</span>' +
                 '<div class="progress-bar" role="progressbar" aria-valuenow="' + obj.current + '" aria-valuemax="' + obj.required + '">' +
                     '<div class="progress-fill" style="width:' + pct + '%"></div>' +
                     '<span class="progress-text">' + obj.current + '/' + obj.required + '</span>' +
@@ -230,6 +231,7 @@ var QuestsScreen = (function() {
         html += '<h3 class="quest-name">' + t(quest.titleKey) + '</h3>';
         html += '</div>';
         html += '<p class="quest-desc">' + t(quest.descriptionKey) + '</p>';
+        html += '<p class="quest-desc">' + _questHint(quest, t) + '</p>';
         html += '<div class="quest-req">' + t('home_level') + ' ' + (quest.minLevel || 1) + '+</div>';
 
         // Rewards preview
@@ -310,6 +312,22 @@ var QuestsScreen = (function() {
                 render();
             });
         }
+    }
+
+    function _describeObjective(obj, t) {
+        if (!obj) return '';
+        if (obj.type === 'explore') return t('quest_obj_explore_detail', { count: obj.required });
+        if (obj.type === 'social' && obj.target === 'blessing') return t('quest_obj_bless_detail', { count: obj.required });
+        if (obj.type === 'territory' && obj.target === 'siege') return t('quest_obj_territory_detail', { count: obj.required });
+        if (obj.type === 'craft' && obj.target === 'enchant') return t('quest_obj_enchant_detail', { count: obj.required });
+        return t('quest_obj_' + obj.type) + ': ' + obj.required;
+    }
+
+    function _questHint(quest, t) {
+        if (!quest) return '';
+        if (quest.id === 'q_visit_regions') return t('quest_visit_regions_hint');
+        if (quest.id === 'q_blessings') return t('quest_blessings_hint');
+        return t('quest_generic_hint');
     }
 
     return { render: render };
