@@ -11,6 +11,7 @@ var App = (function() {
     var _pollTimer = null;
     var _lastPolledBlock = 0;
     var _pollBusy = false;
+    var _syncStartBlock = 0;
     var POLL_INTERVAL_MS = 3000;
 
     /**
@@ -215,13 +216,22 @@ var App = (function() {
      * Show initial connection status
      */
     function _showConnectionStatus() {
+        _updateSyncStatus(0, true);
+    }
+
+    function _updateSyncStatus(percent, forceShow) {
         var statusEl = Helpers.$('connection-status');
-        if (statusEl) {
-            statusEl.textContent = Helpers.t('conn_connecting');
+        if (!statusEl) return;
+
+        percent = Math.max(0, Math.min(100, Math.ceil(percent || 0)));
+        statusEl.textContent = 'Синхронизация с Миром... ' + percent + '%';
+
+        if (forceShow || percent < 100) {
             statusEl.classList.add('show');
+        } else {
             setTimeout(function() {
                 statusEl.classList.remove('show');
-            }, 3000);
+            }, 1500);
         }
     }
 
@@ -271,9 +281,17 @@ var App = (function() {
                 }
 
                 if (headBlock <= _lastPolledBlock) {
+                    _syncStartBlock = 0;
+                    _updateSyncStatus(100);
                     _pollBusy = false;
                     return;
                 }
+
+                if (_syncStartBlock === 0 || _lastPolledBlock < _syncStartBlock) {
+                    _syncStartBlock = _lastPolledBlock;
+                }
+
+                _updateSyncStatus(_calculateSyncPercent(_lastPolledBlock, headBlock));
 
                 // Cap batch size to avoid overwhelming the node
                 var startBlock = _lastPolledBlock + 1;
@@ -314,6 +332,7 @@ var App = (function() {
                     console.log('App: Checkpoint save error:', cpErr);
                 }
 
+                _updateSyncStatus(_calculateSyncPercent(endBlock, chainHead));
                 _refreshActiveScreenAfterSync(eventsCollected);
 
                 // If there are more blocks to process, continue immediately
@@ -322,10 +341,23 @@ var App = (function() {
                     var nextEnd = Math.min(chainHead, nextStart + 9);
                     _processBlockBatch(nextStart, nextEnd, chainHead);
                 } else {
+                    _syncStartBlock = 0;
+                    _updateSyncStatus(100);
                     _pollBusy = false;
                 }
             });
         });
+    }
+
+    function _calculateSyncPercent(processedBlock, chainHead) {
+        if (!chainHead || processedBlock >= chainHead) return 100;
+        if (!_syncStartBlock || chainHead <= _syncStartBlock) return 100;
+
+        var done = processedBlock - _syncStartBlock;
+        var total = chainHead - _syncStartBlock;
+        if (total <= 0) return 100;
+
+        return (done / total) * 100;
     }
 
     function _refreshActiveScreenAfterSync(eventsCollected) {
