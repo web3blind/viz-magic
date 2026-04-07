@@ -96,17 +96,16 @@ var CheckpointSystem = (function() {
         var store = tx.objectStore(STORE_NAME);
         var index = store.index('account');
         var range = IDBKeyRange.only(account);
-        var request = index.openCursor(range, 'prev'); // Descending by key
+        var request = index.openCursor(range);
 
         var latest = null;
 
         request.onsuccess = function(event) {
             var cursor = event.target.result;
-            if (cursor && !latest) {
-                latest = cursor.value;
-            }
-            // Only need the first (latest) result
-            if (!latest && cursor) {
+            if (cursor) {
+                if (!latest || (cursor.value && cursor.value.blockNum > latest.blockNum)) {
+                    latest = cursor.value;
+                }
                 cursor.continue();
             } else {
                 callback(null, latest);
