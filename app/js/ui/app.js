@@ -314,6 +314,8 @@ var App = (function() {
                     console.log('App: Checkpoint save error:', cpErr);
                 }
 
+                _refreshActiveScreenAfterSync(eventsCollected);
+
                 // If there are more blocks to process, continue immediately
                 if (endBlock < chainHead) {
                     var nextStart = endBlock + 1;
@@ -324,6 +326,23 @@ var App = (function() {
                 }
             });
         });
+    }
+
+    function _refreshActiveScreenAfterSync(eventsCollected) {
+        var reactiveScreens = {
+            home: true,
+            character: true,
+            quests: true,
+            map: true,
+            chronicle: true,
+            marketplace: true,
+            leaderboard: true
+        };
+
+        if (!reactiveScreens[currentScreen]) return;
+        if (!eventsCollected || !eventsCollected.length) return;
+
+        _renderScreen(currentScreen);
     }
 
     /**

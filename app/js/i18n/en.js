@@ -825,10 +825,10 @@ var LangEN = {
     help_mana_text: 'Mana is your energy (0–100%). Every spell costs mana. Full regeneration takes ~5 days. Shown as a percentage — 1.00% = 100 basis points on the blockchain.',
 
     help_section_hp: 'HP & Recovery',
-    help_hp_text: 'HP is your health. Max HP grows from your level, class, and Resilience: base 100 + level × 10 + RES × 3, then your class multiplier is applied. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 500 blocks, ~4 min). Full recovery: visit the Hunt screen (camp rest) or use a Health Scroll (craftable or dropped by creatures).',
+    help_hp_text: 'HP is your health. Max HP grows from your level, class, and Resilience: base 100 + level × 10 + RES × 3, then your class multiplier is applied. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 100 blocks, ~5 min). Full recovery: visit the Hunt screen (camp rest) or use a Health Scroll (craftable or dropped by creatures).',
 
     help_section_quests: 'Quests & Prophecies',
-    help_quests_text: 'Regular quests are accepted in the Quests screen. “Traveler” currently means visiting 3 different regions via the world map. The Daily Prophecy must also be accepted first, then completed. If it tells you to bless others, do that in the Chronicle with the “Bless” button on other mages\' entries.',
+    help_quests_text: 'Regular quests are accepted in the Quests screen. “Traveler” currently means visiting 3 different regions via the world map — open the map, choose another region, and press “Travel”. The Daily Prophecy must also be accepted first, then completed. If it tells you to bless others, do that in the Chronicle with the “Bless” button on other mages\' entries.',
 
     help_section_hunt: 'Hunting',
     help_hunt_text: 'Choose a creature and a spell, then attack. Victory earns XP and loot. Defeat gives 25% XP. Loot is volatile — bank it in a safe zone to keep it.',

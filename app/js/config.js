@@ -35,7 +35,7 @@ var VizMagicConfig = (function() {
 
     /** HP passive regeneration constants */
     var HP_REGEN = {
-        HP_REGEN_RATE: 500,      // blocks per +1 HP
+        HP_REGEN_RATE: 100,      // blocks per +1 HP (~5 min)
         HP_REGEN_CAP_PCT: 30     // max % of maxHp that passive regen can reach
     };
 
