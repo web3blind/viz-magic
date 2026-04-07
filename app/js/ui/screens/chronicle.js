@@ -92,6 +92,7 @@ var ChronicleScreen = (function() {
                 if (err) {
                     Toast.error(Helpers.t('error_network'));
                 } else {
+                    _injectLocalPost(text);
                     Toast.success('\u2728 ' + Helpers.t('chronicle_send'));
                     Helpers.$('chronicle-input').value = '';
                     Helpers.$('chronicle-char-count').textContent = '0/' + MAX_POST_LENGTH;
@@ -105,10 +106,45 @@ var ChronicleScreen = (function() {
         var feed = Helpers.$('chronicle-feed');
         if (!feed) return;
 
+        feed.innerHTML = '<p class="empty-state">' + Helpers.t('loading') + '</p>';
+
         var state = StateEngine.getState();
+        var entries = _collectStateEntries(state);
+        var user = VizAccount.getCurrentUser();
+
+        if (!user || typeof VoiceProtocol === 'undefined' || !VoiceProtocol.loadChronicle) {
+            _renderFeedEntries(_filterByTab(entries, state));
+            return;
+        }
+
+        VoiceProtocol.loadChronicle(user, 20, function(err, voiceEntries) {
+            if (!err && voiceEntries && voiceEntries.length) {
+                for (var i = 0; i < voiceEntries.length; i++) {
+                    var voiceEntry = voiceEntries[i];
+                    var voiceText = '';
+                    if (voiceEntry.message) {
+                        if (voiceEntry.message.type === 'text') voiceText = voiceEntry.message.text || '';
+                        else if (voiceEntry.message.type === 'publication') voiceText = voiceEntry.message.title || voiceEntry.message.description || '';
+                    }
+                    if (!voiceText) continue;
+                    entries.push({
+                        type: 'voice',
+                        account: voiceEntry.sender,
+                        text: voiceText,
+                        actionType: 'chronicle_post',
+                        timestamp: voiceEntry.blockTime || null,
+                        blockNum: voiceEntry.blockNum || 0
+                    });
+                }
+            }
+
+            _renderFeedEntries(_filterByTab(_dedupeEntries(entries), state));
+        });
+    }
+
+    function _collectStateEntries(state) {
         var entries = [];
 
-        // Collect recent game actions as narrative entries
         if (state.recentActions) {
             for (var i = state.recentActions.length - 1; i >= 0 && entries.length < 50; i--) {
                 var action = state.recentActions[i];
@@ -126,7 +162,6 @@ var ChronicleScreen = (function() {
             }
         }
 
-        // Collect duel history as narrative entries
         if (state.duels && state.duels.history) {
             for (var j = state.duels.history.length - 1; j >= 0 && entries.length < 50; j--) {
                 var duel = state.duels.history[j];
@@ -144,15 +179,17 @@ var ChronicleScreen = (function() {
             }
         }
 
-        // Filter by tab
-        entries = _filterByTab(entries, state);
+        return entries;
+    }
 
-        // Sort by blockNum descending
+    function _renderFeedEntries(entries) {
+        var feed = Helpers.$('chronicle-feed');
+        if (!feed) return;
+
         entries.sort(function(a, b) {
             return (b.blockNum || 0) - (a.blockNum || 0);
         });
 
-        // Render
         if (entries.length === 0) {
             feed.innerHTML = '<p class="empty-state">' + Helpers.t('chronicle_empty') + '</p>';
             return;
@@ -164,11 +201,37 @@ var ChronicleScreen = (function() {
         }
         feed.innerHTML = html;
 
-        // Bind bless buttons
         var blessBtns = feed.querySelectorAll('.bless-button');
         for (var m = 0; m < blessBtns.length; m++) {
             blessBtns[m].addEventListener('click', _onBless);
         }
+    }
+
+    function _dedupeEntries(entries) {
+        var seen = {};
+        var out = [];
+        for (var i = 0; i < entries.length; i++) {
+            var key = (entries[i].account || '') + '|' + (entries[i].blockNum || 0) + '|' + (entries[i].actionType || '') + '|' + (entries[i].text || '');
+            if (seen[key]) continue;
+            seen[key] = true;
+            out.push(entries[i]);
+        }
+        return out;
+    }
+
+    function _injectLocalPost(text) {
+        var state = StateEngine.getState();
+        var user = VizAccount.getCurrentUser();
+        if (!state || !user) return;
+        state.recentActions.push({
+            type: 'chronicle_post',
+            sender: user,
+            blockNum: (state.headBlock || 0) + 1,
+            timestamp: Date.now(),
+            text: text,
+            message: { type: 'text', text: text },
+            events: []
+        });
     }
 
     function _renderEntry(entry) {
