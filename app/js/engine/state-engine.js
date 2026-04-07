@@ -566,7 +566,13 @@ var StateEngine = (function() {
         var character = worldState.characters[sender];
         if (!character) return [];
 
+        var previousZone = character.currentZone;
         character.currentZone = data.zone;
+
+        if (typeof QuestSystem !== 'undefined' && data.zone && data.zone !== previousZone) {
+            _ensureQuests(sender);
+            QuestSystem.updateQuestProgress(worldState.quests[sender], 'explore', { target: data.zone, count: 1 });
+        }
 
         return [{
             type: 'character_moved',
