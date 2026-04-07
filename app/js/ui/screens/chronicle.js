@@ -221,6 +221,8 @@ var ChronicleScreen = (function() {
         var name = (charInfo && charInfo.name) || action.sender || '???';
 
         switch (action.type) {
+            case 'chronicle_post':
+                return action.text || (action.message && action.message.text) || '';
             case 'hunt':
                 return t('chronicle_narrative_hunt', { name: name });
             case 'hunt_victory':
@@ -285,6 +287,7 @@ var ChronicleScreen = (function() {
 
     function _getActionIcon(actionType) {
         var icons = {
+            'chronicle_post': '\uD83D\uDCDD',
             'hunt': '\u2694\uFE0F',
             'hunt_victory': '\uD83C\uDFC6',
             'hunt_defeat': '\uD83D\uDCA8',

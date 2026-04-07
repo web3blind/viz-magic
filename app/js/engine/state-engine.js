@@ -80,6 +80,11 @@ var StateEngine = (function() {
             events = events.concat(actionEvents);
         }
 
+        // Process Voice / Chronicle posts
+        for (var vp = 0; vp < processedBlock.voicePosts.length; vp++) {
+            _processVoicePost(processedBlock.voicePosts[vp], blockNum);
+        }
+
         // Process awards (blessings)
         for (var j = 0; j < processedBlock.awards.length; j++) {
             var award = processedBlock.awards[j];
@@ -338,6 +343,20 @@ var StateEngine = (function() {
         });
 
         return events;
+    }
+
+    function _processVoicePost(voicePost, blockNum) {
+        if (!voicePost || !voicePost.message) return;
+
+        worldState.recentActions.push({
+            type: 'chronicle_post',
+            sender: voicePost.sender,
+            blockNum: voicePost.blockNum || blockNum,
+            timestamp: voicePost.blockTime || Date.now(),
+            text: voicePost.message.text || '',
+            message: voicePost.message,
+            events: []
+        });
     }
 
     /**

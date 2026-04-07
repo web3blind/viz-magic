@@ -78,7 +78,8 @@ var BlockProcessor = (function() {
                 result.voicePosts.push({
                     sender: sender,
                     message: message,
-                    blockNum: blockNum
+                    blockNum: blockNum,
+                    blockTime: block.timestamp || ''
                 });
             }
         } else if (opData.id === cfg.PROTOCOLS.VE) {
