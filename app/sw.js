@@ -1,5 +1,5 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v7';
+var CACHE_NAME = 'viz-magic-v8';
 var ASSETS = [
     '/',
     '/index.html',
@@ -32,6 +32,8 @@ var ASSETS = [
     '/js/engine/checkpoint.js',
     '/js/engine/block-processor.js',
     '/js/engine/state-engine.js',
+    '/js/engine/daily-leaderboard-storage.js',
+    '/js/engine/daily-leaderboard.js',
     '/js/ui/sound.js',
     '/js/ui/components/progress-bar.js',
     '/js/ui/components/toast.js',
@@ -39,11 +41,22 @@ var ASSETS = [
     '/js/ui/components/nav.js',
     '/js/ui/screens/landing.js',
     '/js/ui/screens/onboarding.js',
+    '/js/ui/screens/login.js',
     '/js/ui/screens/home.js',
     '/js/ui/screens/character.js',
     '/js/ui/screens/hunt.js',
     '/js/ui/screens/inventory.js',
     '/js/ui/screens/chronicle.js',
+    '/js/ui/screens/arena.js',
+    '/js/ui/screens/guild.js',
+    '/js/ui/screens/map.js',
+    '/js/ui/screens/marketplace.js',
+    '/js/ui/screens/crafting.js',
+    '/js/ui/screens/quests.js',
+    '/js/ui/screens/world-boss.js',
+    '/js/ui/screens/settings.js',
+    '/js/ui/screens/help.js',
+    '/js/ui/screens/leaderboard.js',
     '/js/ui/app.js'
 ];
 
