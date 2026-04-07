@@ -8,6 +8,7 @@ var ChronicleScreen = (function() {
     var MAX_POST_LENGTH = 280;
     var BLESS_ENERGY = 100; // 1% = 100 basis points
     var currentTab = 'all'; // all, guild, friends, world
+    var REQUIRED_TAG = '#viz_magic';
 
     function render() {
         var t = Helpers.t;
@@ -85,6 +86,7 @@ var ChronicleScreen = (function() {
         // Send button
         Helpers.$('btn-chronicle-send').addEventListener('click', function() {
             var text = Helpers.$('chronicle-input').value.trim();
+            text = _ensureRequiredTag(text);
             if (!text || text.length > MAX_POST_LENGTH) return;
             SoundManager.play('bless_send');
 
@@ -110,36 +112,92 @@ var ChronicleScreen = (function() {
 
         var state = StateEngine.getState();
         var entries = _collectStateEntries(state);
-        var user = VizAccount.getCurrentUser();
+        var accounts = _getFeedAccounts(state);
 
-        if (!user || typeof VoiceProtocol === 'undefined' || !VoiceProtocol.loadChronicle) {
+        if (!accounts.length || typeof VoiceProtocol === 'undefined' || !VoiceProtocol.loadChronicle) {
             _renderFeedEntries(_filterByTab(entries, state));
             return;
         }
 
-        VoiceProtocol.loadChronicle(user, 20, function(err, voiceEntries) {
-            if (!err && voiceEntries && voiceEntries.length) {
-                for (var i = 0; i < voiceEntries.length; i++) {
-                    var voiceEntry = voiceEntries[i];
-                    var voiceText = '';
-                    if (voiceEntry.message) {
-                        if (voiceEntry.message.type === 'text') voiceText = voiceEntry.message.text || '';
-                        else if (voiceEntry.message.type === 'publication') voiceText = voiceEntry.message.title || voiceEntry.message.description || '';
-                    }
-                    if (!voiceText) continue;
-                    entries.push({
-                        type: 'voice',
-                        account: voiceEntry.sender,
-                        text: voiceText,
-                        actionType: 'chronicle_post',
-                        timestamp: voiceEntry.blockTime || null,
-                        blockNum: voiceEntry.blockNum || 0
-                    });
-                }
+        _loadVoiceEntriesForAccounts(accounts, 20, function(voiceEntries) {
+            for (var i = 0; i < voiceEntries.length; i++) {
+                entries.push(voiceEntries[i]);
             }
-
             _renderFeedEntries(_filterByTab(_dedupeEntries(entries), state));
         });
+    }
+
+    function _getFeedAccounts(state) {
+        var accounts = [];
+        var seen = {};
+        var user = VizAccount.getCurrentUser();
+
+        function add(account) {
+            if (!account || seen[account]) return;
+            seen[account] = true;
+            accounts.push(account);
+        }
+
+        add(user);
+
+        if (state && state.characters) {
+            for (var account in state.characters) {
+                if (state.characters.hasOwnProperty(account)) add(account);
+            }
+        }
+
+        if (typeof GuildSystem !== 'undefined' && state && state.guilds && user) {
+            var guild = GuildSystem.findGuildByMember(state.guilds, user);
+            if (guild && guild.members) {
+                for (var member in guild.members) {
+                    if (guild.members.hasOwnProperty(member)) add(member);
+                }
+            }
+        }
+
+        return accounts;
+    }
+
+    function _loadVoiceEntriesForAccounts(accounts, maxEntries, callback) {
+        var allEntries = [];
+        var index = 0;
+
+        function next() {
+            if (index >= accounts.length) {
+                callback(allEntries);
+                return;
+            }
+
+            var account = accounts[index++];
+            VoiceProtocol.loadChronicle(account, maxEntries, function(err, voiceEntries) {
+                if (!err && voiceEntries && voiceEntries.length) {
+                    for (var i = 0; i < voiceEntries.length; i++) {
+                        var normalized = _normalizeVoiceEntry(voiceEntries[i]);
+                        if (normalized) allEntries.push(normalized);
+                    }
+                }
+                next();
+            });
+        }
+
+        next();
+    }
+
+    function _normalizeVoiceEntry(voiceEntry) {
+        if (!voiceEntry || !voiceEntry.message) return null;
+        var voiceText = '';
+        if (voiceEntry.message.type === 'text') voiceText = voiceEntry.message.text || '';
+        else if (voiceEntry.message.type === 'publication') voiceText = voiceEntry.message.title || voiceEntry.message.description || '';
+        if (!voiceText || !_hasRequiredTag(voiceText)) return null;
+
+        return {
+            type: 'voice',
+            account: voiceEntry.sender,
+            text: voiceText,
+            actionType: 'chronicle_post',
+            timestamp: voiceEntry.blockTime || null,
+            blockNum: voiceEntry.blockNum || 0
+        };
     }
 
     function _collectStateEntries(state) {
@@ -149,7 +207,7 @@ var ChronicleScreen = (function() {
             for (var i = state.recentActions.length - 1; i >= 0 && entries.length < 50; i--) {
                 var action = state.recentActions[i];
                 var narrative = _actionToNarrative(action);
-                if (narrative) {
+                if (narrative && _entryMatchesRequiredTag(action.type, narrative)) {
                     entries.push({
                         type: 'action',
                         account: action.sender,
@@ -278,6 +336,25 @@ var ChronicleScreen = (function() {
         });
     }
 
+    function _hasRequiredTag(text) {
+        if (!text) return false;
+        return String(text).toLowerCase().indexOf(REQUIRED_TAG) !== -1;
+    }
+
+    function _ensureRequiredTag(text) {
+        text = (text || '').trim();
+        if (!text) return '';
+        if (_hasRequiredTag(text)) return text;
+        return text + ' ' + REQUIRED_TAG;
+    }
+
+    function _entryMatchesRequiredTag(actionType, text) {
+        if (actionType === 'chronicle_post') {
+            return _hasRequiredTag(text);
+        }
+        return true;
+    }
+
     function _actionToNarrative(action) {
         var t = Helpers.t;
         var charInfo = StateEngine.getCharacter(action.sender);
@@ -337,14 +414,25 @@ var ChronicleScreen = (function() {
         if (currentTab === 'all') return entries;
 
         var user = VizAccount.getCurrentUser();
-        // For now, simple filtering
-        // guild/friends require guild membership data which we can add later
-        if (currentTab === 'world') {
-            // Show duel events only
+        if (currentTab === 'friends') {
+            return user ? entries.filter(function(e) { return e.account === user; }) : [];
+        }
+
+        if (currentTab === 'guild') {
+            if (typeof GuildSystem === 'undefined' || !state || !state.guilds || !user) return [];
+            var guild = GuildSystem.findGuildByMember(state.guilds, user);
+            if (!guild || !guild.members) return [];
             return entries.filter(function(e) {
-                return e.type === 'duel';
+                return e.account && guild.members[e.account];
             });
         }
+
+        if (currentTab === 'world') {
+            return entries.filter(function(e) {
+                return e.type === 'voice' || e.actionType === 'chronicle_post';
+            });
+        }
+
         return entries;
     }
 
