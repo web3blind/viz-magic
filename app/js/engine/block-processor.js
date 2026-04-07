@@ -38,7 +38,7 @@ var BlockProcessor = (function() {
 
                 switch (opType) {
                     case 'custom':
-                        _processCustomOp(opData, blockNum, result);
+                        _processCustomOp(opData, blockNum, result, block.timestamp || '');
                         break;
                     case 'award':
                         _processAwardOp(opData, blockNum, result);
@@ -54,7 +54,7 @@ var BlockProcessor = (function() {
     /**
      * Process a custom operation
      */
-    function _processCustomOp(opData, blockNum, result) {
+    function _processCustomOp(opData, blockNum, result, blockTimestamp) {
         var sender = '';
         if (opData.required_regular_auths && opData.required_regular_auths.length > 0) {
             sender = opData.required_regular_auths[0];
@@ -79,7 +79,7 @@ var BlockProcessor = (function() {
                     sender: sender,
                     message: message,
                     blockNum: blockNum,
-                    blockTime: block.timestamp || ''
+                    blockTime: blockTimestamp || ''
                 });
             }
         } else if (opData.id === cfg.PROTOCOLS.VE) {
