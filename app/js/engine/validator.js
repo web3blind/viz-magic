@@ -106,14 +106,12 @@ var ActionValidator = (function() {
     function _validateDuelChallenge(action, worldState, sender, blockNum) {
         var data = action.data || {};
         var duels = worldState.duels || { pending: {}, active: {} };
-        var account = worldState.characters[sender];
-        if (!account) {
-            return { valid: false, error: 'no_character' };
-        }
-        if (!data.target || !worldState.characters[data.target]) {
-            return { valid: false, error: 'invalid_duel_target' };
-        }
-        if (data.target === sender) {
+
+        // Duel actions are ingested from chain history and must not depend on
+        // whether local character hydration has already happened on this client.
+        // The duel state manager creates deterministic character stubs when the
+        // action is accepted into state.
+        if (!data.target || data.target === sender) {
             return { valid: false, error: 'invalid_duel_target' };
         }
         if (!data.strategy_hash) {
@@ -135,9 +133,6 @@ var ActionValidator = (function() {
         var data = action.data || {};
         var duels = worldState.duels || { pending: {} };
         var duel = duels.pending && duels.pending[String(data.challenge_ref)];
-        if (!worldState.characters[sender]) {
-            return { valid: false, error: 'no_character' };
-        }
         if (!duel) {
             return { valid: false, error: 'duel_not_found' };
         }
@@ -156,9 +151,6 @@ var ActionValidator = (function() {
     function _validateDuelCommit(action, worldState, sender) {
         var data = action.data || {};
         var duel = _getActiveDuel(worldState, data.combat_ref);
-        if (!worldState.characters[sender]) {
-            return { valid: false, error: 'no_character' };
-        }
         if (!duel) {
             return { valid: false, error: 'duel_not_found' };
         }
@@ -177,9 +169,6 @@ var ActionValidator = (function() {
     function _validateDuelReveal(action, worldState, sender) {
         var data = action.data || {};
         var duel = _getActiveDuel(worldState, data.combat_ref);
-        if (!worldState.characters[sender]) {
-            return { valid: false, error: 'no_character' };
-        }
         if (!duel) {
             return { valid: false, error: 'duel_not_found' };
         }
@@ -198,9 +187,6 @@ var ActionValidator = (function() {
     function _validateDuelForfeit(action, worldState, sender) {
         var data = action.data || {};
         var duel = _getAnyDuel(worldState, data.combat_ref);
-        if (!worldState.characters[sender]) {
-            return { valid: false, error: 'no_character' };
-        }
         if (!duel) {
             return { valid: false, error: 'duel_not_found' };
         }
