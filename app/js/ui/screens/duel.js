@@ -90,6 +90,12 @@ var DuelScreen = (function() {
         duelState.challengeData = challengeData || null;
         duelState.phase = 'pre';
 
+        // For a brand-new outgoing duel we must not reuse a stale local secret
+        // from an older attempt against the same opponent.
+        if (!duelState.combatRef) {
+            _clearPersistedSecret();
+        }
+
         // Try to restore secret from localStorage (survives page reload)
         _restoreSecret();
 
@@ -111,22 +117,36 @@ var DuelScreen = (function() {
             var saved = localStorage.getItem(secretKey);
             if (!saved) return;
             var data = JSON.parse(saved);
-            // Only restore if it matches current duel context
-            if (data && data.secret && data.secret.hash) {
-                if ((!duelState.combatRef && data.opponent === duelState.opponent) ||
-                    (duelState.combatRef && data.combatRef === duelState.combatRef)) {
-                    duelState.strategySecret = data.secret;
-                    duelState.strategyRound = data.round || 1;
-                    duelState.selectedIntent = data.secret.intent;
-                    duelState.currentRound = data.round || 1;
-                    if (duelState.combatRef) {
-                        duelState.phase = 'waiting';
-                    }
-                    console.log('Duel secret restored from localStorage for round', data.round || 1);
-                }
+            if (!data || !data.secret || !data.secret.hash) return;
+
+            var shouldRestore = false;
+
+            // Restore only for an already identified duel after reload.
+            // For fresh outgoing duels without combatRef, stale secrets must not lock UI.
+            if (duelState.combatRef && data.combatRef === duelState.combatRef) {
+                shouldRestore = true;
             }
+
+            if (!shouldRestore) {
+                return;
+            }
+
+            duelState.strategySecret = data.secret;
+            duelState.strategyRound = data.round || 1;
+            duelState.selectedIntent = data.secret.intent;
+            duelState.currentRound = data.round || 1;
+            duelState.phase = 'waiting';
+            console.log('Duel secret restored from localStorage for combat', duelState.combatRef, 'round', data.round || 1);
         } catch(e) {
             console.log('Could not restore duel secret:', e);
+        }
+    }
+
+    function _clearPersistedSecret() {
+        try {
+            localStorage.removeItem(VizMagicConfig.STORAGE_PREFIX + 'duel_secret');
+        } catch (e) {
+            console.log('Could not clear duel secret:', e);
         }
     }
 
