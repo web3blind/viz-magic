@@ -71,13 +71,11 @@ var DuelStateManager = (function() {
     function _handleChallenge(sender, data, blockNum, duels, worldState) {
         var challengeRef = String(blockNum);
 
-        // Verify target exists
-        var targetChar = worldState.characters[data.target];
-        var senderChar = worldState.characters[sender];
-        if (!targetChar || !senderChar) return [];
-
         // Cannot challenge yourself
         if (sender === data.target) return [];
+
+        _ensureCharacterStub(worldState, sender);
+        _ensureCharacterStub(worldState, data.target);
 
         var duel = {
             id: challengeRef,
@@ -120,6 +118,9 @@ var DuelStateManager = (function() {
         if (!duel) return [];
         if (duel.target !== sender) return [];
         if (blockNum > duel.deadlineBlock) return [];
+
+        _ensureCharacterStub(worldState, duel.challenger);
+        _ensureCharacterStub(worldState, duel.target);
 
         // Move from pending to active
         duel.status = 'active';
@@ -347,6 +348,41 @@ var DuelStateManager = (function() {
             xpWinner: xpWinner,
             xpLoser: xpLoser
         }];
+    }
+
+    function _ensureCharacterStub(worldState, account) {
+        if (!account) return null;
+        worldState.characters = worldState.characters || {};
+        if (!worldState.characters[account]) {
+            worldState.characters[account] = {
+                account: account,
+                name: account,
+                className: '',
+                school: '',
+                level: 1,
+                xp: 0,
+                hp: 100,
+                maxHp: 100,
+                pot: 10,
+                res: 5,
+                swf: 5,
+                int: 5,
+                for_: 5,
+                coreBonus: 0,
+                title: '',
+                guild: '',
+                equipment: {},
+                spells: [],
+                lastHuntBlock: 0,
+                fallenUntilBlock: 0,
+                currentZone: 'commons_first_light'
+            };
+        }
+        worldState.inventories = worldState.inventories || {};
+        if (!worldState.inventories[account]) worldState.inventories[account] = [];
+        worldState.quests = worldState.quests || {};
+        if (!worldState.quests[account]) worldState.quests[account] = {};
+        return worldState.characters[account];
     }
 
     /**
