@@ -797,7 +797,18 @@ var DuelScreen = (function() {
         if (!duel) return;
 
         duelState.totalRounds = duel.rounds || duelState.totalRounds;
-        duelState.currentRound = duel.currentRound || duelState.currentRound;
+
+        // Keep on-chain round as source of truth, but do not immediately roll
+        // the UI back when the player has already advanced from a resolved round
+        // into the next local seal step.
+        var chainRound = duel.currentRound || duelState.currentRound;
+        var localAdvancedRound =
+            duelState.phase === 'seal' &&
+            duelState.currentRound > chainRound &&
+            duel.roundResults &&
+            duel.roundResults.length === chainRound;
+
+        duelState.currentRound = localAdvancedRound ? duelState.currentRound : chainRound;
 
         var user = VizAccount.getCurrentUser();
         duelState.opponent = _resolveOpponentFromDuel(duel, user, duelState.opponent);
