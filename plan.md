@@ -1,44 +1,39 @@
-# Viz-magic — duel incoming challenge UX plan
+# Viz-magic — chronicle posts-only cleanup plan
 
 ## Scope
-- Сделать входящий вызов на дуэль заметным для target-аккаунта.
-- Добавить клиентское уведомление и быстрый переход в нужный экран.
-- Упростить принятие вызова из UI без необходимости догадываться зайти в арену.
+- Вернуть хронику к исходной модели: лента постов пользователей, а не mixed activity feed.
+- Убрать игровые события и bless/award narrative из основной ленты хроники.
+- Сохранить кнопку благословения как действие под постом.
 
 ## Non-goals
-- Не менять duel protocol и blockchain action types.
-- Не добавлять серверный push или внешний notification backend.
-- Не переписывать полностью arena/duel flow beyond incoming challenge UX.
+- Не трогать VoiceProtocol и storage формат пользовательских постов.
+- Не проектировать отдельную activity-вкладку в этом проходе.
+- Не ломать compose/send flow и bless action под постом.
 
 ## Milestones
-1. Проверить, где именно приходит `duel_challenge` и как target сейчас узнаёт о вызове.
-2. Добавить уведомление для target-игрока.
-3. Сделать автопереход в арену при входящем вызове.
-4. Оставить быстрый accept flow из текущих экранов арены/дуэли.
-5. Прогнать локальные проверки JS.
+1. Зафиксировать источник истины для хроники: посты из voice/publication + локально отправленные post entries.
+2. Убрать сбор recentActions/duel history в основной feed.
+3. Оставить табы working поверх post-only набора.
+4. Прогнать локальные проверки JS.
 
 ## Expected files or subsystems
-- `app/js/ui/screens/arena.js`
-- `app/js/ui/screens/duel.js`
-- `app/js/i18n/ru.js`
-- `app/js/i18n/en.js`
+- `app/js/ui/screens/chronicle.js`
 
 ## Implementation tasks
-- Подписаться на `duel_challenge` для текущего пользователя.
-- Показать toast/announce с понятным текстом про входящий вызов.
-- Автоматически переводить игрока в `arena`, где already existing accept UI доступен сразу.
-- При желании усилить narrator/aria message для blind UX.
+- Оставить в ленте только `chronicle_post` и voice/publication entries с required tag.
+- Не рендерить blessing/hunt/rest/duel как feed entries.
+- Сохранить локальный optimistic post injection после отправки пользователем.
 
 ## Validation
-- При входящем вызове target-аккаунт получает заметное уведомление.
-- После вызова игрок автоматически попадает в экран арены или легко открывает его одним действием.
-- Принятие вызова остаётся рабочим через существующий accept flow.
+- В хронике больше не появляются bless/award/hunt/duel/rest записи.
+- Пользовательские посты по-прежнему видны.
+- Кнопка благословения под постом остаётся рабочей.
 - `node --check` проходит для изменённых JS файлов.
 
 ## Risks or assumptions
-- Событие `duel_challenge` уже есть в client event flow; используем его как primary trigger, а не low-level chain polling.
-- Автопереход в `arena`, а не сразу в `duel`, снижает риск пропустить context и кнопки принятия.
+- Временный optimistic local post живёт в `recentActions`, но фильтруется только как `chronicle_post`.
+- Если потом понадобится activity feed, его лучше делать отдельным экраном/вкладкой, не в основной хронике.
 
 ## Definition of done
-- Вызванный игрок реально узнаёт о дуэли без ручного похода по меню.
-- Входящий duel challenge ведёт в понятный экран с возможностью принять вызов.
+- Хроника снова воспринимается как лента постов.
+- Игровые события больше не засоряют social feed.

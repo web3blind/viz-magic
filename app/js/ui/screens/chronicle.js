@@ -112,7 +112,7 @@ var ChronicleScreen = (function() {
         feed.innerHTML = '<p class="empty-state">' + Helpers.t('loading') + '</p>';
 
         var state = StateEngine.getState();
-        var entries = _collectStateEntries(state);
+        var entries = _collectPostEntries(state);
         var accounts = _getFeedAccounts(state);
 
         if (!accounts.length || typeof VoiceProtocol === 'undefined' || !VoiceProtocol.loadChronicle) {
@@ -207,38 +207,21 @@ var ChronicleScreen = (function() {
         };
     }
 
-    function _collectStateEntries(state) {
+    function _collectPostEntries(state) {
         var entries = [];
 
         if (state.recentActions) {
             for (var i = state.recentActions.length - 1; i >= 0 && entries.length < 50; i--) {
                 var action = state.recentActions[i];
-                var narrative = _actionToNarrative(action);
-                if (narrative && _entryMatchesRequiredTag(action.type, narrative)) {
+                var postText = _actionToPostText(action);
+                if (postText && _entryMatchesRequiredTag(action.type, postText)) {
                     entries.push({
                         type: 'action',
                         account: action.sender,
-                        text: narrative,
+                        text: postText,
                         actionType: action.type,
                         timestamp: action.timestamp,
                         blockNum: action.blockNum
-                    });
-                }
-            }
-        }
-
-        if (state.duels && state.duels.history) {
-            for (var j = state.duels.history.length - 1; j >= 0 && entries.length < 50; j--) {
-                var duel = state.duels.history[j];
-                var duelNarrative = _duelToNarrative(duel, state);
-                if (duelNarrative) {
-                    entries.push({
-                        type: 'duel',
-                        account: duel.winner || duel.challenger,
-                        text: duelNarrative,
-                        actionType: 'duel_completed',
-                        timestamp: null,
-                        blockNum: duel.completedBlock
                     });
                 }
             }
@@ -362,67 +345,9 @@ var ChronicleScreen = (function() {
         return true;
     }
 
-    function _actionToNarrative(action) {
-        var t = Helpers.t;
-        var charInfo = StateEngine.getCharacter(action.sender);
-        var name = (charInfo && charInfo.name) || action.sender || '???';
-
-        switch (action.type) {
-            case 'chronicle_post':
-                return action.text || (action.message && action.message.text) || '';
-            case 'hunt':
-                return t('chronicle_narrative_hunt', { name: name });
-            case 'hunt_victory':
-            case 'hunt_defeat':
-                if (action.events && action.events[0]) {
-                    var creature = action.events[0].creature || '';
-                    if (action.type === 'hunt_victory') {
-                        return t('chronicle_narrative_hunt_win', { name: name, creature: creature });
-                    } else {
-                        return t('chronicle_narrative_hunt_lose', { name: name, creature: creature });
-                    }
-                }
-                return t('chronicle_narrative_hunt', { name: name });
-            case 'character_created':
-                return t('chronicle_narrative_awaken', { name: name });
-            case 'rest_complete':
-                return t('chronicle_narrative_rest', { name: name });
-            case 'blessing_sent':
-                if (!_isBlessAction(action)) return null;
-                return t('chronicle_narrative_bless', { name: name, target: action.receiver || '' });
-            default:
-                return null;
-        }
-    }
-
-    function _isBlessAction(action) {
-        if (!action) return false;
-        return action.type === 'blessing_sent' && action.memo && String(action.memo).indexOf(BLESS_MEMO_PREFIX) === 0;
-    }
-
-    function _duelToNarrative(duel, state) {
-        var t = Helpers.t;
-        var charA = state.characters[duel.challenger] || {};
-        var charB = state.characters[duel.target] || {};
-        var nameA = charA.name || duel.challenger;
-        var nameB = charB.name || duel.target;
-
-        if (duel.forfeited) {
-            return t('chronicle_narrative_duel_forfeit', { winner: duel.winner === duel.challenger ? nameA : nameB });
-        }
-
-        if (duel.winner) {
-            var winnerName = duel.winner === duel.challenger ? nameA : nameB;
-            var loserName = duel.winner === duel.challenger ? nameB : nameA;
-            return t('chronicle_narrative_duel_win', {
-                winner: winnerName,
-                loser: loserName,
-                winsA: duel.winsA || 0,
-                winsB: duel.winsB || 0
-            });
-        }
-
-        return t('chronicle_narrative_duel_draw', { nameA: nameA, nameB: nameB });
+    function _actionToPostText(action) {
+        if (!action || action.type !== 'chronicle_post') return null;
+        return action.text || (action.message && action.message.text) || '';
     }
 
     function _filterByTab(entries, state) {
