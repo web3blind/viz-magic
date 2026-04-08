@@ -815,7 +815,11 @@ var DuelScreen = (function() {
                     duelState.phase = 'result';
                     duelState.finalWinsMe = _countWinsForUser(duel.roundResults, user);
                     duelState.finalWinsOpp = _countLossesForUser(duel.roundResults, user);
-                } else if (duelState.phase === 'waiting' || duelState.phase === 'seal') {
+                } else if ((duelState.phase === 'waiting' || duelState.phase === 'seal') &&
+                           duelState.currentRound <= duel.roundResults.length) {
+                    // Only stay on reveal for the most recently resolved round.
+                    // Once the player has advanced to the next round, do not
+                    // force the UI back into the prior round's reveal screen.
                     duelState.phase = 'reveal';
                 }
             }
