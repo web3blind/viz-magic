@@ -210,6 +210,8 @@ var LangRU = {
     chronicle_placeholder: 'Впиши слова в Мир...',
     chronicle_send: 'Вписать',
     chronicle_empty: 'Хроника пуста. Будь первым, кто впишет слова!',
+    chronicle_bless_posts_only_hint: 'Благословения доступны только через записи в Хронике. Пока в ленте нет подходящих постов других магов.',
+    chronicle_no_bless_targets_hint: 'Сейчас в ленте нет чужих записей для благословения. Благословлять можно только посты других магов в Хронике.',
     chronicle_narrative_hunt: '{name} отправился на охоту.',
     chronicle_narrative_hunt_win: '{name} одолел {creature}!',
     chronicle_narrative_hunt_lose: '{name} пал в бою с {creature}.',

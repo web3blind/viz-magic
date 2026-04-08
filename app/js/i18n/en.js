@@ -210,6 +210,8 @@ var LangEN = {
     chronicle_placeholder: 'Write your words into the World...',
     chronicle_send: 'Inscribe',
     chronicle_empty: 'Chronicle is empty. Be the first to write!',
+    chronicle_bless_posts_only_hint: 'Blessings are available only through Chronicle posts. There are no suitable posts from other mages in the feed yet.',
+    chronicle_no_bless_targets_hint: 'There are no other mages\' posts to bless right now. Blessings work only on other players\' Chronicle posts.',
     chronicle_narrative_hunt: '{name} set out on a hunt.',
     chronicle_narrative_hunt_win: '{name} defeated {creature}!',
     chronicle_narrative_hunt_lose: '{name} fell in battle with {creature}.',

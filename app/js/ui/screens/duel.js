@@ -10,6 +10,7 @@ var DuelScreen = (function() {
     var STATE_POLL_INTERVAL_MS = 3000;
     var registeredListeners = false;
     var _statePollTimer = null;
+    var _hydratingAccounts = {};
 
     var duelState = _createInitialState();
 
@@ -47,6 +48,7 @@ var DuelScreen = (function() {
         if (opts.combatRef) duelState.combatRef = String(opts.combatRef);
         if (opts.challengeData) duelState.challengeData = opts.challengeData;
 
+        _ensureCharacterHydrated(duelState.opponent);
         _syncFromState();
         _ensureEventListeners();
 
@@ -129,10 +131,14 @@ var DuelScreen = (function() {
     function _renderPreDuel(el) {
         var t = Helpers.t;
         var user = VizAccount.getCurrentUser();
-        var myChar = StateEngine.getCharacter(user) || {};
-        var oppChar = StateEngine.getCharacter(duelState.opponent) || {};
-        var myDuels = _getPlayerStats(user);
-        var oppDuels = _getPlayerStats(duelState.opponent);
+        var participants = _getResolvedParticipants();
+        var myAccount = participants.me || user;
+        var oppAccount = participants.opponent || duelState.opponent;
+        var myChar = StateEngine.getCharacter(myAccount) || {};
+        var oppChar = StateEngine.getCharacter(oppAccount) || {};
+        duelState.opponent = oppAccount || duelState.opponent;
+        var myDuels = _getPlayerStats(myAccount);
+        var oppDuels = _getPlayerStats(oppAccount);
         var pendingNotice = '';
         var beginLabel = duelState.combatRef ? t('duel_begin') : t('duel_begin_real');
 
@@ -149,14 +155,14 @@ var DuelScreen = (function() {
             '<div class="duel-matchup">' +
                 '<div class="duel-mage duel-mage-left">' +
                     '<span class="duel-mage-icon" aria-hidden="true">' + Helpers.classIcon(myChar.className) + '</span>' +
-                    '<strong>' + Helpers.escapeHtml(myChar.name || user || t('duel_you')) + '</strong>' +
+                    '<strong>' + Helpers.escapeHtml(myChar.name || myAccount || t('duel_you')) + '</strong>' +
                     '<span class="duel-mage-info">' + t('home_level') + ' ' + (myChar.level || 1) + '</span>' +
                     '<span class="duel-mage-info">' + t('duel_wins') + ': ' + myDuels.wins + '</span>' +
                 '</div>' +
                 '<span class="duel-vs" aria-hidden="true">VS</span>' +
                 '<div class="duel-mage duel-mage-right">' +
                     '<span class="duel-mage-icon" aria-hidden="true">' + Helpers.classIcon(oppChar.className) + '</span>' +
-                    '<strong>' + Helpers.escapeHtml(oppChar.name || duelState.opponent || '???') + '</strong>' +
+                    '<strong>' + Helpers.escapeHtml(oppChar.name || oppAccount || '???') + '</strong>' +
                     '<span class="duel-mage-info">' + t('home_level') + ' ' + (oppChar.level || 1) + '</span>' +
                     '<span class="duel-mage-info">' + t('duel_wins') + ': ' + oppDuels.wins + '</span>' +
                 '</div>' +
@@ -190,7 +196,7 @@ var DuelScreen = (function() {
 
         if (typeof BattleNarrator !== 'undefined') {
             BattleNarrator.announce(t('duel_narrator_pre', {
-                opponent: oppChar.name || duelState.opponent
+                opponent: oppChar.name || oppAccount
             }));
         }
     }
@@ -724,6 +730,9 @@ var DuelScreen = (function() {
         duelState.currentRound = duel.currentRound || duelState.currentRound;
 
         var user = VizAccount.getCurrentUser();
+        duelState.opponent = _resolveOpponentFromDuel(duel, user, duelState.opponent);
+        _ensureCharacterHydrated(duel.challenger);
+        _ensureCharacterHydrated(duel.target);
         duelState.opponentCommitted = _hasOpponentCommitted(duel, user, duelState.currentRound);
 
         if (duel.roundResults && duel.roundResults.length) {
@@ -754,6 +763,64 @@ var DuelScreen = (function() {
                 duelState.phase = _canRevealCurrentRound(duel) ? 'seal' : 'waiting';
             }
         }
+    }
+
+    function _getResolvedParticipants() {
+        var user = VizAccount.getCurrentUser();
+        var duel = _getCurrentDuel();
+        return {
+            me: user,
+            opponent: _resolveOpponentFromDuel(duel, user, duelState.opponent)
+        };
+    }
+
+    function _resolveOpponentFromDuel(duel, user, fallbackOpponent) {
+        if (!duel || !user) return fallbackOpponent || '';
+        if (duel.challenger === user) return duel.target || fallbackOpponent || '';
+        if (duel.target === user) return duel.challenger || fallbackOpponent || '';
+        return fallbackOpponent || duel.target || duel.challenger || '';
+    }
+
+    function _ensureCharacterHydrated(account) {
+        if (!account || StateEngine.getCharacter(account) || _hydratingAccounts[account]) return;
+        if (typeof VizAccount === 'undefined' || typeof VizAccount.getAccount !== 'function') return;
+        if (typeof CharacterSystem === 'undefined' || typeof CharacterSystem.createCharacter !== 'function') return;
+
+        _hydratingAccounts[account] = true;
+        VizAccount.getAccount(account, function(err, accountData) {
+            delete _hydratingAccounts[account];
+            if (err || !accountData || StateEngine.getCharacter(account)) return;
+
+            var grimoire = VizAccount.parseGrimoire(accountData);
+            if (!grimoire || !grimoire.class) return;
+
+            var state = StateEngine.getState();
+            var character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class);
+            if (!character) return;
+
+            if (grimoire.level && grimoire.level > 1) {
+                character.level = grimoire.level;
+                character.xp = grimoire.xp || 0;
+                if (typeof GameFormulas !== 'undefined' && GameFormulas.calculateMaxHp && CharacterSystem.getTotalStat) {
+                    character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
+                    character.maxHp = character.hp;
+                }
+            }
+
+            if (VizAccount.getEffectiveShares && CharacterSystem.updateCoreBonus) {
+                var effectiveShares = VizAccount.getEffectiveShares(accountData);
+                var cappedShares = Math.min(effectiveShares, 1000000000000);
+                CharacterSystem.updateCoreBonus(character, cappedShares);
+            }
+
+            state.characters[account] = character;
+            state.inventories[account] = state.inventories[account] || [];
+            state.quests[account] = state.quests[account] || (typeof QuestSystem !== 'undefined' && QuestSystem.createPlayerQuestState
+                ? QuestSystem.createPlayerQuestState()
+                : {});
+
+            if (App.getCurrentScreen() === 'duel') render();
+        });
     }
 
     function _findRelatedDuel(state, opponent) {

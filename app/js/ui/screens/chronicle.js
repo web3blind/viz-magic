@@ -238,12 +238,22 @@ var ChronicleScreen = (function() {
             return (b.blockNum || 0) - (a.blockNum || 0);
         });
 
+        var user = VizAccount.getCurrentUser();
+        var blessableCount = 0;
+        for (var b = 0; b < entries.length; b++) {
+            if (entries[b].account && entries[b].account !== user) blessableCount++;
+        }
+
         if (entries.length === 0) {
-            feed.innerHTML = '<p class="empty-state">' + Helpers.t('chronicle_empty') + '</p>';
+            feed.innerHTML = '<p class="empty-state">' + Helpers.t('chronicle_empty') + '</p>' +
+                '<p class="chronicle-hint">' + Helpers.t('chronicle_bless_posts_only_hint') + '</p>';
             return;
         }
 
         var html = '';
+        if (blessableCount === 0) {
+            html += '<p class="chronicle-hint">' + Helpers.t('chronicle_no_bless_targets_hint') + '</p>';
+        }
         for (var k = 0; k < entries.length; k++) {
             html += _renderEntry(entries[k]);
         }
@@ -289,6 +299,19 @@ var ChronicleScreen = (function() {
         var icon = _getActionIcon(entry.actionType);
         var timeStr = entry.timestamp ? Helpers.timeAgo(entry.timestamp) : '';
 
+        var user = VizAccount.getCurrentUser();
+        var canBless = entry.account && user && entry.account !== user;
+        var actionsHtml = '';
+
+        if (canBless) {
+            actionsHtml = '<div class="chronicle-actions">' +
+                '<button class="bless-button" data-account="' + (entry.account || '') + '" ' +
+                    'aria-label="' + Helpers.escapeHtml(t('chronicle_bless_cost', { cost: Helpers.manaCost(BLESS_ENERGY), name: charName })) + '">' +
+                    '✨ ' + t('chronicle_bless') + ' · ' + Helpers.manaCost(BLESS_ENERGY) +
+                '</button>' +
+            '</div>';
+        }
+
         return '<article class="chronicle-entry" role="article" aria-label="' + Helpers.escapeHtml(charName) + '">' +
             '<div class="chronicle-entry-header">' +
                 '<span class="chronicle-icon" aria-hidden="true">' + icon + '</span>' +
@@ -296,12 +319,7 @@ var ChronicleScreen = (function() {
                 (timeStr ? '<span class="chronicle-time">' + timeStr + '</span>' : '') +
             '</div>' +
             '<p class="chronicle-text">' + Helpers.escapeHtml(entry.text) + '</p>' +
-            '<div class="chronicle-actions">' +
-                '<button class="bless-button" data-account="' + (entry.account || '') + '" ' +
-                    'aria-label="' + Helpers.escapeHtml(t('chronicle_bless_cost', { cost: Helpers.manaCost(BLESS_ENERGY), name: charName })) + '">' +
-                    '✨ ' + t('chronicle_bless') + ' · ' + Helpers.manaCost(BLESS_ENERGY) +
-                '</button>' +
-            '</div>' +
+            actionsHtml +
             '</article>';
     }
 
