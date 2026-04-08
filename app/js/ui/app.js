@@ -283,10 +283,12 @@ var App = (function() {
 
                 var headBlock = dgp.head_block_number;
 
-                // If we have no lastPolledBlock, start from recent history
-                // (last 200 blocks ~ 10 minutes) to catch duel actions
+                // If we have no lastPolledBlock, start from recent history.
+                // Use a wider recovery window so duel challenge/accept/reveal flows
+                // still restore after reloads or short pauses.
+                // 1000 blocks is roughly 50 minutes.
                 if (_lastPolledBlock === 0) {
-                    _lastPolledBlock = Math.max(1, headBlock - 200);
+                    _lastPolledBlock = Math.max(1, headBlock - 1000);
                 }
 
                 if (headBlock <= _lastPolledBlock) {
