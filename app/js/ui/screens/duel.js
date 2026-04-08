@@ -25,6 +25,7 @@ var DuelScreen = (function() {
             sealTimer: null,
             sealTimeLeft: SEAL_TIMER_SECONDS,
             strategySecret: null,
+            strategyRound: 0,
             roundResults: [],
             challengeData: null,
             autoMode: false,
@@ -115,6 +116,7 @@ var DuelScreen = (function() {
                 if ((!duelState.combatRef && data.opponent === duelState.opponent) ||
                     (duelState.combatRef && data.combatRef === duelState.combatRef)) {
                     duelState.strategySecret = data.secret;
+                    duelState.strategyRound = data.round || 1;
                     duelState.selectedIntent = data.secret.intent;
                     duelState.currentRound = data.round || 1;
                     if (duelState.combatRef) {
@@ -318,6 +320,7 @@ var DuelScreen = (function() {
                 salt: salt,
                 hash: hash
             };
+            duelState.strategyRound = duelState.currentRound;
 
             // Persist secret to localStorage so it survives page reload
             try {
@@ -617,6 +620,7 @@ var DuelScreen = (function() {
                     duelState.currentRound++;
                     duelState.selectedIntent = null;
                     duelState.strategySecret = null;
+                    duelState.strategyRound = 0;
                     duelState.opponentCommitted = false;
                     duelState.opponentRevealedIntent = '';
                     duelState.myRevealedIntent = '';
@@ -758,9 +762,13 @@ var DuelScreen = (function() {
             }
         }
         if (duel.status === 'active') {
-            duelState.waitingMessageKey = _canRevealCurrentRound(duel) ? 'duel_waiting_reveal_chain' : 'duel_waiting_commit_chain';
+            var canReveal = _canRevealCurrentRound(duel);
+            duelState.waitingMessageKey = canReveal ? 'duel_waiting_reveal_chain' : 'duel_waiting_commit_chain';
             if (duelState.phase === 'pre') {
-                duelState.phase = _canRevealCurrentRound(duel) ? 'seal' : 'waiting';
+                duelState.phase = canReveal ? 'seal' : 'waiting';
+            }
+            if (canReveal) {
+                _maybeAutoRevealCurrentRound(duel);
             }
         }
     }
@@ -889,6 +897,50 @@ var DuelScreen = (function() {
             });
         }
         return mapped;
+    }
+
+    function _hasCurrentUserRevealed(duel, user, round) {
+        var side = duel.challenger === user ? 'A' : 'B';
+        return !!(duel.reveals && duel.reveals[round] && duel.reveals[round][side]);
+    }
+
+    function _maybeAutoRevealCurrentRound(duel) {
+        if (!duel || duel.status !== 'active') return;
+        if (!duelState.strategySecret || !duelState.strategySecret.hash) return;
+        if (duelState.strategyRound !== (duel.currentRound || duelState.currentRound || 1)) return;
+        if (duelState.pendingAction === 'reveal') return;
+
+        var user = VizAccount.getCurrentUser();
+        var round = duel.currentRound || duelState.currentRound || 1;
+        if (!user || _hasCurrentUserRevealed(duel, user, round)) return;
+        if (!_hasCurrentUserCommitted(duel, user, round)) return;
+
+        duelState.pendingAction = 'reveal';
+        duelState.phase = 'waiting';
+        duelState.waitingMessageKey = 'duel_waiting_resolution';
+
+        DuelProtocol.revealStrategy(
+            duel.id,
+            round,
+            {
+                intent: duelState.strategySecret.intent,
+                spell: duelState.strategySecret.spell || '',
+                energy: duelState.strategySecret.energy || 100,
+                salt: duelState.strategySecret.salt
+            },
+            '',
+            '',
+            function(err) {
+                if (err) {
+                    duelState.pendingAction = '';
+                    duelState.errorKey = 'error_network';
+                    if (App.getCurrentScreen() === 'duel') render();
+                    return;
+                }
+                duelState.myRevealedIntent = duelState.strategySecret.intent || '';
+                if (App.getCurrentScreen() === 'duel') render();
+            }
+        );
     }
 
     function _countWinsForUser(roundResults, user) {
