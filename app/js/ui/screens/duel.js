@@ -822,7 +822,14 @@ var DuelScreen = (function() {
         }
 
         if (duel.status === 'pending') {
-            duelState.waitingMessageKey = 'duel_waiting_accept_chain';
+            var isAcceptingPendingChallenge =
+                duel.target === user &&
+                duelState.pendingAction === 'accept';
+
+            duelState.waitingMessageKey = isAcceptingPendingChallenge
+                ? 'duel_waiting_resolution'
+                : 'duel_waiting_accept_chain';
+
             if (duelState.phase !== 'seal') {
                 duelState.phase = 'waiting';
             }
