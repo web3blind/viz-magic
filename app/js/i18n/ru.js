@@ -199,6 +199,7 @@ var LangRU = {
     chronicle_narrative_hunt_lose: '{name} пал в бою с {creature}.',
     chronicle_narrative_awaken: '{name} пробудился в Мире Виз!',
     chronicle_narrative_rest: '{name} отдыхает у костра.',
+    chronicle_narrative_bless: '{name} благословляет мага {target}.',
     chronicle_narrative_duel_win: '{winner} победил {loser} в дуэли ({winsA}:{winsB})!',
     chronicle_narrative_duel_draw: '{nameA} и {nameB} сошлись в ничьей.',
     chronicle_narrative_duel_forfeit: '{winner} победил — противник сдался.',

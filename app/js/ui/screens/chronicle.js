@@ -140,6 +140,12 @@ var ChronicleScreen = (function() {
 
         add(user);
 
+        if (state && state.social && state.social.knownAccounts) {
+            for (var i = 0; i < state.social.knownAccounts.length; i++) {
+                add(state.social.knownAccounts[i]);
+            }
+        }
+
         if (state && state.characters) {
             for (var account in state.characters) {
                 if (state.characters.hasOwnProperty(account)) add(account);
@@ -380,6 +386,8 @@ var ChronicleScreen = (function() {
                 return t('chronicle_narrative_awaken', { name: name });
             case 'rest_complete':
                 return t('chronicle_narrative_rest', { name: name });
+            case 'blessing_sent':
+                return t('chronicle_narrative_bless', { name: name, target: action.receiver || '' });
             default:
                 return null;
         }
@@ -444,6 +452,7 @@ var ChronicleScreen = (function() {
             'hunt_defeat': '\uD83D\uDCA8',
             'character_created': '\u2728',
             'rest_complete': '\uD83D\uDCA4',
+            'blessing_sent': '\u2728',
             'duel_completed': '\u2694\uFE0F',
             'duel_forfeit': '\uD83C\uDFF3\uFE0F'
         };

@@ -24,6 +24,9 @@ var StateEngine = (function() {
             territories: {},
             marketplace: null,
             recentActions: [],
+            social: {
+                knownAccounts: []
+            },
             // Phase 5: Living World
             worldBoss: null,
             quests: {},       // account → playerQuestState
@@ -67,6 +70,8 @@ var StateEngine = (function() {
         var events = [];
         var blockNum = processedBlock.blockNum;
         var blockHash = processedBlock.blockHash;
+
+        _ensureSocialState();
 
         // Process VM game actions
         for (var i = 0; i < processedBlock.vmActions.length; i++) {
@@ -334,6 +339,8 @@ var StateEngine = (function() {
         }
 
         // Add to recent actions
+        _rememberAccount(sender);
+
         worldState.recentActions.push({
             type: action.type,
             sender: sender,
@@ -347,6 +354,8 @@ var StateEngine = (function() {
 
     function _processVoicePost(voicePost, blockNum) {
         if (!voicePost || !voicePost.message) return;
+
+        _rememberAccount(voicePost.sender);
 
         worldState.recentActions.push({
             type: 'chronicle_post',
@@ -587,8 +596,23 @@ var StateEngine = (function() {
      * Process an award operation
      */
     function _processAward(award, blockNum) {
-        // Awards are tracked for Blessing counts in the chronicle
-        // Could also update character stats based on received awards
+        _rememberAccount(award.initiator);
+        _rememberAccount(award.receiver);
+
+        worldState.recentActions.push({
+            type: 'blessing_sent',
+            sender: award.initiator,
+            receiver: award.receiver,
+            blockNum: blockNum,
+            energy: award.energy,
+            memo: award.memo || '',
+            events: [],
+            timestamp: Date.now()
+        });
+
+        if (typeof QuestSystem !== 'undefined' && worldState.quests && worldState.quests[award.initiator]) {
+            QuestSystem.updateQuestProgress(worldState.quests[award.initiator], 'social', { target: 'blessing', count: 1 });
+        }
     }
 
     // ==========================================
@@ -856,6 +880,23 @@ var StateEngine = (function() {
             worldState.quests[account] = (typeof QuestSystem !== 'undefined')
                 ? QuestSystem.createPlayerQuestState()
                 : { active: [], completed: [], dailyProphecyDay: 0 };
+        }
+    }
+
+    function _ensureSocialState() {
+        if (!worldState.social) {
+            worldState.social = { knownAccounts: [] };
+        }
+        if (!worldState.social.knownAccounts) {
+            worldState.social.knownAccounts = [];
+        }
+    }
+
+    function _rememberAccount(account) {
+        if (!account) return;
+        _ensureSocialState();
+        if (worldState.social.knownAccounts.indexOf(account) === -1) {
+            worldState.social.knownAccounts.push(account);
         }
     }
 
