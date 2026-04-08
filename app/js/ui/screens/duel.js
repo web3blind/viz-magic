@@ -27,6 +27,8 @@ var DuelScreen = (function() {
             strategySecret: null,
             strategyRound: 0,
             roundResults: [],
+            revealRoundNumber: 0,
+            lastSeenResolvedRound: 0,
             challengeData: null,
             autoMode: false,
             pendingAction: '',
@@ -119,15 +121,9 @@ var DuelScreen = (function() {
             var data = JSON.parse(saved);
             if (!data || !data.secret || !data.secret.hash) return;
 
-            var shouldRestore = false;
-
             // Restore only for an already identified duel after reload.
             // For fresh outgoing duels without combatRef, stale secrets must not lock UI.
-            if (duelState.combatRef && data.combatRef === duelState.combatRef) {
-                shouldRestore = true;
-            }
-
-            if (!shouldRestore) {
+            if (!duelState.combatRef || data.combatRef !== duelState.combatRef) {
                 return;
             }
 
@@ -135,7 +131,6 @@ var DuelScreen = (function() {
             duelState.strategyRound = data.round || 1;
             duelState.selectedIntent = data.secret.intent;
             duelState.currentRound = data.round || 1;
-            duelState.phase = 'waiting';
             console.log('Duel secret restored from localStorage for combat', duelState.combatRef, 'round', data.round || 1);
         } catch(e) {
             console.log('Could not restore duel secret:', e);
@@ -599,7 +594,8 @@ var DuelScreen = (function() {
         SoundManager.play('seals_break');
         SoundManager.vibrate('reveal');
 
-        var roundLabel = t('duel_round', { round: duelState.currentRound, total: duelState.totalRounds });
+        var revealRound = duelState.revealRoundNumber || duelState.roundResults.length || duelState.currentRound;
+        var roundLabel = t('duel_round', { round: revealRound, total: duelState.totalRounds });
         var resultClass = iWon ? 'round-won' : (isDraw ? 'round-draw' : 'round-lost');
         var resultText = iWon ? t('duel_round_won') : (isDraw ? t('duel_round_draw') : t('duel_round_lost'));
 
@@ -673,6 +669,9 @@ var DuelScreen = (function() {
             var finishBtn = Helpers.$('btn-duel-finish');
             if (finishBtn) {
                 finishBtn.addEventListener('click', function() {
+                    duelState.lastSeenResolvedRound = Math.max(duelState.lastSeenResolvedRound, duelState.revealRoundNumber || duelState.roundResults.length);
+                    duelState.revealRoundNumber = 0;
+                    _clearPersistedSecret();
                     duelState.phase = 'result';
                     duelState.finalWinsMe = winsMe;
                     duelState.finalWinsOpp = winsOpp;
@@ -683,13 +682,16 @@ var DuelScreen = (function() {
             var nextBtn = Helpers.$('btn-duel-next');
             if (nextBtn) {
                 nextBtn.addEventListener('click', function() {
-                    duelState.currentRound++;
+                    duelState.lastSeenResolvedRound = Math.max(duelState.lastSeenResolvedRound, duelState.revealRoundNumber || duelState.roundResults.length);
+                    duelState.revealRoundNumber = 0;
+                    duelState.currentRound = Math.max(duelState.currentRound + 1, duelState.lastSeenResolvedRound + 1);
                     duelState.selectedIntent = null;
                     duelState.strategySecret = null;
                     duelState.strategyRound = 0;
                     duelState.opponentCommitted = false;
                     duelState.opponentRevealedIntent = '';
                     duelState.myRevealedIntent = '';
+                    _clearPersistedSecret();
                     duelState.phase = 'seal';
                     render();
                 });
@@ -823,14 +825,13 @@ var DuelScreen = (function() {
                 duelState.myRevealedIntent = latest.myIntent;
                 duelState.opponentRevealedIntent = latest.oppIntent;
                 if (duel.status === 'completed') {
+                    duelState.revealRoundNumber = duel.roundResults.length;
                     duelState.phase = 'result';
                     duelState.finalWinsMe = _countWinsForUser(duel.roundResults, user);
                     duelState.finalWinsOpp = _countLossesForUser(duel.roundResults, user);
-                } else if ((duelState.phase === 'waiting' || duelState.phase === 'seal') &&
-                           duelState.currentRound <= duel.roundResults.length) {
-                    // Only stay on reveal for the most recently resolved round.
-                    // Once the player has advanced to the next round, do not
-                    // force the UI back into the prior round's reveal screen.
+                    _clearPersistedSecret();
+                } else if (duel.roundResults.length > (duelState.lastSeenResolvedRound || 0)) {
+                    duelState.revealRoundNumber = duel.roundResults.length;
                     duelState.phase = 'reveal';
                 }
             }
@@ -850,11 +851,27 @@ var DuelScreen = (function() {
             }
         }
         if (duel.status === 'active') {
+            var activeRound = duel.currentRound || duelState.currentRound || 1;
+            var hasCurrentCommit = _hasCurrentUserCommitted(duel, user, activeRound);
             var canReveal = _canRevealCurrentRound(duel);
+
             duelState.waitingMessageKey = canReveal ? 'duel_waiting_reveal_chain' : 'duel_waiting_commit_chain';
-            if (duelState.phase === 'pre') {
-                duelState.phase = canReveal ? 'seal' : 'waiting';
+
+            if (duelState.strategySecret && duelState.strategyRound !== activeRound) {
+                duelState.strategySecret = null;
+                duelState.strategyRound = 0;
+                duelState.selectedIntent = null;
+                _clearPersistedSecret();
             }
+
+            if (duelState.phase !== 'reveal' && duelState.phase !== 'result') {
+                if (!hasCurrentCommit) {
+                    duelState.phase = 'seal';
+                } else {
+                    duelState.phase = 'waiting';
+                }
+            }
+
             if (canReveal) {
                 _maybeAutoRevealCurrentRound(duel);
             }
