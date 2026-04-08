@@ -638,7 +638,24 @@ var StateEngine = (function() {
 
     function _handleGuildInvite(sender, data, blockNum) {
         var guild = worldState.guilds[data.guild_id];
+        if (!guild && typeof GuildSystem.ensureGuildShell === 'function') {
+            guild = GuildSystem.ensureGuildShell(worldState.guilds, data.guild_id, sender, blockNum);
+        }
         if (!guild) return [];
+
+        if (guild.isPlaceholder && !guild.members[sender]) {
+            guild.members[sender] = {
+                account: sender,
+                rank: GuildSystem.RANKS.FOUNDER,
+                joinedBlock: blockNum,
+                delegatedShares: 0,
+                pvpWins: 0,
+                pvpLosses: 0,
+                questContributions: 0
+            };
+            if (!guild.founder) guild.founder = sender;
+        }
+
         var ok = GuildSystem.addInvite(guild, sender, data.target, blockNum);
         if (!ok) return [];
         return [{ type: 'guild_invite', guildId: data.guild_id, inviter: sender, target: data.target }];
@@ -646,6 +663,9 @@ var StateEngine = (function() {
 
     function _handleGuildAccept(sender, data, blockNum) {
         var guild = worldState.guilds[data.guild_id];
+        if (!guild && typeof GuildSystem.ensureGuildShell === 'function') {
+            guild = GuildSystem.ensureGuildShell(worldState.guilds, data.guild_id, '', blockNum);
+        }
         if (!guild) return [];
         var ok = GuildSystem.joinGuild(guild, sender, blockNum);
         if (!ok) return [];
@@ -654,6 +674,9 @@ var StateEngine = (function() {
 
     function _handleGuildLeave(sender, data, blockNum) {
         var guild = worldState.guilds[data.guild_id];
+        if (!guild && typeof GuildSystem.ensureGuildShell === 'function') {
+            guild = GuildSystem.ensureGuildShell(worldState.guilds, data.guild_id, '', blockNum);
+        }
         if (!guild) return [];
         var ok = GuildSystem.leaveGuild(guild, sender);
         if (!ok) return [];
@@ -662,7 +685,36 @@ var StateEngine = (function() {
 
     function _handleGuildPromote(sender, data, blockNum) {
         var guild = worldState.guilds[data.guild_id];
+        if (!guild && typeof GuildSystem.ensureGuildShell === 'function') {
+            guild = GuildSystem.ensureGuildShell(worldState.guilds, data.guild_id, sender, blockNum);
+        }
         if (!guild) return [];
+
+        if (guild.isPlaceholder && !guild.members[sender]) {
+            guild.members[sender] = {
+                account: sender,
+                rank: GuildSystem.RANKS.FOUNDER,
+                joinedBlock: blockNum,
+                delegatedShares: 0,
+                pvpWins: 0,
+                pvpLosses: 0,
+                questContributions: 0
+            };
+            if (!guild.founder) guild.founder = sender;
+        }
+
+        if (guild.isPlaceholder && data.target && !guild.members[data.target]) {
+            guild.members[data.target] = {
+                account: data.target,
+                rank: GuildSystem.RANKS.INITIATE,
+                joinedBlock: blockNum,
+                delegatedShares: 0,
+                pvpWins: 0,
+                pvpLosses: 0,
+                questContributions: 0
+            };
+        }
+
         var ok = GuildSystem.promoteRank(guild, sender, data.target, data.rank);
         if (!ok) return [];
         return [{ type: 'guild_promoted', guildId: data.guild_id, promoter: sender, target: data.target, rank: data.rank }];

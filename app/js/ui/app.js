@@ -383,6 +383,7 @@ var App = (function() {
             quests: true,
             map: true,
             chronicle: true,
+            guild: true,
             marketplace: true,
             leaderboard: true
         };

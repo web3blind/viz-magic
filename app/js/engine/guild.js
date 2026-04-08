@@ -92,8 +92,55 @@ var GuildSystem = (function() {
             wars: [],
             quests: [],
             announcements: [],
-            totalDelegated: 0   // Sum of all member delegations (integer, micro-SHARES)
+            totalDelegated: 0,   // Sum of all member delegations (integer, micro-SHARES)
+            isPlaceholder: false
         };
+    }
+
+    /**
+     * Ensure a guild shell exists even when this client has not replayed the
+     * original guild.create yet (e.g. fresh browser with a short sync window).
+     * This keeps invite/join flows functional instead of dropping newer actions.
+     *
+     * @param {Object<string, Object>} guilds
+     * @param {string} guildId
+     * @param {string} founderAccount
+     * @param {number} blockNum
+     * @returns {Object|null}
+     */
+    function ensureGuildShell(guilds, guildId, founderAccount, blockNum) {
+        if (!guilds || !guildId) return null;
+        if (guilds[guildId]) return guilds[guildId];
+
+        var normalizedTag = String(guildId).replace(/[^a-z0-9]/gi, '').toUpperCase();
+        if (normalizedTag.length < 2) normalizedTag = 'GM';
+        normalizedTag = normalizedTag.slice(0, 5);
+
+        guilds[guildId] = {
+            id: guildId,
+            name: guildId,
+            tag: normalizedTag,
+            school: null,
+            motto: '',
+            charter: {
+                tithe_pct: DEFAULT_CHARTER.tithe_pct,
+                membership: MEMBERSHIP.INVITE,
+                min_shares: DEFAULT_CHARTER.min_shares
+            },
+            founder: founderAccount || '',
+            createdBlock: blockNum | 0,
+            level: 1,
+            xp: 0,
+            members: {},
+            invites: {},
+            wars: [],
+            quests: [],
+            announcements: [],
+            totalDelegated: 0,
+            isPlaceholder: true
+        };
+
+        return guilds[guildId];
     }
 
     /**
@@ -483,6 +530,7 @@ var GuildSystem = (function() {
         WAR_STATE: WAR_STATE,
         DEFAULT_CHARTER: DEFAULT_CHARTER,
         createGuild: createGuild,
+        ensureGuildShell: ensureGuildShell,
         addInvite: addInvite,
         joinGuild: joinGuild,
         leaveGuild: leaveGuild,
