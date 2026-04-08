@@ -760,6 +760,7 @@ var LangEN = {
     quest_obj_explore_detail: 'Visit {count} different regions via the world map.',
     quest_obj_social: 'Social actions',
     quest_obj_bless_detail: 'Bless other mages {count} times via the Chronicle.',
+    quest_obj_guild_join_detail: 'Join any guild.',
     quest_obj_territory: 'Territory actions',
     quest_obj_territory_detail: 'Contribute to a siege {count} time(s).',
     quest_obj_enchant_detail: 'Enchant {count} item with a rune stone.',

@@ -318,6 +318,7 @@ var QuestsScreen = (function() {
         if (!obj) return '';
         if (obj.type === 'explore') return t('quest_obj_explore_detail', { count: obj.required });
         if (obj.type === 'social' && obj.target === 'blessing') return t('quest_obj_bless_detail', { count: obj.required });
+        if (obj.type === 'social' && obj.target === 'guild_join') return t('quest_obj_guild_join_detail', { count: obj.required });
         if (obj.type === 'territory' && obj.target === 'siege') return t('quest_obj_territory_detail', { count: obj.required });
         if (obj.type === 'craft' && obj.target === 'enchant') return t('quest_obj_enchant_detail', { count: obj.required });
         return t('quest_obj_' + obj.type) + ': ' + obj.required;

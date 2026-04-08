@@ -760,6 +760,7 @@ var LangRU = {
     quest_obj_explore_detail: 'Посетите {count} разных региона через карту мира.',
     quest_obj_social: 'Социальные действия',
     quest_obj_bless_detail: 'Благословите других магов {count} раз через Хронику.',
+    quest_obj_guild_join_detail: 'Вступите в любую гильдию.',
     quest_obj_territory: 'Территориальные действия',
     quest_obj_territory_detail: 'Внесите вклад в осаду {count} раз.',
     quest_obj_enchant_detail: 'Зачаруйте {count} предмет рунным камнем.',
