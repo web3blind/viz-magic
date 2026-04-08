@@ -12,6 +12,8 @@ var App = (function() {
     var _lastPolledBlock = 0;
     var _pollBusy = false;
     var _syncStartBlock = 0;
+    var _syncVisible = false;
+    var _lastSyncPercent = -1;
     var POLL_INTERVAL_MS = 3000;
 
     /**
@@ -224,15 +226,22 @@ var App = (function() {
         if (!statusEl) return;
 
         percent = Math.max(0, Math.min(100, Math.ceil(percent || 0)));
-        statusEl.textContent = 'Синхронизация с Миром... ' + percent + '%';
 
-        if (forceShow || percent < 100) {
-            statusEl.classList.add('show');
-        } else {
-            setTimeout(function() {
-                statusEl.classList.remove('show');
-            }, 1500);
+        if (!forceShow && percent >= 100) {
+            _syncVisible = false;
+            _lastSyncPercent = percent;
+            statusEl.classList.remove('show');
+            return;
         }
+
+        if (_syncVisible && _lastSyncPercent === percent) {
+            return;
+        }
+
+        statusEl.textContent = 'Синхронизация с Миром... ' + percent + '%';
+        statusEl.classList.add('show');
+        _syncVisible = true;
+        _lastSyncPercent = percent;
     }
 
     /**
@@ -283,6 +292,11 @@ var App = (function() {
                 if (headBlock <= _lastPolledBlock) {
                     _syncStartBlock = 0;
                     _updateSyncStatus(100);
+                    _pollBusy = false;
+                    return;
+                }
+
+                if (!(_lastPolledBlock === 0 || (headBlock - _lastPolledBlock) >= 10)) {
                     _pollBusy = false;
                     return;
                 }
