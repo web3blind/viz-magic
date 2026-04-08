@@ -7,6 +7,7 @@ var ChronicleScreen = (function() {
 
     var MAX_POST_LENGTH = 280;
     var BLESS_ENERGY = 100; // 1% = 100 basis points
+    var BLESS_MEMO_PREFIX = 'viz://vm/bless/';
     var currentTab = 'all'; // all, guild, friends, world
     var REQUIRED_TAG = '#viz_magic';
 
@@ -314,8 +315,8 @@ var ChronicleScreen = (function() {
             '<p class="chronicle-text">' + Helpers.escapeHtml(entry.text) + '</p>' +
             '<div class="chronicle-actions">' +
                 '<button class="bless-button" data-account="' + (entry.account || '') + '" ' +
-                    'aria-label="' + t('chronicle_bless') + ' ' + Helpers.escapeHtml(charName) + '">' +
-                    '\u2728 ' + t('chronicle_bless') +
+                    'aria-label="' + Helpers.escapeHtml(t('chronicle_bless_cost', { cost: Helpers.manaCost(BLESS_ENERGY), name: charName })) + '">' +
+                    '✨ ' + t('chronicle_bless') + ' · ' + Helpers.manaCost(BLESS_ENERGY) +
                 '</button>' +
             '</div>' +
             '</article>';
@@ -331,7 +332,7 @@ var ChronicleScreen = (function() {
         SoundManager.play('bless_send');
         SoundManager.vibrate('light');
 
-        var memo = 'viz://vm/bless/' + account;
+        var memo = BLESS_MEMO_PREFIX + account;
         VizBroadcast.award(account, BLESS_ENERGY, 0, memo, [], function(err) {
             if (err) {
                 Toast.error(Helpers.t('error_low_mana'));
@@ -387,10 +388,16 @@ var ChronicleScreen = (function() {
             case 'rest_complete':
                 return t('chronicle_narrative_rest', { name: name });
             case 'blessing_sent':
+                if (!_isBlessAction(action)) return null;
                 return t('chronicle_narrative_bless', { name: name, target: action.receiver || '' });
             default:
                 return null;
         }
+    }
+
+    function _isBlessAction(action) {
+        if (!action) return false;
+        return action.type === 'blessing_sent' && action.memo && String(action.memo).indexOf(BLESS_MEMO_PREFIX) === 0;
     }
 
     function _duelToNarrative(duel, state) {

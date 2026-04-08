@@ -599,13 +599,18 @@ var StateEngine = (function() {
         _rememberAccount(award.initiator);
         _rememberAccount(award.receiver);
 
+        var memo = award.memo || '';
+        var isBless = String(memo).indexOf('viz://vm/bless/') === 0;
+
+        if (!isBless) return;
+
         worldState.recentActions.push({
             type: 'blessing_sent',
             sender: award.initiator,
             receiver: award.receiver,
             blockNum: blockNum,
             energy: award.energy,
-            memo: award.memo || '',
+            memo: memo,
             events: [],
             timestamp: Date.now()
         });

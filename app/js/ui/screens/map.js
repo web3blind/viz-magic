@@ -148,7 +148,7 @@ var MapScreen = (function() {
                 html += '<button class="btn btn-primary btn-sm region-travel-btn" ';
                 html += 'data-region="' + regionId + '" ';
                 html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + '">';
-                html += '\uD83D\uDEB6 ' + t('map_travel') + ' (' + t('map_travel_cost') + ')';
+                html += '\uD83D\uDEB6 ' + t('map_travel') + ' (' + Helpers.manaCost(100) + ')';
                 html += '</button>';
             } else if (pendingTravel && pendingTravel.account === user && regionId === pendingTravel.to) {
                 html += '<div class="region-benefits">⏳ ' + t('map_pending_travel_short') + '</div>';

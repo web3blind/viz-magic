@@ -204,6 +204,7 @@ var LangEN = {
     chronicle_world: 'World',
     chronicle_tabs: 'Chronicle filter',
     chronicle_bless: 'Bless',
+    chronicle_bless_cost: '{name} · Bless · {cost}',
     chronicle_blessed: 'Blessing sent!',
     chronicle_write: 'Write in Chronicle',
     chronicle_placeholder: 'Write your words into the World...',

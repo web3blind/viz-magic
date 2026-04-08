@@ -204,6 +204,7 @@ var LangRU = {
     chronicle_world: 'Мир',
     chronicle_tabs: 'Фильтр хроники',
     chronicle_bless: 'Благословить',
+    chronicle_bless_cost: '{name} · Благословить · {cost}',
     chronicle_blessed: 'Благословение отправлено!',
     chronicle_write: 'Написать в Хронику',
     chronicle_placeholder: 'Впиши слова в Мир...',

@@ -64,7 +64,7 @@ var HuntScreen = (function() {
             html += '<button class="spell-btn ' + Helpers.schoolClass(s.school) + '" data-id="' + s.id + '" role="radio" aria-checked="false" ' +
                 'aria-label="' + s.name + '. ' + t('hunt_mana_cost', {cost: Helpers.bpToPercent(s.manaCost)}) + '">' +
                 '<span class="spell-name">' + s.name + '</span>' +
-                '<span class="spell-cost">' + Helpers.bpToPercent(s.manaCost) + ' ' + t('home_mana') + '</span>' +
+                '<span class="spell-cost">' + Helpers.manaCost(s.manaCost) + '</span>' +
                 '</button>';
         }
 

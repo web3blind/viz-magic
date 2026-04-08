@@ -156,7 +156,7 @@ var CraftingScreen = (function() {
 
         // Mana cost
         html += '<div class="recipe-cost">';
-        html += '<span>' + t('craft_mana_cost') + ': ' + Helpers.bpToPercent(recipe.manaCost || 0) + ' ' + t('home_mana') + '</span>';
+        html += '<span>' + t('craft_mana_cost') + ': ' + Helpers.manaCost(recipe.manaCost || 0) + '</span>';
         html += '</div>';
 
         // Possible outcomes

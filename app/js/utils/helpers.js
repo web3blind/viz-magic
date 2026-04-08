@@ -206,6 +206,16 @@ var Helpers = (function() {
     }
 
     /**
+     * Compact mana cost label for buttons and short UI badges.
+     * Example: 100 -> "⚡1.00%"
+     * @param {number} bp
+     * @returns {string}
+     */
+    function manaCost(bp) {
+        return '⚡' + bpToPercent(bp);
+    }
+
+    /**
      * Get rarity color class
      */
     function rarityClass(rarity) {
@@ -259,6 +269,7 @@ var Helpers = (function() {
         escapeHtml: escapeHtml,
         isValidAccountName: isValidAccountName,
         bpToPercent: bpToPercent,
+        manaCost: manaCost,
         rarityClass: rarityClass,
         classIcon: classIcon,
         schoolColor: schoolColor,
