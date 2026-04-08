@@ -220,7 +220,11 @@ var StateEngine = (function() {
         // Validate the action
         var validation = ActionValidator.validate(action, worldState, sender, blockNum);
         if (!validation.valid) {
-            console.log('StateEngine: Invalid action from', sender, ':', validation.error);
+            console.log('StateEngine: Invalid action from', sender, {
+                type: action.type,
+                error: validation.error,
+                data: action.data || {}
+            });
             return events;
         }
 

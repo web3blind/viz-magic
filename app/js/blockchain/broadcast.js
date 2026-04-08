@@ -98,7 +98,33 @@ var VizBroadcast = (function() {
                 d: actionData.d || {}
             };
 
-            custom(cfg.PROTOCOLS.VM, object, callback);
+            if (object.t === cfg.ACTION_TYPES.CHALLENGE ||
+                object.t === cfg.ACTION_TYPES.ACCEPT ||
+                object.t === cfg.ACTION_TYPES.COMMIT ||
+                object.t === cfg.ACTION_TYPES.REVEAL ||
+                object.t === cfg.ACTION_TYPES.FORFEIT) {
+                console.log('VizBroadcast.gameAction duel', {
+                    user: user,
+                    previous: previous,
+                    type: object.t,
+                    data: object.d
+                });
+            }
+
+            custom(cfg.PROTOCOLS.VM, object, function(customErr, result) {
+                if (object.t === cfg.ACTION_TYPES.CHALLENGE ||
+                    object.t === cfg.ACTION_TYPES.ACCEPT ||
+                    object.t === cfg.ACTION_TYPES.COMMIT ||
+                    object.t === cfg.ACTION_TYPES.REVEAL ||
+                    object.t === cfg.ACTION_TYPES.FORFEIT) {
+                    console.log('VizBroadcast.gameAction duel result', {
+                        type: object.t,
+                        err: customErr ? (customErr.message || String(customErr)) : null,
+                        ok: !customErr
+                    });
+                }
+                callback(customErr, result);
+            });
         });
     }
 

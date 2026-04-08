@@ -341,6 +341,14 @@ var ArenaScreen = (function() {
         var state = StateEngine.getState();
         var playerDuels = DuelStateManager.getPlayerDuels(user || '', state);
 
+        console.log('ArenaScreen: render history', {
+            user: user,
+            pending: playerDuels.pending.length,
+            active: playerDuels.active.length,
+            history: playerDuels.history.length,
+            headBlock: state && state.headBlock
+        });
+
         var html = '';
 
         // Active duels

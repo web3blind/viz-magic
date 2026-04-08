@@ -287,10 +287,26 @@ var DuelScreen = (function() {
     }
 
     function _onIntentSelect() {
-        if (duelState.selectedIntent) return;
+        if (duelState.selectedIntent) {
+            console.log('DuelScreen: intent select ignored because selectedIntent already set', {
+                selectedIntent: duelState.selectedIntent,
+                combatRef: duelState.combatRef,
+                opponent: duelState.opponent,
+                pendingAction: duelState.pendingAction,
+                currentRound: duelState.currentRound
+            });
+            return;
+        }
 
         var intent = this.getAttribute('data-intent');
         duelState.selectedIntent = intent;
+        console.log('DuelScreen: intent selected', {
+            intent: intent,
+            combatRef: duelState.combatRef,
+            opponent: duelState.opponent,
+            pendingAction: duelState.pendingAction,
+            currentRound: duelState.currentRound
+        });
 
         var cards = document.querySelectorAll('.spell-card');
         for (var i = 0; i < cards.length; i++) {
@@ -324,6 +340,14 @@ var DuelScreen = (function() {
     }
 
     function _commitStrategy(intent) {
+        console.log('DuelScreen: _commitStrategy start', {
+            intent: intent,
+            combatRef: duelState.combatRef,
+            opponent: duelState.opponent,
+            pendingAction: duelState.pendingAction,
+            currentRound: duelState.currentRound
+        });
+
         var salt = DuelSystem.generateSalt();
         var strategy = {
             intent: intent,
@@ -357,6 +381,11 @@ var DuelScreen = (function() {
 
             // Accept flow: broadcast accept with strategy hash
             if (duelState.pendingAction === 'accept' && duelState.combatRef) {
+                console.log('DuelScreen: broadcasting accept', {
+                    combatRef: duelState.combatRef,
+                    round: duelState.currentRound,
+                    hash: hash
+                });
                 DuelProtocol.acceptChallenge(
                     duelState.combatRef,
                     hash,
@@ -375,6 +404,11 @@ var DuelScreen = (function() {
                 );
             } else if (duelState.combatRef && duelState.currentRound > 1) {
                 duelState.pendingAction = 'commit';
+                console.log('DuelScreen: broadcasting commit', {
+                    combatRef: duelState.combatRef,
+                    round: duelState.currentRound,
+                    hash: hash
+                });
                 DuelProtocol.commitStrategy(
                     duelState.combatRef,
                     duelState.currentRound,
@@ -394,6 +428,12 @@ var DuelScreen = (function() {
                 duelState.pendingAction = 'challenge';
                 var currentBlock = StateEngine.getState().headBlock || 0;
                 var deadline = currentBlock + VizMagicConfig.BLOCK.DUEL_ACCEPT_WINDOW;
+                console.log('DuelScreen: broadcasting challenge', {
+                    opponent: duelState.opponent,
+                    currentBlock: currentBlock,
+                    deadline: deadline,
+                    hash: hash
+                });
                 DuelProtocol.createChallenge(
                     duelState.opponent,
                     'best_of_3', 3, 100, hash, deadline,
@@ -410,6 +450,12 @@ var DuelScreen = (function() {
                 );
             } else if (duelState.combatRef && _canRevealCurrentRound()) {
                 duelState.pendingAction = 'reveal';
+                console.log('DuelScreen: broadcasting reveal', {
+                    combatRef: duelState.combatRef,
+                    round: duelState.currentRound,
+                    hash: hash,
+                    intent: intent
+                });
                 DuelProtocol.revealStrategy(
                     duelState.combatRef,
                     duelState.currentRound,
