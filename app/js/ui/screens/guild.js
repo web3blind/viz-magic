@@ -7,6 +7,7 @@ var GuildScreen = (function() {
     'use strict';
 
     var t = Helpers.t;
+    var _seenGuildNotifications = {};
 
     function render() {
         var container = Helpers.$('screen-guild');
@@ -23,7 +24,7 @@ var GuildScreen = (function() {
         if (myGuild) {
             _renderGuildHall(container, myGuild, user, state);
         } else {
-            _renderNoGuild(container, state);
+            _renderNoGuild(container, state, user);
         }
     }
 
@@ -205,11 +206,33 @@ var GuildScreen = (function() {
     /**
      * Render no-guild state: recommended guilds + create button
      */
-    function _renderNoGuild(container, state) {
+    function _renderNoGuild(container, state, user) {
         var html = '';
+        var pendingInvites = _getPendingInvites(state, user);
         html += '<div class="guild-hall" role="region" aria-label="' + t('guild_title') + '">';
         html += '<h1>' + t('guild_title') + '</h1>';
         html += '<p class="guild-no-guild-text">' + t('guild_not_member') + '</p>';
+
+        if (pendingInvites.length > 0) {
+            html += '<section class="recommended-guilds" aria-label="' + t('guild_pending_invites') + '">';
+            html += '<h2>' + t('guild_pending_invites') + '</h2>';
+            html += '<ul class="guild-list" role="list">';
+            for (var pi = 0; pi < pendingInvites.length; pi++) {
+                var inviteGuild = pendingInvites[pi];
+                var inviteInfo = inviteGuild.invites[user] || {};
+                html += '<li class="guild-card">';
+                html += '<div class="guild-card-header">';
+                html += '<strong>' + _esc(inviteGuild.name) + '</strong>';
+                html += ' <span class="guild-tag">[' + _esc(inviteGuild.tag) + ']</span>';
+                html += '</div>';
+                html += '<p class="guild-card-motto">' + t('guild_invited_by') + ': ' + _esc(inviteInfo.inviter || '—') + '</p>';
+                html += '<button class="btn btn-primary btn-sm guild-accept-invite-btn" data-guild="' + inviteGuild.id + '">';
+                html += t('guild_accept_invite') + '</button>';
+                html += '</li>';
+            }
+            html += '</ul>';
+            html += '</section>';
+        }
 
         // Create guild button
         html += '<button class="btn btn-primary btn-large guild-btn" id="btn-guild-create" aria-label="' + t('guild_create') + '">';
@@ -251,6 +274,19 @@ var GuildScreen = (function() {
         container.innerHTML = html;
         _bindNoGuildEvents(container);
         _bindActiveKeyEvents(container);
+    }
+
+    function _getPendingInvites(state, user) {
+        var invites = [];
+        if (!state || !state.guilds || !user) return invites;
+        for (var guildId in state.guilds) {
+            if (!state.guilds.hasOwnProperty(guildId)) continue;
+            var guild = state.guilds[guildId];
+            if (guild && guild.invites && guild.invites[user]) {
+                invites.push(guild);
+            }
+        }
+        return invites;
     }
 
     /**
@@ -341,6 +377,13 @@ var GuildScreen = (function() {
                 _showTreasuryModal(guild);
             });
         }
+
+        var settingsBtn = container.querySelector('#btn-guild-settings');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', function() {
+                _showGuildSettingsModal(guild, user);
+            });
+        }
     }
 
     /**
@@ -375,6 +418,32 @@ var GuildScreen = (function() {
                         }
                         render();
                     }
+                });
+            });
+        }
+
+        var acceptInviteBtns = container.querySelectorAll('.guild-accept-invite-btn');
+        for (var ai = 0; ai < acceptInviteBtns.length; ai++) {
+            acceptInviteBtns[ai].addEventListener('click', function() {
+                var guildId = this.getAttribute('data-guild');
+                GuildProtocol.broadcastJoinGuild(guildId, function(err) {
+                    if (err) {
+                        Toast.error(t('error_network'));
+                        return;
+                    }
+
+                    Toast.success(t('guild_joined'));
+                    SoundManager.play('success');
+
+                    var state = StateEngine.getState();
+                    var user = VizAccount.getCurrentUser();
+                    var blockNum = state.headBlock || 0;
+                    if (state.guilds && state.guilds[guildId]) {
+                        GuildSystem.joinGuild(state.guilds[guildId], user, blockNum);
+                    }
+
+                    Helpers.EventBus.emit('navigate', 'guild');
+                    render();
                 });
             });
         }
@@ -631,12 +700,38 @@ var GuildScreen = (function() {
      * Show treasury info modal
      */
     function _showTreasuryModal(guild) {
-        var tithe = guild.charter.tithe_pct ? (guild.charter.tithe_pct / 100) : 0;
+        var charter = guild && guild.charter ? guild.charter : {};
+        var tithe = charter.tithe_pct ? (charter.tithe_pct / 100) : 0;
         var html = '<div class="modal-content">';
         html += '<h2 class="modal-title">' + t('guild_treasury') + '</h2>';
         html += '<p>' + t('guild_tithe_rate') + ': ' + tithe + '%</p>';
         html += '<p>' + t('guild_treasury_account') + ': ' + _esc(guild.founder) + '</p>';
         html += '<p>' + t('guild_total_delegated') + ': ' + _formatShares(guild.totalDelegated) + '</p>';
+        html += '<div class="modal-actions">';
+        html += '<button class="btn btn-secondary" id="modal-cancel">' + t('close') + '</button>';
+        html += '</div>';
+        html += '</div>';
+
+        ModalComponent.show(html);
+        Helpers.$('modal-cancel').addEventListener('click', function() { ModalComponent.hide(); });
+    }
+
+    function _showGuildSettingsModal(guild, user) {
+        var charter = guild && guild.charter ? guild.charter : {};
+        var membership = charter.membership || GuildSystem.DEFAULT_CHARTER.membership;
+        var minShares = charter.min_shares || 0;
+        var tithe = charter.tithe_pct ? (charter.tithe_pct / 100) : 0;
+        var officerNote = GuildSystem.isOfficer(guild, user)
+            ? t('guild_settings_officer_hint')
+            : t('guild_settings_view_only');
+
+        var html = '<div class="modal-content">';
+        html += '<h2 class="modal-title">' + t('guild_settings') + '</h2>';
+        html += '<p>' + officerNote + '</p>';
+        html += '<p>' + t('guild_tithe_rate') + ': ' + tithe + '%</p>';
+        html += '<p>' + t('guild_membership_mode') + ': ' + t('guild_membership_' + membership) + '</p>';
+        html += '<p>' + t('guild_min_shares') + ': ' + _formatShares(minShares) + '</p>';
+        html += '<p>' + t('guild_treasury_account') + ': ' + _esc(guild.founder) + '</p>';
         html += '<div class="modal-actions">';
         html += '<button class="btn btn-secondary" id="modal-cancel">' + t('close') + '</button>';
         html += '</div>';
@@ -667,7 +762,7 @@ var GuildScreen = (function() {
      * Called once when the screen module loads.
      */
     function init() {
-        var events = ['guild_created', 'guild_joined', 'guild_left', 'guild_promoted'];
+        var events = ['guild_created', 'guild_joined', 'guild_left', 'guild_promoted', 'guild_invite'];
         for (var i = 0; i < events.length; i++) {
             Helpers.EventBus.on(events[i], function() {
                 // Re-render only if guild screen is currently visible
@@ -677,6 +772,44 @@ var GuildScreen = (function() {
                 }
             });
         }
+
+        Helpers.EventBus.on('guild_invite', function(evt) {
+            var user = VizAccount.getCurrentUser();
+            if (!evt || !user || evt.target !== user) return;
+            var key = 'guild_invite:' + evt.guildId + ':' + evt.target;
+            if (_seenGuildNotifications[key]) return;
+            _seenGuildNotifications[key] = true;
+            Toast.info(t('guild_invite_received'), 7000, {
+                actionLabel: t('guild_notification_open_guild'),
+                onClick: function() {
+                    Helpers.EventBus.emit('navigate', 'guild');
+                }
+            });
+            Helpers.EventBus.emit('navigate', 'guild');
+        });
+
+        Helpers.EventBus.on('guild_joined', function(evt) {
+            var user = VizAccount.getCurrentUser();
+            if (!evt || !user || evt.account !== user) return;
+            Toast.success(t('guild_joined'), 5000, {
+                actionLabel: t('guild_notification_open_guild'),
+                onClick: function() {
+                    Helpers.EventBus.emit('navigate', 'guild');
+                }
+            });
+        });
+
+        Helpers.EventBus.on('guild_promoted', function(evt) {
+            var user = VizAccount.getCurrentUser();
+            if (!evt || !user || evt.target !== user) return;
+            Toast.success(t('guild_rank_changed_notice'), 6000, {
+                actionLabel: t('guild_notification_open_guild'),
+                onClick: function() {
+                    Helpers.EventBus.emit('navigate', 'guild');
+                }
+            });
+            Helpers.EventBus.emit('navigate', 'guild');
+        });
     }
 
     return { render: render, init: init };

@@ -7,8 +7,12 @@ var ArenaScreen = (function() {
 
     var currentTab = 'leaderboard'; // leaderboard, history
     var levelFilter = 'all';
+    var listenersRegistered = false;
+    var seenIncomingRefs = {};
 
     function render() {
+        _ensureEventListeners();
+
         var t = Helpers.t;
         var el = Helpers.$('screen-arena');
         if (!el) return;
@@ -67,6 +71,48 @@ var ArenaScreen = (function() {
 
         // Scan chain for incoming challenges addressed to current user
         _scanIncomingChallenges(el);
+    }
+
+    function _ensureEventListeners() {
+        if (listenersRegistered) return;
+        listenersRegistered = true;
+
+        Helpers.EventBus.on('duel_challenge', function(data) {
+            var user = VizAccount.getCurrentUser();
+            if (!data || !user) return;
+            if (data.target !== user) return;
+
+            var ref = String(data.challengeRef || data.combatRef || '');
+            if (ref && seenIncomingRefs[ref]) return;
+            if (ref) seenIncomingRefs[ref] = true;
+
+            Toast.info(Helpers.t('arena_incoming_duel_toast', {
+                opponent: data.account || data.challenger || ''
+            }), 7000, {
+                actionLabel: Helpers.t('arena_open_challenge'),
+                onClick: function() {
+                    currentTab = 'history';
+                    Helpers.EventBus.emit('navigate', 'arena');
+                }
+            });
+
+            currentTab = 'history';
+            Helpers.EventBus.emit('navigate', 'arena');
+        });
+
+        Helpers.EventBus.on('duel_accepted', function(data) {
+            var user = VizAccount.getCurrentUser();
+            if (!data || !user) return;
+            if (data.challenger !== user && data.target !== user) return;
+
+            Toast.success(Helpers.t('arena_duel_accepted_toast'), 5000, {
+                actionLabel: Helpers.t('arena_open_duel'),
+                onClick: function() {
+                    var opp = data.challenger === user ? data.target : data.challenger;
+                    DuelScreen.startDuel(opp, String(data.combatRef || ''), { source: 'accepted_event' });
+                }
+            });
+        });
     }
 
     /**
@@ -382,6 +428,8 @@ var ArenaScreen = (function() {
             });
         }
     }
+
+    _ensureEventListeners();
 
     return { render: render };
 })();
