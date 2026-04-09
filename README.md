@@ -48,7 +48,7 @@ The game uses three protocols on VIZ custom operations:
 - **Armageddon**: Spend 100% mana for 100× XP — requires a rare Armageddon Stone artifact (drops from Thornvine Lv5+, or craft from Echo Shards × 3 + Shadow Shard × 3 + Fire Dust × 5 at level 10). Full confirmation flow protects against accidental use. Each use is recorded on-chain for verifiable authenticity.
 - **Crafting**: Combine materials into equipment — accessible via the 🔨 tab in the bottom navigation
 - **Marketplace**: List, buy, and trade items on-chain
-- **Guilds**: Create guilds, declare wars, siege territories
+- **Guilds**: Create guilds, invite members, promote your guild for discovery, declare wars, siege territories
 - **Quests**: Daily prophecies and storyline quests
 - **World events**: Seasons, world bosses, Weave Surges
 - **Items**: 5 rarity tiers (Common → Legendary)
@@ -62,7 +62,7 @@ The game uses three protocols on VIZ custom operations:
 
 ## HP & Recovery
 
-HP does not regenerate automatically to full. Passive regen slowly restores up to **30% of max HP** (+1 HP every 500 blocks, ~4 min). Full recovery requires visiting the Hunt screen (camp rest) or using a **Health Scroll** (craftable or dropped by creatures).
+HP does not regenerate automatically to full. Passive regen slowly restores up to **30% of max HP** (+1 HP every 100 blocks, ~5 min). Full recovery requires visiting the Hunt screen (camp rest) or using a **Health Scroll** (craftable or dropped by creatures).
 
 ## Accessibility — Battle Narrator
 
@@ -78,8 +78,6 @@ The Battle Narrator announces all combat events via the screen reader (`aria-liv
 
 The app connects to the VIZ blockchain through one of the available nodes:
 
-- `wss://solox.world/ws`
-- `https://viz.lexa.host/`
 - `https://api.viz.world/`
 - `https://node.viz.cx/`
 
