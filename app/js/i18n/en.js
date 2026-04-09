@@ -908,7 +908,7 @@ var LangEN = {
     help_guilds_text: 'Create a guild or join an existing one. Officers can invite members and promote the guild so new players can discover it. The founder cannot leave — transfer leadership first. Patronage (SHARES delegation) empowers guild members via the Magic Core bonus.',
 
     help_section_boss: 'World Boss',
-    help_boss_text: 'The Aether Dragon awakens periodically. All players attack it together. Damage scales with your Potency and level. The Dragon counterattacks after each hit, dealing more damage as it weakens. Loot is distributed proportionally: XP, rare materials, and artifacts.',
+    help_boss_text: 'The Aether Dragon awakens periodically. All players attack it together. Each attack costs 2% mana; damage scales with Potency and level. The Dragon counterattacks after each hit, dealing more damage as it weakens. Loot is distributed proportionally: XP, rare materials, and artifacts. Developers can add new bosses via Pull Requests — mana spent on attacks goes to the boss author.',
 
     help_section_shares: 'SHARES & Magic Core',
     help_shares_text: 'SHARES (your VIZ stake) define your Magic Core bonus: floor(shares^0.3) / 5 added to all stats. More SHARES = stronger character. SHARES are never lost in battle.',

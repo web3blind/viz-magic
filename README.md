@@ -87,10 +87,10 @@ Viz Magic is built so any developer can extend the game world and earn rewards f
 
 ### How contributor economics work
 
-Every creature, zone, and game object has an `author` field — the VIZ account name of the developer who created it. When a player hunts a creature, the game automatically sends an `award` operation to the creature author's account. The author receives a share of VIZ emission proportional to the number of awards received, which converts into SHARES (network influence).
+Every creature, world boss, and game object has an `author` field — the VIZ account name of the developer who created it. When a player hunts a creature or attacks a world boss, the game automatically sends an `award` operation to the author's account. The author receives a share of VIZ emission proportional to the number of awards received, which converts into SHARES (network influence).
 
 Flow:
-1. Player spends mana (energy) — an `award` is sent to the creature's author
+1. Player spends mana (energy) — an `award` is sent to the content author
 2. The author accumulates rewards in their VIZ account
 3. SHARES grow → network influence grows → passive income via delegation
 
@@ -123,12 +123,13 @@ The `author` field is your VIZ account name. Every time a player hunts your crea
 ### What else you can contribute
 
 - **Creatures** (`app/js/data/creatures.js`) — new enemies with unique stats
+- **World bosses** (`app/js/engine/world-boss.js`) — raid bosses with `author` field; every player attack sends an award to the author
 - **Spells** (`app/js/data/spells.js`) — new magic schools and effects
 - **Zones** (`app/js/data/regions.js`) — new game regions
 - **Quests** (`app/js/data/quests.js`) — quest chains and storylines
 - **Items and recipes** (`app/js/data/recipes.js`) — crafting and loot
 
-Submit a Pull Request — add your creatures with your `author` VIZ account and start earning from the first player who hunts them.
+Submit a Pull Request — add your content with your `author` VIZ account and start earning from the first player who interacts with it.
 
 ## Tech stack
 
