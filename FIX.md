@@ -7,8 +7,8 @@
 
 ### Контекст
 Тестировщик (Aleksandr / PAPA MEDBEDb) тестирует с двух аккаунтов:
-- `dream-world` (основной) — Regular key: `[REMOVED]`
-- `social.denis-skripnik` (твинк) — Regular key: `[REMOVED]`
+- `dream-world` (основной)
+- `social.denis-skripnik` (твинк)
 
 ### Баги из чата с тестировщиком и что сделано
 
