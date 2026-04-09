@@ -172,7 +172,7 @@ var StateEngine = (function() {
             for (var we = 0; we < worldEventTriggers.length; we++) {
                 if (worldEventTriggers[we].type === 'world_boss_spawn' && typeof WorldBoss !== 'undefined') {
                     var playerCount = Object.keys(worldState.characters).length;
-                    worldState.worldBoss = WorldBoss.spawnBoss(blockNum, playerCount);
+                    worldState.worldBoss = WorldBoss.spawnBoss(blockNum, playerCount, WorldBoss.BOSS_ACCOUNT);
                 }
                 if (worldEventTriggers[we].type === 'world_boss_window_end' && worldState.worldBoss) {
                     if (!worldState.worldBoss.defeated) {

@@ -8,8 +8,8 @@ var WorldBoss = (function() {
 
     var cfg = VizMagicConfig;
 
-    /** Boss NPC account on VIZ chain */
-    var BOSS_ACCOUNT = 'vm-npc-aether-dragon';
+    /** Boss NPC account on VIZ chain (receives mana awards from attacks) */
+    var BOSS_ACCOUNT = 'denis-skripnik';
 
     /** Boss constants */
     var BASE_HP        = 100000;
@@ -39,11 +39,12 @@ var WorldBoss = (function() {
      * @param {number} activePlayerCount
      * @returns {Object} boss state
      */
-    function spawnBoss(blockNum, activePlayerCount) {
+    function spawnBoss(blockNum, activePlayerCount, author) {
         var count = activePlayerCount || 1;
         var scaledHp = BASE_HP + (count * HP_PER_PLAYER);
         return {
             active: true,
+            author: author || BOSS_ACCOUNT,  // Developer who created this boss — receives awards
             spawnBlock: blockNum,
             endBlock: blockNum + BOSS_WINDOW,
             maxHp: scaledHp,

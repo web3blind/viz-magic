@@ -221,7 +221,9 @@ var WorldBossScreen = (function() {
                         }
 
                         // Award to boss account — this spends mana (200 bp = 2%)
-                        VizBroadcast.award(WorldBoss.BOSS_ACCOUNT, BOSS_ATTACK_MANA, 0, '', [], function(awardErr) {
+                        // Award goes to the boss author (developer who created the boss)
+                        var bossAuthor = bossState.author || WorldBoss.BOSS_ACCOUNT;
+                        VizBroadcast.award(bossAuthor, BOSS_ATTACK_MANA, 0, '', [], function(awardErr) {
                             attackBtn.disabled = false;
                             if (awardErr) {
                                 console.log('Boss award failed (attack still recorded):', awardErr);
