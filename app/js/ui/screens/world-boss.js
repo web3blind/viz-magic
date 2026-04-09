@@ -183,6 +183,9 @@ var WorldBossScreen = (function() {
         return html;
     }
 
+    /** Mana cost for a boss attack: 200 basis points = 2% */
+    var BOSS_ATTACK_MANA = 200;
+
     function _bindActions(el, bossState, user, blockNum) {
         var attackBtn = el.querySelector('#boss-attack-btn');
         if (attackBtn) {
@@ -195,31 +198,53 @@ var WorldBossScreen = (function() {
 
                 attackBtn.disabled = true;
 
-                // Broadcast boss attack to blockchain so all clients see the result
-                var actionData = VMProtocol.createBossAttackAction('attack');
-                VizBroadcast.gameAction(actionData, function(err) {
-                    attackBtn.disabled = false;
-                    if (err) {
-                        Toast.error(Helpers.t('error_network'));
+                // Check mana before attacking
+                VizAccount.getAccount(user, function(err, accountData) {
+                    var playerEnergy = 10000;
+                    if (!err && accountData) {
+                        playerEnergy = VizAccount.calculateCurrentEnergy(accountData);
+                    }
+
+                    if (playerEnergy < BOSS_ATTACK_MANA) {
+                        attackBtn.disabled = false;
+                        Toast.error(Helpers.t('hunt_not_enough_mana'));
                         return;
                     }
 
-                    SoundManager.play('boss_roar');
-                    SoundManager.vibrate('heavy');
-
-                    // Optimistic local update for immediate feedback
-                    var pot = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat)
-                        ? CharacterSystem.getTotalStat(character, 'pot') : (character.pot || 10);
-                    var damage = pot * 5 + character.level * 10;
-                    var result = WorldBoss.attackBoss(bossState, user, damage, 'attack', blockNum, '');
-                    if (result.success) {
-                        Toast.success(Helpers.t('boss_attack_success') + ' -' + result.damage + ' HP');
-                        if (result.bossDefeated) {
-                            Toast.success(Helpers.t('boss_defeated'));
-                            SoundManager.play('duel_victory');
+                    // Broadcast boss attack to blockchain
+                    var actionData = VMProtocol.createBossAttackAction('attack');
+                    VizBroadcast.gameAction(actionData, function(gameErr) {
+                        if (gameErr) {
+                            attackBtn.disabled = false;
+                            Toast.error(Helpers.t('error_network'));
+                            return;
                         }
-                    }
-                    render();
+
+                        // Award to boss account — this spends mana (200 bp = 2%)
+                        VizBroadcast.award(WorldBoss.BOSS_ACCOUNT, BOSS_ATTACK_MANA, 0, '', [], function(awardErr) {
+                            attackBtn.disabled = false;
+                            if (awardErr) {
+                                console.log('Boss award failed (attack still recorded):', awardErr);
+                            }
+
+                            SoundManager.play('boss_roar');
+                            SoundManager.vibrate('heavy');
+
+                            // Optimistic local update for immediate feedback
+                            var pot = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat)
+                                ? CharacterSystem.getTotalStat(character, 'pot') : (character.pot || 10);
+                            var damage = pot * 5 + character.level * 10;
+                            var result = WorldBoss.attackBoss(bossState, user, damage, 'attack', blockNum, '');
+                            if (result.success) {
+                                Toast.success(Helpers.t('boss_attack_success') + ' -' + result.damage + ' HP');
+                                if (result.bossDefeated) {
+                                    Toast.success(Helpers.t('boss_defeated'));
+                                    SoundManager.play('duel_victory');
+                                }
+                            }
+                            render();
+                        });
+                    });
                 });
             });
         }

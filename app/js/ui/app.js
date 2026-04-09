@@ -309,10 +309,10 @@ var App = (function() {
 
                 _updateSyncStatus(_calculateSyncPercent(_lastPolledBlock, headBlock));
 
-                // Cap batch size — use larger batches during initial catch-up
+                // Cap batch size — scale with gap for faster catch-up
                 var startBlock = _lastPolledBlock + 1;
                 var gap = headBlock - _lastPolledBlock;
-                var maxBatch = gap > 100 ? 50 : 10;
+                var maxBatch = gap > 1000 ? 200 : gap > 100 ? 50 : 10;
                 var endBlock = Math.min(headBlock, startBlock + maxBatch - 1);
 
                 _processBlockBatch(startBlock, endBlock, headBlock);

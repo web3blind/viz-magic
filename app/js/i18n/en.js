@@ -720,7 +720,7 @@ var LangEN = {
     boss_attacks: 'Attacks',
     boss_loot_share: 'Loot share',
     boss_attack: 'Attack the Dragon',
-    boss_attack_cost: 'Damage scales with Potency and level',
+    boss_attack_cost: 'Costs 2% mana. Damage scales with Potency and level.',
     boss_attack_success: 'Hit landed!',
     boss_leaderboard: 'Leaderboard',
     boss_counter_log: 'Dragon Counterattacks',

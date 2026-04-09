@@ -720,7 +720,7 @@ var LangRU = {
     boss_attacks: 'Атак',
     boss_loot_share: 'Доля добычи',
     boss_attack: 'Атаковать Дракона',
-    boss_attack_cost: 'Урон зависит от Мощи и уровня',
+    boss_attack_cost: 'Стоит 2% маны. Урон зависит от Мощи и уровня.',
     boss_attack_success: 'Удар нанесён!',
     boss_leaderboard: 'Таблица лидеров',
     boss_counter_log: 'Контратаки Дракона',

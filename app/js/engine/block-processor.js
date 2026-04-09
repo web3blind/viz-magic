@@ -118,6 +118,9 @@ var BlockProcessor = (function() {
      */
     function processBlockRange(startBlock, endBlock, onBlock, onComplete) {
         var current = startBlock;
+        var total = endBlock - startBlock + 1;
+        // Use shorter delays when catching up on many blocks
+        var isCatchUp = total > 100;
 
         function nextBlock() {
             if (current > endBlock) {
@@ -137,8 +140,13 @@ var BlockProcessor = (function() {
                 onBlock(processed, current);
                 current++;
 
-                // Small delay to avoid overwhelming the node
-                setTimeout(nextBlock, 50);
+                // Skip delay for empty blocks during catch-up; short delay otherwise
+                var hasContent = processed.vmActions.length > 0 || processed.voicePosts.length > 0 || processed.awards.length > 0;
+                if (isCatchUp && !hasContent) {
+                    nextBlock();
+                } else {
+                    setTimeout(nextBlock, isCatchUp ? 10 : 50);
+                }
             });
         }
 
