@@ -994,7 +994,9 @@ var StateEngine = (function() {
         var character = worldState.characters[sender];
         if (!character) return [];
 
-        var baseDamage = (character.stats ? (character.stats.pot || 10) : 10) * 5 + character.level * 10;
+        var pot = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat)
+            ? CharacterSystem.getTotalStat(character, 'pot') : (character.pot || 10);
+        var baseDamage = pot * 5 + character.level * 10;
         var result = WorldBoss.attackBoss(worldState.worldBoss, sender, baseDamage, data.spell || '', blockNum, blockHash);
         if (!result.success) return [];
 

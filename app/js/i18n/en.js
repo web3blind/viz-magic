@@ -388,6 +388,7 @@ var LangEN = {
     guild_join: 'Join',
     guild_leave: 'Leave Guild',
     guild_leave_confirm: 'Are you sure you want to leave the guild?',
+    guild_founder_cannot_leave: 'The founder cannot leave the guild. Transfer leadership to another member first.',
     guild_left: 'You left the guild.',
     guild_joined: 'You joined the guild!',
     guild_created: 'Guild created!',

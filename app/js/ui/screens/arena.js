@@ -137,8 +137,8 @@ var ArenaScreen = (function() {
         viz.api.getDynamicGlobalProperties(function(err, dgp) {
             if (err || !dgp) return;
             var headBlock = dgp.head_block_number;
-            // Scan last 100 blocks (~5 minutes) for fast check
-            var startBlock = Math.max(1, headBlock - 100);
+            // Scan last 2400 blocks (~2 hours) so challenges aren't missed
+            var startBlock = Math.max(1, headBlock - 2400);
             _scanBlocksForChallenges(startBlock, headBlock, user, el);
         });
     }

@@ -192,8 +192,12 @@ var GuildScreen = (function() {
         html += '<button class="btn btn-secondary guild-btn" id="btn-guild-settings" aria-label="' + t('guild_settings') + '">';
         html += '\u2699\uFE0F ' + t('guild_settings') + '</button>';
 
-        html += '<button class="btn btn-secondary guild-btn guild-leave-btn" id="btn-guild-leave" aria-label="' + t('guild_leave') + '">';
-        html += t('guild_leave') + '</button>';
+        if (myMember.rank !== GuildSystem.RANKS.FOUNDER) {
+            html += '<button class="btn btn-secondary guild-btn guild-leave-btn" id="btn-guild-leave" aria-label="' + t('guild_leave') + '">';
+            html += t('guild_leave') + '</button>';
+        } else {
+            html += '<p class="guild-founder-note">' + t('guild_founder_cannot_leave') + '</p>';
+        }
 
         html += '</div>';
         html += '</div>';

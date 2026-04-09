@@ -388,6 +388,7 @@ var LangRU = {
     guild_join: 'Вступить',
     guild_leave: 'Покинуть',
     guild_leave_confirm: 'Вы уверены, что хотите покинуть гильдию?',
+    guild_founder_cannot_leave: 'Основатель не может покинуть гильдию. Передайте лидерство другому участнику.',
     guild_left: 'Вы покинули гильдию.',
     guild_joined: 'Вы вступили в гильдию!',
     guild_created: 'Гильдия создана!',

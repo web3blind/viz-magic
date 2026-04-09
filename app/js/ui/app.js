@@ -284,11 +284,11 @@ var App = (function() {
                 var headBlock = dgp.head_block_number;
 
                 // If we have no lastPolledBlock, start from recent history.
-                // Use a wider recovery window so duel challenge/accept/reveal flows
-                // still restore after reloads or short pauses.
-                // 1000 blocks is roughly 50 minutes.
+                // Use a wide recovery window so guild state, duel flows, and
+                // world boss encounters survive reloads and fresh logins.
+                // 28800 blocks ≈ 24 hours — matches DUEL_ACCEPT_WINDOW.
                 if (_lastPolledBlock === 0) {
-                    _lastPolledBlock = Math.max(1, headBlock - 1000);
+                    _lastPolledBlock = Math.max(1, headBlock - 28800);
                 }
 
                 if (headBlock <= _lastPolledBlock) {
@@ -309,9 +309,10 @@ var App = (function() {
 
                 _updateSyncStatus(_calculateSyncPercent(_lastPolledBlock, headBlock));
 
-                // Cap batch size to avoid overwhelming the node
+                // Cap batch size — use larger batches during initial catch-up
                 var startBlock = _lastPolledBlock + 1;
-                var maxBatch = 10;
+                var gap = headBlock - _lastPolledBlock;
+                var maxBatch = gap > 100 ? 50 : 10;
                 var endBlock = Math.min(headBlock, startBlock + maxBatch - 1);
 
                 _processBlockBatch(startBlock, endBlock, headBlock);

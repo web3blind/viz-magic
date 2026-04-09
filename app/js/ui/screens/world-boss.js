@@ -187,29 +187,40 @@ var WorldBossScreen = (function() {
         var attackBtn = el.querySelector('#boss-attack-btn');
         if (attackBtn) {
             attackBtn.addEventListener('click', function() {
-                // Calculate damage based on character stats
                 var character = StateEngine.getCharacter(user);
                 if (!character) {
                     Toast.error(Helpers.t('quest_login_required'));
                     return;
                 }
 
-                var baseDamage = (character.stats ? (character.stats.pot || 10) : 10) * 5;
-                var damage = baseDamage + Math.floor(character.level * 10);
+                attackBtn.disabled = true;
 
-                var result = WorldBoss.attackBoss(bossState, user, damage, 'attack', blockNum, '');
-                if (result.success) {
+                // Broadcast boss attack to blockchain so all clients see the result
+                var actionData = VMProtocol.createBossAttackAction('attack');
+                VizBroadcast.gameAction(actionData, function(err) {
+                    attackBtn.disabled = false;
+                    if (err) {
+                        Toast.error(Helpers.t('error_network'));
+                        return;
+                    }
+
                     SoundManager.play('boss_roar');
                     SoundManager.vibrate('heavy');
-                    Toast.success(Helpers.t('boss_attack_success') + ' -' + result.damage + ' HP');
-                    if (result.bossDefeated) {
-                        Toast.success(Helpers.t('boss_defeated'));
-                        SoundManager.play('duel_victory');
+
+                    // Optimistic local update for immediate feedback
+                    var pot = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat)
+                        ? CharacterSystem.getTotalStat(character, 'pot') : (character.pot || 10);
+                    var damage = pot * 5 + character.level * 10;
+                    var result = WorldBoss.attackBoss(bossState, user, damage, 'attack', blockNum, '');
+                    if (result.success) {
+                        Toast.success(Helpers.t('boss_attack_success') + ' -' + result.damage + ' HP');
+                        if (result.bossDefeated) {
+                            Toast.success(Helpers.t('boss_defeated'));
+                            SoundManager.play('duel_victory');
+                        }
                     }
                     render();
-                } else {
-                    Toast.error(Helpers.t('boss_' + (result.error || 'error')));
-                }
+                });
             });
         }
     }
