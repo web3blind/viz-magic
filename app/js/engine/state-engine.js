@@ -27,6 +27,7 @@ var StateEngine = (function() {
             social: {
                 knownAccounts: []
             },
+            guildListings: [],  // [{guild_id, created_block, sender, blockNum}]
             // Phase 5: Living World
             worldBoss: null,
             quests: {},       // account → playerQuestState
@@ -284,6 +285,9 @@ var StateEngine = (function() {
                 break;
             case AT.GUILD_PEACE:
                 events = events.concat(_handleGuildPeace(sender, action.data, blockNum));
+                break;
+            case AT.GUILD_LISTING:
+                events = events.concat(_handleGuildListing(sender, action.data, blockNum));
                 break;
 
             // --- Crafting ---
@@ -737,6 +741,32 @@ var StateEngine = (function() {
         var ok = GuildSystem.declarePeace(myGuild, data.war_ref);
         if (!ok) return [];
         return [{ type: 'guild_peace', warRef: data.war_ref, declarer: sender }];
+    }
+
+    function _handleGuildListing(sender, data, blockNum) {
+        if (!data.guild_id || !data.created_block) return [];
+        // Verify sender is a member of the guild (if guild is in state)
+        var guild = worldState.guilds[data.guild_id];
+        if (guild && !guild.members[sender]) return [];
+
+        if (!worldState.guildListings) worldState.guildListings = [];
+        // Deduplicate: keep only the latest listing per guild
+        for (var i = worldState.guildListings.length - 1; i >= 0; i--) {
+            if (worldState.guildListings[i].guild_id === data.guild_id) {
+                worldState.guildListings.splice(i, 1);
+            }
+        }
+        worldState.guildListings.push({
+            guild_id: data.guild_id,
+            created_block: data.created_block | 0,
+            sender: sender,
+            blockNum: blockNum
+        });
+        // Keep max 50 listings
+        while (worldState.guildListings.length > 50) {
+            worldState.guildListings.shift();
+        }
+        return [{ type: 'guild_listing', guildId: data.guild_id, sender: sender, createdBlock: data.created_block }];
     }
 
     // ==========================================

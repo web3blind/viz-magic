@@ -8,6 +8,7 @@ var GuildScreen = (function() {
 
     var t = Helpers.t;
     var _seenGuildNotifications = {};
+    var _listingFetchInProgress = {};
 
     function render() {
         var container = Helpers.$('screen-guild');
@@ -184,6 +185,10 @@ var GuildScreen = (function() {
 
             html += '<button class="btn btn-secondary guild-btn" id="btn-guild-patronage" aria-label="' + t('guild_patronage') + '">';
             html += '\uD83E\uDD1D ' + t('guild_patronage') + '</button>';
+
+            html += '<button class="btn btn-secondary guild-btn" id="btn-guild-listing" aria-label="' + t('guild_listing') + '">';
+            html += '\uD83D\uDCE3 ' + t('guild_listing') + '</button>';
+            html += '<p class="guild-listing-hint">' + t('guild_listing_hint') + '</p>';
         }
 
         html += '<button class="btn btn-secondary guild-btn" id="btn-guild-treasury" aria-label="' + t('guild_treasury') + '">';
@@ -211,6 +216,8 @@ var GuildScreen = (function() {
      * Render no-guild state: recommended guilds + create button
      */
     function _renderNoGuild(container, state, user) {
+        // Kick off async hydration of guilds from listings
+        _hydrateGuildListings(state);
         var html = '';
         var pendingInvites = _getPendingInvites(state, user);
         html += '<div class="guild-hall" role="region" aria-label="' + t('guild_title') + '">';
@@ -291,6 +298,59 @@ var GuildScreen = (function() {
             }
         }
         return invites;
+    }
+
+    /**
+     * Hydrate guilds from listings — fetch creation blocks for unknown guilds.
+     * Runs asynchronously; re-renders guild screen when new data arrives.
+     */
+    function _hydrateGuildListings(state) {
+        var listings = state.guildListings;
+        if (!listings || listings.length === 0) return;
+        for (var i = 0; i < listings.length; i++) {
+            var entry = listings[i];
+            var gid = entry.guild_id;
+            var createdBlock = entry.created_block;
+            if (!gid || !createdBlock) continue;
+            // Skip if guild already in state and not a placeholder
+            if (state.guilds[gid] && !state.guilds[gid].isPlaceholder) continue;
+            // Skip if already fetching
+            if (_listingFetchInProgress[gid]) continue;
+            _listingFetchInProgress[gid] = true;
+            (function(guildId, block) {
+                viz.api.getBlock(block, function(err, blockData) {
+                    delete _listingFetchInProgress[guildId];
+                    if (err || !blockData || !blockData.transactions) return;
+                    // Find guild.create for this guild_id in the block
+                    for (var ti = 0; ti < blockData.transactions.length; ti++) {
+                        var tx = blockData.transactions[ti];
+                        if (!tx.operations) continue;
+                        for (var oi = 0; oi < tx.operations.length; oi++) {
+                            var op = tx.operations[oi];
+                            if (op[0] !== 'custom' || op[1].id !== 'VM') continue;
+                            try {
+                                var parsed = JSON.parse(op[1].json);
+                                if (parsed.t !== 'guild.create') continue;
+                                if (parsed.d && parsed.d.id === guildId) {
+                                    var sender = (op[1].required_regular_auths && op[1].required_regular_auths[0]) || '';
+                                    var currentState = StateEngine.getState();
+                                    var guild = GuildSystem.createGuild(guildId, sender, parsed.d, block);
+                                    if (guild) {
+                                        currentState.guilds[guildId] = guild;
+                                        // Re-render if guild screen is active
+                                        var container = Helpers.$('screen-guild');
+                                        if (container && !container.getAttribute('aria-hidden')) {
+                                            render();
+                                        }
+                                    }
+                                    return;
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                });
+            })(gid, createdBlock);
+        }
     }
 
     /**
@@ -379,6 +439,23 @@ var GuildScreen = (function() {
         if (treasuryBtn) {
             treasuryBtn.addEventListener('click', function() {
                 _showTreasuryModal(guild);
+            });
+        }
+
+        // Listing (advertise) button
+        var listingBtn = container.querySelector('#btn-guild-listing');
+        if (listingBtn) {
+            listingBtn.addEventListener('click', function() {
+                listingBtn.disabled = true;
+                GuildProtocol.broadcastGuildListing(guild.id, guild.createdBlock || 0, function(err) {
+                    listingBtn.disabled = false;
+                    if (err) {
+                        Toast.error(t('error_network'));
+                    } else {
+                        Toast.success(t('guild_listing_sent'));
+                        SoundManager.play('tap');
+                    }
+                });
             });
         }
 
@@ -766,7 +843,7 @@ var GuildScreen = (function() {
      * Called once when the screen module loads.
      */
     function init() {
-        var events = ['guild_created', 'guild_joined', 'guild_left', 'guild_promoted', 'guild_invite'];
+        var events = ['guild_created', 'guild_joined', 'guild_left', 'guild_promoted', 'guild_invite', 'guild_listing'];
         for (var i = 0; i < events.length; i++) {
             Helpers.EventBus.on(events[i], function() {
                 // Re-render only if guild screen is currently visible

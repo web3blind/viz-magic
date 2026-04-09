@@ -166,7 +166,9 @@ var VizMagicConfig = (function() {
         // Phase 5: Quests & Boss
         QUEST_ACCEPT:   'quest.accept',
         QUEST_COMPLETE: 'quest.complete',
-        BOSS_ATTACK:    'boss.attack'
+        BOSS_ATTACK:    'boss.attack',
+        // Guild discovery
+        GUILD_LISTING:  'guild.listing'
     };
 
     /** Asset formatting helpers */

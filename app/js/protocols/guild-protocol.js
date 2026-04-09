@@ -181,6 +181,22 @@ var GuildProtocol = (function() {
         };
     }
 
+    /**
+     * Create guild.listing action — advertise guild for discovery
+     * @param {string} guildId
+     * @param {number} createdBlock - block where guild.create was broadcast
+     * @returns {Object}
+     */
+    function createGuildListingAction(guildId, createdBlock) {
+        return {
+            t: AT.GUILD_LISTING,
+            d: {
+                guild_id: guildId,
+                created_block: createdBlock | 0
+            }
+        };
+    }
+
     // --- Broadcast Helpers ---
 
     /**
@@ -245,6 +261,14 @@ var GuildProtocol = (function() {
     }
 
     /**
+     * Broadcast guild listing (advertise)
+     */
+    function broadcastGuildListing(guildId, createdBlock, callback) {
+        var action = createGuildListingAction(guildId, createdBlock);
+        broadcastGuildAction(action, callback);
+    }
+
+    /**
      * Broadcast peace
      */
     function broadcastDeclarePeace(warRef, callback) {
@@ -288,6 +312,7 @@ var GuildProtocol = (function() {
         createSiegeDeclareAction: createSiegeDeclareAction,
         createSiegeCommitAction: createSiegeCommitAction,
         createTerritoryClaimAction: createTerritoryClaimAction,
+        createGuildListingAction: createGuildListingAction,
 
         // Broadcast wrappers
         broadcastGuildAction: broadcastGuildAction,
@@ -300,6 +325,7 @@ var GuildProtocol = (function() {
         broadcastDeclarePeace: broadcastDeclarePeace,
         broadcastDeclareSiege: broadcastDeclareSiege,
         broadcastSiegeCommit: broadcastSiegeCommit,
-        broadcastTerritoryClaim: broadcastTerritoryClaim
+        broadcastTerritoryClaim: broadcastTerritoryClaim,
+        broadcastGuildListing: broadcastGuildListing
     };
 })();
