@@ -267,6 +267,20 @@ var App = (function() {
     var _chainRecoveryDone = false;
     /** Whether chain recovery is currently running */
     var _chainRecoveryBusy = false;
+    /** Set of block numbers already processed during recovery to prevent duplicates */
+    var _recoveryProcessedBlocks = {};
+
+    /**
+     * Process a single block during recovery, skipping if already seen.
+     * Prevents duplicate items/XP when the same block appears in
+     * multiple accounts' chains.
+     */
+    function _processRecoveryBlock(blockNum, block) {
+        if (_recoveryProcessedBlocks[blockNum]) return;
+        _recoveryProcessedBlocks[blockNum] = true;
+        var processed = BlockProcessor.processBlock(block, blockNum);
+        StateEngine.processBlock(processed);
+    }
 
     /**
      * Recover the current user's full action history by traversing the
@@ -282,6 +296,9 @@ var App = (function() {
      * After recovery finishes, normal 24-hour forward polling takes over
      * for shared/world state (other players' guild invites, world boss,
      * marketplace listings, etc.).
+     *
+     * @param {number} headBlock - current chain head from dgp
+     * @param {Function} callback - called when recovery is complete
      */
     function _recoverChainHistory(headBlock, callback) {
         if (_chainRecoveryBusy) { callback(); return; }
@@ -313,9 +330,12 @@ var App = (function() {
             // Collect block numbers that are OLDER than the 24h window
             // (blocks inside the window will be processed by normal polling)
             var historicalBlocks = [];
+            var seen = {};
             for (var i = 0; i < actions.length; i++) {
-                if (actions[i].blockNum < recentWindowStart) {
-                    historicalBlocks.push(actions[i].blockNum);
+                var bn = actions[i].blockNum;
+                if (bn < recentWindowStart && !seen[bn]) {
+                    seen[bn] = true;
+                    historicalBlocks.push(bn);
                 }
             }
 
@@ -337,11 +357,18 @@ var App = (function() {
             function processNext() {
                 if (idx >= historicalBlocks.length) {
                     // After user's own chain is recovered, discover other players
-                    _recoverKnownAccountsChains(recentWindowStart, function() {
+                    _recoverKnownAccountsChains(recentWindowStart, headBlock, function() {
+                        // Set headBlock to current chain head so checkpoint is up-to-date.
+                        // Without this, worldState.headBlock would point to the last
+                        // historical block and a crash+restart would trigger a huge catch-up.
+                        var state = StateEngine.getState();
+                        state.headBlock = headBlock;
+
                         StateEngine.saveCheckpoint(function() {
                             console.log('App: Chain history recovery complete,', historicalBlocks.length, 'blocks processed');
                             _chainRecoveryDone = true;
                             _chainRecoveryBusy = false;
+                            _recoveryProcessedBlocks = {}; // free memory
                             callback();
                         });
                     });
@@ -360,8 +387,7 @@ var App = (function() {
                         return;
                     }
 
-                    var processed = BlockProcessor.processBlock(block, blockNum);
-                    StateEngine.processBlock(processed);
+                    _processRecoveryBlock(blockNum, block);
                     idx++;
 
                     // Small delay to avoid hammering the node
@@ -380,8 +406,9 @@ var App = (function() {
      * marketplace listings, and the social feed account list.
      * Processes up to 100 actions per account, only blocks older than
      * the 24h window (to avoid overlap with normal polling).
+     * Uses _recoveryProcessedBlocks to skip blocks already seen.
      */
-    function _recoverKnownAccountsChains(recentWindowStart, callback) {
+    function _recoverKnownAccountsChains(recentWindowStart, currentHead, callback) {
         var state = StateEngine.getState();
         var user = VizAccount.getCurrentUser();
         var others = [];
@@ -419,11 +446,12 @@ var App = (function() {
                     return;
                 }
 
-                // Collect historical blocks for this account
+                // Collect historical blocks for this account, skip already-processed
                 var blocks = [];
                 for (var i = 0; i < actions.length; i++) {
-                    if (actions[i].blockNum < recentWindowStart) {
-                        blocks.push(actions[i].blockNum);
+                    var bn = actions[i].blockNum;
+                    if (bn < recentWindowStart && !_recoveryProcessedBlocks[bn]) {
+                        blocks.push(bn);
                     }
                 }
 
@@ -441,10 +469,10 @@ var App = (function() {
                         return;
                     }
 
-                    viz.api.getBlock(blocks[bIdx], function(bErr, block) {
+                    var blockNum = blocks[bIdx];
+                    viz.api.getBlock(blockNum, function(bErr, block) {
                         if (!bErr && block) {
-                            var processed = BlockProcessor.processBlock(block, blocks[bIdx]);
-                            StateEngine.processBlock(processed);
+                            _processRecoveryBlock(blockNum, block);
                         }
                         bIdx++;
                         setTimeout(nextBlock, 10);
@@ -486,10 +514,11 @@ var App = (function() {
                     // On a fresh device (no checkpoint), first recover the user's
                     // full action history via backward chain traversal before
                     // starting the normal 24h forward replay.
+                    // Keep _pollBusy=true so no other poll ticks fire during recovery.
                     if (!_chainRecoveryDone) {
-                        _pollBusy = false;
                         _recoverChainHistory(headBlock, function() {
-                            // Recovery done — next poll tick will set the 24h window
+                            // Recovery done — release lock, next tick sets 24h window
+                            _pollBusy = false;
                         });
                         return;
                     }
