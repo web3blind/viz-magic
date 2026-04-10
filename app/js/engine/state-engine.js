@@ -346,8 +346,12 @@ var StateEngine = (function() {
                 break;
         }
 
-        // Add to recent actions
+        // Add to recent actions — remember sender and any target accounts
         _rememberAccount(sender);
+        if (action.data) {
+            if (action.data.target) _rememberAccount(action.data.target);
+            if (action.data.to) _rememberAccount(action.data.to);
+        }
 
         worldState.recentActions.push({
             type: action.type,

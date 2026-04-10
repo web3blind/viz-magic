@@ -163,6 +163,24 @@ var ChronicleScreen = (function() {
             }
         }
 
+        // Discover accounts from guild listings (visible even on fresh devices)
+        if (state && state.guildListings) {
+            for (var gl = 0; gl < state.guildListings.length; gl++) {
+                if (state.guildListings[gl].sender) add(state.guildListings[gl].sender);
+            }
+        }
+
+        // Discover accounts from all known guilds' member rosters
+        if (state && state.guilds) {
+            for (var gid in state.guilds) {
+                if (state.guilds.hasOwnProperty(gid) && state.guilds[gid].members) {
+                    for (var gm in state.guilds[gid].members) {
+                        if (state.guilds[gid].members.hasOwnProperty(gm)) add(gm);
+                    }
+                }
+            }
+        }
+
         return accounts;
     }
 

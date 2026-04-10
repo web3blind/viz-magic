@@ -336,12 +336,14 @@ var App = (function() {
 
             function processNext() {
                 if (idx >= historicalBlocks.length) {
-                    // Save checkpoint after full recovery
-                    StateEngine.saveCheckpoint(function() {
-                        console.log('App: Chain history recovery complete,', historicalBlocks.length, 'blocks processed');
-                        _chainRecoveryDone = true;
-                        _chainRecoveryBusy = false;
-                        callback();
+                    // After user's own chain is recovered, discover other players
+                    _recoverKnownAccountsChains(recentWindowStart, function() {
+                        StateEngine.saveCheckpoint(function() {
+                            console.log('App: Chain history recovery complete,', historicalBlocks.length, 'blocks processed');
+                            _chainRecoveryDone = true;
+                            _chainRecoveryBusy = false;
+                            callback();
+                        });
                     });
                     return;
                 }
@@ -369,6 +371,91 @@ var App = (function() {
 
             processNext();
         });
+    }
+
+    /**
+     * After recovering the current user's chain, traverse VM chains of
+     * other accounts discovered during replay (guild invite targets,
+     * item transfer recipients, etc.) to rebuild guild rosters,
+     * marketplace listings, and the social feed account list.
+     * Processes up to 100 actions per account, only blocks older than
+     * the 24h window (to avoid overlap with normal polling).
+     */
+    function _recoverKnownAccountsChains(recentWindowStart, callback) {
+        var state = StateEngine.getState();
+        var user = VizAccount.getCurrentUser();
+        var others = [];
+
+        // Collect accounts discovered during user's chain replay
+        if (state.social && state.social.knownAccounts) {
+            for (var i = 0; i < state.social.knownAccounts.length; i++) {
+                var acct = state.social.knownAccounts[i];
+                if (acct && acct !== user) others.push(acct);
+            }
+        }
+
+        if (others.length === 0) {
+            console.log('App: No other accounts discovered, skipping secondary recovery');
+            callback();
+            return;
+        }
+
+        console.log('App: Recovering chains for', others.length, 'discovered accounts');
+        var acctIdx = 0;
+
+        function nextAccount() {
+            if (acctIdx >= others.length) {
+                console.log('App: Secondary account recovery complete');
+                callback();
+                return;
+            }
+
+            var account = others[acctIdx++];
+            _updateSyncStatus(80 + (acctIdx / others.length) * 15, true); // 80-95%
+
+            VMProtocol.traverseChain(account, 100, function(err, actions) {
+                if (err || !actions || actions.length === 0) {
+                    nextAccount();
+                    return;
+                }
+
+                // Collect historical blocks for this account
+                var blocks = [];
+                for (var i = 0; i < actions.length; i++) {
+                    if (actions[i].blockNum < recentWindowStart) {
+                        blocks.push(actions[i].blockNum);
+                    }
+                }
+
+                if (blocks.length === 0) {
+                    nextAccount();
+                    return;
+                }
+
+                blocks.sort(function(a, b) { return a - b; });
+                var bIdx = 0;
+
+                function nextBlock() {
+                    if (bIdx >= blocks.length) {
+                        nextAccount();
+                        return;
+                    }
+
+                    viz.api.getBlock(blocks[bIdx], function(bErr, block) {
+                        if (!bErr && block) {
+                            var processed = BlockProcessor.processBlock(block, blocks[bIdx]);
+                            StateEngine.processBlock(processed);
+                        }
+                        bIdx++;
+                        setTimeout(nextBlock, 10);
+                    });
+                }
+
+                nextBlock();
+            });
+        }
+
+        nextAccount();
     }
 
     function _startBlockPolling() {
