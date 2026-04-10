@@ -8,6 +8,8 @@ var MapScreen = (function() {
 
     var t = Helpers.t;
     var pendingTravel = null;
+    var TRAVEL_COST_LOW = 10;   // 0.1%
+    var TRAVEL_COST_HIGH = 100; // 1%
 
     /** Region emoji icons */
     var REGION_ICONS = {
@@ -145,11 +147,18 @@ var MapScreen = (function() {
 
             // Travel button
             if (!isCurrent && character) {
-                html += '<button class="btn btn-primary btn-sm region-travel-btn" ';
-                html += 'data-region="' + regionId + '" ';
-                html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + '">';
-                html += '\uD83D\uDEB6 ' + t('map_travel') + ' (' + Helpers.manaCost(100) + ')';
+                html += '<div class="region-travel-options">';
+                html += '<button class="btn btn-secondary btn-sm region-travel-btn" ';
+                html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_LOW + '" ';
+                html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_LOW) + '">';
+                html += '\uD83D\uDEB6 ' + Helpers.manaCost(TRAVEL_COST_LOW);
                 html += '</button>';
+                html += '<button class="btn btn-primary btn-sm region-travel-btn" ';
+                html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_HIGH + '" ';
+                html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_HIGH) + '">';
+                html += '\uD83D\uDEB6 ' + Helpers.manaCost(TRAVEL_COST_HIGH);
+                html += '</button>';
+                html += '</div>';
             } else if (pendingTravel && pendingTravel.account === user && regionId === pendingTravel.to) {
                 html += '<div class="region-benefits">⏳ ' + t('map_pending_travel_short') + '</div>';
             }
@@ -172,15 +181,19 @@ var MapScreen = (function() {
         for (var i = 0; i < travelBtns.length; i++) {
             travelBtns[i].addEventListener('click', function() {
                 var regionId = this.getAttribute('data-region');
-                _travelTo(regionId, user);
+                var cost = parseInt(this.getAttribute('data-cost'), 10) || TRAVEL_COST_HIGH;
+                _travelTo(regionId, user, cost);
             });
         }
     }
 
     /**
-     * Travel to a region (costs 1 Mana = 100 energy bp)
+     * Travel to a region
+     * @param {string} regionId
+     * @param {string} user
+     * @param {number} cost - energy cost in basis points (10 = 0.1%, 100 = 1%)
      */
-    function _travelTo(regionId, user) {
+    function _travelTo(regionId, user, cost) {
         if (!user) {
             Toast.error(t('error_no_account'));
             return;

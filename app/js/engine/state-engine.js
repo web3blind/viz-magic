@@ -205,7 +205,7 @@ var StateEngine = (function() {
         worldState.headBlock = blockNum;
 
         // Keep recent actions trimmed
-        while (worldState.recentActions.length > 100) {
+        while (worldState.recentActions.length > 200) {
             worldState.recentActions.shift();
         }
 
@@ -637,7 +637,23 @@ var StateEngine = (function() {
         var guild = GuildSystem.createGuild(data.id, sender, data, blockNum);
         if (!guild) return [];
         worldState.guilds[data.id] = guild;
-        return [{ type: 'guild_created', guildId: data.id, founder: sender, blockNum: blockNum }];
+
+        // Auto-add listing so fresh clients discover this guild
+        if (!worldState.guildListings) worldState.guildListings = [];
+        var alreadyListed = false;
+        for (var gl = 0; gl < worldState.guildListings.length; gl++) {
+            if (worldState.guildListings[gl].guild_id === data.id) { alreadyListed = true; break; }
+        }
+        if (!alreadyListed) {
+            worldState.guildListings.push({
+                guild_id: data.id,
+                created_block: blockNum,
+                sender: sender,
+                blockNum: blockNum
+            });
+        }
+
+        return [{ type: 'guild_created', guildId: data.id, founder: sender, blockNum: blockNum, guildName: data.name || data.id }];
     }
 
     function _handleGuildInvite(sender, data, blockNum) {
@@ -1020,7 +1036,14 @@ var StateEngine = (function() {
 
     function _handleBossAttack(sender, data, blockNum, blockHash) {
         if (typeof WorldBoss === 'undefined') return [];
-        if (!worldState.worldBoss || !worldState.worldBoss.active) return [];
+
+        // Auto-spawn boss if attack arrives but no boss state exists
+        // (happens when boss spawn block is outside the sync window)
+        if (!worldState.worldBoss || !worldState.worldBoss.active) {
+            var playerCount = Object.keys(worldState.characters).length;
+            worldState.worldBoss = WorldBoss.spawnBoss(blockNum, playerCount, WorldBoss.BOSS_ACCOUNT);
+        }
+
         var character = worldState.characters[sender];
         if (!character) return [];
 

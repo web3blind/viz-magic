@@ -6,7 +6,8 @@ var ChronicleScreen = (function() {
     'use strict';
 
     var MAX_POST_LENGTH = 280;
-    var BLESS_ENERGY = 100; // 1% = 100 basis points
+    var BLESS_ENERGY_LOW = 10;   // 0.1% = 10 basis points
+    var BLESS_ENERGY_HIGH = 100; // 1% = 100 basis points
     var BLESS_MEMO_PREFIX = 'viz://vm/bless/';
     var currentTab = 'all'; // all, guild, friends, world
     var REQUIRED_TAG = '#viz_magic';
@@ -230,6 +231,9 @@ var ChronicleScreen = (function() {
         return entries;
     }
 
+    /** Increase recentActions limit to allow more chronicle content */
+    var RECENT_ACTIONS_LIMIT = 200;
+
     function _renderFeedEntries(entries) {
         var feed = Helpers.$('chronicle-feed');
         if (!feed) return;
@@ -305,9 +309,13 @@ var ChronicleScreen = (function() {
 
         if (canBless) {
             actionsHtml = '<div class="chronicle-actions">' +
-                '<button class="bless-button" data-account="' + (entry.account || '') + '" ' +
-                    'aria-label="' + Helpers.escapeHtml(t('chronicle_bless_cost', { cost: Helpers.manaCost(BLESS_ENERGY), name: charName })) + '">' +
-                    '✨ ' + t('chronicle_bless') + ' · ' + Helpers.manaCost(BLESS_ENERGY) +
+                '<button class="bless-button" data-account="' + (entry.account || '') + '" data-energy="' + BLESS_ENERGY_LOW + '" ' +
+                    'aria-label="' + Helpers.escapeHtml(t('chronicle_bless')) + ' ' + Helpers.manaCost(BLESS_ENERGY_LOW) + '">' +
+                    '✨ ' + Helpers.manaCost(BLESS_ENERGY_LOW) +
+                '</button>' +
+                '<button class="bless-button" data-account="' + (entry.account || '') + '" data-energy="' + BLESS_ENERGY_HIGH + '" ' +
+                    'aria-label="' + Helpers.escapeHtml(t('chronicle_bless')) + ' ' + Helpers.manaCost(BLESS_ENERGY_HIGH) + '">' +
+                    '✨ ' + Helpers.manaCost(BLESS_ENERGY_HIGH) +
                 '</button>' +
             '</div>';
         }
@@ -325,6 +333,7 @@ var ChronicleScreen = (function() {
 
     function _onBless() {
         var account = this.getAttribute('data-account');
+        var energy = parseInt(this.getAttribute('data-energy'), 10) || BLESS_ENERGY_HIGH;
         if (!account) return;
 
         var user = VizAccount.getCurrentUser();
@@ -334,7 +343,7 @@ var ChronicleScreen = (function() {
         SoundManager.vibrate('light');
 
         var memo = BLESS_MEMO_PREFIX + account;
-        VizBroadcast.award(account, BLESS_ENERGY, 0, memo, [], function(err) {
+        VizBroadcast.award(account, energy, 0, memo, [], function(err) {
             if (err) {
                 Toast.error(Helpers.t('error_low_mana'));
             } else {
@@ -357,6 +366,8 @@ var ChronicleScreen = (function() {
     }
 
     function _entryMatchesRequiredTag(actionType, text) {
+        // Only chronicle_post entries require the #viz_magic tag
+        // Game actions (hunt, duel, etc.) are always shown
         if (actionType === 'chronicle_post') {
             return _hasRequiredTag(text);
         }
@@ -364,8 +375,58 @@ var ChronicleScreen = (function() {
     }
 
     function _actionToPostText(action) {
-        if (!action || action.type !== 'chronicle_post') return null;
-        return action.text || (action.message && action.message.text) || '';
+        if (!action) return null;
+        // Chronicle posts — return the text itself
+        if (action.type === 'chronicle_post') {
+            return action.text || (action.message && action.message.text) || '';
+        }
+        // Blessing entries from _processAward
+        if (action.type === 'blessing_sent') {
+            var blessName = _getCharName(action.sender);
+            return Helpers.t('chronicle_narrative_bless', { name: blessName, target: (action.receiver || '') });
+        }
+        // Game actions from recentActions — generate narrative text
+        var t = Helpers.t;
+        var name = _getCharName(action.sender);
+        // Check events array for result type
+        var ev0 = (action.events && action.events.length > 0) ? action.events[0] : null;
+
+        switch (action.type) {
+            case 'hunt':
+            case 'hunt.armageddon':
+                if (ev0 && ev0.type === 'hunt_victory') {
+                    return t('chronicle_narrative_hunt_win', { name: name, creature: (ev0.creature || '') });
+                } else if (ev0 && ev0.type === 'hunt_defeat') {
+                    return t('chronicle_narrative_hunt_lose', { name: name, creature: (ev0.creature || '') });
+                }
+                return t('chronicle_narrative_hunt', { name: name });
+            case 'char.attune':
+                return t('chronicle_narrative_awaken', { name: name });
+            case 'rest':
+                return t('chronicle_narrative_rest', { name: name });
+            case 'craft':
+                var itemName = (ev0 && ev0.itemName) ? ev0.itemName : '';
+                return t('chronicle_narrative_craft', { name: name, item: itemName });
+            case 'guild.create':
+                var guildName = (ev0 && ev0.guildName) ? ev0.guildName : '';
+                return t('chronicle_narrative_guild_created', { name: name, guild: guildName });
+            case 'guild.accept':
+                var gJoin = (ev0 && ev0.guildName) ? ev0.guildName : '';
+                return t('chronicle_narrative_guild_join', { name: name, guild: gJoin });
+            case 'boss.attack':
+                return name + ' ' + (t('boss_attack') || 'attacks the boss') + '!';
+            case 'challenge':
+            case 'reveal':
+                return null; // Duel steps are noisy, skip
+            default:
+                return null;
+        }
+    }
+
+    function _getCharName(account) {
+        if (!account) return '???';
+        var charInfo = StateEngine.getCharacter(account);
+        return (charInfo && charInfo.name) ? charInfo.name : account;
     }
 
     function _filterByTab(entries, state) {

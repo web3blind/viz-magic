@@ -269,9 +269,7 @@ var ArenaScreen = (function() {
 
         if (leaderboard.length === 0) {
             html += '<p class="empty-state">' + t('arena_no_duels') + '</p>';
-            container.innerHTML = html;
-            return;
-        }
+        } else {
 
         html += '<table class="arena-table" role="table" aria-label="' + t('arena_leaderboard') + '">' +
             '<thead><tr>' +
@@ -311,10 +309,15 @@ var ArenaScreen = (function() {
             html += '</td></tr>';
         }
 
-        html += '</tbody></table>';
+            html += '</tbody></table>';
+        } // end leaderboard.length > 0
+
+        // Known players list — all characters that can be challenged
+        html += _renderKnownPlayers(state, user, leaderboard);
+
         container.innerHTML = html;
 
-        // Bind challenge buttons
+        // Bind challenge buttons (both leaderboard and known players)
         var challengeBtns = container.querySelectorAll('.arena-challenge-btn');
         for (var j = 0; j < challengeBtns.length; j++) {
             challengeBtns[j].addEventListener('click', function() {
@@ -333,6 +336,50 @@ var ArenaScreen = (function() {
                 render();
             });
         }
+    }
+
+    function _renderKnownPlayers(state, user, leaderboard) {
+        var t = Helpers.t;
+        // Collect all known characters not already in leaderboard
+        var lbAccounts = {};
+        for (var li = 0; li < leaderboard.length; li++) {
+            lbAccounts[leaderboard[li].account] = true;
+        }
+
+        var players = [];
+        if (state.characters) {
+            for (var account in state.characters) {
+                if (!state.characters.hasOwnProperty(account)) continue;
+                if (account === user || lbAccounts[account]) continue;
+                var ch = state.characters[account];
+                if (!ch || !ch.name) continue;
+                players.push({ account: account, name: ch.name, level: ch.level || 1, className: ch.className });
+            }
+        }
+
+        if (players.length === 0) return '';
+
+        // Sort by level descending
+        players.sort(function(a, b) { return b.level - a.level; });
+
+        var html = '<h3>' + (t('arena_known_players') || 'Известные маги') + '</h3>';
+        html += '<div class="arena-players-list" role="list">';
+        for (var i = 0; i < Math.min(players.length, 50); i++) {
+            var p = players[i];
+            html += '<div class="arena-player-card" role="listitem">' +
+                '<span class="arena-player-info">' +
+                    '<span aria-hidden="true">' + Helpers.classIcon(p.className) + '</span> ' +
+                    Helpers.escapeHtml(p.name) +
+                    ' <span class="arena-player-level">Lv ' + p.level + '</span>' +
+                '</span>' +
+                '<button class="btn btn-secondary btn-sm arena-challenge-btn" ' +
+                    'data-account="' + p.account + '" ' +
+                    'aria-label="' + (t('arena_challenge_player', { name: p.name }) || p.name) + '">' +
+                    (t('duel_challenge') || 'Вызвать') + '</button>' +
+                '</div>';
+        }
+        html += '</div>';
+        return html;
     }
 
     function _renderHistory(container) {

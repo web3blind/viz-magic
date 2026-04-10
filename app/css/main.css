@@ -473,6 +473,15 @@ body {
 .arena-row-me { background: rgba(212,168,67,0.1) !important; }
 .arena-challenge-btn { font-size: 0.8rem; padding: 4px 8px; }
 .btn-sm { padding: 6px 12px; font-size: 0.85rem; min-height: 36px; }
+.arena-players-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.arena-player-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 8px 12px; background: var(--color-surface); border-radius: 8px;
+    border: 1px solid var(--color-border);
+}
+.arena-player-info { display: flex; align-items: center; gap: 6px; }
+.arena-player-level { color: var(--color-text-muted); font-size: 0.85rem; }
+.region-travel-options { display: flex; gap: 6px; margin-top: 8px; }
 
 .arena-history-entry {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;

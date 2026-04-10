@@ -222,6 +222,13 @@ var GuildScreen = (function() {
         var pendingInvites = _getPendingInvites(state, user);
         html += '<div class="guild-hall" role="region" aria-label="' + t('guild_title') + '">';
         html += '<h1>' + t('guild_title') + '</h1>';
+
+        // Show sync hint if still catching up
+        var guildList = _getGuildList(state);
+        if (guildList.length === 0 && pendingInvites.length === 0) {
+            html += '<p class="guild-sync-hint" role="status">' + (t('guild_sync_hint') || 'Идёт синхронизация с Миром. Гильдии появятся после завершения загрузки.') + '</p>';
+        }
+
         html += '<p class="guild-no-guild-text">' + t('guild_not_member') + '</p>';
 
         if (pendingInvites.length > 0) {

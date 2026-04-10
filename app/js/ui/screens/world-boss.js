@@ -232,19 +232,13 @@ var WorldBossScreen = (function() {
                             SoundManager.play('boss_roar');
                             SoundManager.vibrate('heavy');
 
-                            // Optimistic local update for immediate feedback
+                            // Show estimated damage as feedback (actual damage applied by state-engine from blockchain)
                             var pot = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat)
                                 ? CharacterSystem.getTotalStat(character, 'pot') : (character.pot || 10);
-                            var damage = pot * 5 + character.level * 10;
-                            var result = WorldBoss.attackBoss(bossState, user, damage, 'attack', blockNum, '');
-                            if (result.success) {
-                                Toast.success(Helpers.t('boss_attack_success') + ' -' + result.damage + ' HP');
-                                if (result.bossDefeated) {
-                                    Toast.success(Helpers.t('boss_defeated'));
-                                    SoundManager.play('duel_victory');
-                                }
-                            }
-                            render();
+                            var estimatedDamage = pot * 5 + character.level * 10;
+                            Toast.success(Helpers.t('boss_attack_success') + ' ~' + estimatedDamage + ' HP');
+                            // State-engine will process the real attack from blockchain and update bossState
+                            // Re-render will happen automatically on next block poll
                         });
                     });
                 });
@@ -257,6 +251,23 @@ var WorldBossScreen = (function() {
         if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
         return '' + n;
     }
+
+    // Auto-refresh boss screen when boss events arrive from blockchain
+    var _bossListenersRegistered = false;
+    function _ensureBossListeners() {
+        if (_bossListenersRegistered) return;
+        _bossListenersRegistered = true;
+        var bossEvents = ['boss_attacked', 'boss_defeated', 'world_boss_spawn'];
+        for (var i = 0; i < bossEvents.length; i++) {
+            Helpers.EventBus.on(bossEvents[i], function() {
+                var el = Helpers.$('screen-world-boss');
+                if (el && !el.getAttribute('aria-hidden')) {
+                    render();
+                }
+            });
+        }
+    }
+    _ensureBossListeners();
 
     return { render: render };
 })();
