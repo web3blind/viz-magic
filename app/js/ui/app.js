@@ -263,6 +263,114 @@ var App = (function() {
      * Every POLL_INTERVAL_MS checks chain head and processes new blocks
      * through BlockProcessor → StateEngine → checkpoint save.
      */
+    /** Whether we have already run the historical chain recovery */
+    var _chainRecoveryDone = false;
+    /** Whether chain recovery is currently running */
+    var _chainRecoveryBusy = false;
+
+    /**
+     * Recover the current user's full action history by traversing the
+     * backward-linked chain of VM custom operations (custom_sequence_block_num).
+     * Only runs once per session when there is no IndexedDB checkpoint
+     * (i.e. fresh device / cleared storage).
+     *
+     * Processes each historical block through the normal
+     * BlockProcessor → StateEngine pipeline so inventory, XP, crafting,
+     * guild-create and every other action type are replayed exactly
+     * the same way as during live polling.
+     *
+     * After recovery finishes, normal 24-hour forward polling takes over
+     * for shared/world state (other players' guild invites, world boss,
+     * marketplace listings, etc.).
+     */
+    function _recoverChainHistory(headBlock, callback) {
+        if (_chainRecoveryBusy) { callback(); return; }
+        _chainRecoveryBusy = true;
+
+        var user = VizAccount.getCurrentUser();
+        if (!user) {
+            _chainRecoveryDone = true;
+            _chainRecoveryBusy = false;
+            callback();
+            return;
+        }
+
+        var recentWindowStart = Math.max(1, headBlock - 28800);
+
+        _updateSyncStatus(0, true);
+        console.log('App: Starting chain history recovery for', user);
+
+        // Traverse the full backward chain (up to 5000 actions)
+        VMProtocol.traverseChain(user, 5000, function(err, actions) {
+            if (err || !actions || actions.length === 0) {
+                console.log('App: No chain history found, falling back to 24h window');
+                _chainRecoveryDone = true;
+                _chainRecoveryBusy = false;
+                callback();
+                return;
+            }
+
+            // Collect block numbers that are OLDER than the 24h window
+            // (blocks inside the window will be processed by normal polling)
+            var historicalBlocks = [];
+            for (var i = 0; i < actions.length; i++) {
+                if (actions[i].blockNum < recentWindowStart) {
+                    historicalBlocks.push(actions[i].blockNum);
+                }
+            }
+
+            if (historicalBlocks.length === 0) {
+                console.log('App: All actions within 24h window, no extra recovery needed');
+                _chainRecoveryDone = true;
+                _chainRecoveryBusy = false;
+                callback();
+                return;
+            }
+
+            // Sort ascending so state is built in chronological order
+            historicalBlocks.sort(function(a, b) { return a - b; });
+
+            console.log('App: Recovering', historicalBlocks.length, 'historical blocks (oldest:', historicalBlocks[0], ')');
+
+            var idx = 0;
+
+            function processNext() {
+                if (idx >= historicalBlocks.length) {
+                    // Save checkpoint after full recovery
+                    StateEngine.saveCheckpoint(function() {
+                        console.log('App: Chain history recovery complete,', historicalBlocks.length, 'blocks processed');
+                        _chainRecoveryDone = true;
+                        _chainRecoveryBusy = false;
+                        callback();
+                    });
+                    return;
+                }
+
+                var pct = (idx / historicalBlocks.length) * 80; // 0-80% for recovery
+                _updateSyncStatus(pct, true);
+
+                var blockNum = historicalBlocks[idx];
+                viz.api.getBlock(blockNum, function(bErr, block) {
+                    if (bErr || !block) {
+                        console.log('App: Could not fetch historical block', blockNum);
+                        idx++;
+                        processNext();
+                        return;
+                    }
+
+                    var processed = BlockProcessor.processBlock(block, blockNum);
+                    StateEngine.processBlock(processed);
+                    idx++;
+
+                    // Small delay to avoid hammering the node
+                    setTimeout(processNext, 10);
+                });
+            }
+
+            processNext();
+        });
+    }
+
     function _startBlockPolling() {
         if (_pollTimer) return;
 
@@ -288,6 +396,16 @@ var App = (function() {
                 // world boss encounters survive reloads and fresh logins.
                 // 28800 blocks ≈ 24 hours — matches DUEL_ACCEPT_WINDOW.
                 if (_lastPolledBlock === 0) {
+                    // On a fresh device (no checkpoint), first recover the user's
+                    // full action history via backward chain traversal before
+                    // starting the normal 24h forward replay.
+                    if (!_chainRecoveryDone) {
+                        _pollBusy = false;
+                        _recoverChainHistory(headBlock, function() {
+                            // Recovery done — next poll tick will set the 24h window
+                        });
+                        return;
+                    }
                     _lastPolledBlock = Math.max(1, headBlock - 28800);
                 }
 
