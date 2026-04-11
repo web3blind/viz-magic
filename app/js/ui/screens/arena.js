@@ -346,14 +346,29 @@ var ArenaScreen = (function() {
             lbAccounts[leaderboard[li].account] = true;
         }
 
+        var seen = {};
         var players = [];
+
+        // Source 1: fully hydrated characters from state-engine
         if (state.characters) {
             for (var account in state.characters) {
                 if (!state.characters.hasOwnProperty(account)) continue;
                 if (account === user || lbAccounts[account]) continue;
                 var ch = state.characters[account];
                 if (!ch || !ch.name) continue;
+                seen[account] = true;
                 players.push({ account: account, name: ch.name, level: ch.level || 1, className: ch.className });
+            }
+        }
+
+        // Source 2: known accounts discovered during sync (guild members, action targets, etc.)
+        // Shows accounts without full character data — at least the account name is visible
+        if (state.social && state.social.knownAccounts) {
+            for (var ki = 0; ki < state.social.knownAccounts.length; ki++) {
+                var knownAcct = state.social.knownAccounts[ki];
+                if (!knownAcct || knownAcct === user || lbAccounts[knownAcct] || seen[knownAcct]) continue;
+                seen[knownAcct] = true;
+                players.push({ account: knownAcct, name: knownAcct, level: 0, className: '' });
             }
         }
 
@@ -366,11 +381,13 @@ var ArenaScreen = (function() {
         html += '<div class="arena-players-list" role="list">';
         for (var i = 0; i < Math.min(players.length, 50); i++) {
             var p = players[i];
+            var levelText = p.level > 0 ? ' <span class="arena-player-level">Lv ' + p.level + '</span>' : '';
+            var classIconHtml = p.className ? '<span aria-hidden="true">' + Helpers.classIcon(p.className) + '</span> ' : '';
             html += '<div class="arena-player-card" role="listitem">' +
                 '<span class="arena-player-info">' +
-                    '<span aria-hidden="true">' + Helpers.classIcon(p.className) + '</span> ' +
+                    classIconHtml +
                     Helpers.escapeHtml(p.name) +
-                    ' <span class="arena-player-level">Lv ' + p.level + '</span>' +
+                    levelText +
                 '</span>' +
                 '<button class="btn btn-secondary btn-sm arena-challenge-btn" ' +
                     'data-account="' + p.account + '" ' +

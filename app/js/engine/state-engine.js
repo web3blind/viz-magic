@@ -412,6 +412,9 @@ var StateEngine = (function() {
         var character = worldState.characters[sender];
         if (!character) return [];
 
+        // Skip if already processed by optimistic processHuntResult()
+        if (character.lastHuntBlock === blockNum) return [];
+
         // Get creature and spell definitions
         var creature = GameCreatures.getCreature(data.creature);
         var spell = GameSpells.getSpell(data.spell);
@@ -765,9 +768,10 @@ var StateEngine = (function() {
 
     function _handleGuildListing(sender, data, blockNum) {
         if (!data.guild_id || !data.created_block) return [];
-        // Verify sender is a member of the guild (if guild is in state)
-        var guild = worldState.guilds[data.guild_id];
-        if (guild && !guild.members[sender]) return [];
+        // Accept listing even if guild is not yet in local state or is a placeholder.
+        // The listing's purpose is discovery — other clients need it to learn
+        // about guilds they haven't synced yet. Membership validation is too
+        // strict here because the receiving client may not have the guild data.
 
         if (!worldState.guildListings) worldState.guildListings = [];
         // Deduplicate: keep only the latest listing per guild
