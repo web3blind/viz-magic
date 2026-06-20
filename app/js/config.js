@@ -13,11 +13,16 @@ var VizMagicConfig = (function() {
 
     /**
      * Optional read-only archive mirrors for old block fetches.
-     * Keep empty until a public mirror is verified for CORS and block-shape parity.
+     * VIZ RPC remains primary; mirrors are only used as fallback.
      * Supported endpoint pattern: URL may contain {block}, for example
      * https://example.invalid/viz/block/{block}.json
      */
-    var HISTORY_ARCHIVE_MIRRORS = [];
+    var HISTORY_ARCHIVE_MIRRORS = [
+        {
+            url: 'https://vizmagic.web3blind.xyz/archive-mirror/{block}.json',
+            timeoutMs: 8000
+        }
+    ];
 
     /** Protocol identifiers registered on VIZ chain */
     var PROTOCOLS = {
