@@ -45,7 +45,8 @@ test('history source wraps VIZ block/account access', function () {
   assert.ok(/var HistorySource/.test(historySourceJs), 'HistorySource module missing');
   assert.ok(/function getBlock\(blockNum, callback\)/.test(historySourceJs), 'getBlock API missing');
   assert.ok(/viz\.api\.getBlock/.test(historySourceJs), 'getBlock should use live VIZ RPC as first implementation');
-  assert.ok(/_getBlockFromMirrors\(blockNum, 0, callback\)/.test(historySourceJs), 'getBlock should fall back to archive mirrors');
+  assert.ok(/_getBlockEventsFromMirrors\(blockNum, 0/.test(historySourceJs), 'getBlock should try archive event blocks before block payload mirrors');
+  assert.ok(/_getBlockFromMirrors\(blockNum, 0, callback\)|_getBlockFromMirrors\(blockNum, 0, function/.test(historySourceJs), 'getBlock should fall back to archive block mirrors');
   assert.ok(/XMLHttpRequest/.test(historySourceJs), 'mirror fallback should use browser-safe XHR');
   assert.ok(/function getAccountProtocol\(account, protocol, callback\)/.test(historySourceJs), 'account protocol API missing');
   assert.ok(/getCapabilities/.test(historySourceJs), 'capabilities API missing');
@@ -54,6 +55,7 @@ test('history source wraps VIZ block/account access', function () {
 test('archive mirror config is explicit and points at production nginx path', function () {
   assert.ok(/HISTORY_ARCHIVE_MIRRORS/.test(configJs), 'archive mirror config missing');
   assert.ok(/vizmagic\.web3blind\.xyz\/archive-mirror\/v1\/block\/\{block\}\.json/.test(configJs), 'production archive mirror URL missing');
+  assert.ok(/vizmagic\.web3blind\.xyz\/archive-mirror\/v1\/events\/block\/\{block\}\.json/.test(configJs), 'production archive event URL missing');
   assert.ok(/timeoutMs:\s*8000/.test(configJs), 'mirror timeout should be explicit');
   assert.ok(/\{block\}/.test(configJs), 'mirror URL pattern should document block placeholder');
 });

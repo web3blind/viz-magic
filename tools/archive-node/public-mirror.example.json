@@ -1,6 +1,7 @@
 {
   "name": "Viz Magic Community Archive",
   "url": "https://vizmagic.web3blind.xyz/archive-mirror/v1/block/{block}.json",
+  "eventsUrl": "https://vizmagic.web3blind.xyz/archive-mirror/v1/events/block/{block}.json",
   "apiBase": "https://vizmagic.web3blind.xyz/archive-mirror",
   "readOnly": true,
   "protocols": ["VM", "V", "VE", "award"]

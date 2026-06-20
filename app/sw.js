@@ -1,5 +1,5 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v9';
+var CACHE_NAME = 'viz-magic-v10';
 var ASSETS = [
     '/',
     '/index.html',
@@ -14,6 +14,7 @@ var ASSETS = [
     '/js/utils/crypto.js',
     '/js/utils/a11y.js',
     '/js/blockchain/connection.js',
+    '/js/blockchain/history-source.js',
     '/js/blockchain/account.js',
     '/js/blockchain/broadcast.js',
     '/js/blockchain/invite.js',

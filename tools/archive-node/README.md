@@ -7,12 +7,12 @@ It indexes public VIZ blocks, extracts only game-relevant operations, and serves
 ## What it stores
 
 - block number, `block_id`, `previous`, timestamp, source node;
-- raw block JSON for indexed blocks;
+- thinned block JSON for indexed blocks (only operations that became game events; no full raw block storage);
 - normalized public events for:
   - `custom` protocol `VM`;
   - `custom` protocol `V`;
   - `custom` protocol `VE`;
-  - `award` operations used for blessings/rewards.
+  - game-marked `award` operations (`memo` starts with `viz://vm/`).
 
 The implementation stores data in SQLite (`data/archive-node/archive.sqlite`) using Node 22's built-in `node:sqlite` module. `sqlite-schema.sql` documents the live schema.
 
@@ -43,6 +43,7 @@ node daemon.js
 GET /health
 GET /v1/status
 GET /v1/block/:blockNum.json
+GET /v1/events/block/:blockNum.json
 GET /v1/range?start=123&end=456&protocol=VM,V,VE&limit=500
 GET /v1/account/:account/protocol/:protocol/actions?limit=500
 GET /v1/account/:account/protocol/:protocol/latest
@@ -54,6 +55,7 @@ When hosted behind Nginx at `/archive-mirror`, the same API is available under t
 GET /archive-mirror/health
 GET /archive-mirror/v1/status
 GET /archive-mirror/v1/block/123.json
+GET /archive-mirror/v1/events/block/123.json
 ```
 
 ## Config

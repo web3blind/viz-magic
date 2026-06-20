@@ -104,6 +104,37 @@ function createServer(options) {
             return;
         }
 
+        if (parts.length === 4 && parts[0] === 'v1' && parts[1] === 'events' && parts[2] === 'block') {
+            var eventBlockRaw = parts[3].replace(/\.json$/, '');
+            var eventBlockNum = safeNum(eventBlockRaw, 0);
+            if (!eventBlockNum || eventBlockNum <= 0) {
+                json(res, 400, { error: 'invalid_block' });
+                return;
+            }
+            var eventBlockRecord = archive.getBlockRecord(eventBlockNum);
+            if (!eventBlockRecord) {
+                json(res, 404, { error: 'block_not_indexed', blockNum: eventBlockNum }, { 'Cache-Control': 'no-store' });
+                return;
+            }
+            var blockEvents = archive.queryEvents({
+                start: eventBlockNum,
+                end: eventBlockNum,
+                limit: 5000
+            });
+            json(res, 200, {
+                blockNum: eventBlockRecord.blockNum,
+                block_id: eventBlockRecord.block_id,
+                previous: eventBlockRecord.previous,
+                timestamp: eventBlockRecord.timestamp,
+                eventCount: eventBlockRecord.eventCount || blockEvents.length,
+                sourceNode: eventBlockRecord.sourceNode || '',
+                indexedAt: eventBlockRecord.indexedAt,
+                events: blockEvents,
+                count: blockEvents.length
+            });
+            return;
+        }
+
         if (parts.length === 2 && parts[0] === 'v1' && parts[1] === 'range') {
             var protocols = parsedUrl.query.protocol ? String(parsedUrl.query.protocol).split(',').map(function(x) { return x.trim(); }).filter(Boolean) : null;
             var events = archive.queryEvents({

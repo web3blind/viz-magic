@@ -34,6 +34,44 @@ var HistorySource = (function() {
         return pattern.replace(/\/$/, '') + '/' + encodeURIComponent(String(blockNum)) + '.json';
     }
 
+    function _eventsUrl(mirror, blockNum) {
+        var pattern = mirror.eventsUrl || mirror.blockEventsUrl || '';
+        if (!pattern && mirror.apiBase) {
+            pattern = String(mirror.apiBase).replace(/\/$/, '') + '/v1/events/block/{block}.json';
+        }
+        if (!pattern) return '';
+        if (pattern.indexOf('{block}') !== -1) {
+            return pattern.replace('{block}', encodeURIComponent(String(blockNum)));
+        }
+        return pattern.replace(/\/$/, '') + '/' + encodeURIComponent(String(blockNum)) + '.json';
+    }
+
+    function _eventsPayloadToThinBlock(payload) {
+        if (!payload || !payload.events) return null;
+        var events = payload.events || [];
+        var block = {
+            previous: payload.previous || '',
+            timestamp: payload.timestamp || '',
+            block_id: payload.block_id || payload.blockId || '',
+            transactions: []
+        };
+        var byTx = {};
+        for (var i = 0; i < events.length; i++) {
+            var ev = events[i] || {};
+            var txIndex = ev.txIndex || ev.tx_index || 0;
+            if (!byTx[txIndex]) {
+                byTx[txIndex] = { operations: [] };
+                block.transactions.push(byTx[txIndex]);
+            }
+            if (ev.opType === 'custom' || ev.op_type === 'custom') {
+                byTx[txIndex].operations.push(['custom', ev.raw || {}]);
+            } else if (ev.opType === 'award' || ev.op_type === 'award') {
+                byTx[txIndex].operations.push(['award', ev.raw || {}]);
+            }
+        }
+        return block;
+    }
+
     function _extractBlockFromMirrorPayload(payload) {
         if (!payload) return null;
         if (payload.previous && payload.timestamp && payload.transactions) return payload;
@@ -82,6 +120,28 @@ var HistorySource = (function() {
         }
     }
 
+    function _getBlockEventsFromMirrors(blockNum, index, callback) {
+        var mirrors = _archiveMirrors();
+        if (!mirrors.length || index >= mirrors.length) {
+            callback(_makeError('Block events unavailable from archive mirrors'));
+            return;
+        }
+        var mirror = _normalizeMirror(mirrors[index]);
+        var eventsUrl = _eventsUrl(mirror, blockNum);
+        if (!eventsUrl) {
+            _getBlockEventsFromMirrors(blockNum, index + 1, callback);
+            return;
+        }
+        _requestJson(eventsUrl, mirror.timeoutMs || 6000, function(err, payload) {
+            var block = err ? null : _eventsPayloadToThinBlock(payload);
+            if (block) {
+                callback(null, block);
+                return;
+            }
+            _getBlockEventsFromMirrors(blockNum, index + 1, callback);
+        });
+    }
+
     function _getBlockFromMirrors(blockNum, index, callback) {
         var mirrors = _archiveMirrors();
         if (!mirrors.length || index >= mirrors.length) {
@@ -111,7 +171,13 @@ var HistorySource = (function() {
             return;
         }
         if (typeof viz === 'undefined' || !viz.api || !viz.api.getBlock) {
-            _getBlockFromMirrors(blockNum, 0, callback);
+            _getBlockEventsFromMirrors(blockNum, 0, function(eventsErr, eventsBlock) {
+                if (!eventsErr && eventsBlock) {
+                    callback(null, eventsBlock);
+                    return;
+                }
+                _getBlockFromMirrors(blockNum, 0, callback);
+            });
             return;
         }
         viz.api.getBlock(blockNum, function(err, block) {
@@ -119,7 +185,13 @@ var HistorySource = (function() {
                 callback(null, block);
                 return;
             }
-            _getBlockFromMirrors(blockNum, 0, callback);
+            _getBlockEventsFromMirrors(blockNum, 0, function(eventsErr, eventsBlock) {
+                if (!eventsErr && eventsBlock) {
+                    callback(null, eventsBlock);
+                    return;
+                }
+                _getBlockFromMirrors(blockNum, 0, callback);
+            });
         });
     }
 

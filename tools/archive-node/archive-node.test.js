@@ -137,6 +137,13 @@ async function run() {
             assert.strictEqual(range.status, 200);
             assert.strictEqual(range.body.count, 3);
 
+            var blockEvents = await getJson(port, '/archive-mirror/v1/events/block/123.json');
+            assert.strictEqual(blockEvents.status, 200);
+            assert.strictEqual(blockEvents.body.blockNum, 123);
+            assert.strictEqual(blockEvents.body.count, 3);
+            assert.strictEqual(blockEvents.body.events[0].protocol, 'VM');
+            assert.strictEqual(blockEvents.body.events[2].payload.memo, 'viz://vm/bless/target-mage');
+
             var account = await getJson(port, '/archive-mirror/v1/account/' + ACCOUNT + '/protocol/VM/actions');
             assert.strictEqual(account.status, 200);
             assert.strictEqual(account.body.count, 1);
