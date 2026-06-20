@@ -1,8 +1,5 @@
--- Viz Magic archive-node reference schema.
--- The current dependency-free implementation stores the same entities as
--- flat JSON/JSONL files so community mirrors can run without native modules.
--- This schema documents the intended SQLite layout for operators who later
--- migrate the store to SQLite.
+-- Viz Magic archive-node SQLite schema.
+-- This is the live storage layout used by tools/archive-node/storage.js.
 
 CREATE TABLE IF NOT EXISTS blocks (
     block_num INTEGER PRIMARY KEY,

@@ -14,7 +14,7 @@ It indexes public VIZ blocks, extracts only game-relevant operations, and serves
   - `custom` protocol `VE`;
   - `award` operations used for blessings/rewards.
 
-The current implementation is dependency-free and stores data under `data/archive-node/` as JSON/JSONL files. `sqlite-schema.sql` documents the intended SQLite schema for a future storage backend.
+The implementation stores data in SQLite (`data/archive-node/archive.sqlite`) using Node 22's built-in `node:sqlite` module. `sqlite-schema.sql` documents the live schema.
 
 ## Run locally
 

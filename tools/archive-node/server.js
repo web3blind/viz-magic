@@ -63,7 +63,7 @@ function createServer(options) {
                 dataDir: cfg.dataDir,
                 lastIndexedBlock: status.lastIndexedBlock || 0,
                 cursorUpdatedAt: status.cursorUpdatedAt || null,
-                storage: 'flat-file-jsonl',
+                storage: 'sqlite',
                 readOnly: true
             }, { 'Cache-Control': 'no-store' });
             return;
@@ -74,7 +74,7 @@ function createServer(options) {
             st.ok = st.ok !== false;
             st.service = 'viz-magic-game-archive';
             st.readOnly = true;
-            st.storage = 'flat-file-jsonl';
+            st.storage = 'sqlite';
             json(res, 200, st, { 'Cache-Control': 'no-store' });
             return;
         }
