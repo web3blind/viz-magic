@@ -10,5 +10,7 @@
   "batchSize": 50,
   "requestDelayMs": 120,
   "timeoutMs": 8000,
-  "maxBlocksPerRun": 0
+  "maxBlocksPerRun": 0,
+  "pollIntervalMs": 5000,
+  "maxBlocksPerTick": 500
 }

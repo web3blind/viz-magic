@@ -1,0 +1,14 @@
+{
+  "name": "viz-magic-archive-node",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Read-only Viz Magic game archive indexer and API",
+  "main": "server.js",
+  "scripts": {
+    "index": "node indexer.js",
+    "serve": "node server.js",
+    "daemon": "node daemon.js",
+    "test": "node archive-node.test.js"
+  },
+  "license": "MIT"
+}

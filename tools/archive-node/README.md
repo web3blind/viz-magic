@@ -31,6 +31,12 @@ For a small catch-up run from the saved cursor:
 node indexer.js --max-blocks 500
 ```
 
+For continuous low-memory indexing of new blocks:
+
+```bash
+node daemon.js
+```
+
 ## HTTP API
 
 ```text
