@@ -6,6 +6,7 @@ var A11y = (function() {
     'use strict';
 
     var liveRegion = null;
+    var STORAGE_PREFIX = (typeof VizMagicConfig !== 'undefined' && VizMagicConfig.STORAGE_PREFIX) || 'viz_magic_';
 
     /**
      * Initialize the accessibility system
@@ -21,6 +22,7 @@ var A11y = (function() {
             liveRegion.className = 'sr-only';
             document.body.appendChild(liveRegion);
         }
+        applyPreferences();
     }
 
     /**
@@ -72,6 +74,7 @@ var A11y = (function() {
      * @param {HTMLElement} container
      */
     function focusFirst(container) {
+        if (!container || !container.querySelector) return;
         var focusable = container.querySelector(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
@@ -86,9 +89,17 @@ var A11y = (function() {
      * @returns {Function} cleanup function to remove trap
      */
     function trapFocus(container) {
+        if (!container || !container.querySelectorAll) {
+            return function() {};
+        }
+
         var focusableElements = container.querySelectorAll(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
+        if (!focusableElements.length) {
+            return function() {};
+        }
+
         var firstFocusable = focusableElements[0];
         var lastFocusable = focusableElements[focusableElements.length - 1];
 
@@ -120,7 +131,8 @@ var A11y = (function() {
     function initKeyboardShortcuts() {
         document.addEventListener('keydown', function(e) {
             // Only when no input is focused
-            var tag = document.activeElement.tagName.toLowerCase();
+            var active = document.activeElement || document.body;
+            var tag = (active.tagName || '').toLowerCase();
             if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
 
             switch (e.key.toLowerCase()) {
@@ -132,6 +144,118 @@ var A11y = (function() {
                     break;
             }
         });
+    }
+
+    function _setStoredBool(key, value) {
+        try {
+            localStorage.setItem(STORAGE_PREFIX + key, value ? '1' : '0');
+        } catch (e) {}
+    }
+
+    function _getStoredBool(key, fallback) {
+        try {
+            var raw = localStorage.getItem(STORAGE_PREFIX + key);
+            if (raw === '1' || raw === 'true') return true;
+            if (raw === '0' || raw === 'false') return false;
+        } catch (e) {}
+        return !!fallback;
+    }
+
+    function setHighContrast(enabled) {
+        if (!document || !document.body) return;
+        if (enabled) {
+            document.body.classList.add('high-contrast');
+            document.body.setAttribute('data-theme', 'high-contrast');
+        } else {
+            document.body.classList.remove('high-contrast');
+            document.body.removeAttribute('data-theme');
+        }
+        _setStoredBool('high_contrast', enabled);
+    }
+
+    function setReducedMotion(enabled) {
+        if (!document || !document.body) return;
+        document.body.classList.toggle('reduced-motion', !!enabled);
+        _setStoredBool('reduced_motion', enabled);
+    }
+
+    function applyPreferences() {
+        setHighContrast(_getStoredBool('high_contrast', false));
+        setReducedMotion(_getStoredBool('reduced_motion', false));
+    }
+
+    function bindRadioGroup(container, selector, onSelect) {
+        if (!container || !selector) return [];
+        var options = container.querySelectorAll(selector);
+        if (!options.length) return [];
+
+        function setSelected(option, shouldNotify) {
+            for (var i = 0; i < options.length; i++) {
+                var current = options[i];
+                var isSelected = current === option;
+                current.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+                current.setAttribute('tabindex', isSelected ? '0' : '-1');
+                if (current.classList) {
+                    current.classList.toggle('selected', isSelected);
+                }
+            }
+            if (option && option.focus) option.focus();
+            if (shouldNotify && typeof onSelect === 'function') onSelect(option);
+        }
+
+        var selectedOption = null;
+        for (var idx = 0; idx < options.length; idx++) {
+            if (options[idx].getAttribute('aria-checked') === 'true') {
+                selectedOption = options[idx];
+                break;
+            }
+        }
+        if (selectedOption) {
+            setSelected(selectedOption, false);
+        } else {
+            for (var baseIdx = 0; baseIdx < options.length; baseIdx++) {
+                options[baseIdx].setAttribute('tabindex', baseIdx === 0 ? '0' : '-1');
+                if (options[baseIdx].classList) {
+                    options[baseIdx].classList.remove('selected');
+                }
+            }
+        }
+
+        function moveFrom(currentOption, delta) {
+            var currentIndex = 0;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i] === currentOption) {
+                    currentIndex = i;
+                    break;
+                }
+            }
+            var nextIndex = (currentIndex + delta + options.length) % options.length;
+            setSelected(options[nextIndex], true);
+        }
+
+        function onKeyDown(e) {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                moveFrom(this, 1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                moveFrom(this, -1);
+            } else if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                setSelected(this, true);
+            }
+        }
+
+        function onClick() {
+            setSelected(this, true);
+        }
+
+        for (var j = 0; j < options.length; j++) {
+            options[j].addEventListener('click', onClick);
+            options[j].addEventListener('keydown', onKeyDown);
+        }
+
+        return options;
     }
 
     /**
@@ -158,6 +282,10 @@ var A11y = (function() {
         focusFirst: focusFirst,
         trapFocus: trapFocus,
         initKeyboardShortcuts: initKeyboardShortcuts,
+        bindRadioGroup: bindRadioGroup,
+        setHighContrast: setHighContrast,
+        setReducedMotion: setReducedMotion,
+        applyPreferences: applyPreferences,
         prefersReducedMotion: prefersReducedMotion,
         likelyScreenReader: likelyScreenReader
     };

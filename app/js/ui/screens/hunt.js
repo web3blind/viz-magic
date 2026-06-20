@@ -47,6 +47,7 @@ var HuntScreen = (function() {
             for (var i = 0; i < creatures.length; i++) {
                 var c = creatures[i];
                 html += '<button class="creature-card" data-id="' + c.id + '" role="radio" aria-checked="false" ' +
+                    'tabindex="' + (i === 0 ? '0' : '-1') + '" type="button" ' +
                     'aria-label="' + c.name + '. Level ' + c.minLevel + ' to ' + c.maxLevel + '">' +
                     '<span class="creature-name">' + c.name + '</span>' +
                     '<span class="creature-level">Lv ' + c.minLevel + '-' + c.maxLevel + '</span>' +
@@ -62,6 +63,7 @@ var HuntScreen = (function() {
         for (var j = 0; j < spells.length; j++) {
             var s = spells[j];
             html += '<button class="spell-btn ' + Helpers.schoolClass(s.school) + '" data-id="' + s.id + '" role="radio" aria-checked="false" ' +
+                'tabindex="' + (j === 0 ? '0' : '-1') + '" type="button" ' +
                 'aria-label="' + s.name + '. ' + t('hunt_mana_cost', {cost: Helpers.bpToPercent(s.manaCost)}) + '">' +
                 '<span class="spell-name">' + s.name + '</span>' +
                 '<span class="spell-cost">' + Helpers.manaCost(s.manaCost) + '</span>' +
@@ -113,35 +115,17 @@ var HuntScreen = (function() {
     }
 
     function _bindEvents(el) {
-        var creatureCards = el.querySelectorAll('.creature-card');
-        for (var i = 0; i < creatureCards.length; i++) {
-            creatureCards[i].addEventListener('click', function() {
-                selectedCreature = this.getAttribute('data-id');
-                SoundManager.play('tap');
-                for (var k = 0; k < creatureCards.length; k++) {
-                    creatureCards[k].classList.remove('selected');
-                    creatureCards[k].setAttribute('aria-checked', 'false');
-                }
-                this.classList.add('selected');
-                this.setAttribute('aria-checked', 'true');
-                _checkReady();
-            });
-        }
+        A11y.bindRadioGroup(el.querySelector('.creature-list[role="radiogroup"]'), '.creature-card', function(option) {
+            selectedCreature = option.getAttribute('data-id');
+            SoundManager.play('tap');
+            _checkReady();
+        });
 
-        var spellBtns = el.querySelectorAll('.spell-btn');
-        for (var j = 0; j < spellBtns.length; j++) {
-            spellBtns[j].addEventListener('click', function() {
-                selectedSpell = this.getAttribute('data-id');
-                SoundManager.play('tap');
-                for (var k = 0; k < spellBtns.length; k++) {
-                    spellBtns[k].classList.remove('selected');
-                    spellBtns[k].setAttribute('aria-checked', 'false');
-                }
-                this.classList.add('selected');
-                this.setAttribute('aria-checked', 'true');
-                _checkReady();
-            });
-        }
+        A11y.bindRadioGroup(el.querySelector('.spell-grid[role="radiogroup"]'), '.spell-btn', function(option) {
+            selectedSpell = option.getAttribute('data-id');
+            SoundManager.play('tap');
+            _checkReady();
+        });
 
         Helpers.$('btn-attack').addEventListener('click', _doHunt);
 

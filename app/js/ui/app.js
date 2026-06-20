@@ -177,6 +177,8 @@ var App = (function() {
             nav.classList.remove('show');
         }
 
+        _moveFocusToScreen(target, screenId);
+
         // Announce screen change
         var screenTitle = Helpers.t('nav_' + screenId) || screenId;
         A11y.announce(screenTitle);
@@ -212,6 +214,29 @@ var App = (function() {
             case 'help':        if (typeof HelpScreen !== 'undefined') HelpScreen.render(); break;
             case 'leaderboard': if (typeof LeaderboardScreen !== 'undefined') LeaderboardScreen.render(); break;
         }
+    }
+
+    function _moveFocusToScreen(target, screenId) {
+        if (!target) return;
+
+        var appMain = Helpers.$('app-main');
+        if (appMain) {
+            appMain.setAttribute('data-current-screen', screenId);
+        }
+
+        var focusTarget = target.querySelector('h1, [data-screen-focus], [role="heading"]');
+        if (!focusTarget) {
+            focusTarget = target;
+        }
+        if (!focusTarget.getAttribute('tabindex')) {
+            focusTarget.setAttribute('tabindex', '-1');
+        }
+
+        setTimeout(function() {
+            if (focusTarget && focusTarget.focus) {
+                focusTarget.focus();
+            }
+        }, 0);
     }
 
     /**

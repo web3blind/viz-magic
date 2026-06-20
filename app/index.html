@@ -16,9 +16,12 @@
     <link rel="stylesheet" href="css/accessibility.css">
 </head>
 <body>
+    <a class="skip-link" href="#app-main">Skip to current screen</a>
+
     <!-- Connection status banner -->
     <div id="connection-status" role="status" aria-live="polite"></div>
 
+    <div id="app-main" class="app-shell" tabindex="-1">
     <!-- Screen: Landing -->
     <main id="screen-landing" class="screen active" role="main" aria-hidden="false" aria-label="Landing">
     </main>
@@ -94,6 +97,7 @@
     <!-- Screen: Leaderboard -->
     <section id="screen-leaderboard" class="screen" role="main" aria-hidden="true" aria-label="Leaderboard">
     </section>
+    </div>
 
     <!-- Bottom navigation -->
     <nav id="bottom-nav" role="navigation" aria-label="Main navigation"></nav>

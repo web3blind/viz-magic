@@ -27,15 +27,14 @@ var NavComponent = (function() {
         for (var i = 0; i < tabs.length; i++) {
             var tab = tabs[i];
             var isActive = tab.id === activeTab ? ' active' : '';
-            html += '<button class="nav-tab' + isActive + '" data-screen="' + tab.id + '" ';
-            html += 'role="tab" aria-selected="' + (tab.id === activeTab) + '" ';
+            html += '<button type="button" class="nav-tab' + isActive + '" data-screen="' + tab.id + '" ';
+            if (tab.id === activeTab) html += 'aria-current="page" ';
             html += 'aria-label="' + tab.label + '">';
             html += '<span class="nav-icon" aria-hidden="true">' + tab.icon + '</span>';
             html += '<span class="nav-label">' + tab.label + '</span>';
             html += '</button>';
         }
         nav.innerHTML = html;
-        nav.setAttribute('role', 'tablist');
         nav.setAttribute('aria-label', 'Main navigation');
 
         // Event listeners

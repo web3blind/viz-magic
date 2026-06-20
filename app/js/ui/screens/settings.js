@@ -5,6 +5,23 @@
 var SettingsScreen = (function() {
     'use strict';
 
+    var STORAGE_PREFIX = VizMagicConfig.STORAGE_PREFIX;
+
+    function _getStoredBool(key, fallback) {
+        try {
+            var value = localStorage.getItem(STORAGE_PREFIX + key);
+            if (value === '1' || value === 'true') return true;
+            if (value === '0' || value === 'false') return false;
+        } catch (e) {}
+        return !!fallback;
+    }
+
+    function _setStoredBool(key, value) {
+        try {
+            localStorage.setItem(STORAGE_PREFIX + key, value ? '1' : '0');
+        } catch (e) {}
+    }
+
     function render() {
         var t = Helpers.t;
         var el = Helpers.$('screen-settings');
@@ -12,6 +29,8 @@ var SettingsScreen = (function() {
 
         var user = VizAccount.getCurrentUser();
         var currentLang = Helpers.getCurrentLang ? Helpers.getCurrentLang() : 'ru';
+        var highContrast = _getStoredBool('high_contrast', false);
+        var reducedMotion = _getStoredBool('reduced_motion', false);
 
         el.innerHTML =
             '<div class="settings-screen">' +
@@ -21,7 +40,7 @@ var SettingsScreen = (function() {
                 '<section class="settings-section" aria-label="' + t('settings_language') + '">' +
                     '<h2>' + t('settings_language') + '</h2>' +
                     '<div class="settings-toggle-group">' +
-                        '<button class="btn btn-sm' + (currentLang === 'ru' ? ' btn-primary' : ' btn-secondary') + '" id="lang-ru" aria-pressed="' + (currentLang === 'ru') + '">\uD83C\uDDF7\uD83C\uDDFA \u0420\u0443\u0441\u0441\u043A\u0438\u0439</button>' +
+                        '<button class="btn btn-sm' + (currentLang === 'ru' ? ' btn-primary' : ' btn-secondary') + '" id="lang-ru" aria-pressed="' + (currentLang === 'ru') + '">\uD83C\uDDF7\uD83C\uDDFA Русский</button>' +
                         '<button class="btn btn-sm' + (currentLang === 'en' ? ' btn-primary' : ' btn-secondary') + '" id="lang-en" aria-pressed="' + (currentLang === 'en') + '">\uD83C\uDDEC\uD83C\uDDE7 English</button>' +
                     '</div>' +
                 '</section>' +
@@ -46,8 +65,8 @@ var SettingsScreen = (function() {
                 // Accessibility
                 '<section class="settings-section" aria-label="' + t('settings_accessibility') + '">' +
                     '<h2>' + t('settings_accessibility') + '</h2>' +
-                    _renderToggle('contrast-toggle', t('settings_high_contrast'), false) +
-                    _renderToggle('motion-toggle', t('settings_reduced_motion'), false) +
+                    _renderToggle('contrast-toggle', t('settings_high_contrast'), highContrast) +
+                    _renderToggle('motion-toggle', t('settings_reduced_motion'), reducedMotion) +
                 '</section>' +
 
                 // Notifications
@@ -141,17 +160,25 @@ var SettingsScreen = (function() {
 
                 // Apply specific toggles
                 if (this.id === 'contrast-toggle') {
-                    document.body.classList.toggle('high-contrast', isActive);
+                    if (isActive) {
+                        document.body.classList.add('high-contrast');
+                        document.body.setAttribute('data-theme', 'high-contrast');
+                    } else {
+                        document.body.classList.remove('high-contrast');
+                        document.body.removeAttribute('data-theme');
+                    }
+                    _setStoredBool('high_contrast', isActive);
                 }
                 if (this.id === 'motion-toggle') {
                     document.body.classList.toggle('reduced-motion', isActive);
+                    try { localStorage.setItem(STORAGE_PREFIX + 'reduced_motion', isActive ? '1' : '0'); } catch (e) {}
+                    _setStoredBool('reduced_motion', isActive);
                 }
                 if (this.id === 'narrator-toggle' && typeof BattleNarrator !== 'undefined') {
                     BattleNarrator.setEnabled(isActive);
                 }
                 if (this.id === 'haptics-toggle') {
-                    // Store preference
-                    try { localStorage.setItem(VizMagicConfig.STORAGE_PREFIX + 'haptics', isActive ? '1' : '0'); } catch(e) {}
+                    _setStoredBool('haptics', isActive);
                 }
             });
         }

@@ -38,6 +38,7 @@ var OnboardingScreen = (function() {
             var c = classes[i];
             var sel = c.id === selectedClass ? ' selected' : '';
             html += '<button class="class-card' + sel + '" role="radio" aria-checked="' + (c.id === selectedClass) + '" ' +
+                'tabindex="' + ((c.id === selectedClass || (!selectedClass && i === 0)) ? '0' : '-1') + '" type="button" ' +
                 'data-class="' + c.id + '" aria-label="' + t('class_' + c.id) + '. ' + t('class_' + c.id + '_desc') + '">' +
                 '<span class="class-icon" aria-hidden="true">' + c.icon + '</span>' +
                 '<h3>' + t('class_' + c.id) + '</h3>' +
@@ -56,20 +57,11 @@ var OnboardingScreen = (function() {
 
         el.innerHTML = html;
 
-        var cards = el.querySelectorAll('.class-card');
-        for (var j = 0; j < cards.length; j++) {
-            cards[j].addEventListener('click', function() {
-                selectedClass = this.getAttribute('data-class');
-                SoundManager.play('tap');
-                for (var k = 0; k < cards.length; k++) {
-                    cards[k].classList.remove('selected');
-                    cards[k].setAttribute('aria-checked', 'false');
-                }
-                this.classList.add('selected');
-                this.setAttribute('aria-checked', 'true');
-                Helpers.$('btn-class-next').disabled = false;
-            });
-        }
+        A11y.bindRadioGroup(el.querySelector('.class-grid[role="radiogroup"]'), '.class-card', function(option) {
+            selectedClass = option.getAttribute('data-class');
+            SoundManager.play('tap');
+            Helpers.$('btn-class-next').disabled = false;
+        });
 
         Helpers.$('btn-class-back').addEventListener('click', function() {
             Helpers.EventBus.emit('navigate', 'login');
