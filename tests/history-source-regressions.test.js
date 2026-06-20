@@ -53,7 +53,7 @@ test('history source wraps VIZ block/account access', function () {
 
 test('archive mirror config is explicit and points at production nginx path', function () {
   assert.ok(/HISTORY_ARCHIVE_MIRRORS/.test(configJs), 'archive mirror config missing');
-  assert.ok(/vizmagic\.web3blind\.xyz\/archive-mirror\/\{block\}\.json/.test(configJs), 'production archive mirror URL missing');
+  assert.ok(/vizmagic\.web3blind\.xyz\/archive-mirror\/v1\/block\/\{block\}\.json/.test(configJs), 'production archive mirror URL missing');
   assert.ok(/timeoutMs:\s*8000/.test(configJs), 'mirror timeout should be explicit');
   assert.ok(/\{block\}/.test(configJs), 'mirror URL pattern should document block placeholder');
 });

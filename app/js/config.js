@@ -19,7 +19,7 @@ var VizMagicConfig = (function() {
      */
     var HISTORY_ARCHIVE_MIRRORS = [
         {
-            url: 'https://vizmagic.web3blind.xyz/archive-mirror/{block}.json',
+            url: 'https://vizmagic.web3blind.xyz/archive-mirror/v1/block/{block}.json',
             timeoutMs: 8000
         }
     ];

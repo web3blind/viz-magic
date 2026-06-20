@@ -1,0 +1,14 @@
+{
+  "sourceNodes": [
+    "https://api.viz.world/",
+    "https://node.viz.cx/"
+  ],
+  "dataDir": "./data/archive-node",
+  "host": "127.0.0.1",
+  "port": 3007,
+  "startBlock": 1,
+  "batchSize": 50,
+  "requestDelayMs": 120,
+  "timeoutMs": 8000,
+  "maxBlocksPerRun": 0
+}
