@@ -58,7 +58,17 @@ function normalizeCustom(block, blockNum, txIndex, opIndex, opData) {
     };
 }
 
+function isGameAward(opData) {
+    var memo = opData && opData.memo || '';
+    // VIZ award is global blockchain traffic. Index only awards that Viz Magic
+    // explicitly marks as in-game social blessings. Economic author rewards
+    // attached to hunts are already represented by the VM hunt action, so a
+    // bare award with empty/random memo is intentionally ignored here.
+    return String(memo).indexOf('viz://vm/') === 0;
+}
+
 function normalizeAward(block, blockNum, txIndex, opIndex, opData) {
+    if (!isGameAward(opData)) return null;
     var accounts = [];
     uniquePush(accounts, opData && opData.initiator);
     uniquePush(accounts, opData && opData.receiver);
@@ -109,5 +119,6 @@ function extractGameEvents(block, blockNum) {
 module.exports = {
     extractGameEvents: extractGameEvents,
     parseJsonMaybe: parseJsonMaybe,
-    getSender: getSender
+    getSender: getSender,
+    isGameAward: isGameAward
 };

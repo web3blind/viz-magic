@@ -39,7 +39,16 @@ var TEST_BLOCK = {
                 receiver: 'target-mage',
                 energy: 1000,
                 custom_sequence: 1,
-                memo: 'blessing'
+                memo: 'viz://vm/bless/target-mage'
+            }
+        ], [
+            'award',
+            {
+                initiator: 'dice.id',
+                receiver: 'random-user',
+                energy: 2,
+                custom_sequence: 0,
+                memo: '🎲'
             }
         ]]
     }]
@@ -89,6 +98,8 @@ async function run() {
     assert.strictEqual(events[0].protocol, 'VM');
     assert.strictEqual(events[0].type, 'char.attune');
     assert.strictEqual(events[2].protocol, 'award');
+    assert.strictEqual(events[2].payload.memo, 'viz://vm/bless/target-mage');
+    assert.ok(events.every(function(ev) { return ev.sender !== 'dice.id'; }), 'non-game awards must not be indexed');
 
     var tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'viz-archive-node-test-'));
     var rpc = await startRpcServer();
