@@ -124,9 +124,20 @@ test('chronicle keeps loaded tabs visible and shows sent blessings immediately',
 
 test('guild joining explains and enforces preparation requirements', function () {
   assert.ok(/var GUILD_JOIN_MIN_LEVEL = 4/.test(guildJs), 'guild join level gate should be explicit');
-  assert.ok(/guild_join_requirements/.test(guildJs + ruJs + enJs), 'guild screen should explain join requirements');
-  assert.ok(/guild_join_locked/.test(guildJs + ruJs + enJs), 'locked join button copy missing');
+  assert.ok(/guild_join_requirements/.test(guildJs), 'guild screen should explain join requirements');
+  assert.ok(/guild_join_requirements:\s*'[^']*\{level\}/.test(enJs), 'English guild join requirements copy missing');
+  assert.ok(/guild_join_requirements:\s*'[^']*\{level\}/.test(ruJs), 'Russian guild join requirements copy missing');
+  assert.ok(/guild_join_locked/.test(guildJs), 'locked join button key missing');
+  assert.ok(/guild_join_locked:\s*'[^']*\{level\}/.test(enJs), 'English locked join button copy missing');
+  assert.ok(/guild_join_locked:\s*'[^']*\{level\}/.test(ruJs), 'Russian locked join button copy missing');
   assert.ok(/character\.level < GUILD_JOIN_MIN_LEVEL/.test(guildJs), 'join handler should guard low-level direct clicks');
+});
+
+test('high-traffic UI narration and inventory stat labels are translated', function () {
+  ['char_level_up', 'stat_pot', 'stat_res', 'stat_swf', 'stat_int', 'stat_for', 'duel_narrator_pre', 'duel_narrator_seal', 'duel_narrator_sealed', 'duel_narrator_waiting', 'duel_narrator_reveal'].forEach(function (key) {
+    assert.ok(enJs.indexOf(key + ':') !== -1, 'English translation missing: ' + key);
+    assert.ok(ruJs.indexOf(key + ':') !== -1, 'Russian translation missing: ' + key);
+  });
 });
 
 test('leaderboard has local character fallback while 24h scan is empty or slow', function () {

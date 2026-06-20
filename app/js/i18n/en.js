@@ -119,8 +119,7 @@ var LangEN = {
     char_intellect: 'Intellect',
     char_fortune: 'Fortune',
     char_core: 'Magic Core',
-        char_stats_growth_hint: 'Stats grow from level, Core power, equipment, enchantments, and rare trophies. To improve one specific stat, find or craft items with that stat in the bag and workshop.',
-        char_stats_growth_hint: 'Stats grow from level, Core power, equipment, enchantments, and rare trophies. To improve one specific stat, find or craft items with that stat in the bag and workshop.',
+    char_stats_growth_hint: 'Stats grow from level, Core power, equipment, enchantments, and rare trophies. To improve one specific stat, find or craft items with that stat in the bag and workshop.',
     char_core_power: 'Core Power',
     char_core_per_stat: 'Core Power / 5: +{value} to each main stat',
     char_mana_regen: 'Mana Regeneration',
@@ -141,6 +140,12 @@ var LangEN = {
     spell_grand_covenant_desc: 'The ultimate healing spell. Full restoration and shield.',
     char_achievements: 'Achievements',
     char_strengthen_core: 'Strengthen Core',
+    char_level_up: 'Level up',
+    stat_pot: 'Potency',
+    stat_res: 'Resilience',
+    stat_swf: 'Swiftness',
+    stat_int: 'Intellect',
+    stat_for: 'Fortune',
 
     // Hunt
     hunt_title: 'Hunt',
@@ -334,6 +339,11 @@ var LangEN = {
     narrator_duel_challenge: '{opponent} challenges you to a duel!',
     narrator_duel_won: 'You won the duel!',
     narrator_duel_lost: 'You lost the duel.',
+    duel_narrator_pre: 'Duel with {opponent}. Best of 3 rounds.',
+    duel_narrator_seal: 'Seal phase. Choose your spell. {seconds} seconds.',
+    duel_narrator_sealed: 'Sealed. Waiting for opponent.',
+    duel_narrator_waiting: 'Waiting for opponent\'s move.',
+    duel_narrator_reveal: 'Reveal. {myIntent} versus {oppIntent}. {result}.',
 
     // Rarity
     rarity_common: 'Common',
@@ -398,6 +408,8 @@ var LangEN = {
     guild_joined: 'You joined the guild!',
     guild_created: 'Guild created!',
     guild_not_member: 'You are not in a guild. Create your own or join an existing one.',
+    guild_join_requirements: 'You can request to join public guilds from level {level}.',
+    guild_join_locked: 'Requires level {level}',
     guild_sync_hint: 'Syncing with the World. Guilds and invites will appear after sync completes.',
     guild_recommended: 'Recommended Guilds',
     guild_members: 'Members',

@@ -140,6 +140,12 @@ var LangRU = {
     spell_grand_covenant_desc: 'Величайшее исцеляющее заклинание. Полное восстановление и щит.',
     char_achievements: 'Достижения',
     char_strengthen_core: 'Усилить Ядро',
+    char_level_up: 'Новый уровень',
+    stat_pot: 'Сила',
+    stat_res: 'Защита',
+    stat_swf: 'Скорость',
+    stat_int: 'Дух',
+    stat_for: 'Удача',
 
     // Hunt
     hunt_title: 'Охота',
@@ -333,6 +339,11 @@ var LangRU = {
     narrator_duel_challenge: '{opponent} вызывает тебя на дуэль!',
     narrator_duel_won: 'Ты победил в дуэли!',
     narrator_duel_lost: 'Ты проиграл дуэль.',
+    duel_narrator_pre: 'Дуэль с {opponent}. Лучшая из 3 раундов.',
+    duel_narrator_seal: 'Фаза печати. Выбери заклинание. {seconds} секунд.',
+    duel_narrator_sealed: 'Запечатано. Ожидание противника.',
+    duel_narrator_waiting: 'Ожидание хода противника.',
+    duel_narrator_reveal: 'Раскрытие. {myIntent} против {oppIntent}. {result}.',
 
     // Rarity
     rarity_common: 'Обычный',
@@ -397,6 +408,8 @@ var LangRU = {
     guild_joined: 'Вы вступили в гильдию!',
     guild_created: 'Гильдия создана!',
     guild_not_member: 'Вы не состоите в гильдии. Создайте свою или вступите в существующую.',
+    guild_join_requirements: 'Подать заявку в открытую гильдию можно с {level} уровня.',
+    guild_join_locked: 'Нужен уровень {level}',
     guild_sync_hint: 'Идёт синхронизация с Миром. Гильдии и приглашения появятся после завершения загрузки.',
     guild_recommended: 'Рекомендуемые Гильдии',
     guild_members: 'Участники',
