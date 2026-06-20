@@ -5,6 +5,7 @@ var Toast = (function() {
     'use strict';
 
     var container = null;
+    var activeKeys = {};
 
     function _getContainer() {
         if (!container) {
@@ -28,8 +29,16 @@ var Toast = (function() {
         duration = duration || 3000;
         options = options || {};
 
+        if (options.key && activeKeys[options.key] && activeKeys[options.key].parentNode) {
+            return activeKeys[options.key];
+        }
+
         var toast = document.createElement('div');
         toast.className = 'toast toast-' + type;
+        if (options.key) {
+            toast.setAttribute('data-toast-key', options.key);
+            activeKeys[options.key] = toast;
+        }
         toast.textContent = message;
         toast.setAttribute('role', 'alert');
 
@@ -67,6 +76,9 @@ var Toast = (function() {
             toast.classList.remove('show');
             setTimeout(function() {
                 if (toast.parentNode) toast.parentNode.removeChild(toast);
+                if (options.key && activeKeys[options.key] === toast) {
+                    delete activeKeys[options.key];
+                }
             }, 300);
         }, duration);
     }

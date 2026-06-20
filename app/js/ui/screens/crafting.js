@@ -116,7 +116,11 @@ var CraftingScreen = (function() {
             html += '<span class="recipe-ready">' + t('craft_ready') + '</span>';
         } else {
             var errorKey = 'craft_error_' + (recipeInfo.error || 'unknown');
-            html += '<span class="recipe-locked-text">' + t(errorKey) + '</span>';
+            var errorText = t(errorKey);
+            if (recipeInfo.error === 'not_enough_mana' && recipe.manaCost) {
+                errorText += ' ' + t('craft_required_mana', { cost: Helpers.bpToPercent(recipe.manaCost) });
+            }
+            html += '<span class="recipe-locked-text">' + errorText + '</span>';
         }
         html += '</div>';
         html += '</div>';
@@ -461,7 +465,12 @@ var CraftingScreen = (function() {
         // Validate
         var validation = CraftingSystem.validateRecipe(selectedRecipe, character, inventory, character.currentZone || '');
         if (!validation.valid) {
-            Toast.error(t('craft_error_' + validation.error));
+            var validationMessage = t('craft_error_' + validation.error);
+            var validationRecipe = GameRecipes.getRecipe(selectedRecipe);
+            if (validation.error === 'not_enough_mana' && validationRecipe && validationRecipe.manaCost) {
+                validationMessage += ' ' + t('craft_required_mana', { cost: Helpers.bpToPercent(validationRecipe.manaCost) });
+            }
+            Toast.error(validationMessage);
             SoundManager.play('error');
             return;
         }
@@ -630,6 +639,24 @@ var CraftingScreen = (function() {
         });
     }
 
+    function _consumeSuccessMessage(t, result, character) {
+        var effect = result ? result.effect : null;
+        if (effect && effect.type === 'hp_restore') {
+            return t('consume_success_hp', {
+                amount: effect.amount || 0,
+                current: character.hp || 0,
+                max: character.maxHp || 0
+            });
+        }
+        if (effect && effect.type === 'mana_restore') {
+            return t('consume_success_mana', {
+                amount: Helpers.bpToPercent(effect.amount || 0),
+                current: Helpers.bpToPercent(character.mana || 0)
+            });
+        }
+        return t('consume_success');
+    }
+
     /**
      * Execute consume
      */
@@ -654,7 +681,7 @@ var CraftingScreen = (function() {
             } else {
                 var result = EnchantingSystem.consumeItem(item, character);
                 if (result.success) {
-                    Toast.success(t('consume_success'));
+                    Toast.success(_consumeSuccessMessage(t, result, character));
                     SoundManager.play('success');
                     SoundManager.vibrate('light');
                 }

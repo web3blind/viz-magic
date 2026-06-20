@@ -77,7 +77,9 @@ var QuestSystem = (function() {
                 target: obj.target || '',
                 required: obj.required,
                 current: 0,
-                completed: false
+                completed: false,
+                uniqueTarget: !!obj.uniqueTarget,
+                seenTargets: []
             });
         }
 
@@ -113,7 +115,28 @@ var QuestSystem = (function() {
                         continue;
                     }
 
-                    obj.current += (eventData.count || 1);
+                    if (obj.uniqueTarget) {
+                        if (!eventData || !eventData.uniqueKey) {
+                            continue;
+                        }
+                        if (!obj.seenTargets) {
+                            obj.seenTargets = [];
+                        }
+                        var alreadySeen = false;
+                        for (var st = 0; st < obj.seenTargets.length; st++) {
+                            if (obj.seenTargets[st] === eventData.uniqueKey) {
+                                alreadySeen = true;
+                                break;
+                            }
+                        }
+                        if (alreadySeen) {
+                            continue;
+                        }
+                        obj.seenTargets.push(eventData.uniqueKey);
+                        obj.current = obj.seenTargets.length;
+                    } else {
+                        obj.current += (eventData.count || 1);
+                    }
                     if (obj.current >= obj.required) {
                         obj.current = obj.required;
                         obj.completed = true;

@@ -9,6 +9,7 @@ var GuildScreen = (function() {
     var t = Helpers.t;
     var _seenGuildNotifications = {};
     var _listingFetchInProgress = {};
+    var GUILD_JOIN_MIN_LEVEL = 4;
 
     function render() {
         var container = Helpers.$('screen-guild');
@@ -230,6 +231,7 @@ var GuildScreen = (function() {
         }
 
         html += '<p class="guild-no-guild-text">' + t('guild_not_member') + '</p>';
+        html += '<p class="guild-join-requirements">' + t('guild_join_requirements', { level: GUILD_JOIN_MIN_LEVEL }) + '</p>';
 
         if (pendingInvites.length > 0) {
             html += '<section class="recommended-guilds" aria-label="' + t('guild_pending_invites') + '">';
@@ -276,9 +278,13 @@ var GuildScreen = (function() {
                 html += '<span>' + count + ' ' + t('guild_members') + '</span>';
                 if (g.school) html += '<span>' + t('school_' + g.school) + '</span>';
                 html += '</div>';
+                var currentCharacter = StateEngine.getCharacter(user);
+                var canRequestJoin = currentCharacter && currentCharacter.level >= GUILD_JOIN_MIN_LEVEL;
                 html += '<button class="btn btn-primary btn-sm guild-join-btn" data-guild="' + g.id + '" ';
+                if (!canRequestJoin) html += 'disabled aria-disabled="true" ';
                 html += 'aria-label="' + t('guild_join') + ' ' + _esc(g.name) + '">';
-                html += t('guild_join') + '</button>';
+                html += canRequestJoin ? t('guild_join') : t('guild_join_locked', { level: GUILD_JOIN_MIN_LEVEL });
+                html += '</button>';
                 html += '</li>';
             }
             html += '</ul>';
@@ -491,6 +497,12 @@ var GuildScreen = (function() {
         for (var i = 0; i < joinBtns.length; i++) {
             joinBtns[i].addEventListener('click', function() {
                 var guildId = this.getAttribute('data-guild');
+                var user = VizAccount.getCurrentUser();
+                var character = StateEngine.getCharacter(user);
+                if (!character || character.level < GUILD_JOIN_MIN_LEVEL) {
+                    Toast.info(t('guild_join_locked', { level: GUILD_JOIN_MIN_LEVEL }));
+                    return;
+                }
                 GuildProtocol.broadcastJoinGuild(guildId, function(err) {
                     if (err) {
                         Toast.error(t('error_network'));

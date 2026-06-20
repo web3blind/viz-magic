@@ -223,7 +223,8 @@ var InventoryScreen = (function() {
         var item = group.item;
         var rInfo = ItemSystem.getRarityInfo(item.rarity);
         var label = _itemName(item.type);
-        var aria = label + '. ' + rInfo.name + '. ' + t('inv_count') + ': ' + group.count + '.';
+        var rarityName = t('rarity_' + rInfo.name) || rInfo.name;
+        var aria = label + '. ' + rarityName + '. ' + t('inv_count') + ': ' + group.count + '.';
         if (!compact && _hasMeaningfulStats(item.stats)) {
             aria += ' ' + _statsText(item.stats, t) + '.';
         }
@@ -231,7 +232,7 @@ var InventoryScreen = (function() {
         return '<div class="item-card ' + Helpers.rarityClass(item.rarity) + '" role="listitem" tabindex="0" ' +
             'aria-label="' + Helpers.escapeHtml(aria) + '">' +
             '<span class="item-rarity" aria-hidden="true">' + rInfo.symbol + '</span>' +
-            '<span class="item-name">' + Helpers.escapeHtml(label) + '</span>' +
+            '<span class="item-name">' + Helpers.escapeHtml(label) + ' (' + Helpers.escapeHtml(rarityName) + ')</span>' +
             (group.count > 1 ? '<span class="item-badge">×' + group.count + '</span>' : '') +
             (item.equipped ? '<span class="item-badge">[E]</span>' : '') +
             (item.volatile_ ? '<span class="item-volatile">\u26A0</span>' : '') +

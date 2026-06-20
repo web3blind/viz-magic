@@ -83,7 +83,7 @@ var GameQuests = (function() {
             minLevel: 3,
             maxLevel: 50,
             objectives: [
-                { type: 'explore', required: 3 }
+                { type: 'explore', required: 3, uniqueTarget: true }
             ],
             rewards: {
                 xp: 250,
@@ -100,7 +100,7 @@ var GameQuests = (function() {
             minLevel: 1,
             maxLevel: 50,
             objectives: [
-                { type: 'social', target: 'blessing', required: 5 }
+                { type: 'social', target: 'blessing', required: 5, uniqueTarget: true }
             ],
             rewards: {
                 xp: 200,

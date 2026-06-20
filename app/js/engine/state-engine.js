@@ -597,7 +597,7 @@ var StateEngine = (function() {
 
         if (typeof QuestSystem !== 'undefined' && data.zone && data.zone !== previousZone) {
             _ensureQuests(sender);
-            QuestSystem.updateQuestProgress(worldState.quests[sender], 'explore', { target: data.zone, count: 1 });
+            QuestSystem.updateQuestProgress(worldState.quests[sender], 'explore', { target: data.zone, uniqueKey: data.zone, count: 1 });
         }
 
         return [{
@@ -631,7 +631,7 @@ var StateEngine = (function() {
         });
 
         if (typeof QuestSystem !== 'undefined' && worldState.quests && worldState.quests[award.initiator]) {
-            QuestSystem.updateQuestProgress(worldState.quests[award.initiator], 'social', { target: 'blessing', count: 1 });
+            QuestSystem.updateQuestProgress(worldState.quests[award.initiator], 'social', { target: 'blessing', uniqueKey: award.receiver, count: 1 });
         }
     }
 

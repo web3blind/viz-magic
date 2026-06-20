@@ -43,6 +43,18 @@ var MapScreen = (function() {
         }
 
         var regions = GameRegions.getAll();
+        var regionIds = [];
+        for (var rid in regions) {
+            if (regions.hasOwnProperty(rid)) regionIds.push(rid);
+        }
+        regionIds.sort(function(a, b) {
+            var ar = regions[a] || {};
+            var br = regions[b] || {};
+            if ((ar.minLevel || 0) !== (br.minLevel || 0)) {
+                return (ar.minLevel || 0) - (br.minLevel || 0);
+            }
+            return String(ar.name || a).localeCompare(String(br.name || b));
+        });
 
         var html = '';
         html += '<div class="map-screen" role="region" aria-label="' + t('map_title') + '">';
@@ -71,8 +83,8 @@ var MapScreen = (function() {
         // Region list
         html += '<div class="region-list" role="list" aria-label="' + t('map_regions') + '">';
 
-        for (var regionId in regions) {
-            if (!regions.hasOwnProperty(regionId)) continue;
+        for (var ri = 0; ri < regionIds.length; ri++) {
+            var regionId = regionIds[ri];
             var region = regions[regionId];
             var territory = state.territories ? state.territories[regionId] : null;
             var icon = REGION_ICONS[regionId] || '\uD83C\uDF0D';

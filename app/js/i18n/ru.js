@@ -119,6 +119,7 @@ var LangRU = {
     char_intellect: 'Дух',
     char_fortune: 'Удача',
     char_core: 'Магическое Ядро',
+    char_stats_growth_hint: 'Характеристики растут от уровня, Ядра, экипировки, зачарований и редких трофеев. Если хочешь усилить конкретную черту, ищи или создавай предметы с этой характеристикой в сумке и мастерской.',
     char_core_power: 'Сила Ядра',
     char_core_per_stat: 'Сила Ядра / 5: +{value} к каждому основному стату',
     char_mana_regen: 'Регенерация Маны',
@@ -146,6 +147,7 @@ var LangRU = {
     hunt_no_creatures_here: 'В этой локации сейчас нет доступной добычи для охоты.',
     hunt_no_creatures_hint: 'Откройте карту и вернитесь в The Commons of First Light или дождитесь появления существ в этом регионе.',
     hunt_return_to_commons: 'Вернуться в First Light',
+    hunt_returned_to_commons: 'Вы вернулись в Общины Первого Света. Охота снова доступна.',
     hunt_choose_spell: 'Выбери заклинание',
     hunt_attack: 'Атаковать',
     hunt_victory: 'Победа!',
@@ -165,8 +167,8 @@ var LangRU = {
     hunt_mana_cost: 'Стоит {cost} маны',
     hunt_not_enough_mana: 'Маны мало. Подожди восстановления.',
     hunt_armageddon_title: 'Армагеддон',
-    hunt_armageddon_desc: 'Потратить 100% маны для получения 100x XP. Требует артефакт Камень Армагеддона.',
-    hunt_armageddon_no_stone: 'Для этого нужен Камень Армагеддона.',
+    hunt_armageddon_desc: 'Потратить 100% маны для получения 100x XP. Камень Армагеддона расходуется при запуске.',
+    hunt_armageddon_no_stone: 'Камень Армагеддона можно получить редким дропом с Thornvine (Lv5+) или создать в Мастерской на 10 уровне из Echo Shards, Shadow Shard и Fire Dust.',
     hunt_armageddon_no_mana: 'Армагеддон требует полной маны (100%). Подождите полного восстановления.',
     hunt_armageddon_confirm: 'Я понимаю, что после запуска Армагеддона не смогу играть, пока мана не восстановится полностью (~5 дней).',
     hunt_armageddon_launch: 'UNLEASH ARMAGEDDON !!!',
@@ -590,6 +592,7 @@ var LangRU = {
     craft_error_wrong_class: 'Неподходящий класс.',
     craft_error_wrong_location: 'Нужно быть в другом месте.',
     craft_error_not_enough_mana: 'Мало маны.',
+    craft_required_mana: 'Нужно: {cost} маны.',
     craft_error_missing_materials: 'Не хватает материалов.',
     craft_error_unknown: 'Неизвестная ошибка.',
 
@@ -622,6 +625,8 @@ var LangRU = {
     enchant_select_item_first: 'Сначала выберите предмет.',
     enchant_consumables: 'Расходники',
     consume_success: 'Предмет использован!',
+    consume_success_hp: 'Предмет использован: здоровье +{amount} HP. Сейчас {current}/{max} HP.',
+    consume_success_mana: 'Предмет использован: мана +{amount}. Сейчас {current}.',
     consume_error: 'Не удалось использовать предмет.',
 
     // Enchantment types

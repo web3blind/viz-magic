@@ -11,6 +11,7 @@ var ChronicleScreen = (function() {
     var BLESS_MEMO_PREFIX = 'viz://vm/bless/';
     var currentTab = 'all'; // all, guild, friends, world
     var REQUIRED_TAG = '#viz_magic';
+    var cachedFeedHtml = {};
 
     function render() {
         var t = Helpers.t;
@@ -110,7 +111,12 @@ var ChronicleScreen = (function() {
         var feed = Helpers.$('chronicle-feed');
         if (!feed) return;
 
-        feed.innerHTML = '<p class="empty-state">' + Helpers.t('loading') + '</p>';
+        if (cachedFeedHtml[currentTab]) {
+            feed.innerHTML = cachedFeedHtml[currentTab];
+            _bindBlessButtons(feed);
+        } else {
+            feed.innerHTML = '<p class="empty-state">' + Helpers.t('loading') + '</p>';
+        }
 
         var state = StateEngine.getState();
         var entries = _collectPostEntries(state);
@@ -269,6 +275,7 @@ var ChronicleScreen = (function() {
         if (entries.length === 0) {
             feed.innerHTML = '<p class="empty-state">' + Helpers.t('chronicle_empty') + '</p>' +
                 '<p class="chronicle-hint">' + Helpers.t('chronicle_bless_posts_only_hint') + '</p>';
+            cachedFeedHtml[currentTab] = feed.innerHTML;
             return;
         }
 
@@ -280,7 +287,11 @@ var ChronicleScreen = (function() {
             html += _renderEntry(entries[k]);
         }
         feed.innerHTML = html;
+        cachedFeedHtml[currentTab] = html;
+        _bindBlessButtons(feed);
+    }
 
+    function _bindBlessButtons(feed) {
         var blessBtns = feed.querySelectorAll('.bless-button');
         for (var m = 0; m < blessBtns.length; m++) {
             blessBtns[m].addEventListener('click', _onBless);
@@ -312,6 +323,23 @@ var ChronicleScreen = (function() {
             message: { type: 'text', text: text },
             events: []
         });
+    }
+
+    function _injectLocalBlessing(account, energy) {
+        var state = StateEngine.getState();
+        var user = VizAccount.getCurrentUser();
+        if (!state || !user || !account) return;
+        state.recentActions.push({
+            type: 'blessing_sent',
+            sender: user,
+            receiver: account,
+            blockNum: (state.headBlock || 0) + 1,
+            timestamp: Date.now(),
+            energy: energy || BLESS_ENERGY_LOW,
+            memo: BLESS_MEMO_PREFIX + account,
+            events: []
+        });
+        cachedFeedHtml = {};
     }
 
     function _renderEntry(entry) {
@@ -365,8 +393,10 @@ var ChronicleScreen = (function() {
             if (err) {
                 Toast.error(Helpers.t('error_low_mana'));
             } else {
+                _injectLocalBlessing(account, energy);
                 Toast.success('\u2728 ' + Helpers.t('chronicle_blessed'));
                 SoundManager.play('bless_recv');
+                _loadFeed();
             }
         });
     }

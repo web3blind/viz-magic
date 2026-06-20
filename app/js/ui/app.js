@@ -51,7 +51,7 @@ var App = (function() {
         VizConnection.init(function(err) {
             if (err) {
                 console.log('Connection failed, working offline');
-                Toast.info(Helpers.t('conn_disconnected'));
+                Toast.info(Helpers.t('conn_disconnected'), 4000, { key: 'conn_disconnected' });
             } else {
                 console.log('Connected to VIZ network');
                 _checkHistoryCapabilityNotice();
@@ -128,7 +128,7 @@ var App = (function() {
             Toast.success(Helpers.t('conn_connected'));
         });
         VizConnection.onDisconnect(function() {
-            Toast.info(Helpers.t('conn_disconnected'));
+            Toast.info(Helpers.t('conn_disconnected'), 4000, { key: 'conn_disconnected' });
         });
 
         // Register PWA install
@@ -322,7 +322,7 @@ var App = (function() {
             if (err || !capability || capability.historicalBlocks) return;
             console.log('App: Selected VIZ node has limited history; archive mirror may be needed for old recovery');
             if (capability.recentBlocks && typeof Toast !== 'undefined') {
-                Toast.info(Helpers.t('conn_history_limited'));
+                Toast.info(Helpers.t('conn_history_limited'), 4000, { key: 'conn_history_limited' });
             }
         });
     }

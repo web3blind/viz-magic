@@ -439,3 +439,82 @@ Browser/manual checks:
 - The browser still performs deterministic state rebuilding locally.
 - No private keys ever leave the browser.
 - Documentation clearly explains VIZ node vs archive mirror vs local checkpoint.
+
+
+## Player Bug Batch — 2026-06-20
+
+**Source:** aggregated player feedback from Denis.
+
+### Scope
+
+Fix or classify as already fixed the current gameplay/UX issues reported by players. Keep changes scoped, old-JS/AMD compatible, and preserve the single frontend/blockchain app architecture.
+
+### Bug list and acceptance checks
+
+1. Blessing quests feel delayed.
+   - Check: after a confirmed blessing block is processed, quest progress is visible without extra manual refresh beyond chain/history processing.
+2. Blessing quest counts repeated blessings of the same mage despite copy saying different mages.
+   - Check: repeated blessing of the same receiver does not increment a `uniqueTarget` blessing objective twice; blessing different receivers does.
+3. Blessings may not visibly reach recipients.
+   - Check: chronicle/blessing path keeps clear sent/pending/error feedback and processed award events remain visible.
+4. Travel quest progress feels delayed and unclear.
+   - Check: after travel broadcast, user sees an explicit pending confirmation message; processed move updates quest progress through `StateEngine`.
+5. Chronicle tabs reload slowly and become empty again when returning.
+   - Check: add/verify cache or retained tab state so returning to a loaded tab does not flash empty unnecessarily.
+6. Consumable item use says only “item used”.
+   - Check: health scroll/mana potion success toast includes concrete effect amount and current/max value.
+7. Crafting recipe cards say only “not enough mana”.
+   - Check: recipe list/detail shows required mana percentage when mana is the blocker.
+8. Blockchain degradation toast duplicates endlessly.
+   - Check: duplicate keyed toast is collapsed/reused while the previous warning is active.
+9. Guild entry should require preparation/level and guild list should not be empty just because guilds have not acted recently.
+   - Check: join quest/guild UI explains requirements; guild shell/listing remains discoverable after guild creation/invite/listing actions.
+10. Duel target level mismatch reported.
+    - Check: inspect level source for duel opponent cards/result and ensure it reads current character/grimoire consistently.
+11. Character stats lack upgrade guidance.
+    - Check: help/profile copy explains how stats grow and what equipment/enchanting affects.
+12. Variable energy strike for duels/bosses is a future balancing feature.
+    - Check: document as future feature, not part of this bug-fix batch unless needed by existing broken UI.
+13. Quick hunt “home” button does not work during pending state.
+    - Check: home button remains bound while hunt is pending.
+14. Armageddon copy repeats stone requirement.
+    - Check: remove duplicated sentence and explain where the stone comes from and what it does.
+15. Bag rarity display is unclear.
+    - Check: inventory rows include textual rarity, not only symbols/colors.
+16. Ingredient descriptions are too thin.
+    - Check: add a non-invasive info/description affordance or classify as larger content pass.
+17. Mage rating does not load.
+    - Check: inspect leaderboard data path and fix empty/error rendering or classify backend/history dependency.
+18. Travel list order is inconvenient.
+    - Check: low-level regions appear first in map/travel lists.
+19. Level 6 can quick-hunt level 1–5 players/creatures.
+    - Check: hunt targets should not allow farming below the intended level window unless explicitly designed.
+20. Returning from travel to quick hunt can loop between empty region and map.
+    - Check: “return to commons” updates local current zone and exits the loop after broadcast/pending handling.
+
+### First implementation batch
+
+Prioritize low-risk fixes with clear local tests: unique blessing targets, toast dedupe, consumable effect messages, mana requirement copy, Armageddon copy, bag rarity text, pending hunt home binding, map order/return loop. Then handle slower data-path bugs (chronicle caching, rating, duel level source) with focused inspection/tests.
+
+
+### Implemented in player bug batch 1
+
+- Unique-target quest progress now preserves `uniqueTarget` metadata on accepted quests and counts blessing receivers / visited regions once each.
+- Chronicle keeps cached tab HTML while refreshing, avoiding the empty/loading flash when returning to an already loaded tab.
+- Successful blessing broadcast now injects a local blessing entry immediately so the sender sees feedback before later chain catch-up.
+- Connection degradation/history-limited toasts are keyed, so repeated disconnect/probe events do not flood the screen with duplicate warnings.
+- Consumable success toasts now include concrete HP/Mana effect details.
+- Recipe locked/error copy now shows the required mana percentage.
+- Inventory item rows now show textual rarity beside the item name, not only symbols/colors.
+- Map travel list is sorted by region minimum level, so early regions appear first.
+- Quick hunt filters out creatures below/above the character's level window and the return-to-commons button locally exits the empty-region loop.
+- Guild joining now explains the preparation rule and requires level 4 for open joining; personal invites remain the trust-based exception.
+- Leaderboard screen has a local character fallback when the 24h scan has not produced rows yet.
+- Character screen includes guidance on how stats grow and how to target a specific stat via equipment/crafting/enchanting.
+- Armageddon copy no longer repeats the stone requirement and says where the stone can be obtained.
+
+### Deferred / future design items
+
+- Variable-energy duel/boss strikes are a balancing/product feature, not a small bug fix; keep for a separate design pass.
+- Rich ingredient encyclopedia/details in the bag should be a separate content/UI pass.
+- Guild council is a future progression/social-system idea after the base guild flow stabilizes.

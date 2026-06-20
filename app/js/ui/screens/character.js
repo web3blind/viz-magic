@@ -38,6 +38,7 @@ var CharacterScreen = (function() {
                     _statRow(t('char_intellect'), totalInt) +
                     _statRow(t('char_fortune'), totalFor) +
                 '</div>' +
+                '<p class="quest-desc">' + t('char_stats_growth_hint') + '</p>' +
                 '<h2>' + t('char_core') + '</h2>' +
                 '<p>' + t('char_core_power') + ': ' + Helpers.formatNumber(ch.coreBonus) + '</p>' +
                 '<p>' + t('char_core_per_stat', { value: corePerStat }) + '</p>' +

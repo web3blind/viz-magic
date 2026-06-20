@@ -34,6 +34,9 @@ var LeaderboardScreen = (function() {
 
         snapshot = snapshot || {};
         var rows = snapshot.rows || [];
+        if (!rows.length) {
+            rows = _fallbackRowsFromState();
+        }
         var currentUser = typeof VizAccount !== 'undefined' ? VizAccount.getCurrentUser() : null;
         var myRank = -1;
 
@@ -138,6 +141,28 @@ var LeaderboardScreen = (function() {
                     '<tbody>' + tableRows + '</tbody>' +
                 '</table>' +
             '</div>';
+    }
+
+    function _fallbackRowsFromState() {
+        if (typeof StateEngine === 'undefined') return [];
+        var state = StateEngine.getState ? StateEngine.getState() : null;
+        var chars = state && state.characters ? state.characters : {};
+        var rows = [];
+        for (var account in chars) {
+            if (!chars.hasOwnProperty(account)) continue;
+            var ch = chars[account] || {};
+            rows.push({
+                account: account,
+                name: ch.name || account,
+                xp: ch.xp || 0,
+                hunts: 0
+            });
+        }
+        rows.sort(function(a, b) {
+            if ((b.xp || 0) !== (a.xp || 0)) return (b.xp || 0) - (a.xp || 0);
+            return String(a.name || a.account).localeCompare(String(b.name || b.account));
+        });
+        return rows.slice(0, 100);
     }
 
     function _formatNumber(n) {

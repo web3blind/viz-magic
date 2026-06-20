@@ -25,7 +25,7 @@ var HuntScreen = (function() {
             ch.maxHp = ch.hp;
         }
         var zone = (ch && ch.currentZone) || 'commons_first_light';
-        var creatures = GameCreatures.getCreaturesForZone(zone);
+        var creatures = _filterCreaturesForLevel(GameCreatures.getCreaturesForZone(zone), ch);
         var spells = ch ? GameSpells.getAvailableSpells(ch.className, ch.level) : [];
 
         selectedCreature = null;
@@ -114,6 +114,20 @@ var HuntScreen = (function() {
         _bindEvents(el);
     }
 
+    function _filterCreaturesForLevel(creatures, character) {
+        if (!character || !creatures || !creatures.length) return creatures || [];
+        var level = character.level || 1;
+        var out = [];
+        for (var i = 0; i < creatures.length; i++) {
+            var c = creatures[i];
+            if (!c) continue;
+            if ((c.minLevel || 1) <= level && (c.maxLevel || level) >= level) {
+                out.push(c);
+            }
+        }
+        return out;
+    }
+
     function _bindEvents(el) {
         A11y.bindRadioGroup(el.querySelector('.creature-list[role="radiogroup"]'), '.creature-card', function(option) {
             selectedCreature = option.getAttribute('data-id');
@@ -132,7 +146,16 @@ var HuntScreen = (function() {
         var returnBtn = Helpers.$('btn-return-commons');
         if (returnBtn) {
             returnBtn.addEventListener('click', function() {
-                Helpers.EventBus.emit('navigate', 'map');
+                var user = VizAccount.getCurrentUser();
+                var ch = StateEngine.getCharacter(user);
+                if (ch) {
+                    ch.currentZone = 'commons_first_light';
+                    Toast.info(Helpers.t('hunt_returned_to_commons'));
+                    try {
+                        CheckpointSystem.saveCheckpoint('global', StateEngine.getState().headBlock || 0, StateEngine.getState(), function() {});
+                    } catch (e) {}
+                }
+                render();
             });
         }
 
