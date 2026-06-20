@@ -11,6 +11,14 @@ var VizMagicConfig = (function() {
         'https://node.viz.cx/'
     ];
 
+    /**
+     * Optional read-only archive mirrors for old block fetches.
+     * Keep empty until a public mirror is verified for CORS and block-shape parity.
+     * Supported endpoint pattern: URL may contain {block}, for example
+     * https://example.invalid/viz/block/{block}.json
+     */
+    var HISTORY_ARCHIVE_MIRRORS = [];
+
     /** Protocol identifiers registered on VIZ chain */
     var PROTOCOLS = {
         VM: 'VM',   // Viz Magic — all game actions
@@ -199,6 +207,7 @@ var VizMagicConfig = (function() {
 
     return {
         NODES: NODES,
+        HISTORY_ARCHIVE_MIRRORS: HISTORY_ARCHIVE_MIRRORS,
         PROTOCOLS: PROTOCOLS,
         APP_VERSION: APP_VERSION,
         STORAGE_PREFIX: STORAGE_PREFIX,

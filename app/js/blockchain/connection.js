@@ -17,6 +17,7 @@ var VizConnection = (function() {
     var latencies = {};
     var onConnectCallbacks = [];
     var onDisconnectCallbacks = [];
+    var lastHistoryCapability = null;
 
     /**
      * Initialize connection — pick best node or use saved preference
@@ -42,34 +43,21 @@ var VizConnection = (function() {
     }
 
     /**
-     * Test all nodes and connect to the fastest one
+     * Connect to the first configured node and keep later nodes as ordered fallbacks.
+     * The first node is the primary user-facing endpoint; probing every HTTP node at
+     * startup can create noisy CORS/preflight failures in browsers, so fallback nodes
+     * are touched only when the primary connection fails.
      */
     function _selectBestNode(callback) {
-        var pending = cfg.NODES.length;
-        var bestLatency = Infinity;
-        var bestNode = cfg.NODES[0];
-
-        cfg.NODES.forEach(function(node, index) {
-            _measureLatency(node, function(latency) {
-                pending--;
-                if (latency >= 0 && latency < bestLatency) {
-                    bestLatency = latency;
-                    bestNode = node;
-                    currentNodeIndex = index;
-                }
-                latencies[node] = latency;
-
-                if (pending <= 0) {
-                    console.log('Best node:', bestNode, 'latency:', bestLatency + 'ms');
-                    _connectToNode(bestNode, function(err) {
-                        if (err) {
-                            _tryNextNode(callback);
-                        } else {
-                            callback(null, dgp);
-                        }
-                    });
-                }
-            });
+        currentNodeIndex = 0;
+        var primaryNode = cfg.NODES[0];
+        console.log('Primary node:', primaryNode);
+        _connectToNode(primaryNode, function(err) {
+            if (err) {
+                _tryNextNode(callback);
+            } else {
+                callback(null, dgp);
+            }
         });
     }
 
@@ -305,11 +293,79 @@ var VizConnection = (function() {
         _connectToNode(node, callback);
     }
 
+    /**
+     * Check whether the current VIZ node can serve recent and older blocks.
+     * This is advisory only: the app must keep running even when historical
+     * blocks are unavailable and can later use an archive mirror for recovery.
+     * @param {Function} callback - (err, capability)
+     */
+    function checkHistoryCapability(callback) {
+        callback = callback || function() {};
+        var capability = {
+            live: connected,
+            recentBlocks: false,
+            historicalBlocks: false,
+            checkedAt: Date.now(),
+            node: currentNode
+        };
+
+        function finish() {
+            lastHistoryCapability = capability;
+            callback(null, capability);
+        }
+
+        function probeBlock(blockNum, done) {
+            if (!blockNum || blockNum <= 0) {
+                done(false);
+                return;
+            }
+            viz.api.getBlock(blockNum, function(err, block) {
+                done(!err && !!block);
+            });
+        }
+
+        function runWithHead(headBlock) {
+            if (!headBlock || headBlock <= 0) {
+                finish();
+                return;
+            }
+            capability.live = true;
+            var recentBlock = Math.max(1, headBlock - 100);
+            var oldBlock = Math.max(1, headBlock - 60000);
+            probeBlock(recentBlock, function(recentOk) {
+                capability.recentBlocks = recentOk;
+                probeBlock(oldBlock, function(oldOk) {
+                    capability.historicalBlocks = oldOk;
+                    finish();
+                });
+            });
+        }
+
+        if (dgp && dgp.head_block_number) {
+            runWithHead(dgp.head_block_number);
+            return;
+        }
+
+        viz.api.getDynamicGlobalProperties(function(err, response) {
+            if (err || !response || !response.head_block_number) {
+                finish();
+                return;
+            }
+            runWithHead(response.head_block_number);
+        });
+    }
+
+    function getHistoryCapability() {
+        return lastHistoryCapability;
+    }
+
     return {
         init: init,
         getDGP: getDGP,
         isConnected: isConnected,
         getCurrentNode: getCurrentNode,
+        getHistoryCapability: getHistoryCapability,
+        checkHistoryCapability: checkHistoryCapability,
         onConnect: onConnect,
         onDisconnect: onDisconnect,
         switchNode: switchNode

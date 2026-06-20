@@ -285,9 +285,15 @@ var VMProtocol = (function() {
      * @param {number} maxDepth - max number of actions to retrieve
      * @param {Function} callback - (err, actions[]) where each action has block info
      */
-    function traverseChain(account, maxDepth, callback) {
+    function traverseChain(account, maxDepth, callback, blockSource) {
         maxDepth = maxDepth || 50;
         var actions = [];
+        var source = blockSource || ((typeof HistorySource !== 'undefined') ? HistorySource : null);
+        if (!source || !source.getBlock) {
+            source = {
+                getBlock: function(blockNum, cb) { viz.api.getBlock(blockNum, cb); }
+            };
+        }
 
         // Get the latest block reference for this account+protocol
         VizAccount.getAccountProtocol(account, cfg.PROTOCOLS.VM, function(err, response) {
@@ -297,20 +303,20 @@ var VMProtocol = (function() {
             }
 
             var nextBlock = response.custom_sequence_block_num;
-            _fetchAction(nextBlock, actions, maxDepth, callback);
+            _fetchAction(nextBlock, actions, maxDepth, callback, source);
         });
     }
 
     /**
      * Recursively fetch actions by following block references
      */
-    function _fetchAction(blockNum, actions, remaining, callback) {
+    function _fetchAction(blockNum, actions, remaining, callback, source) {
         if (!blockNum || blockNum <= 0 || remaining <= 0) {
             callback(null, actions);
             return;
         }
 
-        viz.api.getBlock(blockNum, function(err, block) {
+        source.getBlock(blockNum, function(err, block) {
             if (err || !block) {
                 callback(null, actions);
                 return;
@@ -346,7 +352,7 @@ var VMProtocol = (function() {
             }
 
             if (found && previousBlock > 0) {
-                _fetchAction(previousBlock, actions, remaining - 1, callback);
+                _fetchAction(previousBlock, actions, remaining - 1, callback, source);
             } else {
                 callback(null, actions);
             }

@@ -360,6 +360,7 @@ var LangEN = {
     conn_connecting: 'Establishing connection to the World...',
     conn_connected: 'Connection to the World restored!',
     conn_disconnected: 'Connection to the World slumbers. Some actions unavailable.',
+    conn_history_limited: 'This VIZ node only provides recent history. Older character and world recovery may need an archive mirror.',
 
     // Navigation (new)
     nav_map: 'Map',

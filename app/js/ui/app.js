@@ -54,6 +54,7 @@ var App = (function() {
                 Toast.info(Helpers.t('conn_disconnected'));
             } else {
                 console.log('Connected to VIZ network');
+                _checkHistoryCapabilityNotice();
             }
 
             // Initialize game state engine
@@ -307,6 +308,25 @@ var App = (function() {
         StateEngine.processBlock(processed);
     }
 
+    function _getHistoryBlock(blockNum, callback) {
+        if (typeof HistorySource !== 'undefined' && HistorySource.getBlock) {
+            HistorySource.getBlock(blockNum, callback);
+            return;
+        }
+        viz.api.getBlock(blockNum, callback);
+    }
+
+    function _checkHistoryCapabilityNotice() {
+        if (typeof VizConnection === 'undefined' || !VizConnection.checkHistoryCapability) return;
+        VizConnection.checkHistoryCapability(function(err, capability) {
+            if (err || !capability || capability.historicalBlocks) return;
+            console.log('App: Selected VIZ node has limited history; archive mirror may be needed for old recovery');
+            if (capability.recentBlocks && typeof Toast !== 'undefined') {
+                Toast.info(Helpers.t('conn_history_limited'));
+            }
+        });
+    }
+
     /**
      * Recover the current user's full action history by traversing the
      * backward-linked chain of VM custom operations (custom_sequence_block_num).
@@ -404,7 +424,7 @@ var App = (function() {
                 _updateSyncStatus(pct, true);
 
                 var blockNum = historicalBlocks[idx];
-                viz.api.getBlock(blockNum, function(bErr, block) {
+                _getHistoryBlock(blockNum, function(bErr, block) {
                     if (bErr || !block) {
                         console.log('App: Could not fetch historical block', blockNum);
                         idx++;
@@ -495,7 +515,7 @@ var App = (function() {
                     }
 
                     var blockNum = blocks[bIdx];
-                    viz.api.getBlock(blockNum, function(bErr, block) {
+                    _getHistoryBlock(blockNum, function(bErr, block) {
                         if (!bErr && block) {
                             _processRecoveryBlock(blockNum, block);
                         }
