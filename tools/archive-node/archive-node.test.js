@@ -130,6 +130,8 @@ async function run() {
             assert.strictEqual(block.status, 200);
             assert.strictEqual(block.body.block.block_id, TEST_BLOCK.block_id);
             assert.strictEqual(block.body.eventCount, 3);
+            assert.strictEqual(block.body.block.transactions[0].operations.length, 3);
+            assert.ok(JSON.stringify(block.body.block).indexOf('dice.id') === -1, 'served block must be thinned to game operations');
 
             var range = await getJson(port, '/archive-mirror/v1/range?start=100&end=200&protocol=VM,V,VE,award');
             assert.strictEqual(range.status, 200);

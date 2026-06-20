@@ -153,6 +153,35 @@ ArchiveStore.prototype.getBlockRecord = function(blockNum) {
     };
 };
 
+ArchiveStore.prototype.eventKey = function(event) {
+    return [event.blockNum, event.txIndex, event.opIndex, event.protocol, event.type, event.sender || event.account || ''].join(':');
+};
+
+ArchiveStore.prototype._thinBlock = function(block, events) {
+    var thin = {
+        previous: block && (block.previous || block.previous_block_id || '') || '',
+        timestamp: block && block.timestamp || '',
+        block_id: block && (block.block_id || block.id || '') || '',
+        transactions: []
+    };
+    var byTx = {};
+    events = events || [];
+    for (var i = 0; i < events.length; i += 1) {
+        var ev = events[i];
+        var txIndex = Number(ev.txIndex) || 0;
+        if (!byTx[txIndex]) {
+            byTx[txIndex] = { operations: [] };
+            thin.transactions.push(byTx[txIndex]);
+        }
+        if (ev.opType === 'custom') {
+            byTx[txIndex].operations.push(['custom', ev.raw || {}]);
+        } else if (ev.opType === 'award') {
+            byTx[txIndex].operations.push(['award', ev.raw || {}]);
+        }
+    }
+    return thin;
+};
+
 ArchiveStore.prototype.putBlock = function(blockNum, block, sourceNode, events) {
     var now = new Date().toISOString();
     var bn = Number(blockNum);
@@ -163,19 +192,16 @@ ArchiveStore.prototype.putBlock = function(blockNum, block, sourceNode, events) 
     try {
         this.db.prepare('DELETE FROM event_accounts WHERE block_num = ?').run(bn);
         this.db.prepare('DELETE FROM events WHERE block_num = ?').run(bn);
+        var storedBlock = this._thinBlock(block, events || []);
         this.db.prepare([
             'INSERT OR REPLACE INTO blocks(block_num, block_id, previous, timestamp, source_node, indexed_at, event_count, raw_json)',
             'VALUES(?, ?, ?, ?, ?, ?, ?, ?)'
-        ].join(' ')).run(bn, blockId, previous, timestamp, sourceNode || '', now, events ? events.length : 0, JSON.stringify(block || {}));
+        ].join(' ')).run(bn, blockId, previous, timestamp, sourceNode || '', now, events ? events.length : 0, JSON.stringify(storedBlock));
         this.db.exec('COMMIT');
     } catch (err) {
         this.db.exec('ROLLBACK');
         throw err;
     }
-};
-
-ArchiveStore.prototype.eventKey = function(event) {
-    return [event.blockNum, event.txIndex, event.opIndex, event.protocol, event.type, event.sender || event.account || ''].join(':');
 };
 
 ArchiveStore.prototype.putEventsForBlock = function(events) {
