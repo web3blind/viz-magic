@@ -342,6 +342,7 @@ var GuildSystem = (function() {
      */
     function checkWarExpiry(guild, blockNum) {
         if (!guild) return;
+        if (!guild.wars) guild.wars = [];
         for (var i = 0; i < guild.wars.length; i++) {
             var war = guild.wars[i];
             if (war.state === WAR_STATE.ACTIVE && blockNum >= war.endBlock) {

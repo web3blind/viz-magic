@@ -133,6 +133,15 @@ test('guild joining explains and enforces preparation requirements', function ()
   assert.ok(/character\.level < GUILD_JOIN_MIN_LEVEL/.test(guildJs), 'join handler should guard low-level direct clicks');
 });
 
+test('archive-backed guilds normalize missing optional arrays and rerender visible screen', function () {
+  assert.ok(/function _normalizeGuild/.test(guildJs), 'guild screen should normalize archive guild payloads');
+  assert.ok(/guild\.wars = guild\.wars \|\| \[\]/.test(guildJs), 'archive guilds should get default wars array');
+  assert.ok(/guild\.quests = guild\.quests \|\| \[\]/.test(guildJs), 'archive guilds should get default quests array');
+  assert.ok(/guild\.announcements = guild\.announcements \|\| \[\]/.test(guildJs), 'archive guilds should get default announcements array');
+  assert.ok(/function _isScreenVisible/.test(guildJs), 'guild screen should have an aria-hidden visibility helper');
+  assert.ok(/getAttribute\('aria-hidden'\) !== 'true'/.test(guildJs), 'aria-hidden="false" should count as visible');
+});
+
 test('high-traffic UI narration and inventory stat labels are translated', function () {
   ['char_level_up', 'stat_pot', 'stat_res', 'stat_swf', 'stat_int', 'stat_for', 'duel_narrator_pre', 'duel_narrator_seal', 'duel_narrator_sealed', 'duel_narrator_waiting', 'duel_narrator_reveal'].forEach(function (key) {
     assert.ok(enJs.indexOf(key + ':') !== -1, 'English translation missing: ' + key);

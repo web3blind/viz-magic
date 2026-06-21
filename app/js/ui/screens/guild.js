@@ -323,6 +323,7 @@ var GuildScreen = (function() {
         for (var i = 0; i < guilds.length; i++) {
             var guild = guilds[i];
             if (!guild || !guild.id) continue;
+            _normalizeGuild(guild);
             if (!state.guilds[guild.id] || state.guilds[guild.id].isPlaceholder) {
                 state.guilds[guild.id] = guild;
                 changed = true;
@@ -330,6 +331,7 @@ var GuildScreen = (function() {
         }
         for (var gid in guildMap) {
             if (!guildMap.hasOwnProperty(gid)) continue;
+            _normalizeGuild(guildMap[gid]);
             if (!state.guilds[gid] || state.guilds[gid].isPlaceholder) {
                 state.guilds[gid] = guildMap[gid];
                 changed = true;
@@ -366,7 +368,7 @@ var GuildScreen = (function() {
                 if (err || !directory) return;
                 if (_mergeArchiveGuildDirectory(StateEngine.getState(), directory)) {
                     var container = Helpers.$('screen-guild');
-                    if (container && !container.getAttribute('aria-hidden')) render();
+                    if (_isScreenVisible(container)) render();
                 }
             });
         }
@@ -405,7 +407,7 @@ var GuildScreen = (function() {
                                         currentState.guilds[guildId] = guild;
                                         // Re-render if guild screen is active
                                         var container = Helpers.$('screen-guild');
-                                        if (container && !container.getAttribute('aria-hidden')) {
+                                        if (_isScreenVisible(container)) {
                                             render();
                                         }
                                     }
@@ -427,6 +429,7 @@ var GuildScreen = (function() {
         if (!state.guilds) return list;
         for (var gid in state.guilds) {
             if (state.guilds.hasOwnProperty(gid)) {
+                _normalizeGuild(state.guilds[gid]);
                 list.push(state.guilds[gid]);
             }
         }
@@ -436,6 +439,27 @@ var GuildScreen = (function() {
             return GuildSystem.getMemberCount(b) - GuildSystem.getMemberCount(a);
         });
         return list;
+    }
+
+    function _normalizeGuild(guild) {
+        if (!guild) return guild;
+        guild.charter = guild.charter || {};
+        if (!guild.charter.membership) guild.charter.membership = 'open';
+        if (typeof guild.charter.tithe_pct !== 'number') guild.charter.tithe_pct = 1000;
+        if (typeof guild.charter.min_shares !== 'number') guild.charter.min_shares = 0;
+        guild.members = guild.members || {};
+        guild.invites = guild.invites || {};
+        guild.wars = guild.wars || [];
+        guild.quests = guild.quests || [];
+        guild.announcements = guild.announcements || [];
+        if (typeof guild.totalDelegated !== 'number') guild.totalDelegated = 0;
+        if (typeof guild.level !== 'number') guild.level = 1;
+        if (typeof guild.xp !== 'number') guild.xp = 0;
+        return guild;
+    }
+
+    function _isScreenVisible(container) {
+        return !!(container && container.getAttribute('aria-hidden') !== 'true');
     }
 
     /**
@@ -920,7 +944,7 @@ var GuildScreen = (function() {
             Helpers.EventBus.on(events[i], function() {
                 // Re-render only if guild screen is currently visible
                 var container = Helpers.$('screen-guild');
-                if (container && !container.getAttribute('aria-hidden')) {
+                if (_isScreenVisible(container)) {
                     render();
                 }
             });
