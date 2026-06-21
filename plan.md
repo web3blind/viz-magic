@@ -307,7 +307,7 @@ Acceptance criteria:
 
 ## Remaining work item 5 — Archive Mirror / PM2 health
 
-Status: production endpoint works; SQLite data size was around 9 MB in the last check. PM2 RAM was not rechecked in the final attempt because aaPanel cron PATH did not expose `pm2`/`node`.
+Status: completed in the 2026-06-21 08:03 UTC pass. aaPanel one-shot health check resolved the Node/PM2 path, showed `vizmagic-game-archive` online at ~37 MB RSS and `vizmagic-game-archive-indexer` online at ~70 MB RSS, and archive data size around 10 MB. Public `/archive-mirror/health`, `/archive-mirror/v1/guilds`, and `/archive-mirror/v1/range?...` were responsive. `/archive-mirror/v1/health` returns 404 on this Nginx mapping, while `/archive-mirror/health` is the live health path.
 
 Goal: confirm Archive Mirror process RAM stays below the target ~200 MB and endpoints remain responsive.
 
@@ -339,7 +339,7 @@ Acceptance criteria:
 
 ## Remaining work item 6 — Mobile accessibility / TalkBack QA
 
-Status: needs focused pass.
+Status: completed in the 2026-06-21 08:03 UTC pass with `tests/core-screen-accessibility-smoke.test.js` and `node /tmp/vizmagic_screen_smoke.js`. All core screens rendered with visible text, no blank controls, no raw internal keys, and latest cache-busted scripts. High-impact fixes added: missing numeric fallback in `Helpers.formatNumber`, character fallback defaults for `coreBonus`/`spells`, accessible names for Inventory compact switch and Guild active-key input.
 
 Goal: ensure core screens are practical for Denis with TalkBack.
 
@@ -375,7 +375,7 @@ Acceptance criteria:
 
 ## Remaining work item 7 — World Boss / Territory / Siege
 
-Status: deep mechanics not fully covered.
+Status: local fixture/replay smoke completed in the 2026-06-21 08:03 UTC pass. No disruptive live-chain war/siege/boss broadcast was made. `tests/world-boss-territory-siege-smoke.test.js` verifies replay of guild create, siege declare/commit, boss attack, and territory claim; it also caught and fixed same-block territory recalculation overwriting a siege winner.
 
 Goal: verify these screens do not break, and distinguish smoke from full gameplay coverage.
 
@@ -433,14 +433,16 @@ Suggested prompt for a new Hermes session:
 
 ## Completion ledger
 
+Last updated: 2026-06-21 08:03 UTC.
+
 Mark items here as the next session completes them:
 
 - [x] Crafting E2E — local fixture + regression coverage; live-chain broadcast intentionally not spent
-- [ ] Marketplace E2E
-- [ ] Two-browser Guild smoke
-- [ ] Two-browser Arena smoke
-- [ ] Checkpoint recovery matrix
-- [ ] Archive Mirror / PM2 RAM health
-- [ ] Mobile accessibility / TalkBack QA
-- [ ] World Boss / Territory / Siege smoke
-- [ ] Economy / item consistency audit
+- [x] Marketplace E2E — state-engine authoritative list/cancel/buy, checkpoint on live action, replay transfer without duplication
+- [x] Two-browser Guild smoke — isolated-browser replay fixture confirms invite/member state on Browser B
+- [x] Two-browser Arena smoke — isolated-browser replay fixture confirms challenge visibility and accepted active duel state on Browser B
+- [x] Checkpoint recovery matrix — fresh/recent/old partial IndexedDB checkpoints normalize to the current schema without hanging
+- [x] Archive Mirror / PM2 RAM health — production archive endpoints responsive; PM2 archive API/indexer online under ~200 MB RSS
+- [x] Mobile accessibility / TalkBack QA — core screen smoke covers names/raw keys/blank controls; high-impact blockers fixed
+- [x] World Boss / Territory / Siege smoke — local replay fixture covers boss attack, siege lifecycle, and territory claim without live-chain mutation
+- [x] Economy / item consistency audit — catalog/loot/recipe/material coverage regression remains passing in `tests/player-bug-regressions.test.js`

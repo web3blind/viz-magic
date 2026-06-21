@@ -238,6 +238,12 @@ var TerritorySystem = (function() {
                     siege.state = SIEGE_STATE.FAILED;
                     result = { winner: 'defender', siege: siege };
                 }
+                // A siege resolution is itself a territory-control decision.
+                // Prevent the periodic delegation recalculation in the same
+                // block from immediately overwriting the resolved controller,
+                // especially for fixture/early territories that have no
+                // delegation rows yet.
+                territory.lastRecalcBlock = blockNum;
                 return result;
             }
         }

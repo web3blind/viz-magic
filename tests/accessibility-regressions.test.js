@@ -29,6 +29,10 @@ const onboardingJs = read('app/js/ui/screens/onboarding.js');
 const settingsJs = read('app/js/ui/screens/settings.js');
 const accessibilityCss = read('app/css/accessibility.css');
 const mainCss = read('app/css/main.css');
+const helpersJs = read('app/js/utils/helpers.js');
+const characterJs = read('app/js/ui/screens/character.js');
+const inventoryJs = read('app/js/ui/screens/inventory.js');
+const guildJs = read('app/js/ui/screens/guild.js');
 
 test('manifest does not lock orientation', function () {
   assert.ok(!Object.prototype.hasOwnProperty.call(manifest, 'orientation'), 'orientation lock should be removed');
@@ -75,6 +79,14 @@ test('settings accessibility toggles map to persistent DOM hooks', function () {
 
 test('skip link styles are present', function () {
   assert.ok(/\.skip-link/.test(mainCss), 'skip-link CSS missing');
+});
+
+test('core screen fallbacks avoid blank controls and fixture crashes', function () {
+  assert.ok(/typeof num === 'undefined'/.test(helpersJs), 'formatNumber should tolerate missing numeric values');
+  assert.ok(/ch\.coreBonus = ch\.coreBonus \|\| 0/.test(characterJs), 'character screen should default missing coreBonus');
+  assert.ok(/ch\.spells = ch\.spells \|\| \[\]/.test(characterJs), 'character screen should default missing spells');
+  assert.ok(/id="inv-compact"[\s\S]*aria-label=/.test(inventoryJs), 'inventory compact switch needs an accessible name');
+  assert.ok(/id="input-active-key"[\s\S]*aria-label=/.test(guildJs), 'guild active key input needs an accessible name for TalkBack');
 });
 
 if (process.exitCode) {

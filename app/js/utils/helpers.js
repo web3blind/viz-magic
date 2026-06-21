@@ -144,6 +144,7 @@ var Helpers = (function() {
      * @returns {string}
      */
     function formatNumber(num) {
+        if (num === null || typeof num === 'undefined' || isNaN(num)) num = 0;
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 

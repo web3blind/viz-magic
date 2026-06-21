@@ -37,6 +37,30 @@ var StateEngine = (function() {
         };
     }
 
+    function _normalizeWorldState(state) {
+        var empty = _createEmptyState();
+        if (!state || typeof state !== 'object') return empty;
+        for (var key in empty) {
+            if (empty.hasOwnProperty(key) && typeof state[key] === 'undefined') {
+                state[key] = empty[key];
+            }
+        }
+        if (typeof state.headBlock !== 'number' || isNaN(state.headBlock) || state.headBlock < 0) state.headBlock = 0;
+        if (typeof state.checkpointBlock !== 'number' || isNaN(state.checkpointBlock) || state.checkpointBlock < 0) state.checkpointBlock = state.headBlock || 0;
+        state.characters = state.characters || {};
+        state.inventories = state.inventories || {};
+        state.guilds = state.guilds || {};
+        state.territories = state.territories || {};
+        state.recentActions = state.recentActions || [];
+        state.social = state.social || { knownAccounts: [] };
+        state.social.knownAccounts = state.social.knownAccounts || [];
+        state.guildListings = state.guildListings || [];
+        state.quests = state.quests || {};
+        state.loci = state.loci || {};
+        state.activeEvents = state.activeEvents || [];
+        return state;
+    }
+
     /**
      * Initialize the state engine.
      * Tries to load from checkpoint, otherwise starts fresh.
@@ -52,7 +76,7 @@ var StateEngine = (function() {
 
             CheckpointSystem.loadLatestCheckpoint('global', function(err, checkpoint) {
                 if (checkpoint && checkpoint.state) {
-                    worldState = checkpoint.state;
+                    worldState = _normalizeWorldState(checkpoint.state);
                     console.log('StateEngine: Loaded checkpoint at block', worldState.headBlock);
                 } else {
                     console.log('StateEngine: No checkpoint found, starting fresh');

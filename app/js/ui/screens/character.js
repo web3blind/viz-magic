@@ -12,6 +12,8 @@ var CharacterScreen = (function() {
         var user = VizAccount.getCurrentUser();
         var ch = StateEngine.getCharacter(user);
         if (!ch) { ch = { name: user || 'Unknown', className: 'embercaster', level: 1, pot: 10, res: 6, swf: 8, int: 7, for_: 5, coreBonus: 0, spells: ['firebolt'], maxHp: 100, hp: 100 }; }
+        ch.coreBonus = ch.coreBonus || 0;
+        ch.spells = ch.spells || [];
 
         var corePerStat = Math.floor((ch.coreBonus || 0) / 5);
         var totalPot = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat) ? CharacterSystem.getTotalStat(ch, 'pot') : ((ch.pot || 0) + corePerStat);

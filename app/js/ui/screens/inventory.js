@@ -91,7 +91,7 @@ var InventoryScreen = (function() {
 
         html += '<div class="settings-field settings-toggle">';
         html += '<label for="inv-compact" class="settings-toggle-label">' + t('inv_compact_mode') + '</label>';
-        html += '<button id="inv-compact" class="settings-toggle-btn' + (compact ? ' active' : '') + '" role="switch" aria-checked="' + compact + '">';
+        html += '<button id="inv-compact" class="settings-toggle-btn' + (compact ? ' active' : '') + '" role="switch" aria-checked="' + compact + '" aria-label="' + Helpers.escapeHtml(t('inv_compact_mode')) + '">';
         html += '<span class="toggle-knob"></span>';
         html += '</button>';
         html += '</div>';
