@@ -294,6 +294,19 @@ ArchiveStore.prototype.queryEvents = function(options) {
     return rows;
 };
 
+ArchiveStore.prototype.queryEventsByTypePrefix = function(prefix, options) {
+    options = options || {};
+    var start = Number(options.start || options.from || 0);
+    var end = Number(options.end || options.to || 2147483647);
+    var limit = Math.max(1, Math.min(Number(options.limit || 5000), 50000));
+    var stmt = this.db.prepare([
+        'SELECT e.* FROM events e',
+        'WHERE e.block_num >= ? AND e.block_num <= ? AND e.type LIKE ?',
+        'ORDER BY e.block_num ASC, e.tx_index ASC, e.op_index ASC LIMIT ?'
+    ].join(' '));
+    return stmt.all(start, end, String(prefix || '') + '%', limit).map(this._eventFromRow);
+};
+
 module.exports = {
     ArchiveStore: ArchiveStore,
     ensureDir: ensureDir,

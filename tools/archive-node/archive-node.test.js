@@ -33,6 +33,30 @@ var TEST_BLOCK = {
                 json: JSON.stringify({ p: 'V', t: 'post', d: { text: 'hello' } })
             }
         ], [
+            'custom',
+            {
+                required_regular_auths: [ACCOUNT],
+                required_active_auths: [],
+                id: 'VM',
+                json: JSON.stringify({ p: 'VM', v: 1, t: 'guild.create', d: { id: 'archive-guild', name: 'Archive Guild', tag: 'ARC', school: 'embercaster', motto: 'Old magic lives' } })
+            }
+        ], [
+            'custom',
+            {
+                required_regular_auths: [ACCOUNT],
+                required_active_auths: [],
+                id: 'VM',
+                json: JSON.stringify({ p: 'VM', v: 1, t: 'guild.listing', d: { guild_id: 'archive-guild', created_block: 123 } })
+            }
+        ], [
+            'custom',
+            {
+                required_regular_auths: ['guild-member'],
+                required_active_auths: [],
+                id: 'VM',
+                json: JSON.stringify({ p: 'VM', v: 1, t: 'guild.accept', d: { guild_id: 'archive-guild' } })
+            }
+        ], [
             'award',
             {
                 initiator: ACCOUNT,
@@ -94,11 +118,11 @@ function startRpcServer() {
 
 async function run() {
     var events = parser.extractGameEvents(TEST_BLOCK, 123);
-    assert.strictEqual(events.length, 3);
+    assert.strictEqual(events.length, 6);
     assert.strictEqual(events[0].protocol, 'VM');
     assert.strictEqual(events[0].type, 'char.attune');
-    assert.strictEqual(events[2].protocol, 'award');
-    assert.strictEqual(events[2].payload.memo, 'viz://vm/bless/target-mage');
+    assert.strictEqual(events[5].protocol, 'award');
+    assert.strictEqual(events[5].payload.memo, 'viz://vm/bless/target-mage');
     assert.ok(events.every(function(ev) { return ev.sender !== 'dice.id'; }), 'non-game awards must not be indexed');
 
     var tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'viz-archive-node-test-'));
@@ -117,7 +141,7 @@ async function run() {
             once: true
         });
         assert.strictEqual(result.indexedBlocks, 1);
-        assert.strictEqual(result.indexedEvents, 3);
+        assert.strictEqual(result.indexedEvents, 6);
 
         var server = archiveServer.createServer({ dataDir: tmp });
         var port = await listen(server);
@@ -129,24 +153,33 @@ async function run() {
             var block = await getJson(port, '/archive-mirror/v1/block/123.json');
             assert.strictEqual(block.status, 200);
             assert.strictEqual(block.body.block.block_id, TEST_BLOCK.block_id);
-            assert.strictEqual(block.body.eventCount, 3);
-            assert.strictEqual(block.body.block.transactions[0].operations.length, 3);
+            assert.strictEqual(block.body.eventCount, 6);
+            assert.strictEqual(block.body.block.transactions[0].operations.length, 6);
             assert.ok(JSON.stringify(block.body.block).indexOf('dice.id') === -1, 'served block must be thinned to game operations');
 
             var range = await getJson(port, '/archive-mirror/v1/range?start=100&end=200&protocol=VM,V,VE,award');
             assert.strictEqual(range.status, 200);
-            assert.strictEqual(range.body.count, 3);
+            assert.strictEqual(range.body.count, 6);
 
             var blockEvents = await getJson(port, '/archive-mirror/v1/events/block/123.json');
             assert.strictEqual(blockEvents.status, 200);
             assert.strictEqual(blockEvents.body.blockNum, 123);
-            assert.strictEqual(blockEvents.body.count, 3);
+            assert.strictEqual(blockEvents.body.count, 6);
             assert.strictEqual(blockEvents.body.events[0].protocol, 'VM');
-            assert.strictEqual(blockEvents.body.events[2].payload.memo, 'viz://vm/bless/target-mage');
+            assert.strictEqual(blockEvents.body.events[5].payload.memo, 'viz://vm/bless/target-mage');
+
+            var guilds = await getJson(port, '/archive-mirror/v1/guilds');
+            assert.strictEqual(guilds.status, 200);
+            assert.strictEqual(guilds.body.readOnly, true);
+            assert.strictEqual(guilds.body.count, 1);
+            assert.strictEqual(guilds.body.guilds[0].id, 'archive-guild');
+            assert.strictEqual(guilds.body.guilds[0].name, 'Archive Guild');
+            assert.strictEqual(guilds.body.guilds[0].memberCount, 2);
+            assert.strictEqual(guilds.body.listings[0].guild_id, 'archive-guild');
 
             var account = await getJson(port, '/archive-mirror/v1/account/' + ACCOUNT + '/protocol/VM/actions');
             assert.strictEqual(account.status, 200);
-            assert.strictEqual(account.body.count, 1);
+            assert.strictEqual(account.body.count, 3);
             assert.strictEqual(account.body.actions[0].type, 'char.attune');
         } finally {
             await close(server);

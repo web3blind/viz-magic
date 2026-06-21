@@ -29,6 +29,130 @@ function pathParts(reqUrl) {
     return url.parse(reqUrl, true).pathname.replace(/\/+/g, '/').split('/').filter(Boolean);
 }
 
+function memberCount(guild) {
+    return guild && guild.members ? Object.keys(guild.members).length : 0;
+}
+
+function ensureGuildShell(guilds, guildId, sender, blockNum) {
+    if (!guildId) return null;
+    if (guilds[guildId]) return guilds[guildId];
+    guilds[guildId] = {
+        id: guildId,
+        name: guildId,
+        tag: String(guildId).replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, 5) || 'GM',
+        school: null,
+        motto: '',
+        charter: { membership: 'invite', tithe_pct: 1000, min_shares: 0 },
+        founder: sender || '',
+        createdBlock: Number(blockNum) || 0,
+        level: 1,
+        xp: 0,
+        members: {},
+        invites: {},
+        announcements: [],
+        isPlaceholder: true
+    };
+    return guilds[guildId];
+}
+
+function addInitialFounder(guild, sender, blockNum) {
+    if (!guild || !sender || guild.members[sender]) return;
+    guild.members[sender] = {
+        account: sender,
+        rank: 'founder',
+        joinedBlock: Number(blockNum) || 0,
+        delegatedShares: 0,
+        pvpWins: 0,
+        pvpLosses: 0,
+        questContributions: 0
+    };
+}
+
+function applyGuildEvent(guilds, listings, event) {
+    var payload = event && event.payload || {};
+    var data = payload.d || payload.data || {};
+    var type = event && event.type || payload.t || payload.type || '';
+    var sender = event && event.sender || '';
+    var blockNum = event && event.blockNum || 0;
+    var guildId = data.guild_id || data.id || data.guildId;
+    var guild = null;
+
+    if (type === 'guild.create') {
+        guildId = data.id;
+        if (!guildId || !data.name) return;
+        guild = {
+            id: guildId,
+            name: data.name,
+            tag: String(data.tag || guildId).toUpperCase().slice(0, 5),
+            school: data.school || null,
+            motto: data.motto || '',
+            charter: data.charter || { membership: 'open', tithe_pct: 1000, min_shares: 0 },
+            founder: sender,
+            createdBlock: Number(blockNum) || 0,
+            level: 1,
+            xp: 0,
+            members: {},
+            invites: {},
+            announcements: [],
+            isPlaceholder: false
+        };
+        addInitialFounder(guild, sender, blockNum);
+        guilds[guildId] = guild;
+        listings[guildId] = { guild_id: guildId, created_block: Number(blockNum) || 0, sender: sender, blockNum: Number(blockNum) || 0 };
+        return;
+    }
+
+    if (type === 'guild.listing') {
+        if (!guildId || !data.created_block) return;
+        listings[guildId] = { guild_id: guildId, created_block: Number(data.created_block) || 0, sender: sender, blockNum: Number(blockNum) || 0 };
+        return;
+    }
+
+    if (!guildId) return;
+    guild = ensureGuildShell(guilds, guildId, sender, blockNum);
+
+    if (type === 'guild.invite') {
+        if (sender) addInitialFounder(guild, sender, blockNum);
+        if (data.target) guild.invites[data.target] = { inviter: sender, block: Number(blockNum) || 0 };
+    } else if (type === 'guild.accept') {
+        if (sender && !guild.members[sender]) {
+            guild.members[sender] = { account: sender, rank: 'initiate', joinedBlock: Number(blockNum) || 0, delegatedShares: 0, pvpWins: 0, pvpLosses: 0, questContributions: 0 };
+        }
+        if (sender && guild.invites) delete guild.invites[sender];
+    } else if (type === 'guild.leave') {
+        if (sender && guild.members && guild.members[sender] && guild.members[sender].rank !== 'founder') delete guild.members[sender];
+    } else if (type === 'guild.promote') {
+        if (data.target) {
+            if (!guild.members[data.target]) guild.members[data.target] = { account: data.target, rank: 'initiate', joinedBlock: Number(blockNum) || 0, delegatedShares: 0, pvpWins: 0, pvpLosses: 0, questContributions: 0 };
+            guild.members[data.target].rank = data.rank || guild.members[data.target].rank;
+        }
+    } else if (type === 'guild.announce') {
+        if (data.text) guild.announcements.push(String(data.text).slice(0, 500));
+    }
+}
+
+function buildGuildDirectory(archive, options) {
+    var rows = archive.queryEventsByTypePrefix('guild.', options || {});
+    var guilds = {};
+    var listings = {};
+    for (var i = 0; i < rows.length; i += 1) applyGuildEvent(guilds, listings, rows[i]);
+    var list = [];
+    Object.keys(guilds).forEach(function(id) {
+        var guild = guilds[id];
+        if (!listings[id] && !guild.isPlaceholder) {
+            listings[id] = { guild_id: id, created_block: guild.createdBlock || 0, sender: guild.founder || '', blockNum: guild.createdBlock || 0 };
+        }
+        guild.memberCount = memberCount(guild);
+        list.push(guild);
+    });
+    list.sort(function(a, b) {
+        if ((b.level || 1) !== (a.level || 1)) return (b.level || 1) - (a.level || 1);
+        if ((b.memberCount || 0) !== (a.memberCount || 0)) return (b.memberCount || 0) - (a.memberCount || 0);
+        return String(a.name || a.id).localeCompare(String(b.name || b.id));
+    });
+    return { guilds: guilds, listings: Object.keys(listings).map(function(id) { return listings[id]; }), list: list, sourceEvents: rows.length };
+}
+
 function createServer(options) {
     options = options || {};
     var startedAt = Date.now();
@@ -147,6 +271,23 @@ function createServer(options) {
             return;
         }
 
+        if (parts.length === 2 && parts[0] === 'v1' && parts[1] === 'guilds') {
+            var directory = buildGuildDirectory(archive, {
+                start: safeNum(parsedUrl.query.start || parsedUrl.query.from, 0),
+                end: safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647),
+                limit: safeNum(parsedUrl.query.limit, 50000)
+            });
+            json(res, 200, {
+                guilds: directory.list,
+                guildMap: directory.guilds,
+                listings: directory.listings,
+                count: directory.list.length,
+                sourceEvents: directory.sourceEvents,
+                readOnly: true
+            });
+            return;
+        }
+
         if (parts.length === 6 && parts[0] === 'v1' && parts[1] === 'account' && parts[3] === 'protocol' && parts[5] === 'actions') {
             var account = decodeURIComponent(parts[2]);
             var protocol = decodeURIComponent(parts[4]);
@@ -187,5 +328,6 @@ if (require.main === module) {
 module.exports = {
     createServer: createServer,
     safeNum: safeNum,
-    pathParts: pathParts
+    pathParts: pathParts,
+    buildGuildDirectory: buildGuildDirectory
 };

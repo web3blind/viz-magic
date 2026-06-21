@@ -313,11 +313,64 @@ var GuildScreen = (function() {
         return invites;
     }
 
+    function _mergeArchiveGuildDirectory(state, directory) {
+        if (!state || !directory) return false;
+        var changed = false;
+        if (!state.guilds) state.guilds = {};
+        if (!state.guildListings) state.guildListings = [];
+        var guildMap = directory.guildMap || {};
+        var guilds = directory.guilds || [];
+        for (var i = 0; i < guilds.length; i++) {
+            var guild = guilds[i];
+            if (!guild || !guild.id) continue;
+            if (!state.guilds[guild.id] || state.guilds[guild.id].isPlaceholder) {
+                state.guilds[guild.id] = guild;
+                changed = true;
+            }
+        }
+        for (var gid in guildMap) {
+            if (!guildMap.hasOwnProperty(gid)) continue;
+            if (!state.guilds[gid] || state.guilds[gid].isPlaceholder) {
+                state.guilds[gid] = guildMap[gid];
+                changed = true;
+            }
+        }
+        var listings = directory.listings || [];
+        for (var li = 0; li < listings.length; li++) {
+            var listing = listings[li];
+            if (!listing || !listing.guild_id) continue;
+            var exists = false;
+            for (var si = 0; si < state.guildListings.length; si++) {
+                if (state.guildListings[si].guild_id === listing.guild_id) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                state.guildListings.push(listing);
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
     /**
      * Hydrate guilds from listings — fetch creation blocks for unknown guilds.
      * Runs asynchronously; re-renders guild screen when new data arrives.
      */
     function _hydrateGuildListings(state) {
+        if (typeof HistorySource !== 'undefined' && HistorySource.getGuildDirectory && !state._guildDirectoryFetchInProgress) {
+            state._guildDirectoryFetchInProgress = true;
+            HistorySource.getGuildDirectory(function(err, directory) {
+                state._guildDirectoryFetchInProgress = false;
+                if (err || !directory) return;
+                if (_mergeArchiveGuildDirectory(StateEngine.getState(), directory)) {
+                    var container = Helpers.$('screen-guild');
+                    if (container && !container.getAttribute('aria-hidden')) render();
+                }
+            });
+        }
+
         var listings = state.guildListings;
         if (!listings || listings.length === 0) return;
         for (var i = 0; i < listings.length; i++) {
@@ -331,7 +384,7 @@ var GuildScreen = (function() {
             if (_listingFetchInProgress[gid]) continue;
             _listingFetchInProgress[gid] = true;
             (function(guildId, block) {
-                viz.api.getBlock(block, function(err, blockData) {
+                HistorySource.getBlock(block, function(err, blockData) {
                     delete _listingFetchInProgress[guildId];
                     if (err || !blockData || !blockData.transactions) return;
                     // Find guild.create for this guild_id in the block

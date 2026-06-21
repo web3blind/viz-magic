@@ -46,6 +46,14 @@ var HistorySource = (function() {
         return pattern.replace(/\/$/, '') + '/' + encodeURIComponent(String(blockNum)) + '.json';
     }
 
+    function _guildsUrl(mirror) {
+        var pattern = mirror.guildsUrl || '';
+        if (!pattern && mirror.apiBase) {
+            pattern = String(mirror.apiBase).replace(/\/$/, '') + '/v1/guilds';
+        }
+        return pattern;
+    }
+
     function _eventsPayloadToThinBlock(payload) {
         if (!payload || !payload.events) return null;
         var events = payload.events || [];
@@ -241,10 +249,36 @@ var HistorySource = (function() {
         });
     }
 
+    function getGuildDirectory(callback) {
+        callback = callback || function() {};
+        var mirrors = _archiveMirrors();
+        function next(index) {
+            if (!mirrors.length || index >= mirrors.length) {
+                callback(_makeError('Guild directory unavailable from archive mirrors'));
+                return;
+            }
+            var mirror = _normalizeMirror(mirrors[index]);
+            var url = _guildsUrl(mirror);
+            if (!url) {
+                next(index + 1);
+                return;
+            }
+            _requestJson(url, mirror.timeoutMs || 6000, function(err, payload) {
+                if (!err && payload && (payload.guilds || payload.guildMap)) {
+                    callback(null, payload);
+                    return;
+                }
+                next(index + 1);
+            });
+        }
+        next(0);
+    }
+
     return {
         getBlock: getBlock,
         getAccountProtocol: getAccountProtocol,
         getAccountActions: getAccountActions,
-        getCapabilities: getCapabilities
+        getCapabilities: getCapabilities,
+        getGuildDirectory: getGuildDirectory
     };
 })();
