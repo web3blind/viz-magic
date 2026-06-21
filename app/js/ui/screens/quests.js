@@ -177,13 +177,25 @@ var QuestsScreen = (function() {
         var html = '<ul class="quest-list completed" role="list">';
         for (var i = completed.length - 1; i >= Math.max(0, completed.length - 20); i--) {
             var q = completed[i];
+            var title = _completedQuestTitle(q, t);
             html += '<li class="quest-card quest-completed-card">' +
                 '<span class="quest-icon" aria-hidden="true">\u2714</span>' +
-                '<span class="quest-name">' + Helpers.t(q.id) + '</span>' +
+                '<span class="quest-name">' + Helpers.escapeHtml(title) + '</span>' +
             '</li>';
         }
         html += '</ul>';
         return html;
+    }
+
+    function _completedQuestTitle(q, t) {
+        if (!q) return '';
+        if (q.titleKey) return t(q.titleKey);
+        if (typeof GameQuests !== 'undefined' && GameQuests.getQuest) {
+            var quest = GameQuests.getQuest(q.id);
+            if (quest && quest.titleKey) return t(quest.titleKey);
+        }
+        if (/^daily_[0-9]+_[0-9]+$/.test(q.id || '')) return t('quest_daily_hunt');
+        return String(q.id || '').replace(/^q_/, '').replace(/_/g, ' ');
     }
 
     function _renderQuestCard(quest, t, showActions) {

@@ -456,10 +456,10 @@ var ChronicleScreen = (function() {
                 var itemName = (ev0 && ev0.itemName) ? ev0.itemName : '';
                 return t('chronicle_narrative_craft', { name: name, item: itemName });
             case 'guild.create':
-                var guildName = (ev0 && ev0.guildName) ? ev0.guildName : '';
+                var guildName = _guildNameForCreateAction(action, ev0);
                 return t('chronicle_narrative_guild_created', { name: name, guild: guildName });
             case 'guild.accept':
-                var gJoin = (ev0 && ev0.guildName) ? ev0.guildName : '';
+                var gJoin = _guildDisplayName(ev0 && ev0.guildId, ev0 && ev0.guildName);
                 return t('chronicle_narrative_guild_join', { name: name, guild: gJoin });
             case 'boss.attack':
                 return name + ' ' + (t('boss_attack') || 'attacks the boss') + '!';
@@ -475,6 +475,38 @@ var ChronicleScreen = (function() {
         if (!account) return '???';
         var charInfo = StateEngine.getCharacter(account);
         return (charInfo && charInfo.name) ? charInfo.name : account;
+    }
+
+    function _guildNameForCreateAction(action, ev0) {
+        if (ev0 && (ev0.guildName || ev0.guildId)) {
+            return _guildDisplayName(ev0.guildId, ev0.guildName);
+        }
+
+        var state = StateEngine.getState();
+        if (state && state.guilds) {
+            for (var guildId in state.guilds) {
+                if (!state.guilds.hasOwnProperty(guildId)) continue;
+                var guild = state.guilds[guildId];
+                if (!guild) continue;
+                if (action && guild.createdBlock && action.blockNum && guild.createdBlock === action.blockNum) {
+                    return guild.name || guildId;
+                }
+                if (action && action.sender && guild.founder === action.sender) {
+                    return guild.name || guildId;
+                }
+            }
+        }
+
+        return Helpers.t('chronicle_unknown_guild');
+    }
+
+    function _guildDisplayName(guildId, eventName) {
+        if (eventName) return eventName;
+        var state = StateEngine.getState();
+        if (guildId && state && state.guilds && state.guilds[guildId]) {
+            return state.guilds[guildId].name || guildId;
+        }
+        return guildId || Helpers.t('chronicle_unknown_guild');
     }
 
     function _filterByTab(entries, state) {

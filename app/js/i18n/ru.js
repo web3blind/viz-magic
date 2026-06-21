@@ -772,6 +772,7 @@ var LangRU = {
     quest_completed: 'Задание выполнено!',
     quest_abandon: 'Отказаться',
     quest_abandoned: 'Задание отменено.',
+    chronicle_unknown_guild: 'неизвестная гильдия',
     quest_type_hunt: 'Охота',
     quest_type_craft: 'Ковка',
     quest_type_duel: 'Дуэль',

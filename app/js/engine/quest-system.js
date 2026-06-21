@@ -238,6 +238,7 @@ var QuestSystem = (function() {
         playerQuests.active.splice(questIndex, 1);
         playerQuests.completed.push({
             id: quest.id,
+            titleKey: quest.titleKey || (questTemplate && questTemplate.titleKey) || '',
             completedBlock: blockNum
         });
 

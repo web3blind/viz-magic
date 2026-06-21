@@ -772,6 +772,7 @@ var LangEN = {
     quest_completed: 'Quest completed!',
     quest_abandon: 'Abandon',
     quest_abandoned: 'Quest abandoned.',
+    chronicle_unknown_guild: 'an unknown guild',
     quest_type_hunt: 'Hunt',
     quest_type_craft: 'Craft',
     quest_type_duel: 'Duel',

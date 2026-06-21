@@ -34,6 +34,7 @@ const inventoryJs = read('app/js/ui/screens/inventory.js');
 const huntJs = read('app/js/ui/screens/hunt.js');
 const mapJs = read('app/js/ui/screens/map.js');
 const chronicleJs = read('app/js/ui/screens/chronicle.js');
+const questScreenJs = read('app/js/ui/screens/quests.js');
 const guildJs = read('app/js/ui/screens/guild.js');
 const leaderboardJs = read('app/js/ui/screens/leaderboard.js');
 const characterJs = read('app/js/ui/screens/character.js');
@@ -123,6 +124,22 @@ test('chronicle keeps loaded tabs visible and shows sent blessings immediately',
   assert.ok(/_injectLocalBlessing\(account, energy\)/.test(chronicleJs), 'blessing success path should inject visible local action');
 });
 
+
+
+test('completed quest list resolves quest titles instead of raw ids', function () {
+  assert.ok(/titleKey: quest\.titleKey/.test(read('app/js/engine/quest-system.js')), 'completed quest records should preserve titleKey for future claims');
+  assert.ok(/function _completedQuestTitle/.test(questScreenJs), 'quest screen should resolve completed quest titles');
+  assert.ok(/GameQuests\.getQuest\(q\.id\)/.test(questScreenJs), 'completed quest title should fall back to quest template');
+  assert.ok(!/Helpers\.t\(q\.id\)/.test(questScreenJs), 'completed quest list must not translate raw quest ids');
+});
+
+test('chronicle guild narratives have a guild-name fallback', function () {
+  assert.ok(/function _guildDisplayName/.test(chronicleJs), 'chronicle should resolve guild display names');
+  assert.ok(/function _guildNameForCreateAction/.test(chronicleJs), 'chronicle should recover guild names for old create entries');
+  assert.ok(/guildName: guild\.name/.test(stateEngineJs), 'guild join events should carry guildName');
+  assert.ok(/chronicle_unknown_guild/.test(chronicleJs + ruJs + enJs), 'unknown guild fallback copy should exist');
+});
+
 test('stale checkpoint catch-up keeps using scaled batches after first batch', function () {
   assert.ok(/function _nextCatchupBatchEnd/.test(appJs), 'app should centralize catch-up batch sizing');
   assert.ok(/var remaining = Math\.max\(0, chainHead - startBlock \+ 1\)/.test(appJs), 'batch sizing should use remaining gap');
@@ -162,6 +179,16 @@ test('high-traffic UI narration and inventory stat labels are translated', funct
     assert.ok(enJs.indexOf(key + ':') !== -1, 'English translation missing: ' + key);
     assert.ok(ruJs.indexOf(key + ':') !== -1, 'Russian translation missing: ' + key);
   });
+});
+
+
+
+test('service worker updates quickly and keeps navigations network-first', function () {
+  const swJs = read('app/sw.js');
+  assert.ok(/viz-magic-v19/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
+  assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
+  assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
 });
 
 test('leaderboard has local character fallback while 24h scan is empty or slow', function () {

@@ -696,7 +696,7 @@ var StateEngine = (function() {
         if (!guild) return [];
         var ok = GuildSystem.joinGuild(guild, sender, blockNum);
         if (!ok) return [];
-        return [{ type: 'guild_joined', guildId: data.guild_id, account: sender }];
+        return [{ type: 'guild_joined', guildId: data.guild_id, guildName: guild.name || data.guild_id, account: sender }];
     }
 
     function _handleGuildLeave(sender, data, blockNum) {
