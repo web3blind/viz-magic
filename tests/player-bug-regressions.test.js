@@ -122,6 +122,12 @@ test('chronicle keeps loaded tabs visible and shows sent blessings immediately',
   assert.ok(/_injectLocalBlessing\(account, energy\)/.test(chronicleJs), 'blessing success path should inject visible local action');
 });
 
+test('stale checkpoint catch-up keeps using scaled batches after first batch', function () {
+  assert.ok(/function _nextCatchupBatchEnd/.test(appJs), 'app should centralize catch-up batch sizing');
+  assert.ok(/var remaining = Math\.max\(0, chainHead - startBlock \+ 1\)/.test(appJs), 'batch sizing should use remaining gap');
+  assert.ok(/var nextEnd = _nextCatchupBatchEnd\(nextStart, chainHead\)/.test(appJs), 'continued catch-up should not fall back to fixed 10-block batches');
+});
+
 test('guild joining explains and enforces preparation requirements', function () {
   assert.ok(/var GUILD_JOIN_MIN_LEVEL = 4/.test(guildJs), 'guild join level gate should be explicit');
   assert.ok(/guild_join_requirements/.test(guildJs), 'guild screen should explain join requirements');

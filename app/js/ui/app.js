@@ -588,15 +588,23 @@ var App = (function() {
 
                 _updateSyncStatus(_calculateSyncPercent(_lastPolledBlock, headBlock));
 
-                // Cap batch size — scale with gap for faster catch-up
                 var startBlock = _lastPolledBlock + 1;
-                var gap = headBlock - _lastPolledBlock;
-                var maxBatch = gap > 1000 ? 200 : gap > 100 ? 50 : 10;
-                var endBlock = Math.min(headBlock, startBlock + maxBatch - 1);
+                var endBlock = _nextCatchupBatchEnd(startBlock, headBlock);
 
                 _processBlockBatch(startBlock, endBlock, headBlock);
             });
         }, POLL_INTERVAL_MS);
+    }
+
+    /**
+     * Choose a catch-up batch size based on remaining gap.
+     * Keep large gaps moving quickly after stale checkpoints/reloads, then
+     * shrink near head so UI updates stay responsive.
+     */
+    function _nextCatchupBatchEnd(startBlock, chainHead) {
+        var remaining = Math.max(0, chainHead - startBlock + 1);
+        var maxBatch = remaining > 1000 ? 200 : remaining > 100 ? 50 : 10;
+        return Math.min(chainHead, startBlock + maxBatch - 1);
     }
 
     /**
@@ -634,7 +642,7 @@ var App = (function() {
                 // If there are more blocks to process, continue immediately
                 if (endBlock < chainHead) {
                     var nextStart = endBlock + 1;
-                    var nextEnd = Math.min(chainHead, nextStart + 9);
+                    var nextEnd = _nextCatchupBatchEnd(nextStart, chainHead);
                     _processBlockBatch(nextStart, nextEnd, chainHead);
                 } else {
                     _syncStartBlock = 0;
