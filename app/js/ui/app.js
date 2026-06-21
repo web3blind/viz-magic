@@ -611,6 +611,92 @@ var App = (function() {
      * Process a batch of blocks sequentially, then save checkpoint.
      */
     function _processBlockBatch(startBlock, endBlock, chainHead) {
+        if (_shouldUseArchiveEventBatch(startBlock, endBlock, chainHead)) {
+            _processArchiveEventBatch(startBlock, endBlock, chainHead, function(usedArchive) {
+                if (!usedArchive) {
+                    _processBlockBatchFromRpc(startBlock, endBlock, chainHead);
+                }
+            });
+            return;
+        }
+
+        _processBlockBatchFromRpc(startBlock, endBlock, chainHead);
+    }
+
+    function _shouldUseArchiveEventBatch(startBlock, endBlock, chainHead) {
+        return typeof HistorySource !== 'undefined' &&
+            HistorySource.getEventsRange &&
+            chainHead - startBlock > 1000;
+    }
+
+    function _processArchiveEventBatch(startBlock, endBlock, chainHead, done) {
+        HistorySource.getEventsRange({
+            protocol: VizMagicConfig.PROTOCOLS.VM,
+            start: startBlock,
+            end: endBlock,
+            limit: 1000
+        }, function(err, events) {
+            if (err || !events) {
+                done(false);
+                return;
+            }
+
+            events = events || [];
+            events.sort(function(a, b) {
+                if ((a.blockNum || 0) !== (b.blockNum || 0)) return (a.blockNum || 0) - (b.blockNum || 0);
+                if ((a.txIndex || 0) !== (b.txIndex || 0)) return (a.txIndex || 0) - (b.txIndex || 0);
+                return (a.opIndex || 0) - (b.opIndex || 0);
+            });
+
+            var grouped = {};
+            var order = [];
+            for (var i = 0; i < events.length; i++) {
+                var ev = events[i];
+                var blockNum = ev.blockNum || 0;
+                if (!blockNum) continue;
+                if (!grouped[blockNum]) {
+                    grouped[blockNum] = {
+                        vmActions: [],
+                        voicePosts: [],
+                        veEvents: [],
+                        awards: [],
+                        blockHash: ev.block_id || ev.previous || '',
+                        blockNum: blockNum,
+                        timestamp: ev.timestamp || ''
+                    };
+                    order.push(blockNum);
+                }
+                var parsedAction = VMProtocol.parseAction(ev.raw && ev.raw.json ? ev.raw.json : JSON.stringify(ev.payload || {}));
+                if (parsedAction) {
+                    grouped[blockNum].vmActions.push({
+                        sender: ev.sender || '',
+                        action: parsedAction,
+                        blockNum: blockNum,
+                        raw: ev.raw || {}
+                    });
+                }
+            }
+
+            var eventsCollected = [];
+            for (var j = 0; j < order.length; j++) {
+                var processed = grouped[order[j]];
+                var stateEvents = StateEngine.processBlock(processed);
+                for (var k = 0; k < stateEvents.length; k++) {
+                    eventsCollected.push(stateEvents[k]);
+                }
+            }
+
+            // Archive mode intentionally skips empty blocks. Advance the head so
+            // stale checkpoints can catch up in seconds without replaying tens
+            // of thousands of empty blocks through RPC.
+            var state = StateEngine.getState();
+            state.headBlock = endBlock;
+            _finishProcessedBatch(endBlock, chainHead, eventsCollected);
+            done(true);
+        });
+    }
+
+    function _processBlockBatchFromRpc(startBlock, endBlock, chainHead) {
         var eventsCollected = [];
 
         BlockProcessor.processBlockRange(startBlock, endBlock, function(processed, blockNum) {
@@ -620,36 +706,40 @@ var App = (function() {
                 eventsCollected.push(events[i]);
             }
         }, function(err) {
-            _lastPolledBlock = endBlock;
+            _finishProcessedBatch(endBlock, chainHead, eventsCollected);
+        });
+    }
 
-            // Emit game events to EventBus for UI reactivity
-            for (var i = 0; i < eventsCollected.length; i++) {
-                var evt = eventsCollected[i];
-                if (evt.type) {
-                    Helpers.EventBus.emit(evt.type, evt);
-                }
+    function _finishProcessedBatch(endBlock, chainHead, eventsCollected) {
+        _lastPolledBlock = endBlock;
+
+        // Emit game events to EventBus for UI reactivity
+        for (var i = 0; i < eventsCollected.length; i++) {
+            var evt = eventsCollected[i];
+            if (evt.type) {
+                Helpers.EventBus.emit(evt.type, evt);
+            }
+        }
+
+        // Save checkpoint periodically (every batch)
+        StateEngine.saveCheckpoint(function(cpErr) {
+            if (cpErr) {
+                console.log('App: Checkpoint save error:', cpErr);
             }
 
-            // Save checkpoint periodically (every batch)
-            StateEngine.saveCheckpoint(function(cpErr) {
-                if (cpErr) {
-                    console.log('App: Checkpoint save error:', cpErr);
-                }
+            _updateSyncStatus(_calculateSyncPercent(endBlock, chainHead));
+            _refreshActiveScreenAfterSync(eventsCollected);
 
-                _updateSyncStatus(_calculateSyncPercent(endBlock, chainHead));
-                _refreshActiveScreenAfterSync(eventsCollected);
-
-                // If there are more blocks to process, continue immediately
-                if (endBlock < chainHead) {
-                    var nextStart = endBlock + 1;
-                    var nextEnd = _nextCatchupBatchEnd(nextStart, chainHead);
-                    _processBlockBatch(nextStart, nextEnd, chainHead);
-                } else {
-                    _syncStartBlock = 0;
-                    _updateSyncStatus(100);
-                    _pollBusy = false;
-                }
-            });
+            // If there are more blocks to process, continue immediately
+            if (endBlock < chainHead) {
+                var nextStart = endBlock + 1;
+                var nextEnd = _nextCatchupBatchEnd(nextStart, chainHead);
+                _processBlockBatch(nextStart, nextEnd, chainHead);
+            } else {
+                _syncStartBlock = 0;
+                _updateSyncStatus(100);
+                _pollBusy = false;
+            }
         });
     }
 
@@ -672,6 +762,7 @@ var App = (function() {
             map: true,
             chronicle: true,
             guild: true,
+            arena: true,
             marketplace: true,
             leaderboard: true
         };

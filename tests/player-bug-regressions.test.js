@@ -128,6 +128,13 @@ test('stale checkpoint catch-up keeps using scaled batches after first batch', f
   assert.ok(/var nextEnd = _nextCatchupBatchEnd\(nextStart, chainHead\)/.test(appJs), 'continued catch-up should not fall back to fixed 10-block batches');
 });
 
+test('large stale checkpoint catch-up uses archive events instead of replaying empty blocks', function () {
+  assert.ok(/function _processArchiveEventBatch\(startBlock, endBlock, chainHead, done\)/.test(appJs), 'app should have archive event catch-up path');
+  assert.ok(/HistorySource\.getEventsRange/.test(appJs), 'archive catch-up should query event ranges');
+  assert.ok(/state\.headBlock = endBlock/.test(appJs), 'archive catch-up should advance checkpoint past empty blocks');
+  assert.ok(/arena: true/.test(appJs), 'arena should refresh when duel events arrive during catch-up');
+});
+
 test('guild joining explains and enforces preparation requirements', function () {
   assert.ok(/var GUILD_JOIN_MIN_LEVEL = 4/.test(guildJs), 'guild join level gate should be explicit');
   assert.ok(/guild_join_requirements/.test(guildJs), 'guild screen should explain join requirements');
