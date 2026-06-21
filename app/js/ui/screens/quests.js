@@ -328,9 +328,11 @@ var QuestsScreen = (function() {
             }
 
             var user = VizAccount.getCurrentUser();
-            var finalBlockNum = (result && result.block_num) ||
+            var currentHead = StateEngine.getState().headBlock || 0;
+            var finalBlockNum =
+                (result && result.block_num) ||
                 (result && result.action && result.action.block_num) ||
-                (StateEngine.getState().headBlock || 0);
+                (currentHead + 1);
             var event = null;
             if (kind === 'accept') {
                 event = StateEngine.processQuestAcceptResult(user, questId, isDaily, dailyBlock, finalBlockNum);

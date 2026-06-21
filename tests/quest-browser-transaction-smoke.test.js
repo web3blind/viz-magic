@@ -51,7 +51,11 @@ async function run() {
       var calls = [];
       VizBroadcast.questAction = function(type, data, callback) {
         calls.push({ type: type, data: JSON.parse(JSON.stringify(data || {})) });
-        callback(null, { block_num: 12010 });
+        if (calls.length === 1) {
+          callback(null, {});
+        } else {
+          callback(null, { block_num: 12010 + calls.length });
+        }
       };
 
       App.navigateTo('quests');
@@ -63,6 +67,7 @@ async function run() {
       var questId = acceptBtn.getAttribute('data-quest-id');
       acceptBtn.click();
       await new Promise(function(resolve) { setTimeout(resolve, 120); });
+      var headAfterAccept = StateEngine.getState().headBlock;
       var activeAfterAccept = StateEngine.getState().quests['quest-smoke'].active.map(function(q) { return q.id; });
       document.querySelector('[data-tab="active"]').click();
       await new Promise(function(resolve) { setTimeout(resolve, 80); });
@@ -84,6 +89,7 @@ async function run() {
       return {
         calls: calls,
         questId: questId,
+        headAfterAccept: headAfterAccept,
         activeAfterAccept: activeAfterAccept,
         activeAfterAbandon: activeAfterAbandon,
         activeAfterDaily: activeAfterDaily,
@@ -94,13 +100,14 @@ async function run() {
     assert.ifError(result.error);
     assert.strictEqual(result.calls[0].type, 'quest.accept', 'available quest accept should broadcast VM action');
     assert.strictEqual(result.calls[0].data.quest_id, result.questId, 'quest id should be sent on chain');
+    assert.strictEqual(result.headAfterAccept, 12001, 'quest accept without returned block should still advance checkpoint head');
     assert.ok(result.activeAfterAccept.indexOf(result.questId) !== -1, 'accepted quest should update StateEngine after broadcast');
     assert.strictEqual(result.calls[1].type, 'quest.abandon', 'abandon should broadcast VM action');
     assert.deepStrictEqual(result.activeAfterAbandon, [], 'abandoned quest should update StateEngine after broadcast');
     assert.strictEqual(result.calls[2].type, 'quest.accept', 'daily quest accept should broadcast VM action');
     assert.strictEqual(result.calls[2].data.daily, true, 'daily quest should include deterministic daily marker');
     assert.ok(result.activeAfterDaily.length === 1 && /^daily_/.test(result.activeAfterDaily[0]), 'daily quest should be accepted through StateEngine');
-    assert.strictEqual(result.headBlock, 12010, 'local checkpoint head should advance to broadcast block');
+    assert.strictEqual(result.headBlock, 12013, 'local checkpoint head should advance to latest broadcast block');
     console.log('PASS quest browser transaction smoke');
   } finally {
     if (browser) await browser.close();
