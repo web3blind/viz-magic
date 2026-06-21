@@ -39,6 +39,7 @@ const leaderboardJs = read('app/js/ui/screens/leaderboard.js');
 const characterJs = read('app/js/ui/screens/character.js');
 const stateEngineJs = read('app/js/engine/state-engine.js');
 const questsJs = read('app/js/data/quests.js');
+const indexHtml = read('app/index.html');
 const ruJs = read('app/js/i18n/ru.js');
 const enJs = read('app/js/i18n/en.js');
 
@@ -133,6 +134,7 @@ test('large stale checkpoint catch-up uses archive events instead of replaying e
   assert.ok(/HistorySource\.getEventsRange/.test(appJs), 'archive catch-up should query event ranges');
   assert.ok(/state\.headBlock = endBlock/.test(appJs), 'archive catch-up should advance checkpoint past empty blocks');
   assert.ok(/arena: true/.test(appJs), 'arena should refresh when duel events arrive during catch-up');
+  assert.ok(/js\/ui\/app\.js\?v=20260621d/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
 });
 
 test('guild joining explains and enforces preparation requirements', function () {
