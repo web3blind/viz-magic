@@ -243,6 +243,7 @@ var ChronicleScreen = (function() {
                     entries.push({
                         type: 'action',
                         account: action.sender,
+                        receiver: action.receiver || '',
                         text: postText,
                         actionType: action.type,
                         timestamp: action.timestamp,
@@ -302,7 +303,12 @@ var ChronicleScreen = (function() {
         var seen = {};
         var out = [];
         for (var i = 0; i < entries.length; i++) {
-            var key = (entries[i].account || '') + '|' + (entries[i].blockNum || 0) + '|' + (entries[i].actionType || '') + '|' + (entries[i].text || '');
+            var key;
+            if (entries[i].actionType === 'blessing_sent') {
+                key = (entries[i].account || '') + '|blessing_sent|' + (entries[i].receiver || '') + '|' + (entries[i].text || '');
+            } else {
+                key = (entries[i].account || '') + '|' + (entries[i].blockNum || 0) + '|' + (entries[i].actionType || '') + '|' + (entries[i].text || '');
+            }
             if (seen[key]) continue;
             seen[key] = true;
             out.push(entries[i]);
