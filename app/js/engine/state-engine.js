@@ -1213,6 +1213,20 @@ var StateEngine = (function() {
     }
 
     /**
+     * Process movement for live UI — same authoritative mutation path as replay.
+     * @param {string} account
+     * @param {string} zoneId
+     * @param {number} blockNum
+     * @returns {Object|null}
+     */
+    function processMoveResult(account, zoneId, blockNum) {
+        if (!zoneId) return null;
+        var events = _handleMove(account, { zone: zoneId }, blockNum || 0);
+        if (!events.length) return null;
+        return events[0];
+    }
+
+    /**
      * Process Armageddon for live UI — same logic as _handleHuntArmageddon.
      * @param {string} account
      * @param {string} creatureId
@@ -1247,6 +1261,7 @@ var StateEngine = (function() {
         getCharacter: getCharacter,
         getInventory: getInventory,
         processHuntResult: processHuntResult,
+        processMoveResult: processMoveResult,
         processArmageddonResult: processArmageddonResult,
         reset: reset
     };

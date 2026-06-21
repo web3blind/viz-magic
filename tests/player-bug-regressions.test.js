@@ -34,6 +34,7 @@ const inventoryJs = read('app/js/ui/screens/inventory.js');
 const huntJs = read('app/js/ui/screens/hunt.js');
 const mapJs = read('app/js/ui/screens/map.js');
 const chronicleJs = read('app/js/ui/screens/chronicle.js');
+const mapScreenJs = read('app/js/ui/screens/map.js');
 const questScreenJs = read('app/js/ui/screens/quests.js');
 const guildJs = read('app/js/ui/screens/guild.js');
 const leaderboardJs = read('app/js/ui/screens/leaderboard.js');
@@ -124,6 +125,7 @@ test('chronicle keeps loaded tabs visible and shows sent blessings immediately',
   assert.ok(/_injectLocalBlessing\(account, energy\)/.test(chronicleJs), 'blessing success path should inject visible local action');
   assert.ok(/receiver: action\.receiver/.test(chronicleJs), 'chronicle entries should preserve blessing receiver for dedupe');
   assert.ok(/\|blessing_sent\|/.test(chronicleJs), 'blessing dedupe should ignore optimistic/replay block mismatch');
+  assert.ok(/function _updateLocalBlessingQuestProgress/.test(chronicleJs), 'blessing quests should update immediately after a successful local blessing');
 });
 
 
@@ -187,10 +189,20 @@ test('high-traffic UI narration and inventory stat labels are translated', funct
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v20/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v21/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
+});
+
+
+
+test('map travel updates through state-engine and blocks repeat-click loops', function () {
+  assert.ok(/function processMoveResult/.test(stateEngineJs), 'state engine should expose live movement path');
+  assert.ok(/processMoveResult: processMoveResult/.test(stateEngineJs), 'live movement path should be exported');
+  assert.ok(/StateEngine\.processMoveResult\(user, regionId, optimisticBlock\)/.test(mapScreenJs), 'map should update movement immediately through state engine');
+  assert.ok(/PENDING_TRAVEL_TTL_MS/.test(mapScreenJs), 'pending travel state should have a stale guard');
+  assert.ok(/!\(pendingTravel && pendingTravel\.account === user\)/.test(mapScreenJs), 'pending travel should suppress repeat travel buttons');
 });
 
 test('leaderboard has local character fallback while 24h scan is empty or slow', function () {

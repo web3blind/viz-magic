@@ -346,6 +346,17 @@ var ChronicleScreen = (function() {
             events: []
         });
         cachedFeedHtml = {};
+        _updateLocalBlessingQuestProgress(account);
+    }
+
+    function _updateLocalBlessingQuestProgress(account) {
+        var state = StateEngine.getState();
+        var user = VizAccount.getCurrentUser();
+        if (!state || !user || !account || !state.quests || !state.quests[user] || typeof QuestSystem === 'undefined') return;
+        QuestSystem.updateQuestProgress(state.quests[user], 'social', { target: 'blessing', uniqueKey: account, count: 1 });
+        try {
+            CheckpointSystem.saveCheckpoint('global', state.headBlock || 0, state, function() {});
+        } catch (e) {}
     }
 
     function _renderEntry(entry) {

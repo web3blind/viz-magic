@@ -8,6 +8,7 @@ var MapScreen = (function() {
 
     var t = Helpers.t;
     var pendingTravel = null;
+    var PENDING_TRAVEL_TTL_MS = 5 * 60 * 1000;
     var TRAVEL_COST_LOW = 10;   // 0.1%
     var TRAVEL_COST_HIGH = 100; // 1%
 
@@ -34,6 +35,8 @@ var MapScreen = (function() {
         var character = state.characters ? state.characters[user] : null;
         var confirmedZone = character ? character.currentZone : 'commons_first_light';
         if (pendingTravel && pendingTravel.account === user && pendingTravel.to === confirmedZone) {
+            pendingTravel = null;
+        } else if (pendingTravel && pendingTravel.account === user && pendingTravel.at && (Date.now() - pendingTravel.at) > PENDING_TRAVEL_TTL_MS) {
             pendingTravel = null;
         }
         var currentZone = confirmedZone;
@@ -158,7 +161,9 @@ var MapScreen = (function() {
             }
 
             // Travel button
-            if (!isCurrent && character) {
+            if (pendingTravel && pendingTravel.account === user && regionId === pendingTravel.to) {
+                html += '<div class="region-benefits" role="status">⏳ ' + t('map_pending_travel_short') + '</div>';
+            } else if (!isCurrent && character && !(pendingTravel && pendingTravel.account === user)) {
                 html += '<div class="region-travel-options">';
                 html += '<button class="btn btn-secondary btn-sm region-travel-btn" ';
                 html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_LOW + '" ';
@@ -171,8 +176,6 @@ var MapScreen = (function() {
                 html += '\uD83D\uDEB6 ' + Helpers.manaCost(TRAVEL_COST_HIGH);
                 html += '</button>';
                 html += '</div>';
-            } else if (pendingTravel && pendingTravel.account === user && regionId === pendingTravel.to) {
-                html += '<div class="region-benefits">⏳ ' + t('map_pending_travel_short') + '</div>';
             }
 
             html += '</section>';
@@ -226,14 +229,22 @@ var MapScreen = (function() {
             t: VizMagicConfig.ACTION_TYPES.MOVE,
             d: { zone: regionId }
         };
+        var previousZone = character ? character.currentZone : '';
 
         VizBroadcast.gameAction(moveAction, function(err) {
             if (err) {
                 Toast.error(t('error_network'));
             } else {
-                pendingTravel = { account: user, from: character ? character.currentZone : '', to: regionId, at: Date.now() };
+                var stateAfterMove = StateEngine.getState();
+                var optimisticBlock = (stateAfterMove.headBlock || 0) + 1;
+                StateEngine.processMoveResult(user, regionId, optimisticBlock);
+                stateAfterMove.headBlock = Math.max(stateAfterMove.headBlock || 0, optimisticBlock);
+                pendingTravel = { account: user, from: previousZone, to: regionId, at: Date.now() };
                 Toast.success(t('map_traveled') + ' ' + region.name);
                 SoundManager.play('transition');
+                try {
+                    CheckpointSystem.saveCheckpoint('global', stateAfterMove.headBlock || optimisticBlock, stateAfterMove, function() {});
+                } catch (e) {}
                 render();
             }
         });
