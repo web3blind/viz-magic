@@ -142,8 +142,10 @@ var StateEngine = (function() {
         }
 
         // Expire marketplace listings
+        _ensureMarketplace();
         if (typeof MarketplaceEngine !== 'undefined') {
             MarketplaceEngine.expireListings(blockNum);
+            _syncMarketplaceState();
         }
 
         // Register crafted item templates if needed
@@ -903,6 +905,8 @@ var StateEngine = (function() {
             return [];
         }
 
+        _syncMarketplaceState();
+
         return [{
             type: 'market_listed',
             account: sender,
@@ -922,6 +926,8 @@ var StateEngine = (function() {
             return [];
         }
 
+        _syncMarketplaceState();
+
         return [{
             type: 'market_cancelled',
             account: sender,
@@ -937,6 +943,8 @@ var StateEngine = (function() {
             console.log('StateEngine: Market buy failed:', result.error);
             return [];
         }
+
+        _syncMarketplaceState();
 
         return [{
             type: 'market_sold',
@@ -970,19 +978,24 @@ var StateEngine = (function() {
      * Ensure marketplace state is initialized
      */
     function _ensureMarketplace() {
-        if (!worldState.marketplace) {
-            worldState.marketplace = {};
+        if (!worldState.marketplace || !worldState.marketplace.listings) {
+            worldState.marketplace = {
+                listings: {},
+                history: [],
+                priceHistory: {}
+            };
         }
         if (typeof MarketplaceEngine !== 'undefined') {
-            // Sync marketplace state from world state if needed
-            var mState = MarketplaceEngine.getMarketState();
-            if (!mState.listings) {
-                MarketplaceEngine.setMarketState({
-                    listings: {},
-                    history: [],
-                    priceHistory: {}
-                });
-            }
+            // Keep the replay/checkpoint world state and the marketplace module
+            // on the same object so listings survive save/load and buy/cancel
+            // handlers do not mutate a detached in-memory marketplace.
+            MarketplaceEngine.setMarketState(worldState.marketplace);
+        }
+    }
+
+    function _syncMarketplaceState() {
+        if (typeof MarketplaceEngine !== 'undefined') {
+            worldState.marketplace = MarketplaceEngine.getMarketState();
         }
     }
 
