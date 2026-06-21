@@ -54,6 +54,22 @@ var HistorySource = (function() {
         return pattern;
     }
 
+    function _rangeUrl(mirror, options) {
+        var pattern = mirror.rangeUrl || '';
+        if (!pattern && mirror.apiBase) {
+            pattern = String(mirror.apiBase).replace(/\/$/, '') + '/v1/range';
+        }
+        if (!pattern) return '';
+        options = options || {};
+        var params = [];
+        if (options.protocol) params.push('protocol=' + encodeURIComponent(String(options.protocol)));
+        if (options.start || options.from) params.push('start=' + encodeURIComponent(String(options.start || options.from)));
+        if (options.end || options.to) params.push('end=' + encodeURIComponent(String(options.end || options.to)));
+        if (options.limit) params.push('limit=' + encodeURIComponent(String(options.limit)));
+        if (!params.length) return pattern;
+        return pattern + (pattern.indexOf('?') === -1 ? '?' : '&') + params.join('&');
+    }
+
     function _eventsPayloadToThinBlock(payload) {
         if (!payload || !payload.events) return null;
         var events = payload.events || [];
@@ -274,11 +290,38 @@ var HistorySource = (function() {
         next(0);
     }
 
+    function getEventsRange(options, callback) {
+        callback = callback || function() {};
+        options = options || {};
+        var mirrors = _archiveMirrors();
+        function next(index) {
+            if (!mirrors.length || index >= mirrors.length) {
+                callback(_makeError('Event range unavailable from archive mirrors'));
+                return;
+            }
+            var mirror = _normalizeMirror(mirrors[index]);
+            var url = _rangeUrl(mirror, options);
+            if (!url) {
+                next(index + 1);
+                return;
+            }
+            _requestJson(url, mirror.timeoutMs || 6000, function(err, payload) {
+                if (!err && payload && payload.events) {
+                    callback(null, payload.events, payload);
+                    return;
+                }
+                next(index + 1);
+            });
+        }
+        next(0);
+    }
+
     return {
         getBlock: getBlock,
         getAccountProtocol: getAccountProtocol,
         getAccountActions: getAccountActions,
         getCapabilities: getCapabilities,
-        getGuildDirectory: getGuildDirectory
+        getGuildDirectory: getGuildDirectory,
+        getEventsRange: getEventsRange
     };
 })();

@@ -50,6 +50,8 @@ test('history source wraps VIZ block/account access', function () {
   assert.ok(/XMLHttpRequest/.test(historySourceJs), 'mirror fallback should use browser-safe XHR');
   assert.ok(/function getAccountProtocol\(account, protocol, callback\)/.test(historySourceJs), 'account protocol API missing');
   assert.ok(/getCapabilities/.test(historySourceJs), 'capabilities API missing');
+  assert.ok(/function getEventsRange\(options, callback\)/.test(historySourceJs), 'archive event range API missing');
+  assert.ok(/\/v1\/range/.test(historySourceJs), 'event range API should call archive range endpoint');
 });
 
 test('archive mirror config is explicit and points at production nginx path', function () {

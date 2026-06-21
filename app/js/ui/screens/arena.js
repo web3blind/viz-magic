@@ -133,13 +133,60 @@ var ArenaScreen = (function() {
             if (found) return; // Already have pending challenges loaded
         }
 
-        // Fetch recent blocks to look for challenges targeting this user
+        // Fetch recent blocks to look for challenges targeting this user.
+        // Prefer Archive Mirror range events so the Arena does not have to make
+        // thousands of live getBlock() calls and so thin indexed events work in
+        // browsers with different VIZ RPC retention/latency.
         viz.api.getDynamicGlobalProperties(function(err, dgp) {
             if (err || !dgp) return;
             var headBlock = dgp.head_block_number;
             // Scan last 2400 blocks (~2 hours) so challenges aren't missed
             var startBlock = Math.max(1, headBlock - 2400);
-            _scanBlocksForChallenges(startBlock, headBlock, user, el);
+            _scanArchiveForChallenges(startBlock, headBlock, user, el, function(found) {
+                if (found) return;
+                _scanBlocksForChallenges(startBlock, headBlock, user, el);
+            });
+        });
+    }
+
+    function _scanArchiveForChallenges(startBlock, endBlock, user, el, done) {
+        done = done || function() {};
+        if (typeof HistorySource === 'undefined' || !HistorySource.getEventsRange) {
+            done(false);
+            return;
+        }
+        HistorySource.getEventsRange({
+            protocol: VizMagicConfig.PROTOCOLS.VM,
+            start: startBlock,
+            end: endBlock,
+            limit: 1000
+        }, function(err, events) {
+            if (err || !events || !events.length) {
+                done(false);
+                return;
+            }
+            var pendingChallenges = [];
+            for (var i = 0; i < events.length; i++) {
+                var ev = events[i] || {};
+                if (ev.type !== VizMagicConfig.ACTION_TYPES.CHALLENGE) continue;
+                var payload = ev.payload || {};
+                var data = payload.d || ev.data || {};
+                if (!data || data.target !== user) continue;
+                var challenger = ev.sender || ev.account || '';
+                if (!challenger && ev.accounts && ev.accounts.length) challenger = ev.accounts[0];
+                pendingChallenges.push({
+                    challenger: challenger,
+                    blockNum: ev.blockNum || ev.block_num || 0,
+                    data: data,
+                    strategyHash: data.strategy_hash
+                });
+            }
+            if (pendingChallenges.length > 0) {
+                _showIncomingChallenges(pendingChallenges, el, user);
+                done(true);
+                return;
+            }
+            done(false);
         });
     }
 
