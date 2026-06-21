@@ -102,6 +102,46 @@ test('consumable and crafting messages explain concrete effects and requirements
   assert.ok(/Helpers\.bpToPercent\(recipe\.manaCost/.test(craftingJs), 'recipe cards should show mana cost when mana blocks crafting');
 });
 
+test('crafting live UI routes through state-engine and checkpoints result', function () {
+  assert.ok(/function processCraftResult/.test(stateEngineJs), 'state engine should expose live craft path');
+  assert.ok(/processCraftResult: processCraftResult/.test(stateEngineJs), 'live craft path should be exported');
+  assert.ok(/StateEngine\.processCraftResult\(user, selectedRecipe, materialIds, character\.currentZone \|\| '', blockHash, blockNum\)/.test(craftingJs), 'crafting screen should process result through state engine');
+  assert.ok(!/var craftRes = CraftingSystem\.craft\(/.test(craftingJs), 'crafting UI must not mutate inventory directly');
+  assert.ok(/StateEngine\.saveCheckpoint\(function/.test(craftingJs), 'craft success should persist a checkpoint');
+});
+
+test('crafting replay consumes the selected material ids only once', function () {
+  assert.ok(/function craftWithMaterialIds/.test(read('app/js/engine/crafting.js')), 'crafting system should support exact material ids');
+  assert.ok(/data\.materials \|\| \[\]/.test(stateEngineJs), 'craft replay should read material ids from the action');
+  assert.ok(/CraftingSystem\.craftWithMaterialIds/.test(stateEngineJs), 'state-engine craft replay should use exact material ids');
+});
+
+test('crafting recipes have templates and obtainable materials', function () {
+  const context = { console, VizMagicConfig: { RARITY: { COMMON: 0, UNCOMMON: 1, RARE: 2, EPIC: 3, LEGENDARY: 4 } } };
+  vm.createContext(context);
+  vm.runInContext(read('app/js/engine/items.js'), context, { filename: 'items.js' });
+  vm.runInContext(read('app/js/data/recipes.js'), context, { filename: 'recipes.js' });
+  vm.runInContext(read('app/js/data/creatures.js'), context, { filename: 'creatures.js' });
+  context.GameRecipes.registerCraftedTemplates();
+  const recipes = context.GameRecipes.getAll();
+  const templates = context.ItemSystem.ITEM_TEMPLATES;
+  const lootSources = {};
+  Object.keys(context.GameCreatures.getAll()).forEach(function (creatureId) {
+    (context.GameCreatures.getAll()[creatureId].lootTable || []).forEach(function (drop) {
+      lootSources[drop.itemType] = true;
+    });
+  });
+  Object.keys(recipes).forEach(function (recipeId) {
+    const recipe = recipes[recipeId];
+    const output = recipe.outputTemplate || recipe.resultType || recipe.id;
+    assert.ok(templates[output], 'recipe output has no item template: ' + recipeId + ' -> ' + output);
+    (recipe.materials || []).forEach(function (mat) {
+      assert.ok(templates[mat.type], 'recipe material has no item template: ' + recipeId + ' needs ' + mat.type);
+      assert.ok(lootSources[mat.type], 'recipe material has no loot source: ' + mat.type);
+    });
+  });
+});
+
 test('inventory rows show textual rarity beside item names', function () {
   assert.ok(/var rarityName = t\('rarity_' \+ rInfo\.name\)/.test(inventoryJs), 'inventory should translate rarity name');
   assert.ok(/Helpers\.escapeHtml\(label\) \+ ' \(' \+ Helpers\.escapeHtml\(rarityName\)/.test(inventoryJs), 'inventory item name should include textual rarity');
@@ -189,7 +229,7 @@ test('high-traffic UI narration and inventory stat labels are translated', funct
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v21/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v22/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');

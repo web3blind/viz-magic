@@ -159,24 +159,63 @@ var CraftingSystem = (function() {
         };
     }
 
-    /**
-     * Execute a craft action
-     * @param {string} recipeId - recipe identifier
-     * @param {Object} character - CharacterState (will be mutated)
-     * @param {Array} inventory - inventory array (will be mutated)
-     * @param {string} location - current zone
-     * @param {string} blockHash - block hash for quality roll
-     * @param {number} blockNum - block number
-     * @param {string} account - crafter account
-     * @returns {Object} {success, item, quality, error, consumedIds}
-     */
-    function craft(recipeId, character, inventory, location, blockHash, blockNum, account) {
-        // Validate recipe
+    function _validateRecipeWithMaterialIds(recipeId, character, inventory, location, materialIds) {
         var validation = validateRecipe(recipeId, character, inventory, location);
         if (!validation.valid) {
-            return { success: false, error: validation.error, missing: validation.missing };
+            return validation;
         }
 
+        var recipe = validation.recipe;
+        var required = {};
+        var remaining = 0;
+        for (var r = 0; r < recipe.materials.length; r++) {
+            required[recipe.materials[r].type] = (required[recipe.materials[r].type] || 0) + recipe.materials[r].quantity;
+            remaining += recipe.materials[r].quantity;
+        }
+
+        if (!materialIds || materialIds.length !== remaining) {
+            return { valid: false, error: 'missing_materials', recipe: recipe };
+        }
+
+        var matchedMaterials = [];
+        var used = {};
+        for (var i = 0; i < materialIds.length; i++) {
+            var id = materialIds[i];
+            if (used[id]) {
+                return { valid: false, error: 'missing_materials', recipe: recipe };
+            }
+            used[id] = true;
+
+            var item = null;
+            for (var j = 0; j < inventory.length; j++) {
+                if (inventory[j].id === id) {
+                    item = inventory[j];
+                    break;
+                }
+            }
+
+            if (!item || item.consumed || item.equipped || !required[item.type]) {
+                return { valid: false, error: 'missing_materials', recipe: recipe };
+            }
+
+            required[item.type]--;
+            matchedMaterials.push(item);
+        }
+
+        for (var type in required) {
+            if (required.hasOwnProperty(type) && required[type] !== 0) {
+                return { valid: false, error: 'missing_materials', recipe: recipe };
+            }
+        }
+
+        return {
+            valid: true,
+            recipe: recipe,
+            matchedMaterials: matchedMaterials
+        };
+    }
+
+    function _craftFromValidation(validation, character, inventory, blockHash, blockNum, account) {
         var recipe = validation.recipe;
         var materials = validation.matchedMaterials;
 
@@ -218,6 +257,38 @@ var CraftingSystem = (function() {
             quality: quality,
             consumedIds: consumedIds
         };
+    }
+
+    /**
+     * Execute a craft action using any matching materials.
+     * @param {string} recipeId - recipe identifier
+     * @param {Object} character - CharacterState (will be mutated)
+     * @param {Array} inventory - inventory array (will be mutated)
+     * @param {string} location - current zone
+     * @param {string} blockHash - block hash for quality roll
+     * @param {number} blockNum - block number
+     * @param {string} account - crafter account
+     * @returns {Object} {success, item, quality, error, consumedIds}
+     */
+    function craft(recipeId, character, inventory, location, blockHash, blockNum, account) {
+        var validation = validateRecipe(recipeId, character, inventory, location);
+        if (!validation.valid) {
+            return { success: false, error: validation.error, missing: validation.missing };
+        }
+        return _craftFromValidation(validation, character, inventory, blockHash, blockNum, account);
+    }
+
+    /**
+     * Execute a craft action using the exact material item IDs recorded on-chain.
+     * This keeps replay deterministic and prevents a later replay from consuming a
+     * second set of matching materials after the live UI already applied the craft.
+     */
+    function craftWithMaterialIds(recipeId, character, inventory, location, blockHash, blockNum, account, materialIds) {
+        var validation = _validateRecipeWithMaterialIds(recipeId, character, inventory, location, materialIds || []);
+        if (!validation.valid) {
+            return { success: false, error: validation.error, missing: validation.missing };
+        }
+        return _craftFromValidation(validation, character, inventory, blockHash, blockNum, account);
     }
 
     /**
@@ -284,6 +355,7 @@ var CraftingSystem = (function() {
         calculateQuality: calculateQuality,
         validateRecipe: validateRecipe,
         craft: craft,
+        craftWithMaterialIds: craftWithMaterialIds,
         getAvailableRecipes: getAvailableRecipes,
         countMaterial: countMaterial
     };

@@ -27,6 +27,8 @@ var GameCreatures = (function() {
             zone: 'commons_first_light',
             lootTable: [
                 { itemType: 'fire_dust',     name: 'Fire Dust',     dropRate: 400 },
+                { itemType: 'sparkdust',     name: 'Sparkdust',     dropRate: 250 },
+                { itemType: 'sealwax',       name: 'Sealwax',       dropRate: 90 },
                 { itemType: 'health_scroll', name: 'Health Scroll', dropRate: 150 }
             ]
         },
@@ -45,6 +47,7 @@ var GameCreatures = (function() {
             zone: 'commons_first_light',
             lootTable: [
                 { itemType: 'shadow_shard',  name: 'Shadow Shard',  dropRate: 350 },
+                { itemType: 'chronicle_ink', name: 'Chronicle Ink', dropRate: 120 },
                 { itemType: 'health_scroll', name: 'Health Scroll', dropRate: 200 },
                 { itemType: 'lucky_charm',   name: 'Lucky Charm',   dropRate: 50 },
                 { itemType: 'echo_shards',   name: 'Echo Shards',   dropRate: 120 }
@@ -65,6 +68,7 @@ var GameCreatures = (function() {
             zone: 'commons_first_light',
             lootTable: [
                 { itemType: 'thorn_essence',    name: 'Thorn Essence',    dropRate: 300 },
+                { itemType: 'veilstone',         name: 'Veilstone',         dropRate: 140 },
                 { itemType: 'cloth_robe',       name: 'Cloth Robe',       dropRate: 100 },
                 { itemType: 'oak_wand',         name: 'Oak Wand',         dropRate: 80 },
                 { itemType: 'armageddon_stone', name: 'Armageddon Stone', dropRate: 5 }
@@ -86,6 +90,7 @@ var GameCreatures = (function() {
            lootTable: [
                 { itemType: 'ancient_shard', name: 'Ancient Echo Shard', dropRate: 300 },
                 { itemType: 'stone_tablet',  name: 'Weathered Stone Tablet', dropRate: 140 },
+                { itemType: 'aether_ore',    name: 'Aether Ore', dropRate: 80 },
                 { itemType: 'spirit_tunic',  name: 'Spirit Tunic', dropRate: 70 }
            ]
         },

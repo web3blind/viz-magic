@@ -848,10 +848,19 @@ var StateEngine = (function() {
         var inventory = worldState.inventories[sender];
         if (!character || !inventory) return [];
 
-        var result = CraftingSystem.craft(
-            data.recipe, character, inventory,
-            data.location || '', blockHash, blockNum, sender
-        );
+        var result;
+        if (typeof CraftingSystem.craftWithMaterialIds === 'function') {
+            result = CraftingSystem.craftWithMaterialIds(
+                data.recipe, character, inventory,
+                data.location || '', blockHash, blockNum, sender,
+                data.materials || []
+            );
+        } else {
+            result = CraftingSystem.craft(
+                data.recipe, character, inventory,
+                data.location || '', blockHash, blockNum, sender
+            );
+        }
 
         if (!result.success) {
             console.log('StateEngine: Craft failed for', sender, ':', result.error);
@@ -1227,6 +1236,27 @@ var StateEngine = (function() {
     }
 
     /**
+     * Process crafting for live UI — same authoritative mutation path as replay.
+     * @param {string} account
+     * @param {string} recipeId
+     * @param {Array} materialIds
+     * @param {string} location
+     * @param {string} blockHash
+     * @param {number} blockNum
+     * @returns {Object|null}
+     */
+    function processCraftResult(account, recipeId, materialIds, location, blockHash, blockNum) {
+        var data = {
+            recipe: recipeId,
+            materials: materialIds || [],
+            location: location || ''
+        };
+        var events = _handleCraft(account, data, blockNum || 0, blockHash || '');
+        if (!events.length) return null;
+        return events[0];
+    }
+
+    /**
      * Process Armageddon for live UI — same logic as _handleHuntArmageddon.
      * @param {string} account
      * @param {string} creatureId
@@ -1262,6 +1292,7 @@ var StateEngine = (function() {
         getInventory: getInventory,
         processHuntResult: processHuntResult,
         processMoveResult: processMoveResult,
+        processCraftResult: processCraftResult,
         processArmageddonResult: processArmageddonResult,
         reset: reset
     };

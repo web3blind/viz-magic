@@ -1,6 +1,6 @@
 # Viz Magic — remaining QA and hardening plan
 
-Updated: 2026-06-21 06:48 UTC
+Updated: 2026-06-21 07:32 UTC
 
 This file is the canonical handoff plan for the next Hermes session. It intentionally replaces the old `plan.md` contents.
 
@@ -107,7 +107,14 @@ PY
 
 ## Remaining work item 1 — Crafting E2E
 
-Status: not fully covered E2E.
+Status: locally covered with regression tests and browser fixture smoke; live VIZ broadcast not executed.
+
+2026-06-21 update:
+
+- Live crafting no longer mutates inventory directly in `CraftingScreen`; after successful `MarketProtocol.broadcastCraft(...)` it routes through `StateEngine.processCraftResult(...)` and saves a checkpoint.
+- Replay crafting now consumes the exact material item IDs from action data via `CraftingSystem.craftWithMaterialIds(...)`, preventing different matching materials from being consumed during later replay.
+- Recipe output templates and recipe material obtainability are covered by `tests/player-bug-regressions.test.js`.
+- Browser fixture smoke crafted one `mana_potion`, marked the three selected material IDs consumed, added exactly one crafted item, and confirmed checkpoint save was called. This was a local stubbed broadcast smoke, not a live-chain spend.
 
 Goal: verify crafting from UI through state-engine, inventory, material consumption, messages, and checkpoint persistence.
 
@@ -419,7 +426,7 @@ Suggested prompt for a new Hermes session:
 
 Mark items here as the next session completes them:
 
-- [ ] Crafting E2E
+- [x] Crafting E2E — local fixture + regression coverage; live-chain broadcast intentionally not spent
 - [ ] Marketplace E2E
 - [ ] Two-browser Guild smoke
 - [ ] Two-browser Arena smoke

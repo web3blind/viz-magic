@@ -497,22 +497,40 @@ var CraftingScreen = (function() {
                 return;
             }
 
-            // Simulate local craft result (actual state updated from block processing)
+            // Apply local craft result through StateEngine so live play and replay share one mutation path.
             var worldState = StateEngine.getState();
-            var blockHash = 'sim_' + Date.now().toString(16);
-            var blockNum = worldState.headBlock + 1;
+            var blockNum = (result && result.block_num) || (result && result.action && result.action.block_num) || (worldState.headBlock + 1);
+            var blockHash = (result && (result.block_id || result.id || result.transaction_id)) ||
+                (result && result.action && (result.action.block_id || result.action.id || result.action.transaction_id)) ||
+                ('sim_' + Date.now().toString(16));
 
-            var craftRes = CraftingSystem.craft(
-                selectedRecipe, character, inventory,
-                character.currentZone || '', blockHash, blockNum, user
-            );
+            var craftEvent = StateEngine.processCraftResult(user, selectedRecipe, materialIds, character.currentZone || '', blockHash, blockNum);
 
-            if (craftRes.success) {
-                craftResult = craftRes;
+            if (craftEvent) {
+                craftResult = {
+                    item: {
+                        id: craftEvent.itemId,
+                        type: craftEvent.itemType,
+                        rarity: craftEvent.rarity,
+                        stats: (function() {
+                            var inv = StateEngine.getInventory(user);
+                            for (var ii = 0; ii < inv.length; ii++) {
+                                if (inv[ii].id === craftEvent.itemId) return inv[ii].stats || null;
+                            }
+                            return null;
+                        })()
+                    },
+                    quality: {
+                        rarity: craftEvent.rarity,
+                        rarityName: craftEvent.rarityName
+                    },
+                    consumedIds: craftEvent.consumedIds || []
+                };
+                StateEngine.saveCheckpoint(function() {});
                 SoundManager.play('victory');
                 SoundManager.vibrate('loot');
             } else {
-                Toast.error(t('craft_error_' + (craftRes.error || 'unknown')));
+                Toast.error(t('craft_error_unknown'));
                 SoundManager.play('error');
             }
 
