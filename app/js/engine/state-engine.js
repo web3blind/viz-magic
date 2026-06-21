@@ -355,6 +355,9 @@ var StateEngine = (function() {
             case 'quest.complete':
                 events = events.concat(_handleQuestComplete(sender, action.data, blockNum));
                 break;
+            case 'quest.abandon':
+                events = events.concat(_handleQuestAbandon(sender, action.data, blockNum));
+                break;
 
             // --- Phase 5: Boss attack ---
             case 'boss.attack':
@@ -1070,11 +1073,16 @@ var StateEngine = (function() {
         _ensureQuests(sender);
         var character = worldState.characters[sender];
         if (!character) return [];
-        var questData = GameQuests.getQuest(data.quest_id);
+        var questData;
+        if (data && data.daily) {
+            questData = QuestSystem.generateDailyProphecy(data.daily_block || blockNum, character.level);
+        } else {
+            questData = GameQuests.getQuest(data.quest_id);
+        }
         if (!questData) return [];
         var result = QuestSystem.acceptQuest(questData, character, worldState.quests[sender], blockNum);
         if (!result.success) return [];
-        return [{ type: 'quest_accepted', account: sender, questId: data.quest_id, blockNum: blockNum }];
+        return [{ type: 'quest_accepted', account: sender, questId: questData.id, daily: !!(data && data.daily), blockNum: blockNum }];
     }
 
     function _handleQuestComplete(sender, data, blockNum) {
@@ -1086,6 +1094,14 @@ var StateEngine = (function() {
         var result = QuestSystem.completeQuest(data.quest_id, worldState.quests[sender], character, inventory, blockNum);
         if (!result.success) return [];
         return [{ type: 'quest_completed', account: sender, questId: data.quest_id, rewards: result.rewards, blockNum: blockNum }];
+    }
+
+    function _handleQuestAbandon(sender, data, blockNum) {
+        if (typeof QuestSystem === 'undefined') return [];
+        _ensureQuests(sender);
+        var ok = QuestSystem.abandonQuest(data.quest_id, worldState.quests[sender]);
+        if (!ok) return [];
+        return [{ type: 'quest_abandoned', account: sender, questId: data.quest_id, blockNum: blockNum }];
     }
 
     function _handleBossAttack(sender, data, blockNum, blockHash) {
@@ -1316,6 +1332,25 @@ var StateEngine = (function() {
         return events[0];
     }
 
+    function processQuestAcceptResult(account, questId, daily, dailyBlock, blockNum) {
+        var data = { quest_id: questId || '', daily: !!daily, daily_block: dailyBlock || 0 };
+        var events = _handleQuestAccept(account, data, blockNum || 0);
+        if (!events.length) return null;
+        return events[0];
+    }
+
+    function processQuestCompleteResult(account, questId, blockNum) {
+        var events = _handleQuestComplete(account, { quest_id: questId }, blockNum || 0);
+        if (!events.length) return null;
+        return events[0];
+    }
+
+    function processQuestAbandonResult(account, questId, blockNum) {
+        var events = _handleQuestAbandon(account, { quest_id: questId }, blockNum || 0);
+        if (!events.length) return null;
+        return events[0];
+    }
+
     /**
      * Process Armageddon for live UI — same logic as _handleHuntArmageddon.
      * @param {string} account
@@ -1356,6 +1391,9 @@ var StateEngine = (function() {
         processMarketListResult: processMarketListResult,
         processMarketCancelResult: processMarketCancelResult,
         processMarketBuyResult: processMarketBuyResult,
+        processQuestAcceptResult: processQuestAcceptResult,
+        processQuestCompleteResult: processQuestCompleteResult,
+        processQuestAbandonResult: processQuestAbandonResult,
         processArmageddonResult: processArmageddonResult,
         reset: reset
     };

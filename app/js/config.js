@@ -181,6 +181,7 @@ var VizMagicConfig = (function() {
         // Phase 5: Quests & Boss
         QUEST_ACCEPT:   'quest.accept',
         QUEST_COMPLETE: 'quest.complete',
+        QUEST_ABANDON:  'quest.abandon',
         BOSS_ATTACK:    'boss.attack',
         // Guild discovery
         GUILD_LISTING:  'guild.listing'

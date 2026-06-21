@@ -207,6 +207,19 @@ var VizBroadcast = (function() {
     }
 
     /**
+     * Broadcast quest action (accept / complete / abandon) as a VM custom op.
+     * @param {string} type
+     * @param {Object} data
+     * @param {Function} callback
+     */
+    function questAction(type, data, callback) {
+        gameAction({
+            t: type,
+            d: data || {}
+        }, callback);
+    }
+
+    /**
      * Update account metadata (Grimoire)
      * @param {string} jsonMetadata - JSON string
      * @param {Function} callback
@@ -294,6 +307,7 @@ var VizBroadcast = (function() {
         gameAction: gameAction,
         huntAction: huntAction,
         armageddonAction: armageddonAction,
+        questAction: questAction,
         updateMetadata: updateMetadata,
         chroniclePost: chroniclePost,
         delegateShares: delegateShares,

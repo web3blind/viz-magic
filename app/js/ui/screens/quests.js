@@ -286,14 +286,7 @@ var QuestsScreen = (function() {
                 }
 
                 if (questData) {
-                    var result = QuestSystem.acceptQuest(questData, character, playerQuests, blockNum);
-                    if (result.success) {
-                        SoundManager.play('quest_accept');
-                        Toast.success(Helpers.t('quest_accepted'));
-                        render();
-                    } else {
-                        Toast.error(Helpers.t('quest_error_' + result.error));
-                    }
+                    _broadcastQuestAction('accept', questId, isDaily, blockNum);
                 }
             });
         }
@@ -303,14 +296,7 @@ var QuestsScreen = (function() {
         for (var j = 0; j < completeBtns.length; j++) {
             completeBtns[j].addEventListener('click', function() {
                 var questId = this.getAttribute('data-quest-id');
-                var user = VizAccount.getCurrentUser();
-                var inventory = StateEngine.getInventory(user);
-                var result = QuestSystem.completeQuest(questId, playerQuests, character, inventory, blockNum);
-                if (result.success) {
-                    SoundManager.play('quest_complete');
-                    Toast.success(Helpers.t('quest_completed') + ' +' + result.rewards.xp + ' XP');
-                    render();
-                }
+                _broadcastQuestAction('complete', questId, false, blockNum);
             });
         }
 
@@ -319,11 +305,59 @@ var QuestsScreen = (function() {
         for (var k = 0; k < abandonBtns.length; k++) {
             abandonBtns[k].addEventListener('click', function() {
                 var questId = this.getAttribute('data-quest-id');
-                QuestSystem.abandonQuest(questId, playerQuests);
-                Toast.info(Helpers.t('quest_abandoned'));
-                render();
+                _broadcastQuestAction('abandon', questId, false, blockNum);
             });
         }
+    }
+
+    function _broadcastQuestAction(kind, questId, isDaily, dailyBlock) {
+        var cfg = VizMagicConfig;
+        var type = cfg.ACTION_TYPES.QUEST_ACCEPT;
+        if (kind === 'complete') type = cfg.ACTION_TYPES.QUEST_COMPLETE;
+        if (kind === 'abandon') type = cfg.ACTION_TYPES.QUEST_ABANDON;
+        var data = { quest_id: questId || '' };
+        if (isDaily) {
+            data.daily = true;
+            data.daily_block = dailyBlock || 0;
+        }
+
+        VizBroadcast.questAction(type, data, function(err, result) {
+            if (err) {
+                Toast.error(Helpers.t('error_network'));
+                return;
+            }
+
+            var user = VizAccount.getCurrentUser();
+            var finalBlockNum = (result && result.block_num) ||
+                (result && result.action && result.action.block_num) ||
+                (StateEngine.getState().headBlock || 0);
+            var event = null;
+            if (kind === 'accept') {
+                event = StateEngine.processQuestAcceptResult(user, questId, isDaily, dailyBlock, finalBlockNum);
+            } else if (kind === 'complete') {
+                event = StateEngine.processQuestCompleteResult(user, questId, finalBlockNum);
+            } else if (kind === 'abandon') {
+                event = StateEngine.processQuestAbandonResult(user, questId, finalBlockNum);
+            }
+
+            if (!event) {
+                Toast.error(Helpers.t('error_network'));
+                return;
+            }
+
+            StateEngine.getState().headBlock = finalBlockNum;
+            CheckpointSystem.saveCheckpoint('global', finalBlockNum, StateEngine.getState(), function() {});
+            if (kind === 'complete') {
+                SoundManager.play('quest_complete');
+                Toast.success(Helpers.t('quest_completed'));
+            } else if (kind === 'abandon') {
+                Toast.info(Helpers.t('quest_abandoned'));
+            } else {
+                SoundManager.play('quest_accept');
+                Toast.success(Helpers.t('quest_accepted'));
+            }
+            render();
+        });
     }
 
     function _describeObjective(obj, t) {
