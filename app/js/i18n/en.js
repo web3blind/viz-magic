@@ -94,6 +94,7 @@ var LangEN = {
     nav_character: 'Character',
     nav_hunt: 'Hunt',
     nav_bag: 'Bag',
+    nav_inventory: 'Bag',
     nav_chronicle: 'Chronicle',
     nav_arena: 'Arena',
 
@@ -711,6 +712,7 @@ var LangEN = {
     nav_quests: 'Quests',
     nav_boss: 'Boss',
     nav_settings: 'Settings',
+    'nav_world-boss': 'World Boss',
 
     // Seasons
     season_spring: 'Spring',

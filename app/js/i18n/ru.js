@@ -94,6 +94,7 @@ var LangRU = {
     nav_character: 'Персонаж',
     nav_hunt: 'Охота',
     nav_bag: 'Сумка',
+    nav_inventory: 'Сумка',
     nav_chronicle: 'Хроника',
     nav_arena: 'Арена',
 
@@ -711,6 +712,7 @@ var LangRU = {
     nav_quests: 'Задания',
     nav_boss: 'Босс',
     nav_settings: 'Настройки',
+    'nav_world-boss': 'Мировой босс',
 
     // Seasons
     season_spring: 'Весна',

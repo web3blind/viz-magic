@@ -90,7 +90,7 @@ async function run() {
     var badLogs = logs.filter(function(l) { return l.type === 'error' || l.type === 'pageerror'; });
     assert.deepStrictEqual(failed, [], 'all core screens should render with named controls and no raw keys');
     assert.deepStrictEqual(badLogs, [], 'core screen smoke should not emit console errors/page errors');
-    assert.ok(result.cachesKeys.indexOf('viz-magic-v27') !== -1, 'service worker cache should use latest cache name');
+    assert.ok(result.cachesKeys.indexOf('viz-magic-v28') !== -1, 'service worker cache should use latest cache name');
     assert.ok(result.scripts.some(function(src) { return src.indexOf('helpers.js?v=20260621l') !== -1; }), 'helpers script should be cache-busted');
     assert.ok(result.scripts.some(function(src) { return src.indexOf('territory.js?v=20260621l') !== -1; }), 'territory script should be cache-busted');
     assert.ok(result.scripts.some(function(src) { return src.indexOf('state-engine.js?v=20260621m') !== -1; }), 'state engine script should be cache-busted');

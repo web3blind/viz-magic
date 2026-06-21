@@ -316,8 +316,13 @@ test('archive-backed guilds normalize missing optional arrays and rerender visib
   assert.ok(/getAttribute\('aria-hidden'\) !== 'true'/.test(guildJs), 'aria-hidden="false" should count as visible');
 });
 
-test('high-traffic UI narration and inventory stat labels are translated', function () {
-  ['char_level_up', 'stat_pot', 'stat_res', 'stat_swf', 'stat_int', 'stat_for', 'duel_narrator_pre', 'duel_narrator_seal', 'duel_narrator_sealed', 'duel_narrator_waiting', 'duel_narrator_reveal'].forEach(function (key) {
+test('high-traffic UI narration, screen announcements, and inventory stat labels are translated', function () {
+  [
+    'char_level_up', 'stat_pot', 'stat_res', 'stat_swf', 'stat_int', 'stat_for',
+    'duel_narrator_pre', 'duel_narrator_seal', 'duel_narrator_sealed',
+    'duel_narrator_waiting', 'duel_narrator_reveal',
+    'nav_inventory', "'nav_world-boss'"
+  ].forEach(function (key) {
     assert.ok(enJs.indexOf(key + ':') !== -1, 'English translation missing: ' + key);
     assert.ok(ruJs.indexOf(key + ':') !== -1, 'Russian translation missing: ' + key);
   });
@@ -327,7 +332,7 @@ test('high-traffic UI narration and inventory stat labels are translated', funct
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v27/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v28/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
