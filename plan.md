@@ -1,6 +1,6 @@
 # Viz Magic — remaining QA and hardening plan
 
-Updated: 2026-06-21 07:32 UTC
+Updated: 2026-06-21 07:50 UTC
 
 This file is the canonical handoff plan for the next Hermes session. It intentionally replaces the old `plan.md` contents.
 
@@ -165,7 +165,16 @@ Acceptance criteria:
 
 ## Remaining work item 2 — Marketplace E2E
 
-Status: known implementation claims exist, but not recently verified end-to-end in this session.
+Status: locally covered with state-engine regression and browser fixture smoke; live VIZ broadcast/two-account buy not executed.
+
+2026-06-21 update:
+
+- Marketplace state is now anchored to `worldState.marketplace`: `_ensureMarketplace()` passes the checkpoint/replay object into `MarketplaceEngine`, and list/cancel/buy sync back via `_syncMarketplaceState()`.
+- Live marketplace success paths now use exported `StateEngine.processMarketListResult(...)`, `processMarketCancelResult(...)`, and `processMarketBuyResult(...)` instead of only optimistic UI refresh/pending state.
+- Successful live marketplace mutations call `StateEngine.saveCheckpoint(function() {})`.
+- `app/index.html` cache-busts `state-engine.js` and `marketplace.js`; `app/sw.js` was bumped to `viz-magic-v24`.
+- Regression coverage: `marketplace state is mirrored into world state for checkpoints`, `marketplace live UI routes successful actions through state-engine and checkpoints`, and `marketplace sell and buy replay transfers item without duplication`.
+- Browser fixture smoke (`/tmp/vizmagic_marketplace_smoke.js`) verified list → checkpoint-like marketplace reload → buy: seller inventory becomes empty, buyer receives exactly one `browser_oak_wand`, listing becomes `sold`, history length is 1, checkpoint hook was called.
 
 Goal: verify sell, listing display, buy, item transfer, listing sold state, and accessibility copy.
 

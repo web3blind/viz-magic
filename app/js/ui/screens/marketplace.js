@@ -369,6 +369,11 @@ var MarketplaceScreen = (function() {
                                 Toast.error(t('market_buy_error'));
                                 SoundManager.play('error');
                             } else {
+                                var user = typeof VizAccount !== 'undefined' ? VizAccount.getCurrentUser() : '';
+                                var blockNum = _resultBlockNum(result);
+                                if (user && StateEngine.processMarketBuyResult(user, listingRef, blockNum)) {
+                                    StateEngine.saveCheckpoint(function() {});
+                                }
                                 Toast.success(t('market_bought'));
                                 SoundManager.play('equip');
                                 SoundManager.vibrate('loot');
@@ -392,11 +397,16 @@ var MarketplaceScreen = (function() {
     function _handleCancel(listingRef) {
         var t = Helpers.t;
         SoundManager.play('tap');
-        MarketProtocol.broadcastCancel(listingRef, function(err) {
+        MarketProtocol.broadcastCancel(listingRef, function(err, result) {
             if (err) {
                 Toast.error(t('market_cancel_error'));
                 SoundManager.play('error');
             } else {
+                var user = typeof VizAccount !== 'undefined' ? VizAccount.getCurrentUser() : '';
+                var blockNum = _resultBlockNum(result);
+                if (user && StateEngine.processMarketCancelResult(user, listingRef, blockNum)) {
+                    StateEngine.saveCheckpoint(function() {});
+                }
                 Toast.success(t('market_cancelled'));
                 render();
             }
@@ -418,18 +428,31 @@ var MarketplaceScreen = (function() {
             return;
         }
 
+        var user = typeof VizAccount !== 'undefined' ? VizAccount.getCurrentUser() : '';
         SoundManager.play('tap');
         MarketProtocol.broadcastList(itemId, price, 0, function(err, result) {
             if (err) {
                 Toast.error(t('market_list_error'));
                 SoundManager.play('error');
             } else {
-                _addPendingListing(itemId, price, result);
+                var blockNum = _resultBlockNum(result);
+                if (user && StateEngine.processMarketListResult(user, itemId, price, 0, blockNum)) {
+                    StateEngine.saveCheckpoint(function() {});
+                } else {
+                    _addPendingListing(itemId, price, result);
+                }
                 Toast.success(t('market_listed'));
                 SoundManager.play('success');
                 render();
             }
         });
+    }
+
+    function _resultBlockNum(result) {
+        var state = StateEngine.getState();
+        return (result && result.block_num) ||
+            (result && result.action && result.action.block_num) ||
+            (state.headBlock + 1);
     }
 
     function _getDisplayListings(filters) {

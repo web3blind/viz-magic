@@ -1269,6 +1269,29 @@ var StateEngine = (function() {
         return events[0];
     }
 
+    function processMarketListResult(account, itemRef, price, expiresBlock, blockNum) {
+        var data = {
+            item_ref: itemRef,
+            price: price | 0,
+            expires_block: expiresBlock | 0
+        };
+        var events = _handleMarketList(account, data, blockNum || 0);
+        if (!events.length) return null;
+        return events[0];
+    }
+
+    function processMarketCancelResult(account, listingRef, blockNum) {
+        var events = _handleMarketCancel(account, { listing_ref: listingRef }, blockNum || 0);
+        if (!events.length) return null;
+        return events[0];
+    }
+
+    function processMarketBuyResult(account, listingRef, blockNum) {
+        var events = _handleMarketBuy(account, { listing_ref: listingRef }, blockNum || 0);
+        if (!events.length) return null;
+        return events[0];
+    }
+
     /**
      * Process Armageddon for live UI — same logic as _handleHuntArmageddon.
      * @param {string} account
@@ -1306,6 +1329,9 @@ var StateEngine = (function() {
         processHuntResult: processHuntResult,
         processMoveResult: processMoveResult,
         processCraftResult: processCraftResult,
+        processMarketListResult: processMarketListResult,
+        processMarketCancelResult: processMarketCancelResult,
+        processMarketBuyResult: processMarketBuyResult,
         processArmageddonResult: processArmageddonResult,
         reset: reset
     };

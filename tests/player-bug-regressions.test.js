@@ -27,6 +27,20 @@ function loadQuestSystem() {
   return context;
 }
 
+function loadMarketplaceStateEngine() {
+  const context = {
+    console,
+    ActionValidator: {
+      validate: function () { return { valid: true }; }
+    }
+  };
+  vm.createContext(context);
+  vm.runInContext(read('app/js/config.js'), context, { filename: 'config.js' });
+  vm.runInContext(read('app/js/engine/marketplace.js'), context, { filename: 'marketplace.js' });
+  vm.runInContext(read('app/js/engine/state-engine.js'), context, { filename: 'state-engine.js' });
+  return context;
+}
+
 const appJs = read('app/js/ui/app.js');
 const toastJs = read('app/js/ui/components/toast.js');
 const craftingJs = read('app/js/ui/screens/crafting.js');
@@ -39,6 +53,7 @@ const questScreenJs = read('app/js/ui/screens/quests.js');
 const guildJs = read('app/js/ui/screens/guild.js');
 const leaderboardJs = read('app/js/ui/screens/leaderboard.js');
 const characterJs = read('app/js/ui/screens/character.js');
+const marketplaceJs = read('app/js/ui/screens/marketplace.js');
 const stateEngineJs = read('app/js/engine/state-engine.js');
 const questsJs = read('app/js/data/quests.js');
 const indexHtml = read('app/index.html');
@@ -124,6 +139,79 @@ test('marketplace state is mirrored into world state for checkpoints', function 
   assert.ok(/_handleMarketList[\s\S]*_syncMarketplaceState\(\)/.test(stateEngine), 'market list should sync after successful mutation');
   assert.ok(/_handleMarketCancel[\s\S]*_syncMarketplaceState\(\)/.test(stateEngine), 'market cancel should sync after successful mutation');
   assert.ok(/_handleMarketBuy[\s\S]*_syncMarketplaceState\(\)/.test(stateEngine), 'market buy should sync after successful mutation');
+});
+
+test('marketplace live UI routes successful actions through state-engine and checkpoints', function () {
+  assert.ok(/function processMarketListResult/.test(stateEngineJs), 'state engine should expose live market list path');
+  assert.ok(/function processMarketCancelResult/.test(stateEngineJs), 'state engine should expose live market cancel path');
+  assert.ok(/function processMarketBuyResult/.test(stateEngineJs), 'state engine should expose live market buy path');
+  assert.ok(/processMarketListResult: processMarketListResult/.test(stateEngineJs), 'live market list path should be exported');
+  assert.ok(/processMarketCancelResult: processMarketCancelResult/.test(stateEngineJs), 'live market cancel path should be exported');
+  assert.ok(/processMarketBuyResult: processMarketBuyResult/.test(stateEngineJs), 'live market buy path should be exported');
+  assert.ok(/StateEngine\.processMarketListResult\(user, itemId, price, 0, blockNum\)/.test(marketplaceJs), 'marketplace list success should use state engine');
+  assert.ok(/StateEngine\.processMarketBuyResult\(user, listingRef, blockNum\)/.test(marketplaceJs), 'marketplace buy success should use state engine');
+  assert.ok(/StateEngine\.processMarketCancelResult\(user, listingRef, blockNum\)/.test(marketplaceJs), 'marketplace cancel success should use state engine');
+  assert.ok(/StateEngine\.saveCheckpoint\(function/.test(marketplaceJs), 'marketplace live success should save checkpoints');
+});
+
+test('marketplace sell and buy replay transfers item without duplication', function () {
+  const context = loadMarketplaceStateEngine();
+  const AT = context.VizMagicConfig.ACTION_TYPES;
+  const state = context.StateEngine.getState();
+  state.characters.seller = { level: 3 };
+  state.characters.buyer = { level: 3 };
+  state.inventories.seller = [{
+    id: '100_oak_wand',
+    type: 'oak_wand',
+    rarity: 0,
+    owner: 'seller',
+    equipped: false,
+    consumed: false,
+    listed: false,
+    stats: { int: 1 }
+  }];
+  state.inventories.buyer = [];
+
+  const listEvents = context.StateEngine.processBlock({
+    blockNum: 200,
+    blockHash: 'market-list-hash',
+    vmActions: [{
+      sender: 'seller',
+      action: { type: AT.MARKET_LIST, data: { item_ref: '100_oak_wand', price: 7, expires_block: 0 } }
+    }],
+    voicePosts: [],
+    awards: []
+  });
+
+  assert.strictEqual(listEvents.length, 1, 'listing should emit one event');
+  assert.strictEqual(listEvents[0].type, 'market_listed', 'listing event type should be market_listed');
+  assert.strictEqual(state.inventories.seller[0].listed, true, 'seller item should be marked listed');
+  assert.ok(state.marketplace.listings['200_100_oak_wand'], 'listing should be stored in world state marketplace');
+
+  const checkpointMarketplace = JSON.parse(JSON.stringify(state.marketplace));
+  context.MarketplaceEngine.setMarketState({ listings: {}, history: [], priceHistory: {} });
+  state.marketplace = checkpointMarketplace;
+
+  const buyEvents = context.StateEngine.processBlock({
+    blockNum: 201,
+    blockHash: 'market-buy-hash',
+    vmActions: [{
+      sender: 'buyer',
+      action: { type: AT.MARKET_BUY, data: { listing_ref: '200_100_oak_wand' } }
+    }],
+    voicePosts: [],
+    awards: []
+  });
+
+  assert.strictEqual(buyEvents.length, 1, 'buy should emit one event after marketplace replay from checkpoint state');
+  assert.strictEqual(buyEvents[0].type, 'market_sold', 'buy event type should be market_sold');
+  assert.strictEqual(state.inventories.seller.length, 0, 'seller inventory should no longer contain sold item');
+  assert.strictEqual(state.inventories.buyer.length, 1, 'buyer inventory should contain exactly one item');
+  assert.strictEqual(state.inventories.buyer[0].id, '100_oak_wand', 'buyer should receive the exact item id');
+  assert.strictEqual(state.inventories.buyer[0].owner, 'buyer', 'transferred item owner should be buyer');
+  assert.strictEqual(state.inventories.buyer[0].listed, false, 'transferred item should not remain listed');
+  assert.strictEqual(state.marketplace.listings['200_100_oak_wand'].state, 'sold', 'listing should be marked sold in world state');
+  assert.strictEqual(state.marketplace.history.length, 1, 'sale should be recorded once in market history');
 });
 
 test('crafting recipes have templates and obtainable materials', function () {
@@ -239,7 +327,7 @@ test('high-traffic UI narration and inventory stat labels are translated', funct
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v23/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v24/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
