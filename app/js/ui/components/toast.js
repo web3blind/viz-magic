@@ -13,7 +13,12 @@ var Toast = (function() {
             container.id = 'toast-container';
             container.setAttribute('aria-live', 'polite');
             container.setAttribute('role', 'status');
-            document.body.appendChild(container);
+            var appMain = document.getElementById('app-main');
+            if (appMain && appMain.parentNode) {
+                appMain.parentNode.insertBefore(container, appMain);
+            } else {
+                document.body.appendChild(container);
+            }
         }
         return container;
     }

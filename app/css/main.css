@@ -307,7 +307,7 @@ body {
 
 /* Toast */
 #toast-container {
-    position: fixed;
+    position: sticky;
     top: 0;
     left: 0;
     right: 0;
@@ -353,11 +353,14 @@ body {
 
 /* Connection status */
 #connection-status {
-    position: fixed;
-    top: 8px;
-    left: 50%;
-    transform: translate(-50%, -120%);
+    position: sticky;
+    top: 0;
+    left: auto;
+    right: auto;
+    transform: none;
+    display: none;
     text-align: center;
+    margin: 6px auto 0;
     padding: 6px 12px;
     background: rgba(13, 17, 23, 0.88);
     color: var(--color-text-muted);
@@ -366,16 +369,18 @@ body {
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 999px;
     z-index: 300;
-    transition: transform 0.25s ease, opacity 0.25s ease;
+    transition: opacity 0.25s ease;
     opacity: 0;
     pointer-events: none;
-    white-space: nowrap;
+    white-space: normal;
+    width: max-content;
     max-width: calc(100vw - 24px);
     overflow: hidden;
     text-overflow: ellipsis;
 }
 #connection-status.show {
-    transform: translate(-50%, 0);
+    display: block;
+    transform: none;
     opacity: 1;
 }
 
@@ -1030,8 +1035,21 @@ body {
 /* Quest Screen */
 .quests-screen { max-width: 480px; margin: 0 auto; }
 .quests-screen h1 { margin-bottom: 16px; }
-.quest-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-.quest-tabs .btn { flex: 1; min-width: 70px; }
+.quest-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.quest-tabs .btn {
+    width: 100%;
+    min-width: 0;
+    min-height: var(--touch-target);
+    padding: 8px 6px;
+    white-space: normal;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+}
 .quest-tabs .btn.active { background: var(--color-primary); color: #000; }
 
 .quest-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }

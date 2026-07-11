@@ -1,5 +1,5 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v29';
+var CACHE_NAME = 'viz-magic-v30';
 var ASSETS = [
     '/',
     '/index.html',
