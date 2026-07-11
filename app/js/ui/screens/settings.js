@@ -16,6 +16,17 @@ var SettingsScreen = (function() {
         return !!fallback;
     }
 
+    function _getStoredNumber(key, fallback) {
+        try {
+            var value = localStorage.getItem(STORAGE_PREFIX + key);
+            if (value !== null && value !== '') {
+                var num = parseFloat(value);
+                if (!isNaN(num)) return num;
+            }
+        } catch (e) {}
+        return fallback;
+    }
+
     function _setStoredBool(key, value) {
         try {
             localStorage.setItem(STORAGE_PREFIX + key, value ? '1' : '0');
@@ -31,6 +42,8 @@ var SettingsScreen = (function() {
         var currentLang = Helpers.getCurrentLang ? Helpers.getCurrentLang() : 'ru';
         var highContrast = _getStoredBool('high_contrast', false);
         var reducedMotion = _getStoredBool('reduced_motion', false);
+        var sfxVolume = Math.round(_getStoredNumber('sfx_volume', 0.5) * 100);
+        if (typeof SoundManager !== 'undefined') SoundManager.setVolume(sfxVolume / 100);
 
         el.innerHTML =
             '<div class="settings-screen">' +
@@ -48,7 +61,7 @@ var SettingsScreen = (function() {
                 // Sound
                 '<section class="settings-section" aria-label="' + t('settings_sound') + '">' +
                     '<h2>' + t('settings_sound') + '</h2>' +
-                    _renderSlider('sfx-volume', t('settings_sfx'), 50) +
+                    _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume) +
                     _renderSlider('music-volume', t('settings_music'), 50) +
                     _renderToggle('narrator-toggle', t('narrator_toggle'), true) +
                     '<div class="settings-field">' +

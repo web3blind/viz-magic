@@ -335,7 +335,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v30/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v31/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -375,10 +375,14 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/nav_bazaar/.test(homeJs) && /nav_crafting/.test(homeJs), 'home primary labels should reuse bottom-nav translation keys');
   assert.ok(/actionType === 'chronicle_post'[\s\S]*_normalizeDedupeText/.test(chronicleJs), 'chronicle post dedupe should ignore temporary block numbers');
   assert.ok(/insertBefore\(container, appMain\)/.test(toastJs), 'toast strip should be inserted before app-main so it does not cover headings');
-  assert.ok(/#connection-status[\s\S]*position:\s*sticky/.test(mainCss), 'connection status should stay in normal flow instead of covering headings');
-  assert.ok(/\.quest-tabs[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/.test(mainCss), 'quest tabs should render as a two-column mobile grid');
+  assert.ok(/#connection-status[\s\S]*position:\s*static/.test(mainCss), 'connection status should stay in normal flow instead of covering headings');
+  assert.ok(/\.quest-tabs[\s\S]*grid-template-columns:\s*1fr/.test(mainCss), 'quest tabs should render as one full-width column on mobile');
   assert.ok(/role', type === 'error' \? 'alert' : 'status'/.test(toastJs), 'only errors should be assertive toast alerts');
-  assert.ok(/viz-magic-v30/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/function _getStoredNumber/.test(read('app/js/ui/screens/settings.js')), 'settings should read stored sound slider values');
+  assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
+  assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
+  assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
+  assert.ok(/viz-magic-v31/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 if (process.exitCode) {

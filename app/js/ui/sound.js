@@ -5,9 +5,22 @@
 var SoundManager = (function() {
     'use strict';
 
+    var STORAGE_PREFIX = (typeof VizMagicConfig !== 'undefined' && VizMagicConfig.STORAGE_PREFIX) ? VizMagicConfig.STORAGE_PREFIX : 'viz_magic_';
+
+    function _getStoredNumber(key, fallback) {
+        try {
+            var value = localStorage.getItem(STORAGE_PREFIX + key);
+            if (value !== null && value !== '') {
+                var num = parseFloat(value);
+                if (!isNaN(num)) return num;
+            }
+        } catch (e) {}
+        return fallback;
+    }
+
     var audioCtx = null;
     var enabled = true;
-    var volume = 0.5;
+    var volume = _getStoredNumber('sfx_volume', 0.5);
     var sounds = {};
 
     /**
@@ -27,7 +40,7 @@ var SoundManager = (function() {
      * @param {string} soundId
      */
     function play(soundId) {
-        if (!enabled) return;
+        if (!enabled || volume <= 0) return;
         // Lazily initialize on first play call — this always happens inside a user gesture
         if (!audioCtx) init();
         if (!audioCtx) return;
@@ -641,6 +654,9 @@ var SoundManager = (function() {
      */
     function setVolume(vol) {
         volume = Math.max(0, Math.min(1, vol));
+        try {
+            localStorage.setItem(STORAGE_PREFIX + 'sfx_volume', String(volume));
+        } catch (e) {}
     }
 
     /**
