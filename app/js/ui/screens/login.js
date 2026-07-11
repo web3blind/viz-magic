@@ -17,18 +17,26 @@ var LoginScreen = (function() {
                 '<form id="login-form" class="login-form">' +
                     '<div class="form-group">' +
                         '<label for="login-account">' + t('login_account_label') + '</label>' +
-                        '<input type="text" id="login-account" class="input" ' +
+                        '<input type="text" id="login-account" class="input-field" ' +
                             'placeholder="' + t('login_account_placeholder') + '" ' +
-                            'autocomplete="username" autocapitalize="none" spellcheck="false" ' +
+                            'autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" ' +
                             'aria-label="' + t('login_account_label') + '">' +
                     '</div>' +
                     '<div class="form-group">' +
                         '<label for="login-key">' + t('login_key_label') + '</label>' +
-                        '<input type="password" id="login-key" class="input" ' +
+                        '<input type="password" id="login-key" class="input-field" ' +
                             'placeholder="' + t('login_key_placeholder') + '" ' +
-                            'autocomplete="current-password" ' +
+                            'autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" ' +
                             'aria-label="' + t('login_key_label') + '">' +
+                        '<div class="login-key-actions" aria-label="' + t('login_key_actions') + '">' +
+                            '<button type="button" class="btn btn-secondary btn-sm" id="btn-login-paste-key">' + t('login_paste_key') + '</button>' +
+                            '<button type="button" class="btn btn-secondary btn-sm" id="btn-login-toggle-key">' + t('login_show_key') + '</button>' +
+                        '</div>' +
                     '</div>' +
+                    '<details class="login-help">' +
+                        '<summary>' + t('login_keyboard_help') + '</summary>' +
+                        '<p>' + t('login_keyboard_help_text') + '</p>' +
+                    '</details>' +
                     '<div id="login-error" class="error-message" role="alert" aria-live="assertive"></div>' +
                     '<div id="login-status" class="login-status" aria-live="polite"></div>' +
                     '<button type="submit" class="btn btn-primary btn-large" id="btn-login">' +
@@ -51,6 +59,31 @@ var LoginScreen = (function() {
             e.preventDefault();
             SoundManager.play('tap');
             Helpers.EventBus.emit('navigate', 'landing');
+        });
+
+        Helpers.$('btn-login-toggle-key').addEventListener('click', function() {
+            var keyInput = Helpers.$('login-key');
+            var showing = keyInput.getAttribute('type') === 'text';
+            keyInput.setAttribute('type', showing ? 'password' : 'text');
+            this.textContent = showing ? t('login_show_key') : t('login_hide_key');
+            keyInput.focus();
+        });
+
+        Helpers.$('btn-login-paste-key').addEventListener('click', function() {
+            var keyInput = Helpers.$('login-key');
+            var errorEl = Helpers.$('login-error');
+            if (!navigator.clipboard || !navigator.clipboard.readText) {
+                errorEl.textContent = t('login_clipboard_unavailable');
+                keyInput.focus();
+                return;
+            }
+            navigator.clipboard.readText().then(function(text) {
+                keyInput.value = (text || '').trim();
+                keyInput.focus();
+            }).catch(function() {
+                errorEl.textContent = t('login_clipboard_unavailable');
+                keyInput.focus();
+            });
         });
     }
 

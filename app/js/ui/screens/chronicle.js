@@ -306,6 +306,8 @@ var ChronicleScreen = (function() {
             var key;
             if (entries[i].actionType === 'blessing_sent') {
                 key = (entries[i].account || '') + '|blessing_sent|' + (entries[i].receiver || '') + '|' + (entries[i].text || '');
+            } else if (entries[i].actionType === 'chronicle_post') {
+                key = (entries[i].account || '') + '|chronicle_post|' + _normalizeDedupeText(entries[i].text || '');
             } else {
                 key = (entries[i].account || '') + '|' + (entries[i].blockNum || 0) + '|' + (entries[i].actionType || '') + '|' + (entries[i].text || '');
             }
@@ -314,6 +316,10 @@ var ChronicleScreen = (function() {
             out.push(entries[i]);
         }
         return out;
+    }
+
+    function _normalizeDedupeText(text) {
+        return String(text || '').replace(/\s+/g, ' ').trim().toLowerCase();
     }
 
     function _injectLocalPost(text) {

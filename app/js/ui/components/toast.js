@@ -34,13 +34,13 @@ var Toast = (function() {
         }
 
         var toast = document.createElement('div');
-        toast.className = 'toast toast-' + type;
+        toast.className = 'toast toast-strip toast-' + type;
         if (options.key) {
             toast.setAttribute('data-toast-key', options.key);
             activeKeys[options.key] = toast;
         }
         toast.textContent = message;
-        toast.setAttribute('role', 'alert');
+        toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
 
         if (options.actionLabel) {
             toast.setAttribute('tabindex', '0');

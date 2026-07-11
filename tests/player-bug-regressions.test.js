@@ -54,6 +54,9 @@ const guildJs = read('app/js/ui/screens/guild.js');
 const leaderboardJs = read('app/js/ui/screens/leaderboard.js');
 const characterJs = read('app/js/ui/screens/character.js');
 const marketplaceJs = read('app/js/ui/screens/marketplace.js');
+const loginJs = read('app/js/ui/screens/login.js');
+const homeJs = read('app/js/ui/screens/home.js');
+const mainCss = read('app/css/main.css');
 const stateEngineJs = read('app/js/engine/state-engine.js');
 const questsJs = read('app/js/data/quests.js');
 const indexHtml = read('app/index.html');
@@ -293,7 +296,7 @@ test('large stale checkpoint catch-up uses archive events instead of replaying e
   assert.ok(/HistorySource\.getEventsRange/.test(appJs), 'archive catch-up should query event ranges');
   assert.ok(/state\.headBlock = endBlock/.test(appJs), 'archive catch-up should advance checkpoint past empty blocks');
   assert.ok(/arena: true/.test(appJs), 'arena should refresh when duel events arrive during catch-up');
-  assert.ok(/js\/ui\/app\.js\?v=20260621d/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
+  assert.ok(/js\/ui\/app\.js\?v=20260711a/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
 });
 
 test('guild joining explains and enforces preparation requirements', function () {
@@ -332,7 +335,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v28/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v29/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -358,6 +361,22 @@ test('character screen explains how stats can grow', function () {
   assert.ok(/char_stats_growth_hint/.test(characterJs + ruJs + enJs), 'character screen should include stats growth guidance');
   assert.ok(/экипиров/.test(ruJs), 'Russian stats guidance should mention equipment');
   assert.ok(/enchantments/.test(enJs), 'English stats guidance should mention enchantments');
+});
+
+test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parity, non-intrusive toasts, and chronicle post dedupe', function () {
+  assert.ok(/btn-login-paste-key/.test(loginJs), 'login screen should expose a paste-key button for keyboard clipboard failures');
+  assert.ok(/btn-login-toggle-key/.test(loginJs), 'login screen should expose a show-hide key button');
+  assert.ok(/login_keyboard_help/.test(loginJs + ruJs + enJs), 'login screen should include mobile keyboard help copy');
+  assert.ok(/navigator\.clipboard\.readText/.test(loginJs), 'paste helper should use the Clipboard API when available');
+  assert.ok(/beforeinstallprompt/.test(appJs), 'app should listen for PWA install prompt');
+  assert.ok(/function installShortcut/.test(appJs), 'app should expose an install shortcut action');
+  assert.ok(/home_install_shortcut/.test(homeJs + ruJs + enJs), 'home screen should offer install-shortcut guidance');
+  assert.ok(/var PRIMARY_HOME_SCREENS = \['home', 'hunt', 'map', 'guild', 'marketplace', 'crafting', 'character', 'help', 'leaderboard'\]/.test(homeJs), 'home primary grid should mirror bottom nav screens');
+  assert.ok(/nav_bazaar/.test(homeJs) && /nav_crafting/.test(homeJs), 'home primary labels should reuse bottom-nav translation keys');
+  assert.ok(/actionType === 'chronicle_post'[\s\S]*_normalizeDedupeText/.test(chronicleJs), 'chronicle post dedupe should ignore temporary block numbers');
+  assert.ok(/top:\s*0/.test(mainCss) && /toast-strip/.test(mainCss), 'toast CSS should render as a compact top strip');
+  assert.ok(/role', type === 'error' \? 'alert' : 'status'/.test(toastJs), 'only errors should be assertive toast alerts');
+  assert.ok(/viz-magic-v29/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 if (process.exitCode) {

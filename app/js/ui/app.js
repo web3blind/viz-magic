@@ -14,6 +14,7 @@ var App = (function() {
     var _syncStartBlock = 0;
     var _syncVisible = false;
     var _lastSyncPercent = -1;
+    var _deferredInstallPrompt = null;
     var POLL_INTERVAL_MS = 3000;
 
     /**
@@ -275,12 +276,29 @@ var App = (function() {
      */
     function _registerPWA() {
         if ('file://' === document.location.origin) return;
+        window.addEventListener('beforeinstallprompt', function(event) {
+            event.preventDefault();
+            _deferredInstallPrompt = event;
+        });
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function() {
                 console.log('Service Worker Registered');
             }).catch(function(err) {
                 console.log('SW registration failed:', err);
             });
+        }
+    }
+
+    function installShortcut() {
+        if (_deferredInstallPrompt) {
+            _deferredInstallPrompt.prompt();
+            _deferredInstallPrompt.userChoice.then(function() {
+                _deferredInstallPrompt = null;
+            });
+            return;
+        }
+        if (typeof Toast !== 'undefined') {
+            Toast.info(Helpers.t('home_install_shortcut_manual'), 6000, { key: 'install_shortcut_manual' });
         }
     }
 
@@ -794,6 +812,7 @@ var App = (function() {
     return {
         init: init,
         navigateTo: navigateTo,
+        installShortcut: installShortcut,
         getCurrentScreen: getCurrentScreen
     };
 })();

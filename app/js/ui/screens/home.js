@@ -5,6 +5,9 @@
 var HomeScreen = (function() {
     'use strict';
 
+    var PRIMARY_HOME_SCREENS = ['home', 'hunt', 'map', 'guild', 'marketplace', 'crafting', 'character', 'help', 'leaderboard'];
+    var SECONDARY_HOME_SCREENS = ['inventory', 'chronicle', 'arena', 'quests', 'world-boss', 'settings'];
+
     function render() {
         var t = Helpers.t;
         var el = Helpers.$('screen-home');
@@ -49,17 +52,22 @@ var HomeScreen = (function() {
                 // Daily Prophecy
                 _renderDailyProphecy(character, state, blockNum, t) +
 
-                '<section class="home-actions" aria-label="Quick actions">' +
+                '<section class="home-actions" aria-label="' + t('home_primary_actions') + '">' +
+                    '<h2>' + t('home_primary_actions') + '</h2>' +
                     '<div class="action-grid">' +
-                        _tile('hunt', '\u2694\uFE0F', t('home_quick_hunt')) +
-                        _tile('quests', '\uD83D\uDCDC', t('nav_quests')) +
-                        _tile('map', '\uD83D\uDDFA\uFE0F', t('nav_map')) +
-                        _tile('inventory', '\uD83C\uDF92', t('home_bag')) +
-                        _tile('chronicle', '\uD83D\uDCDD', t('home_chronicle')) +
-                        _tile('character', '\uD83E\uDDD9', t('nav_character')) +
-                        _tile('arena', '\u2694\uFE0F', t('nav_duel') || 'Арена') +
-                        _tile('settings', '\u2699\uFE0F', t('settings')) +
+                        _renderActionTiles(PRIMARY_HOME_SCREENS, true) +
                     '</div>' +
+                '</section>' +
+                '<section class="home-actions home-actions-secondary" aria-label="' + t('home_secondary_actions') + '">' +
+                    '<h2>' + t('home_secondary_actions') + '</h2>' +
+                    '<div class="action-grid">' +
+                        _renderActionTiles(SECONDARY_HOME_SCREENS, false) +
+                    '</div>' +
+                '</section>' +
+                '<section class="home-install" aria-label="' + t('home_install_shortcut') + '">' +
+                    '<h2>' + t('home_install_shortcut') + '</h2>' +
+                    '<p>' + t('home_install_shortcut_text') + '</p>' +
+                    '<button type="button" class="btn btn-secondary" id="btn-install-shortcut">' + t('home_install_shortcut_button') + '</button>' +
                 '</section>' +
             '</div>';
 
@@ -77,6 +85,16 @@ var HomeScreen = (function() {
             bossAlert.addEventListener('click', function() {
                 SoundManager.play('tap');
                 Helpers.EventBus.emit('navigate', 'world-boss');
+            });
+        }
+
+        var installBtn = Helpers.$('btn-install-shortcut');
+        if (installBtn) {
+            installBtn.addEventListener('click', function() {
+                SoundManager.play('tap');
+                if (typeof App !== 'undefined' && App.installShortcut) {
+                    App.installShortcut();
+                }
             });
         }
 
@@ -156,6 +174,45 @@ var HomeScreen = (function() {
                 '</div>' +
             '</div>' +
         '</section>';
+    }
+
+    function _renderActionTiles(screens, primary) {
+        var html = '';
+        for (var i = 0; i < screens.length; i++) {
+            html += _tile(screens[i], _iconForScreen(screens[i]), _labelForScreen(screens[i], primary));
+        }
+        return html;
+    }
+
+    function _labelForScreen(screen, primary) {
+        var t = Helpers.t;
+        if (primary && screen === 'marketplace') return t('nav_bazaar');
+        if (primary && screen === 'crafting') return t('nav_crafting');
+        if (screen === 'world-boss') return t('nav_world-boss');
+        if (screen === 'settings') return t('nav_settings') || t('settings');
+        if (screen === 'arena') return t('nav_duel') || t('nav_arena');
+        return t('nav_' + screen) || screen;
+    }
+
+    function _iconForScreen(screen) {
+        var icons = {
+            home: '\uD83C\uDFE0',
+            hunt: '\u2694\uFE0F',
+            map: '\uD83D\uDDFA\uFE0F',
+            guild: '\uD83D\uDEE1\uFE0F',
+            marketplace: '\uD83C\uDFEA',
+            crafting: '\uD83D\uDD28',
+            character: '\uD83E\uDDD9',
+            help: '\u2753',
+            leaderboard: '\uD83C\uDFC6',
+            inventory: '\uD83C\uDF92',
+            chronicle: '\uD83D\uDCDD',
+            arena: '\u2694\uFE0F',
+            quests: '\uD83D\uDCDC',
+            'world-boss': '\uD83D\uDC32',
+            settings: '\u2699\uFE0F'
+        };
+        return icons[screen] || '\u2728';
     }
 
     function _tile(screen, icon, label) {
