@@ -304,6 +304,21 @@ var WorldEvents = (function() {
 
 
 
+
+
+    /** Occasional magical holidays tied to game sections. */
+    var FESTIVALS = [
+        { id: 'hearth_spirit_day', icon: '\uD83C\uDFE0', screen: 'home', nameKey: 'festival_hearth_spirit_day', descKey: 'festival_hearth_spirit_day_desc' },
+        { id: 'hunt_tribute', icon: '\u2694\uFE0F', screen: 'hunt', nameKey: 'festival_hunt_tribute', descKey: 'festival_hunt_tribute_desc' },
+        { id: 'guild_dance', icon: '\uD83D\uDEE1\uFE0F', screen: 'guild', nameKey: 'festival_guild_dance', descKey: 'festival_guild_dance_desc' },
+        { id: 'chronicle_ink_night', icon: '\uD83D\uDCDD', screen: 'chronicle', nameKey: 'festival_chronicle_ink_night', descKey: 'festival_chronicle_ink_night_desc' },
+        { id: 'bazaar_bell_day', icon: '\uD83C\uDFEA', screen: 'marketplace', nameKey: 'festival_bazaar_bell_day', descKey: 'festival_bazaar_bell_day_desc' },
+        { id: 'hammer_sparks', icon: '\uD83D\uDD28', screen: 'crafting', nameKey: 'festival_hammer_sparks', descKey: 'festival_hammer_sparks_desc' },
+        { id: 'bag_whisper', icon: '\uD83C\uDF92', screen: 'inventory', nameKey: 'festival_bag_whisper', descKey: 'festival_bag_whisper_desc' },
+        { id: 'prophecy_candle', icon: '\uD83D\uDD2E', screen: 'quests', nameKey: 'festival_prophecy_candle', descKey: 'festival_prophecy_candle_desc' },
+        { id: 'dragon_mask_day', icon: '\uD83D\uDC32', screen: 'world-boss', nameKey: 'festival_dragon_mask_day', descKey: 'festival_dragon_mask_day_desc' }
+    ];
+
     /** Everyday magical sky signs. Combined with omens, this gives a year-sized forecast pool. */
     var SKY_SIGNS = [
         { id: 'sun_cloud', icon: '\u26C5', summaryKey: 'sky_sun_cloud' },
@@ -356,6 +371,20 @@ var WorldEvents = (function() {
 
 
 
+
+
+
+    /**
+     * Get occasional magical holiday. Appears roughly every fifth in-world day.
+     * @param {number} blockNum
+     * @returns {Object|null}
+     */
+    function getCurrentFestival(blockNum) {
+        var day = Math.floor(blockNum / 28800);
+        if (day % 5 !== 0) return null;
+        var idx = Math.floor(day / 5) % FESTIVALS.length;
+        return FESTIVALS[idx];
+    }
 
     /**
      * Get current sky sign based on block number.
@@ -562,6 +591,7 @@ var WorldEvents = (function() {
         getCurrentWeather: getCurrentWeather,
         getCurrentSky: getCurrentSky,
         getForecastVariantCount: getForecastVariantCount,
+        getCurrentFestival: getCurrentFestival,
         getActiveEvents: getActiveEvents,
         checkEventTriggers: checkEventTriggers,
         checkWeaveSurge: checkWeaveSurge,

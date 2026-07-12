@@ -337,7 +337,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v38/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v39/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -373,8 +373,10 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/beforeinstallprompt/.test(appJs), 'app should listen for PWA install prompt');
   assert.ok(/function installShortcut/.test(appJs), 'app should expose an install shortcut action');
   assert.ok(/home_install_shortcut/.test(homeJs + ruJs + enJs), 'home screen should offer install-shortcut guidance');
-  assert.ok(/var PRIMARY_HOME_SCREENS = \['home', 'hunt', 'map', 'guild', 'marketplace', 'crafting', 'character', 'help', 'leaderboard'\]/.test(homeJs), 'home primary grid should mirror bottom nav screens');
+  assert.ok(/var PRIMARY_HOME_SCREENS = \['home', 'hunt', 'map', 'chronicle', 'guild', 'marketplace', 'crafting', 'character', 'leaderboard'\]/.test(homeJs), 'home primary grid should put Chronicle in the first visible row');
   assert.ok(/nav_bazaar/.test(homeJs) && /nav_crafting/.test(homeJs), 'home primary labels should reuse bottom-nav translation keys');
+  assert.ok(/prophecy-mini-button/.test(homeJs), 'daily prophecy card should be an active navigation button');
+  assert.ok(/Helpers.EventBus.emit\('navigate', 'quests'\)/.test(homeJs), 'daily prophecy should navigate to quests');
   assert.ok(/actionType === 'chronicle_post'[\s\S]*_normalizeDedupeText/.test(chronicleJs), 'chronicle post dedupe should ignore temporary block numbers');
   assert.ok(/insertBefore\(container, appMain\)/.test(toastJs), 'toast strip should be inserted before app-main so it does not cover headings');
   assert.ok(/#connection-status[\s\S]*position:\s*static/.test(mainCss), 'connection status should stay in normal flow instead of covering headings');
@@ -384,7 +386,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v38/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v39/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -433,16 +435,20 @@ test('mobile shell prevents tray and tab controls from overflowing the viewport'
 test('magical weather is labelled and affects hunts', function () {
   assert.ok(/function getCurrentWeather/.test(worldEventsJs), 'world events should expose deterministic magical weather');
   assert.ok(/weather_frog_rain/.test(worldEventsJs + ruJs + enJs), 'magical forecast copy should exist');
+  assert.ok(/духом луга/.test(ruJs), 'glass grass copy should mention the meadow spirit, not argue with the meadow');
+  assert.ok(/Серебряный дождь:/.test(ruJs), 'sky weather copy should use harmonized colon phrasing');
   assert.ok((worldEventsJs.match(/summaryKey: 'weather_/g) || []).length >= 30, 'magical forecast should have at least 30 rotating templates');
   assert.ok(/var SKY_SIGNS/.test(worldEventsJs), 'forecast should combine omens with sky signs');
   assert.ok(/function getForecastVariantCount/.test(worldEventsJs), 'forecast should expose total variant count');
   assert.ok(((worldEventsJs.match(/summaryKey: 'sky_/g) || []).length * (worldEventsJs.match(/summaryKey: 'weather_/g) || []).length) >= 365, 'forecast pool should cover a year of daily surprise');
   assert.ok(/forecast-card-effect/.test(homeJs + mainCss), 'forecast effect column needs its own thematic icon/card');
-  assert.ok(/i18n\/ru.js\?v=20260712e/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260712e/.test(indexHtml), 'English weather copy must be cache-busted');
-  assert.ok(/home.js\?v=20260712e/.test(indexHtml), 'home forecast layout must be cache-busted');
-  assert.ok(/world-events.js\?v=20260712e/.test(indexHtml), 'world events forecast pool must be cache-busted');
-  assert.ok(/main.css\?v=20260712e/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should sometimes appear in the forecast');
+  assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
+  assert.ok(/i18n\/ru.js\?v=20260712f/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260712f/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/home.js\?v=20260712f/.test(indexHtml), 'home forecast layout must be cache-busted');
+  assert.ok(/world-events.js\?v=20260712f/.test(indexHtml), 'world events forecast pool must be cache-busted');
+  assert.ok(/main.css\?v=20260712f/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
   assert.ok(/creatureAttackMod/.test(combatJs), 'weather should affect creature danger in hunt combat');

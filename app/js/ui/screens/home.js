@@ -5,8 +5,8 @@
 var HomeScreen = (function() {
     'use strict';
 
-    var PRIMARY_HOME_SCREENS = ['home', 'hunt', 'map', 'guild', 'marketplace', 'crafting', 'character', 'help', 'leaderboard'];
-    var SECONDARY_HOME_SCREENS = ['inventory', 'chronicle', 'arena', 'quests', 'world-boss', 'settings'];
+    var PRIMARY_HOME_SCREENS = ['home', 'hunt', 'map', 'chronicle', 'guild', 'marketplace', 'crafting', 'character', 'leaderboard'];
+    var SECONDARY_HOME_SCREENS = ['inventory', 'arena', 'quests', 'world-boss', 'settings', 'help'];
     var HOME_HP_DISPLAY_MAX = 5000;
     var HOME_XP_DISPLAY_MAX = 3000;
 
@@ -92,6 +92,14 @@ var HomeScreen = (function() {
             });
         }
 
+        var prophecyBtn = el.querySelector('.prophecy-mini-button');
+        if (prophecyBtn) {
+            prophecyBtn.addEventListener('click', function() {
+                SoundManager.play('tap');
+                Helpers.EventBus.emit('navigate', 'quests');
+            });
+        }
+
         var installBtn = Helpers.$('btn-install-shortcut');
         if (installBtn) {
             installBtn.addEventListener('click', function() {
@@ -165,6 +173,9 @@ var HomeScreen = (function() {
         var skyText = sky ? t(sky.summaryKey) : '';
         var forecast = weather ? t(weather.summaryKey) : '';
         var effect = weather ? t(weather.effectKey) : '';
+        var festival = WorldEvents.getCurrentFestival ? WorldEvents.getCurrentFestival(blockNum) : null;
+        var festivalHtml = festival ? '<p class="forecast-festival"><span aria-hidden="true">' + festival.icon + '</span> ' +
+            t('festival_today_prefix') + ': ' + t(festival.nameKey) + '. ' + t(festival.descKey) + '</p>' : '';
         return '<section class="season-indicator magical-forecast" aria-label="' + t('weather_forecast_label') + '">' +
             '<div class="forecast-card forecast-card-season">' +
                 '<span class="forecast-icon" aria-hidden="true">' + season.icon + '</span>' +
@@ -182,6 +193,7 @@ var HomeScreen = (function() {
                 '<span class="forecast-kicker">' + t('season_effect_prefix') + '</span>' +
                 '<p class="season-bonus">' + t('school_' + season.dominant) + ' +20%, ' +
                     t('school_' + season.secondary) + ' +10%. ' + effect + '</p>' +
+                festivalHtml +
             '</div>' +
         '</section>';
     }
@@ -193,7 +205,7 @@ var HomeScreen = (function() {
         if (!prophecy) return '';
 
         return '<section class="home-prophecy" aria-label="' + t('home_daily_prophecy') + '">' +
-            '<div class="prophecy-mini">' +
+            '<button type="button" class="prophecy-mini prophecy-mini-button" aria-label="' + t('home_daily_prophecy') + ': ' + t(prophecy.titleKey) + '">' +
                 '<span class="prophecy-icon" aria-hidden="true">\uD83D\uDD2E</span>' +
                 '<div class="prophecy-info">' +
                     '<h3>' + t('home_daily_prophecy') + '</h3>' +
@@ -201,7 +213,7 @@ var HomeScreen = (function() {
                     '<p><small>' + t('quest_daily_help_text') + '</small></p>' +
                     '<span class="prophecy-reward">\u2B50 ' + (prophecy.rewards ? prophecy.rewards.xp : 0) + ' XP</span>' +
                 '</div>' +
-            '</div>' +
+            '</button>' +
         '</section>';
     }
 

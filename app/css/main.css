@@ -1674,3 +1674,30 @@ body,
         grid-template-columns: 1fr;
     }
 }
+
+
+.prophecy-mini-button {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    text-align: left;
+    cursor: pointer;
+}
+
+.prophecy-mini-button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.prophecy-mini-button:hover {
+    border-color: var(--color-primary);
+}
+
+.forecast-festival {
+    margin: var(--space-xs) 0 0;
+    padding-top: var(--space-xs);
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
