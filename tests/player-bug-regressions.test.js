@@ -342,7 +342,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v42/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v43/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -391,7 +391,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v42/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v43/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -449,11 +449,11 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/forecast-card-effect/.test(homeJs + mainCss), 'forecast effect column needs its own thematic icon/card');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should sometimes appear in the forecast');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260712i/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260712i/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260712j/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260712j/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/home.js\?v=20260712g/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/world-events.js\?v=20260712g/.test(indexHtml), 'world events forecast pool must be cache-busted');
-  assert.ok(/main.css\?v=20260712h/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/main.css\?v=20260712i/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
   assert.ok(/creatureAttackMod/.test(combatJs), 'weather should affect creature danger in hunt combat');
@@ -481,6 +481,9 @@ test('temple tab uses balanced on-chain offerings without direct pay-to-win stat
   assert.ok(/function templeOffering/.test(broadcastJs), 'temple offering should have a broadcast wrapper');
   assert.ok(/award\(targetAccount, energy/.test(broadcastJs), 'temple offering should send a VIZ award to the deity account');
   assert.ok(/prayerText/.test(broadcastJs + templeJs), 'temple offerings should include selected prayer text in the public memo/action');
+  assert.ok(/temple_social_publish/.test(templeJs + ruJs + enJs), 'temple should offer an optional Chronicle prayer post for native promotion');
+  assert.ok(/VizBroadcast\.chroniclePost/.test(templeJs), 'temple social prayer should use Chronicle posts');
+  assert.ok(/#viz_magic #temple/.test(ruJs + enJs), 'temple social posts should include discoverable tags');
   assert.ok(/VizAccount\.calculateCurrentEnergy/.test(templeJs), 'temple should check current mana before broadcasting an award');
   assert.ok(/case AT\.TEMPLE_OFFERING/.test(stateEngineJs), 'state engine should replay temple offerings');
   assert.ok(/function _handleTempleOffering/.test(stateEngineJs), 'temple offering handler should exist');
@@ -494,7 +497,7 @@ test('temple tab uses balanced on-chain offerings without direct pay-to-win stat
   assert.ok(/OFFERING_ENERGY = 50/.test(templeJs), 'offering cost should be small and explicit');
   assert.ok(/fire_goddess[\s\S]*target:\s*'null'/.test(templeJs), 'fire goddess should burn through null');
   assert.ok(/labor_god[\s\S]*target:\s*'committee'/.test(templeJs), 'labor god should support committee');
-  assert.ok(/screen-temple/.test(indexHtml) && /temple\.js\?v=20260712b/.test(indexHtml), 'temple screen should be loaded and cache-busted');
+  assert.ok(/screen-temple/.test(indexHtml) && /temple\.js\?v=20260712c/.test(indexHtml), 'temple screen should be loaded and cache-busted');
   assert.ok(/id: 'temple'/.test(navJs + homeJs) && /nav_temple/.test(ruJs + enJs), 'temple should be reachable from navigation/home');
 });
 

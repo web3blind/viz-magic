@@ -1796,3 +1796,24 @@ body,
     background: var(--color-surface-2);
     color: var(--color-text);
 }
+
+
+.temple-social-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: var(--space-xs) 0;
+    color: var(--color-text);
+}
+
+.temple-social-toggle input {
+    min-width: 20px;
+    min-height: 20px;
+    margin-top: 2px;
+}
+
+.temple-social-note {
+    margin-top: 0;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}

@@ -18,13 +18,15 @@ var TempleScreen = (function() {
             id: 'fire_goddess',
             target: 'null',
             image: 'assets/deities/goddess-fire.svg',
-            item: 'flame_votive_mark'
+            item: 'flame_votive_mark',
+            socialTag: '#fire'
         },
         {
             id: 'labor_god',
             target: 'committee',
             image: 'assets/deities/god-labor.svg',
-            item: 'labor_votive_mark'
+            item: 'labor_votive_mark',
+            socialTag: '#labor'
         }
     ];
 
@@ -82,6 +84,11 @@ var TempleScreen = (function() {
                 '<p class="temple-reward">' + t('temple_reward') + ': ' + t('item_' + deity.item) + '</p>' +
                 '<label class="temple-prayer-label" for="temple-prayer-' + deity.id + '">' + t('temple_prayer_label') + '</label>' +
                 _renderPrayerSelect(deity, t) +
+                '<label class="temple-social-toggle">' +
+                    '<input type="checkbox" id="temple-social-' + deity.id + '" checked> ' +
+                    '<span>' + t('temple_social_publish') + '</span>' +
+                '</label>' +
+                '<p class="temple-social-note">' + t('temple_social_note') + '</p>' +
                 '<p class="temple-cooldown">' + cooldownText + '</p>' +
                 '<button type="button" class="btn btn-primary temple-offer-btn" data-deity="' + deity.id + '">' +
                     t('temple_offer_button').replace('{cost}', Helpers.bpToPercent(OFFERING_ENERGY)) +
@@ -124,6 +131,8 @@ var TempleScreen = (function() {
         }
         var select = Helpers.$('temple-prayer-' + deity.id);
         var prayerText = select ? Helpers.t(select.value) : '';
+        var socialToggle = Helpers.$('temple-social-' + deity.id);
+        var shouldPublish = !socialToggle || socialToggle.checked;
 
         busy = true;
         Toast.info(Helpers.t('temple_offering_started'));
@@ -157,9 +166,31 @@ var TempleScreen = (function() {
                 } else {
                     StateEngine.saveCheckpoint(function() {});
                     Toast.success(Helpers.t('temple_offering_success'));
+                    if (shouldPublish) {
+                        _publishPrayerPost(deity, prayerText, user);
+                    }
                 }
                 render();
             });
+        });
+    }
+
+
+    function _publishPrayerPost(deity, prayerText, user) {
+        var character = StateEngine.getCharacter(user);
+        var name = character && character.name ? character.name : user;
+        var deityName = Helpers.t('temple_' + deity.id + '_name');
+        var text = Helpers.t('temple_social_post')
+            .replace('{name}', name)
+            .replace('{deity}', deityName)
+            .replace('{prayer}', prayerText)
+            .replace('{tag}', deity.socialTag || '#temple');
+        VizBroadcast.chroniclePost(text, function(err) {
+            if (err) {
+                Toast.info(Helpers.t('temple_social_failed'));
+            } else {
+                Toast.success(Helpers.t('temple_social_success'));
+            }
         });
     }
 
