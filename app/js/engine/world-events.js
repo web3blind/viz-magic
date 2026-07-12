@@ -118,7 +118,7 @@ var WorldEvents = (function() {
         },
         {
             id: 'mirror_fog',
-            icon: '\uD83E\uDE9E',
+            icon: '\uD83C\uDF2B\uFE0F',
             summaryKey: 'weather_mirror_fog',
             effectKey: 'weather_mirror_fog_effect',
             creatureAttackMod: 1000,

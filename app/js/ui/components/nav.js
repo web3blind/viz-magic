@@ -20,7 +20,6 @@ var NavComponent = (function() {
             { id: 'crafting',    icon: '\uD83D\uDD28', label: t('nav_crafting') },
             { id: 'character',   icon: '🧙', label: t('nav_character') },
             { id: 'temple',      icon: '\u26EA', label: t('nav_temple') },
-            { id: 'help',        icon: '❓', label: t('nav_help') },
             { id: 'leaderboard', icon: '\uD83C\uDFC6', label: t('nav_leaderboard') }
         ];
 

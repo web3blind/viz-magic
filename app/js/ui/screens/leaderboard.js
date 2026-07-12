@@ -47,16 +47,9 @@ var LeaderboardScreen = (function() {
             }
         }
 
-        if (typeof BattleNarrator !== 'undefined' && BattleNarrator.isEnabled()) {
-            if (myRank > 0) {
-                BattleNarrator.announce(
-                    t('narrator_leaderboard_rank', { rank: myRank, total: rows.length }),
-                    'polite'
-                );
-            } else if (rows.length > 0) {
-                BattleNarrator.announce(t('leaderboard_not_ranked'), 'polite');
-            }
-        }
+        // Keep BattleNarrator combat-only. Leaderboard rank is shown in the page
+        // itself; speaking it through speechSynthesis caused repeated/stuck audio
+        // on some mobile screen-reader/browser combinations.
 
         var rankBanner = '';
         if (myRank > 0) {

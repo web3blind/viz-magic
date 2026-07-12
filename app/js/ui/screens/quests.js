@@ -91,7 +91,10 @@ var QuestsScreen = (function() {
             return '<div class="empty-state">' + t('quest_no_active') + '</div>';
         }
 
-        var html = '<ul class="quest-list" role="list">';
+        var limit = QuestSystem.MAX_ACTIVE_QUESTS || 5;
+        var html = '<p class="quest-limit-note" role="status">' +
+            t('quest_active_count', { count: quests.length, max: limit }) + '</p>' +
+            '<ul class="quest-list" role="list">';
         for (var i = 0; i < quests.length; i++) {
             html += _renderQuestCard(quests[i], t, true);
         }
@@ -107,7 +110,7 @@ var QuestsScreen = (function() {
 
         var html = '<ul class="quest-list" role="list">';
         for (var i = 0; i < quests.length; i++) {
-            html += _renderAvailableCard(quests[i], t);
+            html += _renderAvailableCard(quests[i], t, playerQuests);
         }
         html += '</ul>';
         return html;
@@ -157,9 +160,14 @@ var QuestsScreen = (function() {
             }
         }
 
-        if (!isAccepted) {
+        var limit = QuestSystem.MAX_ACTIVE_QUESTS || 5;
+        var isFull = (playerQuests.active || []).length >= limit;
+        if (!isAccepted && !isFull) {
             html += '<button class="btn btn-primary btn-glow quest-accept-btn" data-quest-id="' + prophecy.id + '" data-daily="true">' +
                 t('quest_accept') + '</button>';
+        } else if (!isAccepted && isFull) {
+            html += '<p class="quest-limit-note" role="status">' + t('quest_limit_reached_daily') + '</p>' +
+                '<button class="btn btn-primary btn-glow" disabled aria-disabled="true">' + t('quest_accept') + '</button>';
         } else {
             html += '<p class="quest-accepted-label">\u2714 ' + t('quest_already_accepted') + '</p>';
         }
@@ -236,7 +244,7 @@ var QuestsScreen = (function() {
         return html;
     }
 
-    function _renderAvailableCard(quest, t) {
+    function _renderAvailableCard(quest, t, playerQuests) {
         var html = '<li class="quest-card quest-available" role="listitem">';
         html += '<div class="quest-card-header">';
         html += '<span class="quest-type-badge">' + t('quest_type_' + quest.type) + '</span>';
@@ -264,8 +272,15 @@ var QuestsScreen = (function() {
             }
         }
 
-        html += '<button class="btn btn-primary btn-sm quest-accept-btn" data-quest-id="' + quest.id + '">' +
-            t('quest_accept') + '</button>';
+        var limit = QuestSystem.MAX_ACTIVE_QUESTS || 5;
+        var isFull = playerQuests && playerQuests.active && playerQuests.active.length >= limit;
+        if (isFull) {
+            html += '<p class="quest-limit-note" role="status">' + t('quest_limit_reached_short') + '</p>' +
+                '<button class="btn btn-primary btn-sm" disabled aria-disabled="true">' + t('quest_accept') + '</button>';
+        } else {
+            html += '<button class="btn btn-primary btn-sm quest-accept-btn" data-quest-id="' + quest.id + '">' +
+                t('quest_accept') + '</button>';
+        }
         html += '</li>';
         return html;
     }
@@ -286,6 +301,12 @@ var QuestsScreen = (function() {
                 }
 
                 if (questData) {
+                    var limit = QuestSystem.MAX_ACTIVE_QUESTS || 5;
+                    if ((playerQuests.active || []).length >= limit) {
+                        Toast.info(Helpers.t('quest_limit_reached_toast'));
+                        render();
+                        return;
+                    }
                     _broadcastQuestAction('accept', questId, isDaily, blockNum);
                 }
             });
@@ -321,6 +342,16 @@ var QuestsScreen = (function() {
             data.daily_block = dailyBlock || 0;
         }
 
+        if (kind === 'accept') {
+            var state = StateEngine.getState();
+            var userForLimit = VizAccount.getCurrentUser();
+            var active = state.quests && state.quests[userForLimit] && state.quests[userForLimit].active ? state.quests[userForLimit].active : [];
+            if (active.length >= (QuestSystem.MAX_ACTIVE_QUESTS || 5)) {
+                Toast.info(Helpers.t('quest_limit_reached_toast'));
+                return;
+            }
+        }
+
         VizBroadcast.questAction(type, data, function(err, result) {
             if (err) {
                 Toast.error(Helpers.t('error_network'));
@@ -343,7 +374,11 @@ var QuestsScreen = (function() {
             }
 
             if (!event) {
-                Toast.error(Helpers.t('error_network'));
+                if (kind === 'accept') {
+                    Toast.info(Helpers.t('quest_limit_reached_toast'));
+                } else {
+                    Toast.error(Helpers.t('error_network'));
+                }
                 return;
             }
 

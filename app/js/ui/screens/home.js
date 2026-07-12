@@ -42,8 +42,8 @@ var HomeScreen = (function() {
                     '<h1>' + t('home_welcome') + ', ' + Helpers.escapeHtml(character.name) + '</h1>' +
                     '<p>' + Helpers.classIcon(character.className) + ' ' + t('class_' + character.className) +
                         ' \u2022 ' + t('home_level') + ' ' + character.level + '</p>' +
-                    ProgressBar.create({id:'hp-bar', label:'HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
-                    ProgressBar.create({id:'xp-bar', label:'XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'}) +
+                    ProgressBar.create({id:'hp-bar', label:'❤ HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
+                    ProgressBar.create({id:'xp-bar', label:'⭐ XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'}) +
                     ProgressBar.create({id:'mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
                     '<button class="help-tip-btn" aria-label="' + t('help_tip_mana') + '" ' +
                     'title="' + t('help_tip_mana') + '" ' +

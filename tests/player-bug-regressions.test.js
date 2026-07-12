@@ -54,6 +54,7 @@ const guildJs = read('app/js/ui/screens/guild.js');
 const leaderboardJs = read('app/js/ui/screens/leaderboard.js');
 const characterJs = read('app/js/ui/screens/character.js');
 const marketplaceJs = read('app/js/ui/screens/marketplace.js');
+const leaderboardScreenJs = read('app/js/ui/screens/leaderboard.js');
 const loginJs = read('app/js/ui/screens/login.js');
 const homeJs = read('app/js/ui/screens/home.js');
 const mainCss = read('app/css/main.css');
@@ -342,7 +343,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v43/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v44/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -391,7 +392,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v43/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v44/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -449,15 +450,19 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/forecast-card-effect/.test(homeJs + mainCss), 'forecast effect column needs its own thematic icon/card');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should sometimes appear in the forecast');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260712j/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260712j/.test(indexHtml), 'English weather copy must be cache-busted');
-  assert.ok(/home.js\?v=20260712g/.test(indexHtml), 'home forecast layout must be cache-busted');
-  assert.ok(/world-events.js\?v=20260712g/.test(indexHtml), 'world events forecast pool must be cache-busted');
-  assert.ok(/main.css\?v=20260712i/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260712k/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260712k/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/home.js\?v=20260712h/.test(indexHtml), 'home forecast layout must be cache-busted');
+  assert.ok(/quests.js\?v=20260712a/.test(indexHtml), 'quest-limit UX must be cache-busted');
+  assert.ok(/nav.js\?v=20260712a/.test(indexHtml), 'bottom tray nav must be cache-busted');
+  assert.ok(/leaderboard.js\?v=20260712c/.test(indexHtml), 'leaderboard narrator fix must be cache-busted');
+  assert.ok(/world-events.js\?v=20260712h/.test(indexHtml), 'world events forecast pool must be cache-busted');
+  assert.ok(/main.css\?v=20260712j/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
   assert.ok(/creatureAttackMod/.test(combatJs), 'weather should affect creature danger in hunt combat');
   assert.ok(/playerDefenseMod/.test(combatJs), 'weather should affect player defense in hunt combat');
+  assert.ok(!/\uD83E\uDE9E/.test(worldEventsJs), 'mirror emoji should not be used for magical weather icon');
 });
 
 test('music volume, narrator speech, and PWA icons are durable', function () {
@@ -499,6 +504,15 @@ test('temple tab uses balanced on-chain offerings without direct pay-to-win stat
   assert.ok(/labor_god[\s\S]*target:\s*'committee'/.test(templeJs), 'labor god should support committee');
   assert.ok(/screen-temple/.test(indexHtml) && /temple\.js\?v=20260712c/.test(indexHtml), 'temple screen should be loaded and cache-busted');
   assert.ok(/id: 'temple'/.test(navJs + homeJs) && /nav_temple/.test(ruJs + enJs), 'temple should be reachable from navigation/home');
+});
+
+
+test('reported mobile UX issues have explicit fixes', function () {
+  assert.ok(/quest_limit_reached_toast/.test(questsJs + ruJs + enJs), 'quest limit should be explained before/after accept attempts');
+  assert.ok(/MAX_ACTIVE_QUESTS/.test(questScreenJs), 'quest screen should use the five-quest limit');
+  assert.ok(!/BattleNarrator\.announce/.test(leaderboardScreenJs), 'leaderboard should not wake Battle Narrator speech synthesis');
+  assert.ok(!/id: 'help'/.test(navJs), 'Help should be removed from bottom tray');
+  assert.ok(/label:'❤ HP'/.test(homeJs) && /label:'⭐ XP'/.test(homeJs), 'home HP and XP should have their own icons');
 });
 
 if (process.exitCode) {
