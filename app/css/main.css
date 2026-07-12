@@ -1777,3 +1777,22 @@ body,
         height: 96px;
     }
 }
+
+
+.temple-prayer-label {
+    display: block;
+    margin-top: var(--space-sm);
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.temple-prayer-select {
+    width: 100%;
+    min-height: var(--touch-target);
+    margin: var(--space-xs) 0;
+    padding: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-2);
+    color: var(--color-text);
+}

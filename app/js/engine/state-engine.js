@@ -563,8 +563,8 @@ var StateEngine = (function() {
         var target = data.target || '';
         var energy = Number(data.energy || 0);
         var cfgByDeity = {
-            fire_goddess: { target: 'null', minEnergy: 50, item: 'flame_votive_mark' },
-            labor_god: { target: 'committee', minEnergy: 50, item: 'labor_votive_mark' }
+            fire_goddess: { target: 'null', minEnergy: 50, item: 'flame_votive_mark', blessing: { type: 'fire', school: 'ignis', schoolBonus: 20 } },
+            labor_god: { target: 'committee', minEnergy: 50, item: 'labor_votive_mark', blessing: { type: 'labor', fortuneBonus: 2 } }
         };
         var def = cfgByDeity[deity];
         if (!def || target !== def.target || energy < def.minEnergy) return [];
@@ -578,6 +578,15 @@ var StateEngine = (function() {
         }
 
         worldState.temple[sender][deity] = blockNum || 0;
+        if (!worldState.temple[sender].blessings) worldState.temple[sender].blessings = {};
+        var blessing = {};
+        for (var bk in def.blessing) {
+            if (def.blessing.hasOwnProperty(bk)) blessing[bk] = def.blessing[bk];
+        }
+        blessing.deity = deity;
+        blessing.expiresBlock = (blockNum || 0) + cooldown;
+        blessing.prayer = data.prayer || '';
+        worldState.temple[sender].blessings[deity] = blessing;
         if (!worldState.inventories[sender]) worldState.inventories[sender] = [];
         var item = ItemSystem.createItem(def.item, sender, 1, blockNum || 0, sender, false);
         item.templeDeity = deity;
@@ -590,7 +599,8 @@ var StateEngine = (function() {
             target: target,
             energy: energy,
             itemType: def.item,
-            itemId: item.id
+            itemId: item.id,
+            blessing: blessing
         }];
     }
 
@@ -1266,6 +1276,27 @@ var StateEngine = (function() {
         }];
     }
 
+
+    /**
+     * Return active Temple blessings for combat/UI. Expired blessings are ignored.
+     */
+    function getTempleBlessing(account, blockNum) {
+        var result = { schoolBonuses: {}, fortuneBonus: 0, active: [] };
+        if (!worldState.temple || !worldState.temple[account] || !worldState.temple[account].blessings) return result;
+        var blessings = worldState.temple[account].blessings;
+        for (var deity in blessings) {
+            if (!blessings.hasOwnProperty(deity)) continue;
+            var b = blessings[deity];
+            if (!b || (b.expiresBlock && blockNum && b.expiresBlock < blockNum)) continue;
+            result.active.push(b);
+            if (b.school && b.schoolBonus) {
+                result.schoolBonuses[b.school] = (result.schoolBonuses[b.school] || 0) + b.schoolBonus;
+            }
+            if (b.fortuneBonus) result.fortuneBonus += b.fortuneBonus;
+        }
+        return result;
+    }
+
     /**
      * Process a hunt action directly (for live UI — bypasses block replay).
      * Adds XP, loot, quest progress identically to _handleHunt.
@@ -1324,10 +1355,12 @@ var StateEngine = (function() {
      * Process Temple offering for live UI — same logic as replay.
      */
     function processTempleOfferingResult(account, deityId, targetAccount, energy, blockNum) {
+        var prayerText = arguments.length > 5 ? arguments[5] : '';
         var events = _handleTempleOffering(account, {
             deity: deityId,
             target: targetAccount,
-            energy: energy
+            energy: energy,
+            prayer: prayerText || ''
         }, blockNum || 0);
         if (!events.length) return null;
         return events[0];
@@ -1444,6 +1477,7 @@ var StateEngine = (function() {
         getState: getState,
         getCharacter: getCharacter,
         getInventory: getInventory,
+        getTempleBlessing: getTempleBlessing,
         processHuntResult: processHuntResult,
         processMoveResult: processMoveResult,
         processCraftResult: processCraftResult,

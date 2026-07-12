@@ -33,6 +33,11 @@ var CombatSystem = (function() {
             var seasonBonuses = WorldEvents.getSeasonalBonuses(blockNum || 0);
             elemMod += seasonBonuses[spell.school] || 0;
         }
+        var templeBlessing = (typeof StateEngine !== 'undefined' && StateEngine.getTempleBlessing) ?
+            StateEngine.getTempleBlessing(player.account, blockNum || 0) : null;
+        if (templeBlessing && templeBlessing.schoolBonuses) {
+            elemMod += templeBlessing.schoolBonuses[spell.school] || 0;
+        }
 
         // Calculate class modifier
         var classMod = _classModifier(player.className, spell);
@@ -125,7 +130,7 @@ var CombatSystem = (function() {
         // Determine loot (only on victory)
         var loot = [];
         if (victory && creature.lootTable) {
-            loot = _rollLoot(creature.lootTable, blockHash, CharacterSystem.getTotalStat(player, 'for_'));
+            loot = _rollLoot(creature.lootTable, blockHash, CharacterSystem.getTotalStat(player, 'for_') + (templeBlessing ? (templeBlessing.fortuneBonus || 0) : 0));
         }
 
         return {

@@ -8,6 +8,11 @@ var TempleScreen = (function() {
     var OFFERING_ENERGY = 50; // 0.50% mana — deliberately small
     var busy = false;
 
+    var PRAYERS = {
+        fire_goddess: ['fire_power', 'fire_second', 'fire_mercy'],
+        labor_god: ['labor_hands', 'labor_craft', 'labor_patience']
+    };
+
     var DEITIES = [
         {
             id: 'fire_goddess',
@@ -50,6 +55,7 @@ var TempleScreen = (function() {
                     '<li>' + t('temple_rule_cost') + '</li>' +
                     '<li>' + t('temple_rule_cooldown') + '</li>' +
                     '<li>' + t('temple_rule_no_pay_to_win') + '</li>' +
+                    '<li>' + t('temple_rule_blessing') + '</li>' +
                 '</ul>' +
             '</section>' +
         '</div>';
@@ -74,12 +80,26 @@ var TempleScreen = (function() {
                 '<p>' + t('temple_' + deity.id + '_text') + '</p>' +
                 '<p class="temple-target">' + t('temple_offering_target') + ': <code>' + deity.target + '</code></p>' +
                 '<p class="temple-reward">' + t('temple_reward') + ': ' + t('item_' + deity.item) + '</p>' +
+                '<label class="temple-prayer-label" for="temple-prayer-' + deity.id + '">' + t('temple_prayer_label') + '</label>' +
+                _renderPrayerSelect(deity, t) +
                 '<p class="temple-cooldown">' + cooldownText + '</p>' +
                 '<button type="button" class="btn btn-primary temple-offer-btn" data-deity="' + deity.id + '">' +
                     t('temple_offer_button').replace('{cost}', Helpers.bpToPercent(OFFERING_ENERGY)) +
                 '</button>' +
             '</div>' +
         '</article>';
+    }
+
+
+    function _renderPrayerSelect(deity, t) {
+        var list = PRAYERS[deity.id] || [];
+        var html = '<select class="temple-prayer-select" id="temple-prayer-' + deity.id + '" data-deity="' + deity.id + '">';
+        for (var i = 0; i < list.length; i++) {
+            var key = 'temple_prayer_' + list[i];
+            html += '<option value="' + key + '">' + t(key) + '</option>';
+        }
+        html += '</select>';
+        return html;
     }
 
     function _makeOffering(deityId) {
@@ -94,28 +114,52 @@ var TempleScreen = (function() {
             return;
         }
 
+        var state = StateEngine.getState();
+        var user = VizAccount.getCurrentUser();
+        var headBlock = state.headBlock || 0;
+        var last = state.temple && state.temple[user] ? (state.temple[user][deity.id] || 0) : 0;
+        if (last && headBlock && headBlock - last < 28800) {
+            Toast.info(Helpers.t('temple_cooldown_active'));
+            return;
+        }
+        var select = Helpers.$('temple-prayer-' + deity.id);
+        var prayerText = select ? Helpers.t(select.value) : '';
+
         busy = true;
         Toast.info(Helpers.t('temple_offering_started'));
-        VizBroadcast.templeOffering(deity.id, deity.target, OFFERING_ENERGY, function(err, result) {
-            busy = false;
-            if (err) {
-                Toast.error(Helpers.t('temple_offering_failed'));
+        VizAccount.getAccount(user, function(energyErr, accountData) {
+            if (energyErr || !accountData) {
+                busy = false;
+                Toast.error(Helpers.t('temple_energy_check_failed'));
                 return;
             }
-            var blockNum = 0;
-            if (result && result.action) {
-                blockNum = result.action.block_num || result.action.block || 0;
+            var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
+            if (currentEnergy < OFFERING_ENERGY) {
+                busy = false;
+                Toast.error(Helpers.t('temple_not_enough_mana'));
+                return;
             }
-            var event = StateEngine.processTempleOfferingResult(
-                VizAccount.getCurrentUser(), deity.id, deity.target, OFFERING_ENERGY, blockNum
-            );
-            if (event && event.type === 'temple_offering_rejected') {
-                Toast.info(Helpers.t('temple_cooldown_active'));
-            } else {
-                StateEngine.saveCheckpoint(function() {});
-                Toast.success(Helpers.t('temple_offering_success'));
-            }
-            render();
+            VizBroadcast.templeOffering(deity.id, deity.target, OFFERING_ENERGY, prayerText, function(err, result) {
+                busy = false;
+                if (err) {
+                    Toast.error(Helpers.t('temple_offering_failed'));
+                    return;
+                }
+                var blockNum = 0;
+                if (result && result.action) {
+                    blockNum = result.action.block_num || result.action.block || 0;
+                }
+                var event = StateEngine.processTempleOfferingResult(
+                    user, deity.id, deity.target, OFFERING_ENERGY, blockNum, prayerText
+                );
+                if (event && event.type === 'temple_offering_rejected') {
+                    Toast.info(Helpers.t('temple_cooldown_active'));
+                } else {
+                    StateEngine.saveCheckpoint(function() {});
+                    Toast.success(Helpers.t('temple_offering_success'));
+                }
+                render();
+            });
         });
     }
 

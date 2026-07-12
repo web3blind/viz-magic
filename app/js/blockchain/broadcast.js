@@ -215,11 +215,13 @@ var VizBroadcast = (function() {
      * @param {number} energy - mana basis points
      * @param {Function} callback
      */
-    function templeOffering(deityId, targetAccount, energy, callback) {
-        var memo = 'viz://vm/temple/' + deityId;
+    function templeOffering(deityId, targetAccount, energy, prayerText, callback) {
+        if (typeof prayerText === 'function') { callback = prayerText; prayerText = ''; }
+        prayerText = prayerText || '';
+        var memo = 'viz://vm/temple/' + deityId + (prayerText ? ' — ' + prayerText : '');
         var actionData = {
             t: cfg.ACTION_TYPES.TEMPLE_OFFERING,
-            d: { deity: deityId, target: targetAccount, energy: energy }
+            d: { deity: deityId, target: targetAccount, energy: energy, prayer: prayerText.substring(0, 240) }
         };
 
         gameAction(actionData, function(err, result) {
