@@ -43,6 +43,7 @@ var SettingsScreen = (function() {
         var highContrast = _getStoredBool('high_contrast', false);
         var reducedMotion = _getStoredBool('reduced_motion', false);
         var sfxVolume = Math.round(_getStoredNumber('sfx_volume', 0.5) * 100);
+        var narratorEnabled = (typeof BattleNarrator !== 'undefined' && BattleNarrator.isEnabled) ? BattleNarrator.isEnabled() : _getStoredBool('battle_narrator', false);
         if (typeof SoundManager !== 'undefined') SoundManager.setVolume(sfxVolume / 100);
 
         el.innerHTML =
@@ -63,7 +64,8 @@ var SettingsScreen = (function() {
                     '<h2>' + t('settings_sound') + '</h2>' +
                     _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume) +
                     _renderSlider('music-volume', t('settings_music'), 50) +
-                    _renderToggle('narrator-toggle', t('narrator_toggle'), true) +
+                    _renderToggle('narrator-toggle', t('narrator_toggle'), narratorEnabled) +
+                    '<button type="button" class="btn btn-secondary btn-sm" id="btn-test-narrator">' + t('narrator_test') + '</button>' +
                     '<div class="settings-field">' +
                         '<label for="sound-density" class="input-label">' + t('settings_sound_density') + '</label>' +
                         '<select id="sound-density" class="input-field">' +
@@ -189,12 +191,29 @@ var SettingsScreen = (function() {
                 }
                 if (this.id === 'narrator-toggle' && typeof BattleNarrator !== 'undefined') {
                     BattleNarrator.setEnabled(isActive);
+                    if (isActive) BattleNarrator.announce(Helpers.t('narrator_test_message'), 'assertive');
                 }
                 if (this.id === 'haptics-toggle') {
                     _setStoredBool('haptics', isActive);
                 }
             });
         }
+
+        // Narrator test
+        var narratorTest = el.querySelector('#btn-test-narrator');
+        if (narratorTest) narratorTest.addEventListener('click', function() {
+            SoundManager.play('tap');
+            if (typeof BattleNarrator !== 'undefined') {
+                BattleNarrator.setEnabled(true);
+                var toggle = el.querySelector('#narrator-toggle');
+                if (toggle) {
+                    toggle.classList.add('active');
+                    toggle.setAttribute('aria-checked', 'true');
+                }
+                BattleNarrator.announce(Helpers.t('narrator_test_message'), 'assertive');
+                BattleNarrator.spatialHint('center', 660);
+            }
+        });
 
         // Realm info
         var realmBtn = el.querySelector('#btn-realm-info');

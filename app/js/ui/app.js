@@ -280,6 +280,12 @@ var App = (function() {
             event.preventDefault();
             _deferredInstallPrompt = event;
         });
+        window.addEventListener('appinstalled', function() {
+            _deferredInstallPrompt = null;
+            if (typeof Toast !== 'undefined') {
+                Toast.success(Helpers.t('home_install_shortcut_installed'));
+            }
+        });
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function() {
                 console.log('Service Worker Registered');
@@ -290,15 +296,40 @@ var App = (function() {
     }
 
     function installShortcut() {
+        if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+            if (typeof Toast !== 'undefined') Toast.info(Helpers.t('home_install_shortcut_already'), 5000, { key: 'install_shortcut_already' });
+            return;
+        }
         if (_deferredInstallPrompt) {
             _deferredInstallPrompt.prompt();
-            _deferredInstallPrompt.userChoice.then(function() {
+            _deferredInstallPrompt.userChoice.then(function(choice) {
                 _deferredInstallPrompt = null;
+                if (choice && choice.outcome === 'accepted' && typeof Toast !== 'undefined') {
+                    Toast.success(Helpers.t('home_install_shortcut_installed'));
+                } else {
+                    _showInstallInstructions();
+                }
             });
             return;
         }
+        _showInstallInstructions();
+    }
+
+    function _showInstallInstructions() {
+        var text = '<p>' + Helpers.t('home_install_shortcut_manual') + '</p>' +
+            '<ol>' +
+                '<li>' + Helpers.t('home_install_step_1') + '</li>' +
+                '<li>' + Helpers.t('home_install_step_2') + '</li>' +
+                '<li>' + Helpers.t('home_install_step_3') + '</li>' +
+            '</ol>';
+        if (typeof Modal !== 'undefined' && Modal.show) {
+            Modal.show(Helpers.t('home_install_shortcut'), text, [
+                { label: Helpers.t('close'), action: function() { Modal.close(); } }
+            ]);
+            return;
+        }
         if (typeof Toast !== 'undefined') {
-            Toast.info(Helpers.t('home_install_shortcut_manual'), 6000, { key: 'install_shortcut_manual' });
+            Toast.info(Helpers.t('home_install_shortcut_manual'), 9000, { key: 'install_shortcut_manual' });
         }
     }
 

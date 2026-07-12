@@ -7,6 +7,8 @@ var HomeScreen = (function() {
 
     var PRIMARY_HOME_SCREENS = ['home', 'hunt', 'map', 'guild', 'marketplace', 'crafting', 'character', 'help', 'leaderboard'];
     var SECONDARY_HOME_SCREENS = ['inventory', 'chronicle', 'arena', 'quests', 'world-boss', 'settings'];
+    var HOME_HP_DISPLAY_MAX = 5000;
+    var HOME_XP_DISPLAY_MAX = 3000;
 
     function render() {
         var t = Helpers.t;
@@ -25,6 +27,8 @@ var HomeScreen = (function() {
         var xpNeeded = GameFormulas.xpForLevel(character.level + 1) || 1000;
         var xpCurrent = character.xp - GameFormulas.totalXpForLevel(character.level);
         if (xpCurrent < 0) xpCurrent = 0;
+        var hpShown = _scaleForDisplay(character.hp, character.maxHp, HOME_HP_DISPLAY_MAX);
+        var xpShown = _scaleForDisplay(xpCurrent, xpNeeded, HOME_XP_DISPLAY_MAX);
 
         el.innerHTML =
             '<div class="home-dashboard">' +
@@ -38,8 +42,8 @@ var HomeScreen = (function() {
                     '<h1>' + t('home_welcome') + ', ' + Helpers.escapeHtml(character.name) + '</h1>' +
                     '<p>' + Helpers.classIcon(character.className) + ' ' + t('class_' + character.className) +
                         ' \u2022 ' + t('home_level') + ' ' + character.level + '</p>' +
-                    ProgressBar.create({id:'hp-bar', label:'HP', value:character.hp, max:character.maxHp, color:'#e53935'}) +
-                    ProgressBar.create({id:'xp-bar', label:'XP', value:xpCurrent, max:xpNeeded, color:'#ffc107'}) +
+                    ProgressBar.create({id:'hp-bar', label:'HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
+                    ProgressBar.create({id:'xp-bar', label:'XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'}) +
                     ProgressBar.create({id:'mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
                     '<button class="help-tip-btn" aria-label="' + t('help_tip_mana') + '" ' +
                     'title="' + t('help_tip_mana') + '" ' +
@@ -107,6 +111,13 @@ var HomeScreen = (function() {
                 }
             });
         }
+    }
+
+    function _scaleForDisplay(value, max, displayMax) {
+        if (!max || max <= 0) return 0;
+        var shown = Math.round(Math.max(0, value) * displayMax / max);
+        if (shown > displayMax) shown = displayMax;
+        return shown;
     }
 
     function _renderWorldEventBanner(state, blockNum, t) {

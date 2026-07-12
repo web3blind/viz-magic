@@ -122,7 +122,12 @@ var LangEN = {
     home_install_shortcut: 'Game shortcut on your phone',
     home_install_shortcut_text: 'Add Viz Magic to your phone home screen so you do not have to find a saved link after the game window closes. This is a normal PWA shortcut install, no app store needed.',
     home_install_shortcut_button: 'Install or show instructions',
-    home_install_shortcut_manual: 'If the install prompt does not appear: open the browser or Telegram menu and choose Add to Home screen / Install app.',
+    home_install_shortcut_manual: 'If the install prompt does not appear, add the shortcut manually:',
+    home_install_step_1: 'Open the browser menu or Telegram three-dot menu.',
+    home_install_step_2: 'Choose Add to Home screen, Install app, or a similar item.',
+    home_install_step_3: 'Confirm the Viz Magic shortcut.',
+    home_install_shortcut_installed: 'Viz Magic shortcut installed.',
+    home_install_shortcut_already: 'The game is already running as an installed app.',
 
     // Character
     char_title: 'Character',
@@ -340,6 +345,8 @@ var LangEN = {
     // Battle Narrator
     narrator_label: 'Battle Narrator',
     narrator_toggle: 'Battle Narrator',
+    narrator_test: 'Test narrator',
+    narrator_test_message: 'Battle Narrator is online. If your screen reader is enabled, it should read this message.',
     narrator_pve_attack: 'You used {spell}. {creature} takes {damage} damage.',
     narrator_critical: 'Critical hit!',
     narrator_hunt_victory: 'Victory! {creature} defeated. {xp} XP gained.',

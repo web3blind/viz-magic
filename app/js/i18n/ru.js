@@ -122,7 +122,12 @@ var LangRU = {
     home_install_shortcut: 'Ярлык игры на телефоне',
     home_install_shortcut_text: 'Чтобы не искать сохранённую ссылку после закрытия окна, добавьте Viz Magic на главный экран телефона. Это обычная установка PWA-ярлыка без магазина приложений.',
     home_install_shortcut_button: 'Установить или показать инструкцию',
-    home_install_shortcut_manual: 'Если кнопка установки не появилась: откройте меню браузера или Telegram, выберите «Добавить на главный экран» / «Установить приложение».',
+    home_install_shortcut_manual: 'Если системное окно установки не появилось, установите ярлык вручную:',
+    home_install_step_1: 'Откройте меню браузера или меню Telegram с тремя точками.',
+    home_install_step_2: 'Выберите «Добавить на главный экран», «Установить приложение» или похожий пункт.',
+    home_install_step_3: 'Подтвердите добавление ярлыка Viz Magic.',
+    home_install_shortcut_installed: 'Ярлык Viz Magic установлен.',
+    home_install_shortcut_already: 'Игра уже открыта как установленное приложение.',
 
     // Character
     char_title: 'Персонаж',
@@ -340,6 +345,8 @@ var LangRU = {
     // Battle Narrator
     narrator_label: 'Боевой Рассказчик',
     narrator_toggle: 'Боевой Рассказчик',
+    narrator_test: 'Проверить рассказчика',
+    narrator_test_message: 'Боевой рассказчик на связи. Если включён экранный диктор, он должен прочитать это сообщение.',
     narrator_pve_attack: 'Ты использовал {spell}. {creature} получает {damage} урона.',
     narrator_critical: 'Критический удар!',
     narrator_hunt_victory: 'Победа! {creature} повержен. Получено {xp} опыта.',
@@ -538,9 +545,9 @@ var LangRU = {
 
     // Navigation (marketplace/crafting)
     nav_bazaar: 'Базар',
-    nav_craft: 'Ковка',
+    nav_craft: 'Мастерская',
     nav_marketplace: 'Базар',
-    nav_crafting: 'Ковка',
+    nav_crafting: 'Мастерская',
 
     // Marketplace
     market_title: 'Базар',
@@ -789,7 +796,7 @@ var LangRU = {
     quest_abandoned: 'Задание отменено.',
     chronicle_unknown_guild: 'неизвестная гильдия',
     quest_type_hunt: 'Охота',
-    quest_type_craft: 'Ковка',
+    quest_type_craft: 'Мастерская',
     quest_type_duel: 'Дуэль',
     quest_type_explore: 'Исследование',
     quest_type_social: 'Общение',
@@ -837,7 +844,7 @@ var LangRU = {
     quest_daily_bless: 'Ежедневные Благословения',
     quest_daily_bless_desc: 'Благословите других магов сегодня.',
     quest_daily_help_text: 'Ежедневное пророчество нужно принять, а потом выполнить его цель. Для благословений — откройте Хронику и благословляйте других магов.',
-    quest_daily_craft: 'Ежедневная Ковка',
+    quest_daily_craft: 'Ежедневная Мастерская',
     quest_daily_craft_desc: 'Создайте предмет сегодня.',
     quest_daily_duel: 'Ежедневная Дуэль',
     quest_daily_duel_desc: 'Выиграйте дуэль сегодня.',
@@ -923,8 +930,8 @@ var LangRU = {
     help_section_armageddon: 'Армагеддон',
     help_armageddon_text: 'Потратьте 100% маны ради 100× опыта от обычного удара. Требует артефакт Камень Армагеддона. Дроп: Thornvine (Lv5+, шанс 0.5%). Крафт: Echo Shards ×3 + Shadow Shard ×3 + Fire Dust ×5 на 10 уровне (стоит 5% маны). Подтвердите чекбокс перед запуском — мана восстанавливается ~5 дней.',
 
-    help_section_crafting: 'Крафт',
-    help_crafting_text: 'Откройте экран Крафт, выберите рецепт и нажмите «Создать». Материалы расходуются. Качество зависит от INT и хеша блока.',
+    help_section_crafting: 'Мастерская',
+    help_crafting_text: 'Откройте Мастерскую, выберите рецепт и нажмите «Создать». Материалы расходуются. Качество зависит от INT и хеша блока.',
 
     help_section_marketplace: 'Рынок',
     help_marketplace_text: 'Обзор → купите выставленные предметы. Продать → выставьте свои предметы за Печати Мира. Обмен → прямая передача предмета другому магу.',

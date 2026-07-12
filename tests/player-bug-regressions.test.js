@@ -296,7 +296,7 @@ test('large stale checkpoint catch-up uses archive events instead of replaying e
   assert.ok(/HistorySource\.getEventsRange/.test(appJs), 'archive catch-up should query event ranges');
   assert.ok(/state\.headBlock = endBlock/.test(appJs), 'archive catch-up should advance checkpoint past empty blocks');
   assert.ok(/arena: true/.test(appJs), 'arena should refresh when duel events arrive during catch-up');
-  assert.ok(/js\/ui\/app\.js\?v=20260711a/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
+  assert.ok(/js\/ui\/app\.js\?v=20260711d/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
 });
 
 test('guild joining explains and enforces preparation requirements', function () {
@@ -335,7 +335,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v31/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v32/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -382,7 +382,36 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v31/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v32/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+});
+
+
+test('home dashboard uses Denis-approved visual scales and keeps real mana percent', function () {
+  assert.ok(/HOME_HP_DISPLAY_MAX = 5000/.test(homeJs), 'home HP visual scale should top at 5000');
+  assert.ok(/HOME_XP_DISPLAY_MAX = 3000/.test(homeJs), 'home XP visual scale should top at 3000');
+  assert.ok(/displayMax:HOME_HP_DISPLAY_MAX/.test(homeJs), 'HP bar should show the visual HP scale');
+  assert.ok(/displayMax:HOME_XP_DISPLAY_MAX/.test(homeJs), 'XP bar should show the visual XP scale');
+  assert.ok(/ProgressBar\.update\('mana-bar', currentEnergy \/ 100, 100\)/.test(homeJs), 'mana should remain real VIZ energy as 0-100 percent');
+  assert.ok(/displayValue/.test(read('app/js/ui/components/progress-bar.js')), 'progress bar should separate real ratio from displayed scale');
+});
+
+test('narrator and install instructions are actionable, not silent toggles or transient toasts', function () {
+  const settingsJs = read('app/js/ui/screens/settings.js');
+  assert.ok(/BattleNarrator\.isEnabled\(\)/.test(settingsJs), 'settings narrator toggle should reflect actual narrator state');
+  assert.ok(/btn-test-narrator/.test(settingsJs), 'settings should expose a narrator test button');
+  assert.ok(/narrator_test_message/.test(settingsJs + ruJs + enJs), 'narrator test copy should exist');
+  assert.ok(/appinstalled/.test(appJs), 'app should handle successful PWA installation');
+  assert.ok(/function _showInstallInstructions/.test(appJs), 'install fallback should open manual instructions');
+  assert.ok(/Modal\.show\(Helpers\.t\('home_install_shortcut'\)/.test(appJs), 'manual install instructions should open in a modal');
+  assert.ok(/home_install_step_1/.test(appJs + ruJs + enJs), 'manual install instructions should have concrete steps');
+});
+
+test('Russian crafting naming is unified as Workshop/Masterская', function () {
+  assert.ok(/nav_crafting:\s*'Мастерская'/.test(ruJs), 'craft nav should say Мастерская');
+  assert.ok(/craft_title:\s*'Мастерская'/.test(ruJs), 'craft title should say Мастерская');
+  assert.ok(/help_section_crafting:\s*'Мастерская'/.test(ruJs), 'help section should say Мастерская');
+  assert.ok(!/nav_crafting:\s*'Ковка'/.test(ruJs), 'craft nav should not say Ковка');
+  assert.ok(!/help_section_crafting:\s*'Крафт'/.test(ruJs), 'help section should not say Крафт');
 });
 
 if (process.exitCode) {
