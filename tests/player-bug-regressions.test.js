@@ -337,7 +337,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v36/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v37/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -384,7 +384,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v36/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v37/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -433,8 +433,9 @@ test('mobile shell prevents tray and tab controls from overflowing the viewport'
 test('magical weather is labelled and affects hunts', function () {
   assert.ok(/function getCurrentWeather/.test(worldEventsJs), 'world events should expose deterministic magical weather');
   assert.ok(/weather_frog_rain/.test(worldEventsJs + ruJs + enJs), 'magical forecast copy should exist');
-  assert.ok(/i18n\/ru.js\?v=20260712c/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260712c/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok((worldEventsJs.match(/summaryKey: 'weather_/g) || []).length >= 30, 'magical forecast should have at least 30 rotating templates');
+  assert.ok(/i18n\/ru.js\?v=20260712d/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260712d/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
   assert.ok(/creatureAttackMod/.test(combatJs), 'weather should affect creature danger in hunt combat');

@@ -91,9 +91,216 @@ var WorldEvents = (function() {
             effectKey: 'weather_quiet_stars_effect',
             creatureAttackMod: 950,
             playerDefenseMod: 1050
+        },
+        {
+            id: 'forbidden_wind',
+            icon: '\uD83C\uDF2B\uFE0F',
+            summaryKey: 'weather_forbidden_wind',
+            effectKey: 'weather_forbidden_wind_effect',
+            creatureAttackMod: 1150,
+            playerDefenseMod: 950
+        },
+        {
+            id: 'dragon_shadow',
+            icon: '\uD83D\uDC09',
+            summaryKey: 'weather_dragon_shadow',
+            effectKey: 'weather_dragon_shadow_effect',
+            creatureAttackMod: 1120,
+            playerDefenseMod: 1000
+        },
+        {
+            id: 'no_looking_back',
+            icon: '\uD83D\uDC41\uFE0F',
+            summaryKey: 'weather_no_looking_back',
+            effectKey: 'weather_no_looking_back_effect',
+            creatureAttackMod: 1080,
+            playerDefenseMod: 980
+        },
+        {
+            id: 'mirror_fog',
+            icon: '\uD83E\uDE9E',
+            summaryKey: 'weather_mirror_fog',
+            effectKey: 'weather_mirror_fog_effect',
+            creatureAttackMod: 1000,
+            playerDefenseMod: 920
+        },
+        {
+            id: 'whispering_mushrooms',
+            icon: '\uD83C\uDF44',
+            summaryKey: 'weather_whispering_mushrooms',
+            effectKey: 'weather_whispering_mushrooms_effect',
+            creatureAttackMod: 960,
+            playerDefenseMod: 1060
+        },
+        {
+            id: 'iron_moon',
+            icon: '\uD83C\uDF15',
+            summaryKey: 'weather_iron_moon',
+            effectKey: 'weather_iron_moon_effect',
+            creatureAttackMod: 1030,
+            playerDefenseMod: 1030
+        },
+        {
+            id: 'singing_swamp',
+            icon: '\uD83E\uDEB7',
+            summaryKey: 'weather_singing_swamp',
+            effectKey: 'weather_singing_swamp_effect',
+            creatureAttackMod: 1060,
+            playerDefenseMod: 960
+        },
+        {
+            id: 'upward_rain',
+            icon: '\uD83C\uDF27\uFE0F',
+            summaryKey: 'weather_upward_rain',
+            effectKey: 'weather_upward_rain_effect',
+            creatureAttackMod: 970,
+            playerDefenseMod: 1040
+        },
+        {
+            id: 'glass_grass',
+            icon: '\uD83C\uDF3F',
+            summaryKey: 'weather_glass_grass',
+            effectKey: 'weather_glass_grass_effect',
+            creatureAttackMod: 1090,
+            playerDefenseMod: 970
+        },
+        {
+            id: 'sleeping_thunder',
+            icon: '\uD83C\uDF29\uFE0F',
+            summaryKey: 'weather_sleeping_thunder',
+            effectKey: 'weather_sleeping_thunder_effect',
+            creatureAttackMod: 940,
+            playerDefenseMod: 1080
+        },
+        {
+            id: 'hungry_constellations',
+            icon: '\uD83C\uDF0C',
+            summaryKey: 'weather_hungry_constellations',
+            effectKey: 'weather_hungry_constellations_effect',
+            creatureAttackMod: 1110,
+            playerDefenseMod: 1000
+        },
+        {
+            id: 'borrowed_sun',
+            icon: '\u2600\uFE0F',
+            summaryKey: 'weather_borrowed_sun',
+            effectKey: 'weather_borrowed_sun_effect',
+            creatureAttackMod: 980,
+            playerDefenseMod: 1070
+        },
+        {
+            id: 'ash_snow',
+            icon: '\u2744\uFE0F',
+            summaryKey: 'weather_ash_snow',
+            effectKey: 'weather_ash_snow_effect',
+            creatureAttackMod: 1040,
+            playerDefenseMod: 990
+        },
+        {
+            id: 'lost_names',
+            icon: '\uD83D\uDCDC',
+            summaryKey: 'weather_lost_names',
+            effectKey: 'weather_lost_names_effect',
+            creatureAttackMod: 1070,
+            playerDefenseMod: 970
+        },
+        {
+            id: 'clockwork_hail',
+            icon: '\u23F1\uFE0F',
+            summaryKey: 'weather_clockwork_hail',
+            effectKey: 'weather_clockwork_hail_effect',
+            creatureAttackMod: 1130,
+            playerDefenseMod: 980
+        },
+        {
+            id: 'polite_crows',
+            icon: '\uD83D\uDC26\u200D\u2B1B',
+            summaryKey: 'weather_polite_crows',
+            effectKey: 'weather_polite_crows_effect',
+            creatureAttackMod: 960,
+            playerDefenseMod: 1060
+        },
+        {
+            id: 'golden_dust',
+            icon: '\u2728',
+            summaryKey: 'weather_golden_dust',
+            effectKey: 'weather_golden_dust_effect',
+            creatureAttackMod: 930,
+            playerDefenseMod: 1100
+        },
+        {
+            id: 'black_rainbow',
+            icon: '\uD83C\uDF08',
+            summaryKey: 'weather_black_rainbow',
+            effectKey: 'weather_black_rainbow_effect',
+            creatureAttackMod: 1100,
+            playerDefenseMod: 940
+        },
+        {
+            id: 'wandering_doors',
+            icon: '\uD83D\uDEAA',
+            summaryKey: 'weather_wandering_doors',
+            effectKey: 'weather_wandering_doors_effect',
+            creatureAttackMod: 1050,
+            playerDefenseMod: 970
+        },
+        {
+            id: 'salt_wind',
+            icon: '\uD83C\uDF2C\uFE0F',
+            summaryKey: 'weather_salt_wind',
+            effectKey: 'weather_salt_wind_effect',
+            creatureAttackMod: 1020,
+            playerDefenseMod: 1020
+        },
+        {
+            id: 'paper_storm',
+            icon: '\uD83D\uDCDC',
+            summaryKey: 'weather_paper_storm',
+            effectKey: 'weather_paper_storm_effect',
+            creatureAttackMod: 1080,
+            playerDefenseMod: 960
+        },
+        {
+            id: 'bone_bells',
+            icon: '\uD83D\uDD14',
+            summaryKey: 'weather_bone_bells',
+            effectKey: 'weather_bone_bells_effect',
+            creatureAttackMod: 1140,
+            playerDefenseMod: 950
+        },
+        {
+            id: 'kind_darkness',
+            icon: '\uD83C\uDF11',
+            summaryKey: 'weather_kind_darkness',
+            effectKey: 'weather_kind_darkness_effect',
+            creatureAttackMod: 920,
+            playerDefenseMod: 1120
+        },
+        {
+            id: 'blue_fireflies',
+            icon: '\uD83D\uDCA1',
+            summaryKey: 'weather_blue_fireflies',
+            effectKey: 'weather_blue_fireflies_effect',
+            creatureAttackMod: 950,
+            playerDefenseMod: 1080
+        },
+        {
+            id: 'wrong_echo',
+            icon: '\uD83D\uDD0A',
+            summaryKey: 'weather_wrong_echo',
+            effectKey: 'weather_wrong_echo_effect',
+            creatureAttackMod: 1090,
+            playerDefenseMod: 970
+        },
+        {
+            id: 'crown_of_rain',
+            icon: '\uD83D\uDC51',
+            summaryKey: 'weather_crown_of_rain',
+            effectKey: 'weather_crown_of_rain_effect',
+            creatureAttackMod: 1050,
+            playerDefenseMod: 1050
         }
     ];
-
 
     /**
      * Get the current season based on block number.
