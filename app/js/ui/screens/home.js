@@ -160,17 +160,29 @@ var HomeScreen = (function() {
         var season = WorldEvents.getCurrentSeason(blockNum);
         if (!season) return '';
 
+        var sky = WorldEvents.getCurrentSky ? WorldEvents.getCurrentSky(blockNum) : null;
         var weather = WorldEvents.getCurrentWeather ? WorldEvents.getCurrentWeather(blockNum) : null;
+        var skyText = sky ? t(sky.summaryKey) : '';
         var forecast = weather ? t(weather.summaryKey) : '';
         var effect = weather ? t(weather.effectKey) : '';
         return '<section class="season-indicator magical-forecast" aria-label="' + t('weather_forecast_label') + '">' +
-            '<div class="forecast-head">' +
-                '<span class="season-icon" aria-hidden="true">' + season.icon + '</span>' +
-                '<span class="season-name">' + t('weather_forecast_title') + ': ' + t(season.nameKey) + '</span>' +
+            '<div class="forecast-card forecast-card-season">' +
+                '<span class="forecast-icon" aria-hidden="true">' + season.icon + '</span>' +
+                '<span class="forecast-kicker">' + t('weather_forecast_title') + '</span>' +
+                '<p class="forecast-line">' + t(season.nameKey) + '</p>' +
             '</div>' +
-            '<p class="forecast-line">' + (weather ? '<span aria-hidden="true">' + weather.icon + '</span> ' : '') + forecast + '</p>' +
-            '<p class="season-bonus">' + t('season_effect_prefix') + ': ' + t('school_' + season.dominant) + ' +20%, ' +
-                t('school_' + season.secondary) + ' +10%. ' + effect + '</p>' +
+            '<div class="forecast-card forecast-card-sky">' +
+                '<span class="forecast-icon" aria-hidden="true">' + (sky ? sky.icon : '\u26C5') + '</span>' +
+                '<span class="forecast-kicker">' + t('weather_sky_title') + '</span>' +
+                '<p class="forecast-line">' + skyText + '</p>' +
+                '<p class="forecast-omen">' + forecast + '</p>' +
+            '</div>' +
+            '<div class="forecast-card forecast-card-effect">' +
+                '<span class="forecast-icon" aria-hidden="true">\u2694\uFE0F</span>' +
+                '<span class="forecast-kicker">' + t('season_effect_prefix') + '</span>' +
+                '<p class="season-bonus">' + t('school_' + season.dominant) + ' +20%, ' +
+                    t('school_' + season.secondary) + ' +10%. ' + effect + '</p>' +
+            '</div>' +
         '</section>';
     }
 

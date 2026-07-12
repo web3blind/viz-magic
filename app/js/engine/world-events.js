@@ -302,6 +302,25 @@ var WorldEvents = (function() {
         }
     ];
 
+
+
+    /** Everyday magical sky signs. Combined with omens, this gives a year-sized forecast pool. */
+    var SKY_SIGNS = [
+        { id: 'sun_cloud', icon: '\u26C5', summaryKey: 'sky_sun_cloud' },
+        { id: 'rain', icon: '\uD83C\uDF27\uFE0F', summaryKey: 'sky_rain' },
+        { id: 'hail', icon: '\uD83C\uDF28\uFE0F', summaryKey: 'sky_hail' },
+        { id: 'lightning', icon: '\uD83C\uDF29\uFE0F', summaryKey: 'sky_lightning' },
+        { id: 'hurricane', icon: '\uD83C\uDF2A\uFE0F', summaryKey: 'sky_hurricane' },
+        { id: 'dry_heat', icon: '\uD83C\uDF35', summaryKey: 'sky_dry_heat' },
+        { id: 'hard_frost', icon: '\u2744\uFE0F', summaryKey: 'sky_hard_frost' },
+        { id: 'dust_storm', icon: '\uD83C\uDF2B\uFE0F', summaryKey: 'sky_dust_storm' },
+        { id: 'sudden_thaw', icon: '\uD83E\uDDCA', summaryKey: 'sky_sudden_thaw' },
+        { id: 'red_dawn', icon: '\uD83C\uDF05', summaryKey: 'sky_red_dawn' },
+        { id: 'black_snow', icon: '\u26C4', summaryKey: 'sky_black_snow' },
+        { id: 'silver_fog', icon: '\uD83C\uDF01', summaryKey: 'sky_silver_fog' },
+        { id: 'double_rainbow', icon: '\uD83C\uDF08', summaryKey: 'sky_double_rainbow' }
+    ];
+
     /**
      * Get the current season based on block number.
      * @param {number} blockNum
@@ -336,6 +355,27 @@ var WorldEvents = (function() {
 
 
 
+
+
+    /**
+     * Get current sky sign based on block number.
+     * @param {number} blockNum
+     * @returns {Object}
+     */
+    function getCurrentSky(blockNum) {
+        var idx = Math.floor(blockNum / 28800) % SKY_SIGNS.length;
+        if (idx < 0) idx = 0;
+        return SKY_SIGNS[idx];
+    }
+
+    /**
+     * Count available daily forecast combinations.
+     * @returns {number}
+     */
+    function getForecastVariantCount() {
+        return SKY_SIGNS.length * WEATHER.length;
+    }
+
     /**
      * Get current magical weather based on block number.
      * This is a deterministic in-game forecast and affects hunts.
@@ -343,7 +383,8 @@ var WorldEvents = (function() {
      * @returns {Object}
      */
     function getCurrentWeather(blockNum) {
-        var idx = Math.floor(blockNum / 28800) % WEATHER.length;
+        var day = Math.floor(blockNum / 28800);
+        var idx = Math.floor(day / SKY_SIGNS.length) % WEATHER.length;
         if (idx < 0) idx = 0;
         return WEATHER[idx];
     }
@@ -519,6 +560,8 @@ var WorldEvents = (function() {
         getCurrentSeason: getCurrentSeason,
         getSeasonalBonuses: getSeasonalBonuses,
         getCurrentWeather: getCurrentWeather,
+        getCurrentSky: getCurrentSky,
+        getForecastVariantCount: getForecastVariantCount,
         getActiveEvents: getActiveEvents,
         checkEventTriggers: checkEventTriggers,
         checkWeaveSurge: checkWeaveSurge,

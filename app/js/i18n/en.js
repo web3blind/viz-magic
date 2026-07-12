@@ -743,6 +743,7 @@ var LangEN = {
 
     weather_forecast_label: 'Magical weather forecast',
     weather_forecast_title: 'Magical weather',
+    weather_sky_title: 'Sky',
     season_effect_prefix: 'Affects hunts',
     weather_frog_rain: 'Frog rain. Watch the cauldron and avoid the croaking circles.',
     weather_frog_rain_effect: 'Creatures hit 5% harder.',
@@ -804,6 +805,19 @@ var LangEN = {
     weather_wrong_echo_effect: 'Creatures hit 9% harder, character defense is 3% lower.',
     weather_crown_of_rain: 'A crown of rain hangs over the road. Today even puddles demand a title.',
     weather_crown_of_rain_effect: 'Creatures and character defense are 5% stronger.',
+    sky_sun_cloud: 'Sun and cloud are arguing. No winner yet, but it is beautiful.',
+    sky_rain: 'Sharp rain drums on roofs like an apprentice on a kettle.',
+    sky_hail: 'Hail arrives suddenly and proudly: the world has a continental temper.',
+    sky_lightning: 'Lightning walks low, as if looking for someone to deliver a letter to.',
+    sky_hurricane: 'A hurricane tries roads on for size. Not all roads fit.',
+    sky_dry_heat: 'Dry heat crackles in the air. Grass pretends to be parchment.',
+    sky_hard_frost: 'Frost grabs words by the tail and holds them until evening.',
+    sky_dust_storm: 'A dust storm erases horizons and edits the map a little.',
+    sky_sudden_thaw: 'Sudden thaw. Snow has reconsidered being snow.',
+    sky_red_dawn: 'Red dawn is watching too carefully.',
+    sky_black_snow: 'Black snow falls quietly. Footprints sound louder than steps.',
+    sky_silver_fog: 'Silver fog makes the world richer and more suspicious.',
+    sky_double_rainbow: 'A double rainbow. One is real; the other handles consequences.',
 
     // World Events
     event_weave_surge: 'Weave Surge',
