@@ -64,6 +64,11 @@ const questsJs = read('app/js/data/quests.js');
 const indexHtml = read('app/index.html');
 const ruJs = read('app/js/i18n/ru.js');
 const enJs = read('app/js/i18n/en.js');
+const configJs = read('app/js/config.js');
+const broadcastJs = read('app/js/blockchain/broadcast.js');
+const itemsJs = read('app/js/engine/items.js');
+const templeJs = read('app/js/ui/screens/temple.js');
+const navJs = read('app/js/ui/components/nav.js');
 
 test('blessing quest requires different receivers', function () {
   const context = loadQuestSystem();
@@ -298,7 +303,7 @@ test('large stale checkpoint catch-up uses archive events instead of replaying e
   assert.ok(/HistorySource\.getEventsRange/.test(appJs), 'archive catch-up should query event ranges');
   assert.ok(/state\.headBlock = endBlock/.test(appJs), 'archive catch-up should advance checkpoint past empty blocks');
   assert.ok(/arena: true/.test(appJs), 'arena should refresh when duel events arrive during catch-up');
-  assert.ok(/js\/ui\/app\.js\?v=20260711d/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
+  assert.ok(/js\/ui\/app\.js\?v=20260712a/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
 });
 
 test('guild joining explains and enforces preparation requirements', function () {
@@ -337,7 +342,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v39/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v40/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -373,7 +378,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/beforeinstallprompt/.test(appJs), 'app should listen for PWA install prompt');
   assert.ok(/function installShortcut/.test(appJs), 'app should expose an install shortcut action');
   assert.ok(/home_install_shortcut/.test(homeJs + ruJs + enJs), 'home screen should offer install-shortcut guidance');
-  assert.ok(/var PRIMARY_HOME_SCREENS = \['home', 'hunt', 'map', 'chronicle', 'guild', 'marketplace', 'crafting', 'character', 'leaderboard'\]/.test(homeJs), 'home primary grid should put Chronicle in the first visible row');
+  assert.ok(/var PRIMARY_HOME_SCREENS = \['home', 'hunt', 'map', 'chronicle', 'guild', 'marketplace', 'crafting', 'character', 'temple', 'leaderboard'\]/.test(homeJs), 'home primary grid should put Chronicle in the first visible row');
   assert.ok(/nav_bazaar/.test(homeJs) && /nav_crafting/.test(homeJs), 'home primary labels should reuse bottom-nav translation keys');
   assert.ok(/prophecy-mini-button/.test(homeJs), 'daily prophecy card should be an active navigation button');
   assert.ok(/Helpers.EventBus.emit\('navigate', 'quests'\)/.test(homeJs), 'daily prophecy should navigate to quests');
@@ -386,7 +391,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v39/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v40/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -444,11 +449,11 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/forecast-card-effect/.test(homeJs + mainCss), 'forecast effect column needs its own thematic icon/card');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should sometimes appear in the forecast');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260712f/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260712f/.test(indexHtml), 'English weather copy must be cache-busted');
-  assert.ok(/home.js\?v=20260712f/.test(indexHtml), 'home forecast layout must be cache-busted');
-  assert.ok(/world-events.js\?v=20260712f/.test(indexHtml), 'world events forecast pool must be cache-busted');
-  assert.ok(/main.css\?v=20260712f/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260712g/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260712g/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/home.js\?v=20260712g/.test(indexHtml), 'home forecast layout must be cache-busted');
+  assert.ok(/world-events.js\?v=20260712g/.test(indexHtml), 'world events forecast pool must be cache-busted');
+  assert.ok(/main.css\?v=20260712g/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
   assert.ok(/creatureAttackMod/.test(combatJs), 'weather should affect creature danger in hunt combat');
@@ -468,6 +473,23 @@ test('music volume, narrator speech, and PWA icons are durable', function () {
   assert.ok(/viz-magic-192\.png\?v=20260712c/.test(indexHtml), 'launcher icon link should be cache-busted');
   assert.ok(/assets\/icons\/viz-magic-512\.png/.test(swJs), 'service worker should cache PWA launcher icons');
   assert.ok(/viz-magic-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
+});
+
+
+test('temple tab uses balanced on-chain offerings without direct pay-to-win stats', function () {
+  assert.ok(/TEMPLE_OFFERING:\s*'temple\.offering'/.test(configJs), 'temple offering action type should exist');
+  assert.ok(/function templeOffering/.test(broadcastJs), 'temple offering should have a broadcast wrapper');
+  assert.ok(/award\(targetAccount, energy/.test(broadcastJs), 'temple offering should send a VIZ award to the deity account');
+  assert.ok(/case AT\.TEMPLE_OFFERING/.test(stateEngineJs), 'state engine should replay temple offerings');
+  assert.ok(/function _handleTempleOffering/.test(stateEngineJs), 'temple offering handler should exist');
+  assert.ok(/cooldown = 28800/.test(stateEngineJs), 'temple offerings should be cooldown-limited');
+  assert.ok(/flame_votive_mark/.test(itemsJs) && /labor_votive_mark/.test(itemsJs), 'temple relics should be registered item templates');
+  assert.ok(/baseStats:\s*\{\}/.test(itemsJs), 'temple relics should not add direct combat stats');
+  assert.ok(/OFFERING_ENERGY = 50/.test(templeJs), 'offering cost should be small and explicit');
+  assert.ok(/fire_goddess[\s\S]*target:\s*'null'/.test(templeJs), 'fire goddess should burn through null');
+  assert.ok(/labor_god[\s\S]*target:\s*'committee'/.test(templeJs), 'labor god should support committee');
+  assert.ok(/screen-temple/.test(indexHtml) && /temple\.js\?v=20260712a/.test(indexHtml), 'temple screen should be loaded and cache-busted');
+  assert.ok(/id: 'temple'/.test(navJs + homeJs) && /nav_temple/.test(ruJs + enJs), 'temple should be reachable from navigation/home');
 });
 
 if (process.exitCode) {

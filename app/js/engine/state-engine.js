@@ -265,6 +265,9 @@ var StateEngine = (function() {
             case AT.HUNT_ARMAGEDDON:
                 events = events.concat(_handleHuntArmageddon(sender, action.data, blockNum));
                 break;
+            case AT.TEMPLE_OFFERING:
+                events = events.concat(_handleTempleOffering(sender, action.data, blockNum));
+                break;
             case AT.ITEM_EQUIP:
                 events = events.concat(_handleEquip(sender, action.data, blockNum));
                 break;
@@ -546,6 +549,48 @@ var StateEngine = (function() {
             xpGained: xp,
             levelsGained: xpResult ? (xpResult.levelsGained || 0) : 0,
             stoneId: data.stone || ''
+        }];
+    }
+
+
+    /**
+     * Handle a Temple offering. Rewards are intentionally non-combat cosmetic relics.
+     * Cooldown prevents spam and keeps the economy from becoming pay-to-win.
+     */
+    function _handleTempleOffering(sender, data, blockNum) {
+        if (!worldState.characters[sender]) return [];
+        var deity = data.deity || '';
+        var target = data.target || '';
+        var energy = Number(data.energy || 0);
+        var cfgByDeity = {
+            fire_goddess: { target: 'null', minEnergy: 50, item: 'flame_votive_mark' },
+            labor_god: { target: 'committee', minEnergy: 50, item: 'labor_votive_mark' }
+        };
+        var def = cfgByDeity[deity];
+        if (!def || target !== def.target || energy < def.minEnergy) return [];
+
+        if (!worldState.temple) worldState.temple = {};
+        if (!worldState.temple[sender]) worldState.temple[sender] = {};
+        var lastBlock = worldState.temple[sender][deity] || 0;
+        var cooldown = 28800; // roughly one day
+        if (lastBlock && blockNum && blockNum - lastBlock < cooldown) {
+            return [{ type: 'temple_offering_rejected', account: sender, deity: deity, reason: 'cooldown' }];
+        }
+
+        worldState.temple[sender][deity] = blockNum || 0;
+        if (!worldState.inventories[sender]) worldState.inventories[sender] = [];
+        var item = ItemSystem.createItem(def.item, sender, 1, blockNum || 0, sender, false);
+        item.templeDeity = deity;
+        item.nonCombat = true;
+        worldState.inventories[sender].push(item);
+        return [{
+            type: 'temple_offering',
+            account: sender,
+            deity: deity,
+            target: target,
+            energy: energy,
+            itemType: def.item,
+            itemId: item.id
         }];
     }
 
@@ -1274,6 +1319,20 @@ var StateEngine = (function() {
         return result;
     }
 
+
+    /**
+     * Process Temple offering for live UI — same logic as replay.
+     */
+    function processTempleOfferingResult(account, deityId, targetAccount, energy, blockNum) {
+        var events = _handleTempleOffering(account, {
+            deity: deityId,
+            target: targetAccount,
+            energy: energy
+        }, blockNum || 0);
+        if (!events.length) return null;
+        return events[0];
+    }
+
     /**
      * Process movement for live UI — same authoritative mutation path as replay.
      * @param {string} account
@@ -1395,6 +1454,7 @@ var StateEngine = (function() {
         processQuestCompleteResult: processQuestCompleteResult,
         processQuestAbandonResult: processQuestAbandonResult,
         processArmageddonResult: processArmageddonResult,
+        processTempleOfferingResult: processTempleOfferingResult,
         reset: reset
     };
 })();

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="God of Labor">
+  <defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#11243a"/><stop offset="1" stop-color="#0a0712"/></linearGradient><linearGradient id="m" x1="0" x2="1"><stop offset="0" stop-color="#d8e6ff"/><stop offset="1" stop-color="#7c35ff"/></linearGradient></defs>
+  <rect width="512" height="512" rx="72" fill="url(#b)"/>
+  <circle cx="256" cy="256" r="178" fill="#101a28" stroke="#58a6ff" stroke-width="12"/>
+  <path d="M171 331l136-136 34 34-136 136c-16 16-42-8-34-34z" fill="url(#m)" stroke="#d8e6ff" stroke-width="8"/>
+  <path d="M284 118l110 110-36 36-34-34-28 28-50-50 28-28-26-26 36-36z" fill="#f0c040" stroke="#fff0aa" stroke-width="8"/>
+  <path d="M144 378h224" stroke="#58a6ff" stroke-width="18" stroke-linecap="round"/>
+  <path d="M160 408h192" stroke="#7c35ff" stroke-width="12" stroke-linecap="round"/>
+</svg>

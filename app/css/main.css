@@ -1701,3 +1701,79 @@ body,
     font-size: 0.82rem;
     line-height: 1.4;
 }
+
+
+/* Temple */
+.temple-screen {
+    max-width: 920px;
+    margin: 0 auto;
+}
+
+.temple-balance-note,
+.temple-rules {
+    color: var(--color-text-muted);
+}
+
+.temple-deities {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+    margin: var(--space-md) 0;
+}
+
+.temple-card {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+}
+
+.temple-card-fire_goddess {
+    border-left: 4px solid #ff7a1a;
+}
+
+.temple-card-labor_god {
+    border-left: 4px solid #58a6ff;
+}
+
+.temple-deity-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 24px;
+    background: #08080f;
+}
+
+.temple-deity-copy h2 {
+    margin-bottom: var(--space-xs);
+}
+
+.temple-domain,
+.temple-target,
+.temple-reward,
+.temple-cooldown {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.temple-rules ul {
+    margin-left: 1.2rem;
+}
+
+@media (max-width: 720px) {
+    .temple-deities {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .temple-card {
+        grid-template-columns: 1fr;
+    }
+    .temple-deity-image {
+        width: 96px;
+        height: 96px;
+    }
+}

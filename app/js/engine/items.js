@@ -145,6 +145,16 @@ var ItemSystem = (function() {
             category: CATEGORIES.RELIC,
             slot: SLOTS.ACCESSORY,
             baseStats: {}
+        },
+        flame_votive_mark: {
+            category: CATEGORIES.RELIC,
+            slot: null,
+            baseStats: {}
+        },
+        labor_votive_mark: {
+            category: CATEGORIES.RELIC,
+            slot: null,
+            baseStats: {}
         }
     };
 

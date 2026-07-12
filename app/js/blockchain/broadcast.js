@@ -206,6 +206,38 @@ var VizBroadcast = (function() {
         });
     }
 
+
+    /**
+     * Send a Temple offering: VM proof + award to a symbolic VIZ account.
+     * The in-game result is deliberately small and cosmetic to avoid pay-to-win balance.
+     * @param {string} deityId
+     * @param {string} targetAccount - null or committee
+     * @param {number} energy - mana basis points
+     * @param {Function} callback
+     */
+    function templeOffering(deityId, targetAccount, energy, callback) {
+        var memo = 'viz://vm/temple/' + deityId;
+        var actionData = {
+            t: cfg.ACTION_TYPES.TEMPLE_OFFERING,
+            d: { deity: deityId, target: targetAccount, energy: energy }
+        };
+
+        gameAction(actionData, function(err, result) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            award(targetAccount, energy, 0, memo, [], function(awardErr, awardResult) {
+                if (awardErr) {
+                    console.log('Temple award failed (VM offering proof was recorded):', awardErr);
+                    callback(awardErr);
+                    return;
+                }
+                callback(null, { action: result, award: awardResult || null });
+            });
+        });
+    }
+
     /**
      * Broadcast quest action (accept / complete / abandon) as a VM custom op.
      * @param {string} type
@@ -307,6 +339,7 @@ var VizBroadcast = (function() {
         gameAction: gameAction,
         huntAction: huntAction,
         armageddonAction: armageddonAction,
+        templeOffering: templeOffering,
         questAction: questAction,
         updateMetadata: updateMetadata,
         chroniclePost: chroniclePost,

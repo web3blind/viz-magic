@@ -23,6 +23,7 @@ var HelpScreen = (function() {
             { key: 'duels',       icon: '\uD83D\uDEE1\uFE0F' },
             { key: 'guilds',      icon: '\uD83C\uDFF0' },
             { key: 'boss',        icon: '\uD83D\uDC32' },
+            { key: 'temple',      icon: '\u26EA' },
             { key: 'shares',      icon: '\uD83D\uDC8E' },
             { key: 'blockchain',  icon: '\u26D3\uFE0F' }
         ];

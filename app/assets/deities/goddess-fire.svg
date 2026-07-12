@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Goddess of Fire">
+  <defs><radialGradient id="g" cx="50%" cy="42%" r="58%"><stop offset="0" stop-color="#fff6a3"/><stop offset="0.45" stop-color="#ff7a1a"/><stop offset="1" stop-color="#320014"/></radialGradient><linearGradient id="f" x1="0" x2="1"><stop offset="0" stop-color="#ffcf33"/><stop offset="1" stop-color="#ff3158"/></linearGradient></defs>
+  <rect width="512" height="512" rx="72" fill="#160010"/>
+  <circle cx="256" cy="232" r="190" fill="url(#g)" opacity="0.95"/>
+  <path d="M255 72c55 65 14 101 49 150 22 31 57 57 57 111 0 70-48 118-105 118s-105-48-105-118c0-63 42-93 64-132 24-42-5-76 40-129z" fill="url(#f)" stroke="#fff0a6" stroke-width="10"/>
+  <path d="M256 178c26 42-10 65 20 102 14 18 32 34 32 67 0 36-24 61-52 61s-52-25-52-61c0-38 24-56 38-82 13-25-6-45 14-87z" fill="#fff3b0" opacity="0.9"/>
+  <path d="M148 414c61 42 155 42 216 0" fill="none" stroke="#ffe578" stroke-width="18" stroke-linecap="round"/>
+</svg>

@@ -183,6 +183,7 @@ var VizMagicConfig = (function() {
         QUEST_COMPLETE: 'quest.complete',
         QUEST_ABANDON:  'quest.abandon',
         BOSS_ATTACK:    'boss.attack',
+        TEMPLE_OFFERING:'temple.offering',
         // Guild discovery
         GUILD_LISTING:  'guild.listing'
     };

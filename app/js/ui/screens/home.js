@@ -5,7 +5,7 @@
 var HomeScreen = (function() {
     'use strict';
 
-    var PRIMARY_HOME_SCREENS = ['home', 'hunt', 'map', 'chronicle', 'guild', 'marketplace', 'crafting', 'character', 'leaderboard'];
+    var PRIMARY_HOME_SCREENS = ['home', 'hunt', 'map', 'chronicle', 'guild', 'marketplace', 'crafting', 'character', 'temple', 'leaderboard'];
     var SECONDARY_HOME_SCREENS = ['inventory', 'arena', 'quests', 'world-boss', 'settings', 'help'];
     var HOME_HP_DISPLAY_MAX = 5000;
     var HOME_XP_DISPLAY_MAX = 3000;
@@ -246,6 +246,7 @@ var HomeScreen = (function() {
             character: '\uD83E\uDDD9',
             help: '\u2753',
             leaderboard: '\uD83C\uDFC6',
+            temple: '\u26EA',
             inventory: '\uD83C\uDF92',
             chronicle: '\uD83D\uDCDD',
             arena: '\u2694\uFE0F',
