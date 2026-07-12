@@ -433,6 +433,8 @@ test('mobile shell prevents tray and tab controls from overflowing the viewport'
 test('magical weather is labelled and affects hunts', function () {
   assert.ok(/function getCurrentWeather/.test(worldEventsJs), 'world events should expose deterministic magical weather');
   assert.ok(/weather_frog_rain/.test(worldEventsJs + ruJs + enJs), 'magical forecast copy should exist');
+  assert.ok(/i18n\/ru.js\?v=20260712c/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260712c/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
   assert.ok(/creatureAttackMod/.test(combatJs), 'weather should affect creature danger in hunt combat');
