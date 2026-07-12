@@ -740,6 +740,19 @@ var LangEN = {
     season_autumn: 'Autumn',
     season_winter: 'Winter',
 
+
+    weather_forecast_label: 'Magical weather forecast',
+    weather_forecast_title: 'Magical weather',
+    season_effect_prefix: 'Affects hunts',
+    weather_frog_rain: 'Frog rain. Watch the cauldron and avoid the croaking circles.',
+    weather_frog_rain_effect: 'Creatures hit 5% harder.',
+    weather_low_dragons: 'Low-flying dragons. Hold your hat with both hands.',
+    weather_low_dragons_effect: 'Creatures hit 10% harder.',
+    weather_singing_lightning: 'Lightning will strike anyone who starts singing. Especially baritones.',
+    weather_singing_lightning_effect: 'Character defense in hunts is 5% lower.',
+    weather_quiet_stars: 'Quiet stars and an even Weave. A good time to hunt without heroic stupidity.',
+    weather_quiet_stars_effect: 'Creatures hit 5% softer, character defense is 5% higher.',
+
     // World Events
     event_weave_surge: 'Weave Surge',
     event_weave_surge_desc: 'Mana regeneration doubled!',

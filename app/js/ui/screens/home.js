@@ -160,12 +160,18 @@ var HomeScreen = (function() {
         var season = WorldEvents.getCurrentSeason(blockNum);
         if (!season) return '';
 
-        return '<div class="season-indicator">' +
-            '<span class="season-icon" aria-hidden="true">' + season.icon + '</span>' +
-            '<span class="season-name">' + t(season.nameKey) + '</span>' +
-            '<span class="season-bonus">' + t('school_' + season.dominant) + ' +20%, ' +
-                t('school_' + season.secondary) + ' +10%</span>' +
-        '</div>';
+        var weather = WorldEvents.getCurrentWeather ? WorldEvents.getCurrentWeather(blockNum) : null;
+        var forecast = weather ? t(weather.summaryKey) : '';
+        var effect = weather ? t(weather.effectKey) : '';
+        return '<section class="season-indicator magical-forecast" aria-label="' + t('weather_forecast_label') + '">' +
+            '<div class="forecast-head">' +
+                '<span class="season-icon" aria-hidden="true">' + season.icon + '</span>' +
+                '<span class="season-name">' + t('weather_forecast_title') + ': ' + t(season.nameKey) + '</span>' +
+            '</div>' +
+            '<p class="forecast-line">' + (weather ? '<span aria-hidden="true">' + weather.icon + '</span> ' : '') + forecast + '</p>' +
+            '<p class="season-bonus">' + t('season_effect_prefix') + ': ' + t('school_' + season.dominant) + ' +20%, ' +
+                t('school_' + season.secondary) + ' +10%. ' + effect + '</p>' +
+        '</section>';
     }
 
     function _renderDailyProphecy(character, state, blockNum, t) {

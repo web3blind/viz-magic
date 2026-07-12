@@ -1592,3 +1592,27 @@ body,
         padding-left: 44px;
     }
 }
+
+
+.magical-forecast {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.forecast-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.forecast-line {
+    margin: 0;
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.magical-forecast .season-bonus {
+    margin-left: 0;
+    line-height: 1.4;
+}

@@ -27,8 +27,12 @@ var CombatSystem = (function() {
         // Scale creature stats by level
         var creatureStats = _scaleCreatureStats(creature, creatureLevel);
 
-        // Calculate element modifier
+        // Calculate element modifier, including the current in-world season.
         var elemMod = GameFormulas.elementModifier(spell.school, creature.school);
+        if (typeof WorldEvents !== 'undefined' && WorldEvents.getSeasonalBonuses) {
+            var seasonBonuses = WorldEvents.getSeasonalBonuses(blockNum || 0);
+            elemMod += seasonBonuses[spell.school] || 0;
+        }
 
         // Calculate class modifier
         var classMod = _classModifier(player.className, spell);
@@ -61,9 +65,18 @@ var CombatSystem = (function() {
         // Calculate creature defense
         var creatureDefense = GameFormulas.calculateDefense(creatureStats.res, creatureLevel);
 
+        // Magical weather affects hunt danger. This keeps the home forecast meaningful.
+        var weather = (typeof WorldEvents !== 'undefined' && WorldEvents.getCurrentWeather) ? WorldEvents.getCurrentWeather(blockNum || 0) : null;
+        if (weather && weather.creatureAttackMod) {
+            creatureStats.attack = Math.max(1, Math.floor(creatureStats.attack * weather.creatureAttackMod / 1000));
+        }
+
         // Multi-round combat: exchange blows until someone falls
         var playerRes = CharacterSystem.getTotalStat(player, 'res');
         var playerDefense = GameFormulas.calculateDefense(playerRes, player.level);
+        if (weather && weather.playerDefenseMod) {
+            playerDefense = Math.max(0, Math.floor(playerDefense * weather.playerDefenseMod / 1000));
+        }
 
         var creatureHpLeft = creatureStats.hp;
         var playerHpLeft = player.hp;

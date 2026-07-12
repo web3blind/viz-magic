@@ -58,6 +58,43 @@ var WorldEvents = (function() {
         }
     ];
 
+    /** Magical weather definitions. These are in-world, not real-world forecasts. */
+    var WEATHER = [
+        {
+            id: 'frog_rain',
+            icon: '\uD83D\uDC38',
+            summaryKey: 'weather_frog_rain',
+            effectKey: 'weather_frog_rain_effect',
+            creatureAttackMod: 1050,
+            playerDefenseMod: 1000
+        },
+        {
+            id: 'low_dragons',
+            icon: '\uD83D\uDC32',
+            summaryKey: 'weather_low_dragons',
+            effectKey: 'weather_low_dragons_effect',
+            creatureAttackMod: 1100,
+            playerDefenseMod: 1000
+        },
+        {
+            id: 'singing_lightning',
+            icon: '\u26A1',
+            summaryKey: 'weather_singing_lightning',
+            effectKey: 'weather_singing_lightning_effect',
+            creatureAttackMod: 1000,
+            playerDefenseMod: 950
+        },
+        {
+            id: 'quiet_stars',
+            icon: '\u2728',
+            summaryKey: 'weather_quiet_stars',
+            effectKey: 'weather_quiet_stars_effect',
+            creatureAttackMod: 950,
+            playerDefenseMod: 1050
+        }
+    ];
+
+
     /**
      * Get the current season based on block number.
      * @param {number} blockNum
@@ -88,6 +125,20 @@ var WorldEvents = (function() {
         bonuses[season.dominant] = season.dominantBonus;
         bonuses[season.secondary] = season.secondaryBonus;
         return bonuses;
+    }
+
+
+
+    /**
+     * Get current magical weather based on block number.
+     * This is a deterministic in-game forecast and affects hunts.
+     * @param {number} blockNum
+     * @returns {Object}
+     */
+    function getCurrentWeather(blockNum) {
+        var idx = Math.floor(blockNum / 28800) % WEATHER.length;
+        if (idx < 0) idx = 0;
+        return WEATHER[idx];
     }
 
     /**
@@ -260,6 +311,7 @@ var WorldEvents = (function() {
         SEASONS: SEASONS,
         getCurrentSeason: getCurrentSeason,
         getSeasonalBonuses: getSeasonalBonuses,
+        getCurrentWeather: getCurrentWeather,
         getActiveEvents: getActiveEvents,
         checkEventTriggers: checkEventTriggers,
         checkWeaveSurge: checkWeaveSurge,

@@ -740,6 +740,19 @@ var LangRU = {
     season_autumn: 'Осень',
     season_winter: 'Зима',
 
+
+    weather_forecast_label: 'Магическая сводка погоды',
+    weather_forecast_title: 'Магическая погода',
+    season_effect_prefix: 'Влияет на охоту',
+    weather_frog_rain: 'Дождь с лягушками. Следите за котлом и не наступайте на квакающие круги.',
+    weather_frog_rain_effect: 'Существа бьют на 5% сильнее.',
+    weather_low_dragons: 'Низко летающие драконы. Шляпы держать двумя руками.',
+    weather_low_dragons_effect: 'Существа бьют на 10% сильнее.',
+    weather_singing_lightning: 'Молния ударит в любого, кто запоёт. Особенно в баритонов.',
+    weather_singing_lightning_effect: 'Защита персонажа на охоте ниже на 5%.',
+    weather_quiet_stars: 'Тихие звёзды и ровное Плетение. Самое время охотиться без героической глупости.',
+    weather_quiet_stars_effect: 'Существа бьют на 5% слабее, защита персонажа выше на 5%.',
+
     // World Events
     event_weave_surge: 'Всплеск Плетения',
     event_weave_surge_desc: 'Регенерация маны удвоена!',

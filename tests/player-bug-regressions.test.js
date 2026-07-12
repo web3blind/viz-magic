@@ -58,6 +58,8 @@ const loginJs = read('app/js/ui/screens/login.js');
 const homeJs = read('app/js/ui/screens/home.js');
 const mainCss = read('app/css/main.css');
 const stateEngineJs = read('app/js/engine/state-engine.js');
+const combatJs = read('app/js/engine/combat.js');
+const worldEventsJs = read('app/js/engine/world-events.js');
 const questsJs = read('app/js/data/quests.js');
 const indexHtml = read('app/index.html');
 const ruJs = read('app/js/i18n/ru.js');
@@ -335,7 +337,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v35/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v36/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -382,7 +384,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v35/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v36/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -426,6 +428,17 @@ test('mobile shell prevents tray and tab controls from overflowing the viewport'
   assert.ok(/\.recipe-card[\s\S]*flex-wrap:\s*wrap/.test(mainCss), 'recipe cards should wrap on narrow screens');
 });
 
+
+
+test('magical weather is labelled and affects hunts', function () {
+  assert.ok(/function getCurrentWeather/.test(worldEventsJs), 'world events should expose deterministic magical weather');
+  assert.ok(/weather_frog_rain/.test(worldEventsJs + ruJs + enJs), 'magical forecast copy should exist');
+  assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
+  assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
+  assert.ok(/creatureAttackMod/.test(combatJs), 'weather should affect creature danger in hunt combat');
+  assert.ok(/playerDefenseMod/.test(combatJs), 'weather should affect player defense in hunt combat');
+});
+
 test('music volume, narrator speech, and PWA icons are durable', function () {
   const settingsJs = read('app/js/ui/screens/settings.js');
   const narratorJs = read('app/js/ui/components/battle-narrator.js');
@@ -434,9 +447,11 @@ test('music volume, narrator speech, and PWA icons are durable', function () {
   assert.ok(/_setStoredNumber\('music_volume', this\.value \/ 100\)/.test(settingsJs), 'music slider should persist changes');
   assert.ok(/SpeechSynthesisUtterance/.test(narratorJs), 'battle narrator should speak audibly through Web Speech when available');
   assert.ok(/textContent = ''[\s\S]*textContent = message/.test(narratorJs), 'battle narrator should force live-region text replacement');
-  assert.ok(/manifest\.json\?v=20260712b/.test(indexHtml), 'manifest should be cache-busted for updated icon');
-  assert.ok(/icon-192\.png\?v=20260712b/.test(indexHtml), 'launcher icon link should be cache-busted');
-  assert.ok(/assets\/icons\/icon-512\.png/.test(swJs), 'service worker should cache PWA launcher icons');
+  assert.ok(/manifest\.json\?v=20260712c/.test(indexHtml), 'manifest should be cache-busted for updated icon');
+  assert.ok(/favicon\.ico\?v=20260712c/.test(indexHtml), 'favicon should be explicit for browser shortcut fallback');
+  assert.ok(/viz-magic-192\.png\?v=20260712c/.test(indexHtml), 'launcher icon link should be cache-busted');
+  assert.ok(/assets\/icons\/viz-magic-512\.png/.test(swJs), 'service worker should cache PWA launcher icons');
+  assert.ok(/viz-magic-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
 });
 
 if (process.exitCode) {
