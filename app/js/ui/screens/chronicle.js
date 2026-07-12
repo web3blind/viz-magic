@@ -484,6 +484,11 @@ var ChronicleScreen = (function() {
             case 'guild.accept':
                 var gJoin = _guildDisplayName(ev0 && ev0.guildId, ev0 && ev0.guildName);
                 return t('chronicle_narrative_guild_join', { name: name, guild: gJoin });
+            case 'temple.offering':
+                if (ev0 && ev0.type === 'temple_offering') {
+                    return t('chronicle_narrative_temple', { name: name, deity: t('temple_' + ev0.deity + '_name') });
+                }
+                return null;
             case 'boss.attack':
                 return name + ' ' + (t('boss_attack') || 'attacks the boss') + '!';
             case 'challenge':

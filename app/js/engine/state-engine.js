@@ -266,7 +266,8 @@ var StateEngine = (function() {
                 events = events.concat(_handleHuntArmageddon(sender, action.data, blockNum));
                 break;
             case AT.TEMPLE_OFFERING:
-                events = events.concat(_handleTempleOffering(sender, action.data, blockNum));
+                // Temple rewards are granted only from the real VIZ award memo in _processAward.
+                // The VM custom op remains a public audit/link record, but cannot mint blessings alone.
                 break;
             case AT.ITEM_EQUIP:
                 events = events.concat(_handleEquip(sender, action.data, blockNum));
@@ -699,7 +700,33 @@ var StateEngine = (function() {
         _rememberAccount(award.receiver);
 
         var memo = award.memo || '';
-        var isBless = String(memo).indexOf('viz://vm/bless/') === 0;
+        var memoText = String(memo);
+        var isBless = memoText.indexOf('viz://vm/bless/') === 0;
+        var isTemple = memoText.indexOf('viz://vm/temple/') === 0;
+
+        if (isTemple) {
+            var prefix = 'viz://vm/temple/';
+            var rest = memoText.substring(prefix.length);
+            var dashIdx = rest.indexOf(' — ');
+            var deity = dashIdx >= 0 ? rest.substring(0, dashIdx) : rest.split(' ')[0];
+            var prayer = dashIdx >= 0 ? rest.substring(dashIdx + 3) : '';
+            var templeEvents = _handleTempleOffering(award.initiator, {
+                deity: deity,
+                target: award.receiver,
+                energy: award.energy,
+                prayer: prayer
+            }, blockNum);
+            worldState.recentActions.push({
+                type: AT.TEMPLE_OFFERING,
+                sender: award.initiator,
+                blockNum: blockNum,
+                energy: award.energy,
+                memo: memo,
+                events: templeEvents,
+                timestamp: Date.now()
+            });
+            return;
+        }
 
         if (!isBless) return;
 
