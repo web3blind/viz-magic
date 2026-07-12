@@ -40,6 +40,11 @@ var ProgressBar = (function() {
         var shownMax = (typeof displayMax !== 'undefined') ? displayMax : max;
         el.setAttribute('aria-valuenow', shownValue);
         el.setAttribute('aria-valuemax', shownMax);
+        var label = el.getAttribute('aria-label') || '';
+        var labelName = label.split(' ')[0] || '';
+        if (labelName) {
+            el.setAttribute('aria-label', labelName + ' ' + shownValue + ' of ' + shownMax);
+        }
         var fill = el.querySelector('.progress-fill');
         if (fill) fill.style.width = pct + '%';
         var text = el.querySelector('.progress-text');
