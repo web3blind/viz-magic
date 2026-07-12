@@ -23,14 +23,15 @@ var BattleNarrator = (function() {
             enabled = true;
         }
 
-        // Create narrator live region
+        // Create narrator live region. Keep it as one persistent status region:
+        // mobile screen readers announce text replacement more reliably than
+        // appended children inside role=log.
         if (!narratorEl) {
             narratorEl = document.createElement('div');
             narratorEl.id = 'battle-narrator';
-            narratorEl.setAttribute('role', 'log');
+            narratorEl.setAttribute('role', 'status');
             narratorEl.setAttribute('aria-live', 'polite');
-            narratorEl.setAttribute('aria-atomic', 'false');
-            narratorEl.setAttribute('aria-relevant', 'additions');
+            narratorEl.setAttribute('aria-atomic', 'true');
             narratorEl.className = 'sr-only';
             narratorEl.setAttribute('aria-label', Helpers.t('narrator_label'));
             document.body.appendChild(narratorEl);
@@ -66,17 +67,32 @@ var BattleNarrator = (function() {
         if (!enabled || !message) return;
         if (!narratorEl) init();
 
-        narratorEl.setAttribute('aria-live', priority || 'polite');
+        var mode = priority || 'polite';
+        narratorEl.setAttribute('aria-live', mode);
+        narratorEl.setAttribute('role', mode === 'assertive' ? 'alert' : 'status');
 
-        // Append new message as paragraph
-        var p = document.createElement('p');
-        p.textContent = message;
-        narratorEl.appendChild(p);
+        // Force a DOM text change so TalkBack/VoiceOver do not ignore repeated
+        // announcements after navigation or re-render.
+        narratorEl.textContent = '';
+        setTimeout(function() {
+            if (narratorEl) narratorEl.textContent = message;
+        }, 25);
 
-        // Keep only last 10 messages
-        while (narratorEl.children.length > 10) {
-            narratorEl.removeChild(narratorEl.firstChild);
-        }
+        _speak(message);
+    }
+
+    function _speak(message) {
+        if (!message || typeof window === 'undefined' || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+        try {
+            var utterance = new SpeechSynthesisUtterance(message);
+            var lang = (Helpers.getCurrentLang && Helpers.getCurrentLang() === 'en') ? 'en-US' : 'ru-RU';
+            utterance.lang = lang;
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {}
     }
 
     /**

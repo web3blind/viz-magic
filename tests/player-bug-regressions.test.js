@@ -335,7 +335,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v33/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v34/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -382,7 +382,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v33/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v34/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -391,7 +391,7 @@ test('home dashboard uses Denis-approved visual scales and keeps real mana perce
   assert.ok(/HOME_XP_DISPLAY_MAX = 3000/.test(homeJs), 'home XP visual scale should top at 3000');
   assert.ok(/displayMax:HOME_HP_DISPLAY_MAX/.test(homeJs), 'HP bar should show the visual HP scale');
   assert.ok(/displayMax:HOME_XP_DISPLAY_MAX/.test(homeJs), 'XP bar should show the visual XP scale');
-  assert.ok(/ProgressBar\.update\('mana-bar', currentEnergy \/ 100, 100, Math\.floor\(currentEnergy \/ 100\), 100\)/.test(homeJs), 'mana should remain real VIZ energy as 0-100 percent');
+  assert.ok(/ProgressBar\.update\('mana-bar', currentEnergy \/ 100, 100\)/.test(homeJs), 'mana should remain real VIZ energy as 0-100 percent');
   assert.ok(/displayValue/.test(read('app/js/ui/components/progress-bar.js')), 'progress bar should separate real ratio from displayed scale');
 });
 
@@ -412,6 +412,30 @@ test('Russian crafting naming is unified as Workshop/Masterская', function (
   assert.ok(/help_section_crafting:\s*'Мастерская'/.test(ruJs), 'help section should say Мастерская');
   assert.ok(!/nav_crafting:\s*'Ковка'/.test(ruJs), 'craft nav should not say Ковка');
   assert.ok(!/help_section_crafting:\s*'Крафт'/.test(ruJs), 'help section should not say Крафт');
+});
+
+
+test('mobile shell prevents tray and tab controls from overflowing the viewport', function () {
+  assert.ok(/padding-bottom:\s*calc\(180px \+ env\(safe-area-inset-bottom\)\)/.test(mainCss), 'screens need enough bottom padding for the two-row mobile tray');
+  assert.ok(/#bottom-nav\.show[\s\S]*display:\s*grid[\s\S]*repeat\(5, minmax\(0, 1fr\)\)/.test(mainCss), 'bottom nav should fit all tabs without horizontal overflow');
+  assert.ok(/\.nav-tab[\s\S]*min-width:\s*0/.test(mainCss), 'nav tabs must be allowed to shrink inside viewport');
+  assert.ok(/\.nav-label[\s\S]*text-overflow:\s*ellipsis/.test(mainCss), 'long nav labels should not push tabs off screen');
+  assert.ok(/@media \(max-width: 480px\)[\s\S]*\.chronicle-tabs[\s\S]*grid-template-columns:\s*1fr/.test(mainCss), 'mobile chronicle tabs should stack instead of clipping');
+  assert.ok(/@media \(max-width: 480px\)[\s\S]*\.craft-tabs[\s\S]*grid-template-columns:\s*1fr/.test(mainCss), 'mobile craft tabs should stack instead of clipping');
+  assert.ok(/\.recipe-card[\s\S]*flex-wrap:\s*wrap/.test(mainCss), 'recipe cards should wrap on narrow screens');
+});
+
+test('music volume, narrator speech, and PWA icons are durable', function () {
+  const settingsJs = read('app/js/ui/screens/settings.js');
+  const narratorJs = read('app/js/ui/components/battle-narrator.js');
+  const swJs = read('app/sw.js');
+  assert.ok(/musicVolume = Math\.round\(_getStoredNumber\('music_volume', 0\.5\) \* 100\)/.test(settingsJs), 'music slider should restore stored value');
+  assert.ok(/_setStoredNumber\('music_volume', this\.value \/ 100\)/.test(settingsJs), 'music slider should persist changes');
+  assert.ok(/SpeechSynthesisUtterance/.test(narratorJs), 'battle narrator should speak audibly through Web Speech when available');
+  assert.ok(/textContent = ''[\s\S]*textContent = message/.test(narratorJs), 'battle narrator should force live-region text replacement');
+  assert.ok(/manifest\.json\?v=20260712b/.test(indexHtml), 'manifest should be cache-busted for updated icon');
+  assert.ok(/icon-192\.png\?v=20260712b/.test(indexHtml), 'launcher icon link should be cache-busted');
+  assert.ok(/assets\/icons\/icon-512\.png/.test(swJs), 'service worker should cache PWA launcher icons');
 });
 
 if (process.exitCode) {

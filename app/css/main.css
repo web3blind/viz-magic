@@ -1433,3 +1433,162 @@ body {
     vertical-align: middle;
     line-height: 1.4;
 }
+
+
+/* ===== Mobile viewport containment and bottom tray hardening ===== */
+html,
+body,
+.app-shell,
+#app-main {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.screen {
+    min-height: 100dvh;
+    max-width: 100vw;
+    overflow-x: hidden;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: calc(180px + env(safe-area-inset-bottom));
+}
+
+#bottom-nav.show {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: stretch;
+    width: 100vw;
+    max-width: 100vw;
+    overflow: hidden;
+}
+
+.nav-tab {
+    min-width: 0;
+    max-width: 100%;
+    padding: 6px 2px;
+    gap: 1px;
+    line-height: 1.05;
+}
+
+.nav-icon {
+    font-size: 1.05rem;
+    margin-bottom: 1px;
+}
+
+.nav-label {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.62rem;
+}
+
+.chronicle-tabs,
+.market-tabs,
+.craft-tabs,
+.arena-tabs,
+.settings-toggle-group,
+.region-travel-options,
+.quest-actions,
+.duel-actions,
+.guild-actions,
+.sell-item-controls,
+.chronicle-compose-footer,
+.modal-actions {
+    max-width: 100%;
+}
+
+@media (max-width: 480px) {
+    .chronicle-tabs,
+    .market-tabs,
+    .craft-tabs,
+    .arena-tabs {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .chronicle-tabs .btn,
+    .market-tabs .btn,
+    .craft-tabs .btn,
+    .arena-tabs .btn,
+    .quest-actions .btn,
+    .duel-actions .btn,
+    .guild-actions .btn {
+        width: 100%;
+        min-width: 0;
+        min-height: var(--touch-target);
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .settings-toggle-group,
+    .region-travel-options,
+    .quest-actions,
+    .duel-actions,
+    .guild-actions,
+    .sell-item-controls,
+    .chronicle-compose-footer,
+    .modal-actions,
+    .listing-footer,
+    .region-header,
+    .char-header,
+    .arena-player-card,
+    .market-my-listing,
+    .consumable-item {
+        flex-wrap: wrap;
+    }
+
+    .btn-sm {
+        min-height: 44px;
+    }
+
+    .screen h1 {
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 360px) {
+    #bottom-nav.show {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .screen {
+        padding-bottom: calc(260px + env(safe-area-inset-bottom));
+    }
+
+    .nav-label {
+        font-size: 0.58rem;
+    }
+}
+
+
+/* Keep recipe rows inside narrow mobile screens. */
+.recipe-card {
+    max-width: 100%;
+    flex-wrap: wrap;
+}
+
+.recipe-info {
+    min-width: 0;
+}
+
+.recipe-status {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.recipe-locked-text,
+.recipe-ready {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+    .recipe-status {
+        flex: 1 1 100%;
+        text-align: left;
+        padding-left: 44px;
+    }
+}

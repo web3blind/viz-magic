@@ -33,6 +33,12 @@ var SettingsScreen = (function() {
         } catch (e) {}
     }
 
+    function _setStoredNumber(key, value) {
+        try {
+            localStorage.setItem(STORAGE_PREFIX + key, String(value));
+        } catch (e) {}
+    }
+
     function render() {
         var t = Helpers.t;
         var el = Helpers.$('screen-settings');
@@ -43,6 +49,7 @@ var SettingsScreen = (function() {
         var highContrast = _getStoredBool('high_contrast', false);
         var reducedMotion = _getStoredBool('reduced_motion', false);
         var sfxVolume = Math.round(_getStoredNumber('sfx_volume', 0.5) * 100);
+        var musicVolume = Math.round(_getStoredNumber('music_volume', 0.5) * 100);
         var narratorEnabled = (typeof BattleNarrator !== 'undefined' && BattleNarrator.isEnabled) ? BattleNarrator.isEnabled() : _getStoredBool('battle_narrator', false);
         if (typeof SoundManager !== 'undefined') SoundManager.setVolume(sfxVolume / 100);
 
@@ -63,7 +70,7 @@ var SettingsScreen = (function() {
                 '<section class="settings-section" aria-label="' + t('settings_sound') + '">' +
                     '<h2>' + t('settings_sound') + '</h2>' +
                     _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume) +
-                    _renderSlider('music-volume', t('settings_music'), 50) +
+                    _renderSlider('music-volume', t('settings_music'), musicVolume) +
                     _renderToggle('narrator-toggle', t('narrator_toggle'), narratorEnabled) +
                     '<button type="button" class="btn btn-secondary btn-sm" id="btn-test-narrator">' + t('narrator_test') + '</button>' +
                     '<div class="settings-field">' +
@@ -163,6 +170,11 @@ var SettingsScreen = (function() {
         var sfxSlider = el.querySelector('#sfx-volume');
         if (sfxSlider) sfxSlider.addEventListener('input', function() {
             SoundManager.setVolume(this.value / 100);
+        });
+
+        var musicSlider = el.querySelector('#music-volume');
+        if (musicSlider) musicSlider.addEventListener('input', function() {
+            _setStoredNumber('music_volume', this.value / 100);
         });
 
         // Toggle buttons

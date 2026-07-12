@@ -107,7 +107,7 @@ var HomeScreen = (function() {
             VizAccount.getAccount(user, function(err, accountData) {
                 if (!err && accountData) {
                     var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
-                    ProgressBar.update('mana-bar', currentEnergy / 100, 100, Math.floor(currentEnergy / 100), 100);
+                    ProgressBar.update('mana-bar', currentEnergy / 100, 100);
                 }
             });
         }
