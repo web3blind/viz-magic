@@ -12,6 +12,7 @@ var ChronicleScreen = (function() {
     var currentTab = 'all'; // all, guild, friends, world
     var REQUIRED_TAG = '#viz_magic';
     var cachedFeedHtml = {};
+    var DRAFT_KEY = VizMagicConfig.STORAGE_PREFIX + 'chronicle_draft';
 
     function render() {
         var t = Helpers.t;
@@ -34,7 +35,7 @@ var ChronicleScreen = (function() {
                 '<textarea id="chronicle-input" class="input-field" rows="3" ' +
                     'maxlength="' + MAX_POST_LENGTH + '" ' +
                     'placeholder="' + t('chronicle_placeholder') + '" ' +
-                    'aria-label="' + t('chronicle_write') + '"></textarea>' +
+                    'aria-label="' + t('chronicle_write') + '">' + Helpers.escapeHtml(_getDraft()) + '</textarea>' +
                 '<div class="chronicle-compose-footer">' +
                     '<span id="chronicle-char-count" class="chronicle-char-count" aria-live="polite">0/' + MAX_POST_LENGTH + '</span>' +
                     '<button class="btn btn-primary" id="btn-chronicle-send">' + t('chronicle_send') + '</button>' +
@@ -51,6 +52,14 @@ var ChronicleScreen = (function() {
         el.innerHTML = html;
         _bindEvents(el);
         _loadFeed();
+    }
+
+    function _getDraft() {
+        try { return localStorage.getItem(DRAFT_KEY) || ''; } catch (e) { return ''; }
+    }
+
+    function _setDraft(text) {
+        try { localStorage.setItem(DRAFT_KEY, text || ''); } catch (e) {}
     }
 
     function _tabButton(id, label) {
@@ -76,6 +85,7 @@ var ChronicleScreen = (function() {
         var counter = Helpers.$('chronicle-char-count');
         if (input && counter) {
             input.addEventListener('input', function() {
+                _setDraft(this.value);
                 var len = this.value.length;
                 counter.textContent = len + '/' + MAX_POST_LENGTH;
                 if (len > MAX_POST_LENGTH) {
@@ -100,6 +110,7 @@ var ChronicleScreen = (function() {
                     _injectLocalPost(text);
                     Toast.success('\u2728 ' + Helpers.t('chronicle_send'));
                     Helpers.$('chronicle-input').value = '';
+                    _setDraft('');
                     Helpers.$('chronicle-char-count').textContent = '0/' + MAX_POST_LENGTH;
                     _loadFeed();
                 }

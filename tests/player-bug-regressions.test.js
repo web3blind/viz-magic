@@ -348,7 +348,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v57/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v58/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -397,7 +397,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v57/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v58/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -527,7 +527,7 @@ test('reported mobile UX issues have explicit fixes', function () {
 
 test('PWA icon and HP heart use expressive color accents', function () {
   assert.ok(/viz-magic-192\.png\?v=20260713a/.test(indexHtml), 'PWA icon link should be cache-busted after plus placement/color update');
-  assert.ok(/viz-magic-v57/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
+  assert.ok(/viz-magic-v58/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
   assert.ok(/label:'❤️ HP'/.test(homeJs), 'HP label should use a red heart emoji variant');
 });
 
@@ -674,6 +674,13 @@ test('reported ux polish issues have explicit fixes', function () {
   assert.ok(/getCurrentMagicNews/.test(worldEventsJs) && /magic_news_sun_wolf/.test(ruJs + enJs), 'home forecast should sometimes show daily magical news');
   assert.ok(/boss_motto/.test(worldBossJs + ruJs + enJs) && /boss_lore/.test(worldBossJs + mainCss), 'world boss screen should have thematic lore filling');
   assert.ok(/matchedVoice/.test(read('app/js/ui/components/battle-narrator.js')), 'male narrator should avoid fake pitch-shift when no male browser voice exists');
+});
+
+
+test('chronicle draft survives rerenders while feed loads', function () {
+  assert.ok(/chronicle.js\?v=20260713a/.test(indexHtml), 'chronicle screen should be cache-busted for draft preservation');
+  assert.ok(/DRAFT_KEY/.test(chronicleJs), 'chronicle should keep a draft key');
+  assert.ok(/_getDraft\(\)/.test(chronicleJs) && /_setDraft\(this\.value\)/.test(chronicleJs), 'typed chronicle text should be restored and saved during rerenders');
 });
 
 if (process.exitCode) {
