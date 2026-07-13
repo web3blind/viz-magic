@@ -7,6 +7,7 @@ var HuntScreen = (function() {
     var selectedCreature = null;
     var selectedSpell = null;
     var stoneItemId = null;
+    var HUNT_HP_DISPLAY_MAX = 5000;
 
     function render() {
         var t = Helpers.t;
@@ -32,7 +33,8 @@ var HuntScreen = (function() {
         selectedSpell = null;
 
         var needsRest = ch && ch.maxHp && ch.hp < ch.maxHp;
-        var hpText = ch && ch.maxHp ? (Helpers.formatNumber(ch.hp || 0) + ' / ' + Helpers.formatNumber(ch.maxHp)) : '';
+        var hpShown = ch && ch.maxHp ? _scaleForDisplay(ch.hp || 0, ch.maxHp, HUNT_HP_DISPLAY_MAX) : 0;
+        var hpText = ch && ch.maxHp ? (Helpers.formatNumber(hpShown) + ' / ' + Helpers.formatNumber(HUNT_HP_DISPLAY_MAX)) : '';
         var html = '<div class="hunt-screen">' +
             '<h1>' + t('hunt_title') + '</h1>' +
             '<section class="hunt-rest-section" aria-label="' + t('hunt_rest_title') + '">' +
@@ -121,6 +123,13 @@ var HuntScreen = (function() {
 
         el.innerHTML = html;
         _bindEvents(el);
+    }
+
+    function _scaleForDisplay(value, max, displayMax) {
+        if (!max || max <= 0) return 0;
+        var shown = Math.round(Math.max(0, value) * displayMax / max);
+        if (shown > displayMax) shown = displayMax;
+        return shown;
     }
 
     function _filterCreaturesForLevel(creatures, character) {

@@ -256,7 +256,7 @@ var HomeScreen = (function() {
     function _iconForScreen(screen) {
         var icons = {
             home: '\uD83C\uDFE0',
-            hunt: '\u2694\uFE0F',
+            hunt: '\uD83C\uDFF9',
             map: '\uD83D\uDDFA\uFE0F',
             guild: '\uD83D\uDEE1\uFE0F',
             marketplace: '\uD83C\uDFEA',

@@ -210,17 +210,23 @@ var MarketplaceScreen = (function() {
         if (sellableItems.length === 0) {
             html += '<div class="empty-state">' + t('market_nothing_to_sell') + '</div>';
         } else {
+            var sellGroups = _groupSellableItems(sellableItems);
             html += '<div class="market-sell-list" role="list">';
-            for (var j = 0; j < sellableItems.length; j++) {
-                var sItem = sellableItems[j];
+            for (var j = 0; j < sellGroups.length; j++) {
+                var group = sellGroups[j];
+                var sItem = group.items[0];
                 var sName = t('item_' + sItem.type) || sItem.type.replace(/_/g, ' ');
                 var sRarity = ItemSystem.getRarityInfo(sItem.rarity);
+                var itemIds = group.items.map(function(it) { return it.id; }).join(',');
                 html += '<div class="market-sell-item ' + Helpers.rarityClass(sItem.rarity) + '" role="listitem" data-item="' + sItem.id + '">';
-                html += '<span class="sell-item-name rarity-color-' + sRarity.name + '">' + sRarity.symbol + ' ' + Helpers.escapeHtml(sName) + '</span>';
+                html += '<span class="sell-item-name rarity-color-' + sRarity.name + '">' + sRarity.symbol + ' ' + Helpers.escapeHtml(sName) +
+                    (group.items.length > 1 ? ' <span class="sell-item-count">×' + group.items.length + '</span>' : '') + '</span>';
                 html += '<div class="sell-item-controls">';
                 html += '<label for="price-' + sItem.id + '" class="sr-only">' + t('market_set_price') + '</label>';
                 html += '<input type="number" id="price-' + sItem.id + '" class="input-field sell-price-input" min="1" placeholder="' + t('market_price_placeholder') + '" aria-label="' + t('market_set_price') + '">';
-                html += '<button class="btn btn-primary btn-sm market-list-btn" data-item="' + sItem.id + '">' + t('market_list_item') + '</button>';
+                html += '<label for="qty-' + sItem.id + '" class="sr-only">' + t('market_set_quantity') + '</label>';
+                html += '<input type="number" id="qty-' + sItem.id + '" class="input-field sell-qty-input" min="1" max="' + group.items.length + '" value="1" aria-label="' + t('market_set_quantity') + '">';
+                html += '<button class="btn btn-primary btn-sm market-list-btn" data-item="' + sItem.id + '" data-items="' + itemIds + '">' + t('market_list_item') + '</button>';
                 html += '</div>';
                 html += '</div>';
             }
@@ -325,8 +331,8 @@ var MarketplaceScreen = (function() {
         var listBtns = container.querySelectorAll('.market-list-btn');
         for (var l = 0; l < listBtns.length; l++) {
             listBtns[l].addEventListener('click', function() {
-                var itemId = this.getAttribute('data-item');
-                _handleList(itemId, container);
+                var itemIds = (this.getAttribute('data-items') || this.getAttribute('data-item') || '').split(',');
+                _handleList(itemIds, container);
             });
         }
 
@@ -414,11 +420,17 @@ var MarketplaceScreen = (function() {
     }
 
     /**
-     * Handle list item for sale
+     * Handle list item(s) for sale. Identical inventory rows are grouped in the UI,
+     * but the chain still receives one listing action per selected item.
      */
-    function _handleList(itemId, container) {
+    function _handleList(itemIds, container) {
         var t = Helpers.t;
-        var priceInput = container.querySelector('#price-' + itemId);
+        itemIds = itemIds || [];
+        if (typeof itemIds === 'string') itemIds = [itemIds];
+        if (!itemIds.length || !itemIds[0]) return;
+
+        var firstId = itemIds[0];
+        var priceInput = container.querySelector('#price-' + firstId);
         if (!priceInput) return;
 
         var price = parseInt(priceInput.value, 10);
@@ -428,24 +440,42 @@ var MarketplaceScreen = (function() {
             return;
         }
 
+        var qtyInput = container.querySelector('#qty-' + firstId);
+        var quantity = qtyInput ? parseInt(qtyInput.value, 10) : 1;
+        if (!quantity || quantity <= 0) quantity = 1;
+        if (quantity > itemIds.length) quantity = itemIds.length;
+        var selectedIds = itemIds.slice(0, quantity);
         var user = typeof VizAccount !== 'undefined' ? VizAccount.getCurrentUser() : '';
-        SoundManager.play('tap');
-        MarketProtocol.broadcastList(itemId, price, 0, function(err, result) {
-            if (err) {
-                Toast.error(t('market_list_error'));
-                SoundManager.play('error');
-            } else {
+        var listed = 0;
+
+        function listNext(index) {
+            if (index >= selectedIds.length) {
+                Toast.success(t('market_listed_count', { count: listed }));
+                SoundManager.play('success');
+                render();
+                return;
+            }
+            var itemId = selectedIds[index];
+            MarketProtocol.broadcastList(itemId, price, 0, function(err, result) {
+                if (err) {
+                    Toast.error(t(listed > 0 ? 'market_list_partial_error' : 'market_list_error', { count: listed }));
+                    SoundManager.play('error');
+                    render();
+                    return;
+                }
                 var blockNum = _resultBlockNum(result);
                 if (user && StateEngine.processMarketListResult(user, itemId, price, 0, blockNum)) {
                     StateEngine.saveCheckpoint(function() {});
                 } else {
                     _addPendingListing(itemId, price, result);
                 }
-                Toast.success(t('market_listed'));
-                SoundManager.play('success');
-                render();
-            }
-        });
+                listed++;
+                listNext(index + 1);
+            });
+        }
+
+        SoundManager.play('tap');
+        listNext(0);
     }
 
     function _resultBlockNum(result) {
@@ -487,6 +517,31 @@ var MarketplaceScreen = (function() {
             if (typeLower.indexOf(searchLower) === -1) return false;
         }
         return true;
+    }
+
+    function _groupSellableItems(items) {
+        var byKey = {};
+        var groups = [];
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var key = _sellGroupKey(item);
+            if (!byKey[key]) {
+                byKey[key] = { key: key, items: [] };
+                groups.push(byKey[key]);
+            }
+            byKey[key].items.push(item);
+        }
+        return groups;
+    }
+
+    function _sellGroupKey(item) {
+        var stats = item.stats || {};
+        var statKeys = ['pot', 'res', 'swf', 'int', 'for_'];
+        var statBits = [];
+        for (var i = 0; i < statKeys.length; i++) {
+            statBits.push(statKeys[i] + ':' + (stats[statKeys[i]] || 0));
+        }
+        return [item.type, item.rarity || 1, statBits.join('|')].join('::');
     }
 
     function _isPendingItem(itemId) {
