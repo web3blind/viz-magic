@@ -343,7 +343,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v46/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v47/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -392,7 +392,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v46/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v47/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -456,7 +456,7 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
   assert.ok(/i18n\/ru.js\?v=20260712k/.test(indexHtml), 'Russian weather copy must be cache-busted');
   assert.ok(/i18n\/en.js\?v=20260712k/.test(indexHtml), 'English weather copy must be cache-busted');
-  assert.ok(/home.js\?v=20260712h/.test(indexHtml), 'home forecast layout must be cache-busted');
+  assert.ok(/home.js\?v=20260713a/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/quests.js\?v=20260712a/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260712b/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260712c/.test(indexHtml), 'leaderboard narrator fix must be cache-busted');
@@ -477,9 +477,9 @@ test('music volume, narrator speech, and PWA icons are durable', function () {
   assert.ok(/_setStoredNumber\('music_volume', this\.value \/ 100\)/.test(settingsJs), 'music slider should persist changes');
   assert.ok(/SpeechSynthesisUtterance/.test(narratorJs), 'battle narrator should speak audibly through Web Speech when available');
   assert.ok(/textContent = ''[\s\S]*textContent = message/.test(narratorJs), 'battle narrator should force live-region text replacement');
-  assert.ok(/manifest\.json\?v=20260712c/.test(indexHtml), 'manifest should be cache-busted for updated icon');
+  assert.ok(/manifest\.json\?v=20260713a/.test(indexHtml), 'manifest should be cache-busted for updated icon');
   assert.ok(/favicon\.ico\?v=20260712c/.test(indexHtml), 'favicon should be explicit for browser shortcut fallback');
-  assert.ok(/viz-magic-192\.png\?v=20260712c/.test(indexHtml), 'launcher icon link should be cache-busted');
+  assert.ok(/viz-magic-192\.png\?v=20260713a/.test(indexHtml), 'launcher icon link should be cache-busted');
   assert.ok(/assets\/icons\/viz-magic-512\.png/.test(swJs), 'service worker should cache PWA launcher icons');
   assert.ok(/viz-magic-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
 });
@@ -516,7 +516,14 @@ test('reported mobile UX issues have explicit fixes', function () {
   assert.ok(/MAX_ACTIVE_QUESTS/.test(questScreenJs), 'quest screen should use the five-quest limit');
   assert.ok(!/BattleNarrator\.announce/.test(leaderboardScreenJs), 'leaderboard should not wake Battle Narrator speech synthesis');
   assert.ok(!/id: 'help'/.test(navJs), 'Help should be removed from bottom tray');
-  assert.ok(/label:'❤ HP'/.test(homeJs) && /label:'⭐ XP'/.test(homeJs), 'home HP and XP should have their own icons');
+  assert.ok(/label:'❤️ HP'/.test(homeJs) && /label:'⭐ XP'/.test(homeJs), 'home HP and XP should have their own icons');
+});
+
+
+test('PWA icon and HP heart use expressive color accents', function () {
+  assert.ok(/viz-magic-192\.png\?v=20260713a/.test(indexHtml), 'PWA icon link should be cache-busted after plus placement/color update');
+  assert.ok(/viz-magic-v47/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
+  assert.ok(/label:'❤️ HP'/.test(homeJs), 'HP label should use a red heart emoji variant');
 });
 
 if (process.exitCode) {
