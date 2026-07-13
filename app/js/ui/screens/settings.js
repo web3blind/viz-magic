@@ -27,6 +27,14 @@ var SettingsScreen = (function() {
         return fallback;
     }
 
+    function _getStoredText(key, fallback) {
+        try {
+            var value = localStorage.getItem(STORAGE_PREFIX + key);
+            if (value !== null && value !== '') return value;
+        } catch (e) {}
+        return fallback;
+    }
+
     function _setStoredBool(key, value) {
         try {
             localStorage.setItem(STORAGE_PREFIX + key, value ? '1' : '0');
@@ -51,6 +59,10 @@ var SettingsScreen = (function() {
         var sfxVolume = Math.round(_getStoredNumber('sfx_volume', 0.5) * 100);
         var musicVolume = Math.round(_getStoredNumber('music_volume', 0.5) * 100);
         var narratorEnabled = (typeof BattleNarrator !== 'undefined' && BattleNarrator.isEnabled) ? BattleNarrator.isEnabled() : _getStoredBool('battle_narrator', false);
+        var narratorVoice = (typeof BattleNarrator !== 'undefined' && BattleNarrator.getVoiceOptions) ? BattleNarrator.getVoiceOptions() : {
+            gender: _getStoredText('narrator_voice_gender', 'male'),
+            timbre: _getStoredText('narrator_voice_timbre', 'rough')
+        };
         if (typeof SoundManager !== 'undefined') SoundManager.setVolume(sfxVolume / 100);
 
         el.innerHTML =
@@ -72,6 +84,16 @@ var SettingsScreen = (function() {
                     _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume) +
                     _renderSlider('music-volume', t('settings_music'), musicVolume) +
                     _renderToggle('narrator-toggle', t('narrator_toggle'), narratorEnabled) +
+                    _renderSelect('narrator-voice-gender', t('narrator_voice_gender'), [
+                        { value: 'male', label: t('narrator_voice_male') },
+                        { value: 'female', label: t('narrator_voice_female') }
+                    ], narratorVoice.gender || 'male') +
+                    _renderSelect('narrator-voice-timbre', t('narrator_voice_timbre'), [
+                        { value: 'rough', label: t('narrator_timbre_rough') },
+                        { value: 'neutral', label: t('narrator_timbre_neutral') },
+                        { value: 'soft', label: t('narrator_timbre_soft') }
+                    ], narratorVoice.timbre || 'rough') +
+                    '<p class="settings-help-text">' + t('narrator_voice_hint') + '</p>' +
                     '<button type="button" class="btn btn-secondary btn-sm" id="btn-test-narrator">' + t('narrator_test') + '</button>' +
                     '<div class="settings-field">' +
                         '<label for="sound-density" class="input-label">' + t('settings_sound_density') + '</label>' +
@@ -149,6 +171,16 @@ var SettingsScreen = (function() {
         '</div>';
     }
 
+    function _renderSelect(id, label, options, selectedValue) {
+        var html = '<div class="settings-field">' +
+            '<label for="' + id + '" class="input-label">' + label + '</label>' +
+            '<select id="' + id + '" class="input-field" aria-label="' + label + '">';
+        for (var i = 0; i < options.length; i++) {
+            html += '<option value="' + options[i].value + '"' + (options[i].value === selectedValue ? ' selected' : '') + '>' + options[i].label + '</option>';
+        }
+        return html + '</select></div>';
+    }
+
     function _bindEvents(el) {
         // Language toggles
         var langRu = el.querySelector('#lang-ru');
@@ -211,11 +243,27 @@ var SettingsScreen = (function() {
             });
         }
 
+        var narratorGender = el.querySelector('#narrator-voice-gender');
+        var narratorTimbre = el.querySelector('#narrator-voice-timbre');
+        function updateNarratorVoice() {
+            if (typeof BattleNarrator !== 'undefined' && BattleNarrator.setVoiceOptions) {
+                BattleNarrator.setVoiceOptions(narratorGender ? narratorGender.value : 'male', narratorTimbre ? narratorTimbre.value : 'rough');
+            } else {
+                try {
+                    localStorage.setItem(STORAGE_PREFIX + 'narrator_voice_gender', narratorGender ? narratorGender.value : 'male');
+                    localStorage.setItem(STORAGE_PREFIX + 'narrator_voice_timbre', narratorTimbre ? narratorTimbre.value : 'rough');
+                } catch (e) {}
+            }
+        }
+        if (narratorGender) narratorGender.addEventListener('change', function() { updateNarratorVoice(); SoundManager.play('tap'); });
+        if (narratorTimbre) narratorTimbre.addEventListener('change', function() { updateNarratorVoice(); SoundManager.play('tap'); });
+
         // Narrator test
         var narratorTest = el.querySelector('#btn-test-narrator');
         if (narratorTest) narratorTest.addEventListener('click', function() {
             SoundManager.play('tap');
             if (typeof BattleNarrator !== 'undefined') {
+                updateNarratorVoice();
                 BattleNarrator.setEnabled(true);
                 var toggle = el.querySelector('#narrator-toggle');
                 if (toggle) {

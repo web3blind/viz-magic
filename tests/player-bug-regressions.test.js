@@ -345,7 +345,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v49/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v50/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -394,7 +394,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v49/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v50/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -456,8 +456,8 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/forecast-card-effect/.test(homeJs + mainCss), 'forecast effect column needs its own thematic icon/card');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should sometimes appear in the forecast');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260713b/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260713b/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260713c/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260713c/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/home.js\?v=20260713a/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/quests.js\?v=20260712a/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260712b/.test(indexHtml), 'bottom tray nav must be cache-busted');
@@ -524,7 +524,7 @@ test('reported mobile UX issues have explicit fixes', function () {
 
 test('PWA icon and HP heart use expressive color accents', function () {
   assert.ok(/viz-magic-192\.png\?v=20260713a/.test(indexHtml), 'PWA icon link should be cache-busted after plus placement/color update');
-  assert.ok(/viz-magic-v49/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
+  assert.ok(/viz-magic-v50/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
   assert.ok(/label:'❤️ HP'/.test(homeJs), 'HP label should use a red heart emoji variant');
 });
 
@@ -549,6 +549,21 @@ test('hunt screen exposes explicit camp rest promised by Help', function () {
   assert.ok(/hunt-rest-section/.test(huntJs) && /btn-rest-camp/.test(huntJs), 'Hunt should show a visible rest-at-camp section and button');
   assert.ok(/VizBroadcast\.restAction/.test(huntJs), 'rest button should record a normal VM rest action');
   assert.ok(/Отдых у костра/.test(ruJs) && /нажми «Отдых у костра»/.test(ruJs), 'Russian Help should name the visible rest button');
+});
+
+
+test('narrator voice preferences support gender and timbre', function () {
+  const settingsJs = read('app/js/ui/screens/settings.js');
+  const narratorJs = read('app/js/ui/components/battle-narrator.js');
+  assert.ok(/battle-narrator.js\?v=20260713a/.test(indexHtml), 'battle narrator should be cache-busted');
+  assert.ok(/settings.js\?v=20260713a/.test(indexHtml), 'settings should be cache-busted');
+  assert.ok(/narrator-voice-gender/.test(settingsJs), 'settings should expose narrator gender select');
+  assert.ok(/narrator-voice-timbre/.test(settingsJs), 'settings should expose narrator timbre select');
+  assert.ok(/setVoiceOptions/.test(narratorJs), 'narrator should persist selectable voice options');
+  assert.ok(/voiceGender = 'male'/.test(narratorJs) && /voiceTimbre = 'rough'/.test(narratorJs), 'default narrator voice should be low male/rough');
+  assert.ok(/utterance\.pitch = \(voiceGender === 'male'\)/.test(narratorJs), 'narrator should adjust pitch by selected gender/timbre');
+  assert.ok(/speechSynthesis\.getVoices/.test(narratorJs), 'narrator should try to select a matching system voice');
+  assert.ok(/narrator_voice_hint/.test(settingsJs + ruJs + enJs), 'settings should explain browser voice limitations');
 });
 
 if (process.exitCode) {

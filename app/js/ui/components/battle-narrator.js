@@ -8,6 +8,8 @@ var BattleNarrator = (function() {
 
     var enabled = false;
     var narratorEl = null;
+    var voiceGender = 'male';
+    var voiceTimbre = 'rough';
 
     /**
      * Initialize the Battle Narrator.
@@ -17,6 +19,8 @@ var BattleNarrator = (function() {
         // Check saved preference
         var saved = localStorage.getItem(VizMagicConfig.STORAGE_PREFIX + 'battle_narrator');
         enabled = saved === 'true' || saved === '1';
+        voiceGender = _getStoredVoiceOption('narrator_voice_gender', 'male');
+        voiceTimbre = _getStoredVoiceOption('narrator_voice_timbre', 'rough');
 
         // Also auto-enable if screen reader likely active
         if (A11y.likelyScreenReader()) {
@@ -58,6 +62,48 @@ var BattleNarrator = (function() {
         return enabled;
     }
 
+    function _getStoredVoiceOption(key, fallback) {
+        try {
+            var value = localStorage.getItem(VizMagicConfig.STORAGE_PREFIX + key);
+            return value || fallback;
+        } catch (e) {}
+        return fallback;
+    }
+
+    function setVoiceOptions(gender, timbre) {
+        voiceGender = gender || 'male';
+        voiceTimbre = timbre || 'rough';
+        try {
+            localStorage.setItem(VizMagicConfig.STORAGE_PREFIX + 'narrator_voice_gender', voiceGender);
+            localStorage.setItem(VizMagicConfig.STORAGE_PREFIX + 'narrator_voice_timbre', voiceTimbre);
+        } catch (e) {}
+    }
+
+    function getVoiceOptions() {
+        return { gender: voiceGender, timbre: voiceTimbre };
+    }
+
+    function _selectVoice(lang) {
+        if (typeof window === 'undefined' || !window.speechSynthesis || !window.speechSynthesis.getVoices) return null;
+        var voices = window.speechSynthesis.getVoices() || [];
+        if (!voices.length) return null;
+        var langPrefix = (lang || 'ru-RU').split('-')[0].toLowerCase();
+        var localVoices = [];
+        for (var i = 0; i < voices.length; i++) {
+            var v = voices[i];
+            if (v && v.lang && v.lang.toLowerCase().indexOf(langPrefix) === 0) localVoices.push(v);
+        }
+        var pool = localVoices.length ? localVoices : voices;
+        var maleHints = /male|муж|alex|alexander|maxim|pavel|dmitry|nikolai|yuri|george|daniel|denis|sergey|anton/i;
+        var femaleHints = /female|жен|anna|elena|irina|maria|oksana|svetlana|google русский|milena|alice/i;
+        var hints = voiceGender === 'female' ? femaleHints : maleHints;
+        for (var j = 0; j < pool.length; j++) {
+            var name = (pool[j].name || '') + ' ' + (pool[j].voiceURI || '');
+            if (hints.test(name)) return pool[j];
+        }
+        return pool[0] || null;
+    }
+
     /**
      * Announce a message through the narrator.
      * @param {string} message
@@ -86,9 +132,11 @@ var BattleNarrator = (function() {
         try {
             var utterance = new SpeechSynthesisUtterance(message);
             var lang = (Helpers.getCurrentLang && Helpers.getCurrentLang() === 'en') ? 'en-US' : 'ru-RU';
+            var voice = _selectVoice(lang);
             utterance.lang = lang;
-            utterance.rate = 1;
-            utterance.pitch = 1;
+            if (voice) utterance.voice = voice;
+            utterance.rate = (voiceTimbre === 'rough') ? 0.88 : (voiceTimbre === 'soft' ? 0.96 : 1);
+            utterance.pitch = (voiceGender === 'male') ? (voiceTimbre === 'rough' ? 0.65 : 0.82) : (voiceTimbre === 'rough' ? 0.9 : 1.08);
             utterance.volume = 1;
             window.speechSynthesis.cancel();
             window.speechSynthesis.speak(utterance);
@@ -246,6 +294,8 @@ var BattleNarrator = (function() {
         init: init,
         setEnabled: setEnabled,
         isEnabled: isEnabled,
+        setVoiceOptions: setVoiceOptions,
+        getVoiceOptions: getVoiceOptions,
         announce: announce,
         spatialHint: spatialHint,
         announcePvEAttack: announcePvEAttack,
