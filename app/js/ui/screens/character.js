@@ -39,13 +39,11 @@ var CharacterScreen = (function() {
                     '<p>' + t('class_' + ch.className) + ' \u2022 ' + t('home_level') + ' ' + ch.level + '</p></div>' +
                 '</div>' +
                 ProgressBar.create({id:'char-hp-bar', label:'❤️ HP', value:ch.hp, max:ch.maxHp, displayValue:hpShown, displayMax:CHARACTER_HP_DISPLAY_MAX, color:'#e53935'}) +
+                '<p class="quest-desc character-vital-note">' + t('char_hp_explainer') + '</p>' +
                 ProgressBar.create({id:'char-xp-bar', label:'⭐ XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:CHARACTER_XP_DISPLAY_MAX, color:'#ffc107'}) +
+                '<p class="quest-desc character-vital-note">' + t('char_xp_explainer') + '</p>' +
                 ProgressBar.create({id:'char-mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
-                '<div class="character-growth-notes">' +
-                    '<p class="quest-desc">' + t('char_hp_explainer') + '</p>' +
-                    '<p class="quest-desc">' + t('char_xp_explainer') + '</p>' +
-                    '<p class="quest-desc">' + t('char_mana_explainer') + '</p>' +
-                '</div>' +
+                '<p class="quest-desc character-vital-note">' + t('char_mana_explainer') + '</p>' +
                 '<h2>' + t('char_stats') + '</h2>' +
                 '<div class="stats-list">' +
                     _statRow(t('char_potency'), totalPot) +

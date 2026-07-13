@@ -345,7 +345,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v50/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v51/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -381,7 +381,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/beforeinstallprompt/.test(appJs), 'app should listen for PWA install prompt');
   assert.ok(/function installShortcut/.test(appJs), 'app should expose an install shortcut action');
   assert.ok(/home_install_shortcut/.test(homeJs + ruJs + enJs), 'home screen should offer install-shortcut guidance');
-  assert.ok(/var PRIMARY_HOME_SCREENS = \['home', 'hunt', 'map', 'chronicle', 'guild', 'marketplace', 'crafting', 'character', 'temple', 'leaderboard'\]/.test(homeJs), 'home primary grid should put Chronicle in the first visible row');
+  assert.ok(/var PRIMARY_HOME_SCREENS = \['home', 'hunt', 'map', 'inventory', 'arena', 'quests', 'guild', 'marketplace', 'crafting', 'temple'\]/.test(homeJs), 'home primary grid should put bag, arena and quests in the first visible sections');
   assert.ok(/nav_bazaar/.test(homeJs) && /nav_crafting/.test(homeJs), 'home primary labels should reuse bottom-nav translation keys');
   assert.ok(/prophecy-mini-button/.test(homeJs), 'daily prophecy card should be an active navigation button');
   assert.ok(/Helpers.EventBus.emit\('navigate', 'quests'\)/.test(homeJs), 'daily prophecy should navigate to quests');
@@ -394,7 +394,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v50/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v51/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -458,7 +458,7 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
   assert.ok(/i18n\/ru.js\?v=20260713c/.test(indexHtml), 'Russian weather copy must be cache-busted');
   assert.ok(/i18n\/en.js\?v=20260713c/.test(indexHtml), 'English weather copy must be cache-busted');
-  assert.ok(/home.js\?v=20260713a/.test(indexHtml), 'home forecast layout must be cache-busted');
+  assert.ok(/home.js\?v=20260713b/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/quests.js\?v=20260712a/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260712b/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260712c/.test(indexHtml), 'leaderboard narrator fix must be cache-busted');
@@ -524,13 +524,13 @@ test('reported mobile UX issues have explicit fixes', function () {
 
 test('PWA icon and HP heart use expressive color accents', function () {
   assert.ok(/viz-magic-192\.png\?v=20260713a/.test(indexHtml), 'PWA icon link should be cache-busted after plus placement/color update');
-  assert.ok(/viz-magic-v50/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
+  assert.ok(/viz-magic-v51/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
   assert.ok(/label:'❤️ HP'/.test(homeJs), 'HP label should use a red heart emoji variant');
 });
 
 
 test('character screen uses current home-scale vitals and growth explainers', function () {
-  assert.ok(/character.js\?v=20260713a/.test(indexHtml), 'character screen should be cache-busted');
+  assert.ok(/character.js\?v=20260713b/.test(indexHtml), 'character screen should be cache-busted');
   assert.ok(/CHARACTER_HP_DISPLAY_MAX = 5000/.test(characterScreenJs), 'character HP should use the same 5000 display scale as Home');
   assert.ok(/label:'❤️ HP'/.test(characterScreenJs), 'character HP should have the red heart icon');
   assert.ok(/label:'⭐ XP'/.test(characterScreenJs), 'character XP should have an icon and visible bar');
@@ -564,6 +564,20 @@ test('narrator voice preferences support gender and timbre', function () {
   assert.ok(/utterance\.pitch = \(voiceGender === 'male'\)/.test(narratorJs), 'narrator should adjust pitch by selected gender/timbre');
   assert.ok(/speechSynthesis\.getVoices/.test(narratorJs), 'narrator should try to select a matching system voice');
   assert.ok(/narrator_voice_hint/.test(settingsJs + ruJs + enJs), 'settings should explain browser voice limitations');
+});
+
+
+test('home action tiles reflect Denis priority order', function () {
+  assert.ok(/home.js\?v=20260713b/.test(indexHtml), 'home screen should be cache-busted for action order');
+  assert.ok(/PRIMARY_HOME_SCREENS = \['home', 'hunt', 'map', 'inventory', 'arena', 'quests', 'guild', 'marketplace', 'crafting', 'temple'\]/.test(homeJs), 'primary row should include bag, arena and quests');
+  assert.ok(/SECONDARY_HOME_SCREENS = \['chronicle', 'character', 'leaderboard', 'world-boss', 'settings', 'help'\]/.test(homeJs), 'secondary sections should hold chronicle, character and leaderboard');
+});
+
+
+test('character vital explainers are placed immediately after their bars', function () {
+  assert.ok(/character.js\?v=20260713b/.test(indexHtml), 'character screen should be cache-busted for vital layout');
+  assert.ok(/char-hp-bar[\s\S]*char_hp_explainer[\s\S]*char-xp-bar[\s\S]*char_xp_explainer[\s\S]*char-mana-bar[\s\S]*char_mana_explainer/.test(characterScreenJs), 'character vital explanations should follow HP, XP and Mana bars respectively');
+  assert.ok(!/character-growth-notes/.test(characterScreenJs), 'vital explanations should not be grouped away from their bars');
 });
 
 if (process.exitCode) {
