@@ -6,7 +6,7 @@ var App = (function() {
     'use strict';
 
     var currentScreen = 'landing';
-    var screens = ['landing', 'onboarding', 'login', 'home', 'character', 'hunt', 'inventory', 'chronicle', 'duel', 'arena', 'guild', 'map', 'marketplace', 'crafting', 'quests', 'world-boss', 'settings', 'help', 'leaderboard', 'temple'];
+    var screens = ['landing', 'onboarding', 'login', 'home', 'character', 'hunt', 'inventory', 'chronicle', 'duel', 'arena', 'guild', 'map', 'marketplace', 'crafting', 'quests', 'world-boss', 'settings', 'help', 'leaderboard', 'temple', 'developers'];
     var initialized = false;
     var _pollTimer = null;
     var _lastPolledBlock = 0;
@@ -170,7 +170,7 @@ var App = (function() {
         _renderScreen(screenId);
 
         // Update navigation
-        var gameScreens = ['home', 'character', 'hunt', 'inventory', 'chronicle', 'duel', 'arena', 'guild', 'map', 'marketplace', 'crafting', 'quests', 'world-boss', 'settings', 'help', 'leaderboard', 'temple'];
+        var gameScreens = ['home', 'character', 'hunt', 'inventory', 'chronicle', 'duel', 'arena', 'guild', 'map', 'marketplace', 'crafting', 'quests', 'world-boss', 'settings', 'help', 'leaderboard', 'temple', 'developers'];
         var nav = Helpers.$('bottom-nav');
         if (gameScreens.indexOf(screenId) !== -1) {
             nav.classList.add('show');
@@ -216,6 +216,7 @@ var App = (function() {
             case 'help':        if (typeof HelpScreen !== 'undefined') HelpScreen.render(); break;
             case 'leaderboard': if (typeof LeaderboardScreen !== 'undefined') LeaderboardScreen.render(); break;
             case 'temple':      if (typeof TempleScreen !== 'undefined') TempleScreen.render(); break;
+            case 'developers':  if (typeof DevelopersScreen !== 'undefined') DevelopersScreen.render(); break;
         }
     }
 

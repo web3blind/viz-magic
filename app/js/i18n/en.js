@@ -566,6 +566,24 @@ var LangEN = {
     nav_marketplace: 'Bazaar',
     nav_crafting: 'Craft',
 
+    // Developers
+    nav_developers: 'Developers',
+    developers_title: 'Developers',
+    developers_about_title: 'Who builds Viz Magic',
+    developers_about_text: 'Viz Magic grows as an open VIZ blockchain game: mechanics, creatures, writing, and accessibility can improve through developer and player contributions.',
+    developers_primary_dev: 'Primary developer',
+    developers_reward_title: 'Thank the developer',
+    developers_reward_text: 'If the game gave you joy, you can voluntarily send a small VIZ award to the developer.',
+    developers_reward_note: 'This is optional. It spends the selected share of your mana/energy and gives no gameplay advantage.',
+    developers_login_required: 'Enter the World to send a developer reward.',
+    developers_reward_button: 'Reward {amount}',
+    developers_reward_confirm_title: 'Confirm reward',
+    developers_reward_confirm_text: 'Send {amount} mana to @{account}? This is a voluntary thank-you and gives no gameplay advantage.',
+    developers_reward_confirm_button: 'Send reward',
+    developers_reward_success: 'Thank you! Developer reward sent.',
+    developers_reward_error: 'Could not send the reward. Check login and try again.',
+    developers_reward_memo: 'thanks for Viz Magic',
+
     // Marketplace
     market_title: 'Bazaar',
     market_tabs: 'Bazaar sections',

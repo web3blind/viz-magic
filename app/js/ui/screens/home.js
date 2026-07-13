@@ -6,7 +6,7 @@ var HomeScreen = (function() {
     'use strict';
 
     var PRIMARY_HOME_SCREENS = ['home', 'hunt', 'map', 'inventory', 'arena', 'quests', 'guild', 'marketplace', 'crafting', 'temple'];
-    var SECONDARY_HOME_SCREENS = ['chronicle', 'character', 'leaderboard', 'world-boss', 'settings', 'help'];
+    var SECONDARY_HOME_SCREENS = ['chronicle', 'character', 'leaderboard', 'world-boss', 'settings', 'help', 'developers'];
     var HOME_HP_DISPLAY_MAX = 5000;
     var HOME_XP_DISPLAY_MAX = 3000;
 
@@ -248,6 +248,7 @@ var HomeScreen = (function() {
         if (primary && screen === 'marketplace') return t('nav_bazaar');
         if (primary && screen === 'crafting') return t('nav_crafting');
         if (screen === 'world-boss') return t('nav_world-boss');
+        if (screen === 'developers') return t('nav_developers');
         if (screen === 'settings') return t('nav_settings') || t('settings');
         if (screen === 'arena') return t('nav_duel') || t('nav_arena');
         return t('nav_' + screen) || screen;
@@ -270,7 +271,8 @@ var HomeScreen = (function() {
             arena: '\u2694\uFE0F',
             quests: '\uD83D\uDCDC',
             'world-boss': '\uD83D\uDC32',
-            settings: '\u2699\uFE0F'
+            settings: '\u2699\uFE0F',
+            developers: '\uD83D\uDEE0\uFE0F'
         };
         return icons[screen] || '\u2728';
     }

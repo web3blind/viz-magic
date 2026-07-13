@@ -566,6 +566,24 @@ var LangRU = {
     nav_marketplace: 'Базар',
     nav_crafting: 'Мастерская',
 
+    // Developers
+    nav_developers: 'Разработчики',
+    developers_title: 'Разработчики',
+    developers_about_title: 'Кто делает Viz Magic',
+    developers_about_text: 'Viz Magic развивается как открытая игра на блокчейне VIZ: механики, существа, тексты и доступность можно улучшать через вклад разработчиков и игроков.',
+    developers_primary_dev: 'Основной разработчик',
+    developers_reward_title: 'Поблагодарить разработчика',
+    developers_reward_text: 'Если игра принесла удовольствие, можно добровольно отправить небольшую награду разработчику через VIZ award.',
+    developers_reward_note: 'Это необязательное действие. Оно тратит выбранную долю вашей маны/энергии и не даёт игрового преимущества.',
+    developers_login_required: 'Войдите в Мир, чтобы отправить награду разработчику.',
+    developers_reward_button: 'Наградить на {amount}',
+    developers_reward_confirm_title: 'Подтвердить награду',
+    developers_reward_confirm_text: 'Отправить {amount} маны аккаунту @{account}? Это добровольная благодарность и она не даёт игрового преимущества.',
+    developers_reward_confirm_button: 'Отправить награду',
+    developers_reward_success: 'Спасибо! Награда разработчику отправлена.',
+    developers_reward_error: 'Не удалось отправить награду. Проверьте вход и попробуйте снова.',
+    developers_reward_memo: 'спасибо за Viz Magic',
+
     // Marketplace
     market_title: 'Базар',
     market_tabs: 'Разделы базара',
