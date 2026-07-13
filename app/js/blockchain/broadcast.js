@@ -254,6 +254,17 @@ var VizBroadcast = (function() {
     }
 
     /**
+     * Rest at camp: restore HP through a normal VM action.
+     * @param {Function} callback
+     */
+    function restAction(callback) {
+        gameAction({
+            t: cfg.ACTION_TYPES.REST,
+            d: {}
+        }, callback);
+    }
+
+    /**
      * Update account metadata (Grimoire)
      * @param {string} jsonMetadata - JSON string
      * @param {Function} callback
@@ -343,6 +354,7 @@ var VizBroadcast = (function() {
         armageddonAction: armageddonAction,
         templeOffering: templeOffering,
         questAction: questAction,
+        restAction: restAction,
         updateMetadata: updateMetadata,
         chroniclePost: chroniclePost,
         delegateShares: delegateShares,

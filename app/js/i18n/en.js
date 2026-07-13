@@ -167,6 +167,14 @@ var LangEN = {
     stat_for: 'Fortune',
 
     // Hunt
+    hunt_rest_title: 'Rest at camp',
+    hunt_rest_desc: 'Safe rest fully restores HP before the next hunt.',
+    hunt_rest_hp_now: 'Current: {hp} HP.',
+    hunt_rest_button: 'Rest at camp and restore HP',
+    hunt_rest_full: 'HP already full',
+    hunt_rest_pending: 'Recording camp rest in the World...',
+    hunt_rest_success: 'You rested at camp. HP is fully restored.',
+    hunt_rest_error: 'Could not record rest. Check the World connection and try again.',
     hunt_title: 'Hunt',
     hunt_choose_creature: 'Choose your prey',
     hunt_no_creatures_here: 'There are currently no huntable creatures in this location.',
@@ -1064,7 +1072,7 @@ var LangEN = {
     help_mana_text: 'Mana is your energy (0–100%). Every spell costs mana. Full regeneration takes ~5 days. Shown as a percentage — 1.00% = 100 basis points on the blockchain.',
 
     help_section_hp: 'HP & Recovery',
-    help_hp_text: 'HP is your health. Max HP grows from your level, class, and Resilience: base 100 + level × 10 + RES × 3, then your class multiplier is applied. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 100 blocks, ~5 min). Full recovery: visit the Hunt screen (camp rest) or use a Health Scroll (craftable or dropped by creatures).',
+    help_hp_text: 'HP is your health. Max HP grows from your level, class, and Resilience: base 100 + level × 10 + RES × 3, then your class multiplier is applied. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 100 blocks, ~5 min). Full recovery: open the Hunt screen and press “Rest at camp”, or use a Health Scroll (craftable or dropped by creatures).',
 
     help_section_quests: 'Quests & Prophecies',
     help_quests_text: 'Regular quests are accepted in the Quests screen. “Traveler” currently means visiting 3 different regions via the world map — open the map, choose another region, and press “Travel”. The Daily Prophecy must also be accepted first, then completed. If it tells you to bless others, do that in the Chronicle with the “Bless” button on other mages\' entries.',

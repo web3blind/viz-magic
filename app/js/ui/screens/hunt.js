@@ -31,8 +31,17 @@ var HuntScreen = (function() {
         selectedCreature = null;
         selectedSpell = null;
 
+        var needsRest = ch && ch.maxHp && ch.hp < ch.maxHp;
+        var hpText = ch && ch.maxHp ? (Helpers.formatNumber(ch.hp || 0) + ' / ' + Helpers.formatNumber(ch.maxHp)) : '';
         var html = '<div class="hunt-screen">' +
             '<h1>' + t('hunt_title') + '</h1>' +
+            '<section class="hunt-rest-section" aria-label="' + t('hunt_rest_title') + '">' +
+                '<h2>⛺ ' + t('hunt_rest_title') + '</h2>' +
+                '<p class="quest-desc">' + t('hunt_rest_desc') + (hpText ? ' ' + t('hunt_rest_hp_now', {hp: hpText}) : '') + '</p>' +
+                '<button class="btn btn-secondary" id="btn-rest-camp" type="button"' + (needsRest ? '' : ' disabled') + '>' +
+                    (needsRest ? t('hunt_rest_button') : t('hunt_rest_full')) +
+                '</button>' +
+            '</section>' +
             '<h2>' + t('hunt_choose_creature') + '</h2>';
 
         if (!creatures.length) {
@@ -143,6 +152,11 @@ var HuntScreen = (function() {
 
         Helpers.$('btn-attack').addEventListener('click', _doHunt);
 
+        var restBtn = Helpers.$('btn-rest-camp');
+        if (restBtn) {
+            restBtn.addEventListener('click', _doRest);
+        }
+
         var returnBtn = Helpers.$('btn-return-commons');
         if (returnBtn) {
             returnBtn.addEventListener('click', function() {
@@ -175,6 +189,39 @@ var HuntScreen = (function() {
 
     function _checkReady() {
         Helpers.$('btn-attack').disabled = !(selectedCreature && selectedSpell);
+    }
+
+    function _doRest() {
+        var t = Helpers.t;
+        var resultEl = Helpers.$('hunt-result');
+        var btn = Helpers.$('btn-rest-camp');
+        var user = VizAccount.getCurrentUser();
+        var ch = StateEngine.getCharacter(user);
+        if (!user || !ch) {
+            if (resultEl) resultEl.innerHTML = '<p class="error">' + t('error_network') + '</p>';
+            return;
+        }
+        if (!ch.maxHp || ch.hp >= ch.maxHp) return;
+        if (btn) btn.disabled = true;
+        if (resultEl) resultEl.innerHTML = '<p class="pending">' + t('hunt_rest_pending') + '</p>';
+        SoundManager.play('tap');
+        VizBroadcast.restAction(function(err, broadcastResult) {
+            if (err) {
+                if (resultEl) resultEl.innerHTML = '<p class="error">' + t('hunt_rest_error') + '</p>';
+                if (btn) btn.disabled = false;
+                return;
+            }
+            var blockNum = (broadcastResult && broadcastResult.action && broadcastResult.action.block_num) || (StateEngine.getState().headBlock || 0);
+            var ev = StateEngine.processRestResult(user, blockNum);
+            if (!ev) {
+                if (resultEl) resultEl.innerHTML = '<p class="error">' + t('hunt_rest_error') + '</p>';
+                if (btn) btn.disabled = false;
+                return;
+            }
+            CheckpointSystem.saveCheckpoint('global', blockNum, StateEngine.getState(), function() {});
+            if (resultEl) resultEl.innerHTML = '<p class="success">' + t('hunt_rest_success') + '</p>';
+            render();
+        });
     }
 
     function _doHunt() {

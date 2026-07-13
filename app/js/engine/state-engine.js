@@ -1408,6 +1408,18 @@ var StateEngine = (function() {
     }
 
     /**
+     * Process rest for live UI — same authoritative mutation path as replay.
+     * @param {string} account
+     * @param {number} blockNum
+     * @returns {Object|null}
+     */
+    function processRestResult(account, blockNum) {
+        var events = _handleRest(account, blockNum || 0);
+        if (!events.length) return null;
+        return events[0];
+    }
+
+    /**
      * Process crafting for live UI — same authoritative mutation path as replay.
      * @param {string} account
      * @param {string} recipeId
@@ -1507,6 +1519,7 @@ var StateEngine = (function() {
         getTempleBlessing: getTempleBlessing,
         processHuntResult: processHuntResult,
         processMoveResult: processMoveResult,
+        processRestResult: processRestResult,
         processCraftResult: processCraftResult,
         processMarketListResult: processMarketListResult,
         processMarketCancelResult: processMarketCancelResult,
