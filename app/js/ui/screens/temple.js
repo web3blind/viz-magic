@@ -43,6 +43,7 @@ var TempleScreen = (function() {
                 '<h1 data-screen-focus>' + t('temple_title') + '</h1>' +
                 '<p>' + t('temple_intro') + '</p>' +
                 '<p class="temple-balance-note">' + t('temple_balance_note') + '</p>' +
+                '<p id="temple-status-region" class="temple-status-region" role="status" aria-live="polite"></p>' +
             '</div>' +
             '<div class="temple-deities">';
 
@@ -109,6 +110,13 @@ var TempleScreen = (function() {
         return html;
     }
 
+    function _setTempleStatus(message, isSuccess) {
+        var el = Helpers.$('temple-status-region');
+        if (!el) return;
+        el.className = 'temple-status-region' + (isSuccess ? ' temple-status-success' : '');
+        el.textContent = message || '';
+    }
+
     function _makeOffering(deityId) {
         if (busy) return;
         var deity = null;
@@ -117,6 +125,7 @@ var TempleScreen = (function() {
         }
         if (!deity) return;
         if (!VizAccount.isLoggedIn || !VizAccount.isLoggedIn()) {
+            _setTempleStatus(Helpers.t('not_logged_in'), false);
             Toast.error(Helpers.t('not_logged_in'));
             return;
         }
@@ -126,6 +135,7 @@ var TempleScreen = (function() {
         var headBlock = state.headBlock || 0;
         var last = state.temple && state.temple[user] ? (state.temple[user][deity.id] || 0) : 0;
         if (last && headBlock && headBlock - last < 28800) {
+            _setTempleStatus(Helpers.t('temple_cooldown_active'), false);
             Toast.info(Helpers.t('temple_cooldown_active'));
             return;
         }
@@ -135,22 +145,26 @@ var TempleScreen = (function() {
         var shouldPublish = !socialToggle || socialToggle.checked;
 
         busy = true;
+        _setTempleStatus(Helpers.t('temple_offering_started'), false);
         Toast.info(Helpers.t('temple_offering_started'));
         VizAccount.getAccount(user, function(energyErr, accountData) {
             if (energyErr || !accountData) {
                 busy = false;
+                _setTempleStatus(Helpers.t('temple_energy_check_failed'), false);
                 Toast.error(Helpers.t('temple_energy_check_failed'));
                 return;
             }
             var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
             if (currentEnergy < OFFERING_ENERGY) {
                 busy = false;
+                _setTempleStatus(Helpers.t('temple_not_enough_mana'), false);
                 Toast.error(Helpers.t('temple_not_enough_mana'));
                 return;
             }
             VizBroadcast.templeOffering(deity.id, deity.target, OFFERING_ENERGY, prayerText, function(err, result) {
                 busy = false;
                 if (err) {
+                    _setTempleStatus(Helpers.t('temple_offering_failed'), false);
                     Toast.error(Helpers.t('temple_offering_failed'));
                     return;
                 }
@@ -162,9 +176,11 @@ var TempleScreen = (function() {
                     user, deity.id, deity.target, OFFERING_ENERGY, blockNum, prayerText
                 );
                 if (event && event.type === 'temple_offering_rejected') {
+                    _setTempleStatus(Helpers.t('temple_cooldown_active'), false);
                     Toast.info(Helpers.t('temple_cooldown_active'));
                 } else {
                     StateEngine.saveCheckpoint(function() {});
+                    _setTempleStatus(Helpers.t('temple_offering_success'), true);
                     Toast.success(Helpers.t('temple_offering_success'));
                     if (shouldPublish) {
                         _publishPrayerPost(deity, prayerText, user);

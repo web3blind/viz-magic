@@ -83,6 +83,14 @@ var HomeScreen = (function() {
             });
         }
 
+        var eventButtons = el.querySelectorAll('.event-banner-button');
+        for (var eb = 0; eb < eventButtons.length; eb++) {
+            eventButtons[eb].addEventListener('click', function() {
+                SoundManager.play('tap');
+                Helpers.EventBus.emit('navigate', this.getAttribute('data-screen'));
+            });
+        }
+
         // Boss alert click
         var bossAlert = el.querySelector('.boss-alert');
         if (bossAlert) {
@@ -140,11 +148,21 @@ var HomeScreen = (function() {
             if (evt.type === 'world_boss') continue; // Shown separately
             var timeLeft = Math.floor(evt.blocksRemaining * 3 / 60);
             var timeStr = timeLeft > 60 ? Math.floor(timeLeft / 60) + 'h' : timeLeft + 'm';
-            html += '<div class="event-banner-item">' +
+            var descKey = evt.nameKey + '_desc';
+            var desc = t(descKey);
+            if (!desc || desc === descKey) desc = '';
+            var target = evt.type === 'minor_rift' ? 'hunt' : '';
+            var tag = target ? 'button' : 'div';
+            var attrs = target ? ' type="button" data-screen="' + target + '"' : '';
+            html += '<' + tag + ' class="event-banner-item event-banner-' + evt.type + (target ? ' event-banner-button' : '') + '"' + attrs + ' aria-label="' +
+                t(evt.nameKey) + (desc ? '. ' + desc : '') + ' ' + t('event_time_left', {time: timeStr}) + '">' +
                 '<span class="event-icon" aria-hidden="true">' + evt.icon + '</span>' +
-                '<span class="event-name">' + t(evt.nameKey) + '</span>' +
+                '<span class="event-copy">' +
+                    '<span class="event-name">' + t(evt.nameKey) + '</span>' +
+                    (desc ? '<span class="event-desc">' + desc + '</span>' : '') +
+                '</span>' +
                 '<span class="event-timer">' + timeStr + '</span>' +
-            '</div>';
+            '</' + tag + '>';
         }
         html += '</div>';
         return html;

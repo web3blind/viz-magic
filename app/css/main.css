@@ -975,7 +975,12 @@ body {
     padding: 8px 12px; background: rgba(212,168,67,0.1);
     border: 1px solid var(--color-primary); border-radius: var(--radius-sm);
     font-size: 0.9rem; animation: eventPulse 2s ease-in-out infinite;
+    color: var(--color-text); text-align: left; width: 100%;
 }
+.event-banner-button { cursor: pointer; font: inherit; }
+.event-banner-button:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.event-copy { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.event-desc { color: var(--color-text-muted); font-size: 0.82rem; }
 @keyframes eventPulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.8; }
@@ -1836,4 +1841,15 @@ body,
     border-radius: var(--radius-sm);
     background: var(--color-surface-2);
     color: var(--color-text-muted);
+}
+
+
+.temple-status-region {
+    min-height: 1.2em;
+    margin-top: 8px;
+    color: var(--color-text-muted);
+}
+.temple-status-success {
+    color: var(--color-success);
+    font-weight: 600;
 }
