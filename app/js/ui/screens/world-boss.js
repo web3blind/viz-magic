@@ -48,6 +48,8 @@ var WorldBossScreen = (function() {
                 '<div class="boss-icon-large" aria-hidden="true">\uD83D\uDC32</div>' +
                 '<h2>' + t('boss_dormant') + '</h2>' +
                 '<p>' + t('boss_dormant_desc') + '</p>' +
+                '<blockquote class="boss-motto">' + t('boss_motto') + '</blockquote>' +
+                _renderBossLore(t) +
                 nextInfo +
             '</div>' +
         '</div>';
@@ -68,6 +70,8 @@ var WorldBossScreen = (function() {
                 '<h2>' + t('npc_aether_dragon') + '</h2>' +
                 '<div class="boss-timer">\u23F1 ' + t('boss_time_remaining') + ': ' + timeStr + '</div>' +
             '</div>' +
+
+            _renderBossLore(t) +
 
             // HP bar
             '<div class="boss-hp-section">' +
@@ -125,6 +129,7 @@ var WorldBossScreen = (function() {
                 '<div class="boss-icon-large defeated" aria-hidden="true">\uD83D\uDC32</div>' +
                 '<h2>' + t('boss_defeated') + '!</h2>' +
                 '<p>' + t('boss_defeated_desc') + '</p>' +
+                '<blockquote class="boss-motto">' + t('boss_motto') + '</blockquote>' +
             '</div>' +
 
             '<div class="boss-loot-section">' +
@@ -148,6 +153,18 @@ var WorldBossScreen = (function() {
 
         html += '</div></div>';
         return html;
+    }
+
+    function _renderBossLore(t) {
+        return '<section class="boss-lore" aria-label="' + t('boss_lore_title') + '">' +
+            '<h3>' + t('boss_lore_title') + '</h3>' +
+            '<p>' + t('boss_lore_text') + '</p>' +
+            '<ul>' +
+                '<li>' + t('boss_lore_rule_1') + '</li>' +
+                '<li>' + t('boss_lore_rule_2') + '</li>' +
+                '<li>' + t('boss_lore_rule_3') + '</li>' +
+            '</ul>' +
+        '</section>';
     }
 
     function _renderLeaderboard(leaderboard, t) {

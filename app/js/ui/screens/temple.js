@@ -18,6 +18,7 @@ var TempleScreen = (function() {
             id: 'fire_goddess',
             target: 'null',
             image: 'assets/deities/goddess-fire.svg',
+            icon: '🔥',
             item: 'flame_votive_mark',
             socialTag: '#fire'
         },
@@ -25,6 +26,7 @@ var TempleScreen = (function() {
             id: 'labor_god',
             target: 'committee',
             image: 'assets/deities/god-labor.svg',
+            icon: '🔨',
             item: 'labor_votive_mark',
             socialTag: '#labor'
         }
@@ -76,7 +78,8 @@ var TempleScreen = (function() {
         var last = temple[deity.id] || 0;
         var cooldownText = last ? t('temple_last_offering_recorded') : t('temple_no_offering_yet');
         return '<article class="temple-card temple-card-' + deity.id + '">' +
-            '<img class="temple-deity-image" src="' + deity.image + '" alt="" aria-hidden="true">' +
+            '<span class="temple-deity-fallback" aria-hidden="true">' + (deity.icon || '✦') + '</span>' +
+            '<img class="temple-deity-image" src="' + deity.image + '" alt="" aria-hidden="true" loading="eager" decoding="async">' +
             '<div class="temple-deity-copy">' +
                 '<h2>' + t('temple_' + deity.id + '_name') + '</h2>' +
                 '<p class="temple-domain">' + t('temple_' + deity.id + '_domain') + '</p>' +

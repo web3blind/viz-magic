@@ -58,6 +58,23 @@ var WorldEvents = (function() {
         }
     ];
 
+
+    /** Daily magical news: flavor-only, deterministic from block-day. */
+    var MAGIC_NEWS = [
+        { icon: '📰', summaryKey: 'magic_news_sun_wolf' },
+        { icon: '🌲', summaryKey: 'magic_news_forest_patrol' },
+        { icon: '🪄', summaryKey: 'magic_news_wand_union' },
+        { icon: '🐸', summaryKey: 'magic_news_frog_court' },
+        { icon: '🐉', summaryKey: 'magic_news_dragon_shadow' },
+        { icon: '🕯️', summaryKey: 'magic_news_temple_candles' },
+        { icon: '🏪', summaryKey: 'magic_news_bazaar_prices' },
+        { icon: '📜', summaryKey: 'magic_news_chronicle_blots' },
+        { icon: '⚔️', summaryKey: 'magic_news_arena_helmets' },
+        { icon: '🔮', summaryKey: 'magic_news_prophet_sneeze' },
+        { icon: '🌧️', summaryKey: 'magic_news_upward_rain' },
+        { icon: '🧪', summaryKey: 'magic_news_healers_busy' }
+    ];
+
     /** Magical weather definitions. These are in-world, not real-world forecasts. */
     var WEATHER = [
         {
@@ -418,6 +435,20 @@ var WorldEvents = (function() {
         return WEATHER[idx];
     }
 
+
+    /**
+     * Get optional daily magical news. Flavor-only; does not affect combat.
+     * @param {number} blockNum
+     * @returns {Object|null}
+     */
+    function getCurrentMagicNews(blockNum) {
+        var day = Math.floor(blockNum / 28800);
+        if (day % 2 !== 0) return null;
+        var idx = Math.floor(day / 2) % MAGIC_NEWS.length;
+        if (idx < 0) idx = 0;
+        return MAGIC_NEWS[idx];
+    }
+
     /**
      * Check if Weave Surge is active.
      * @param {number} blockNum
@@ -592,6 +623,7 @@ var WorldEvents = (function() {
         getCurrentSky: getCurrentSky,
         getForecastVariantCount: getForecastVariantCount,
         getCurrentFestival: getCurrentFestival,
+        getCurrentMagicNews: getCurrentMagicNews,
         getActiveEvents: getActiveEvents,
         checkEventTriggers: checkEventTriggers,
         checkWeaveSurge: checkWeaveSurge,

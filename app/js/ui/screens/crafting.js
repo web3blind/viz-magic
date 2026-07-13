@@ -257,8 +257,6 @@ var CraftingScreen = (function() {
             return html;
         }
 
-        html += '<button class="btn btn-secondary btn-sm craft-tab-back-btn" aria-label="' + t('craft_back') + '">' + t('craft_back') + '</button>';
-
         // Enchantable items (equipped or in bag, with slots available)
         html += '<h2>' + t('enchant_title') + '</h2>';
         html += '<p class="enchant-desc">' + t('enchant_desc') + '</p>';

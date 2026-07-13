@@ -38,7 +38,7 @@ var HomeScreen = (function() {
                 // Boss alert
                 _renderBossAlert(state, blockNum, t) +
 
-                '<section class="home-summary" aria-label="Character summary">' +
+                '<section class="home-summary home-summary-button" role="button" tabindex="0" aria-label="' + t('home_open_character') + '">' +
                     '<h1>' + t('home_welcome') + ', ' + Helpers.escapeHtml(character.name) + '</h1>' +
                     '<p>' + Helpers.classIcon(character.className) + ' ' + t('class_' + character.className) +
                         ' \u2022 ' + t('home_level') + ' ' + character.level + '</p>' +
@@ -105,6 +105,22 @@ var HomeScreen = (function() {
             prophecyBtn.addEventListener('click', function() {
                 SoundManager.play('tap');
                 Helpers.EventBus.emit('navigate', 'quests');
+            });
+        }
+
+        var summaryBtn = el.querySelector('.home-summary-button');
+        if (summaryBtn) {
+            summaryBtn.addEventListener('click', function(e) {
+                if (e.target && e.target.closest && e.target.closest('.help-tip-btn')) return;
+                SoundManager.play('tap');
+                Helpers.EventBus.emit('navigate', 'character');
+            });
+            summaryBtn.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    SoundManager.play('tap');
+                    Helpers.EventBus.emit('navigate', 'character');
+                }
             });
         }
 
@@ -192,6 +208,7 @@ var HomeScreen = (function() {
         var forecast = weather ? t(weather.summaryKey) : '';
         var effect = weather ? t(weather.effectKey) : '';
         var festival = WorldEvents.getCurrentFestival ? WorldEvents.getCurrentFestival(blockNum) : null;
+        var magicNews = WorldEvents.getCurrentMagicNews ? WorldEvents.getCurrentMagicNews(blockNum) : null;
         var festivalHtml = festival ? '<p class="forecast-festival"><span aria-hidden="true">' + festival.icon + '</span> ' +
             t('festival_today_prefix') + ': ' + t(festival.nameKey) + '. ' + t(festival.descKey) + '</p>' : '';
         return '<section class="season-indicator magical-forecast" aria-label="' + t('weather_forecast_label') + '">' +
@@ -213,6 +230,11 @@ var HomeScreen = (function() {
                     t('school_' + season.secondary) + ' +10%. ' + effect + '</p>' +
                 festivalHtml +
             '</div>' +
+            (magicNews ? '<div class="forecast-card forecast-card-news">' +
+                '<span class="forecast-icon" aria-hidden="true">' + magicNews.icon + '</span>' +
+                '<span class="forecast-kicker">' + t('magic_news_title') + '</span>' +
+                '<p class="forecast-line">' + t(magicNews.summaryKey) + '</p>' +
+            '</div>' : '') +
         '</section>';
     }
 

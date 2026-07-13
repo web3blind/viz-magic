@@ -219,8 +219,9 @@ var MarketplaceScreen = (function() {
                 var sRarity = ItemSystem.getRarityInfo(sItem.rarity);
                 var itemIds = group.items.map(function(it) { return it.id; }).join(',');
                 html += '<div class="market-sell-item ' + Helpers.rarityClass(sItem.rarity) + '" role="listitem" data-item="' + sItem.id + '">';
-                html += '<span class="sell-item-name rarity-color-' + sRarity.name + '">' + _marketItemIcon(sItem) + ' ' + sRarity.symbol + ' ' + Helpers.escapeHtml(sName) +
-                    (group.items.length > 1 ? ' <span class="sell-item-count">×' + group.items.length + '</span>' : '') + '</span>';
+                html += '<span class="sell-item-name">' + _marketItemIcon(sItem) + ' ' + Helpers.escapeHtml(sName) +
+                    (group.items.length > 1 ? ' <span class="sell-item-count">×' + group.items.length + '</span>' : '') +
+                    ' <span class="sell-item-rarity rarity-color-' + sRarity.name + '">' + sRarity.symbol + '</span></span>';
                 html += '<div class="sell-item-controls">';
                 html += '<label for="price-' + sItem.id + '" class="sr-only">' + t('market_set_price') + '</label>';
                 html += '<input type="number" id="price-' + sItem.id + '" class="input-field sell-price-input" min="1" placeholder="' + t('market_price_placeholder') + '" aria-label="' + t('market_set_price') + '">';

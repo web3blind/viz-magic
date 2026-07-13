@@ -99,9 +99,9 @@ var BattleNarrator = (function() {
         var hints = voiceGender === 'female' ? femaleHints : maleHints;
         for (var j = 0; j < pool.length; j++) {
             var name = (pool[j].name || '') + ' ' + (pool[j].voiceURI || '');
-            if (hints.test(name)) return pool[j];
+            if (hints.test(name)) return { voice: pool[j], matched: true };
         }
-        return pool[0] || null;
+        return { voice: pool[0] || null, matched: false };
     }
 
     /**
@@ -132,11 +132,17 @@ var BattleNarrator = (function() {
         try {
             var utterance = new SpeechSynthesisUtterance(message);
             var lang = (Helpers.getCurrentLang && Helpers.getCurrentLang() === 'en') ? 'en-US' : 'ru-RU';
-            var voice = _selectVoice(lang);
+            var voiceChoice = _selectVoice(lang);
+            var voice = voiceChoice && voiceChoice.voice ? voiceChoice.voice : null;
+            var matchedVoice = !!(voiceChoice && voiceChoice.matched);
             utterance.lang = lang;
             if (voice) utterance.voice = voice;
-            utterance.rate = (voiceTimbre === 'rough') ? 0.92 : (voiceTimbre === 'soft' ? 0.98 : 1);
-            utterance.pitch = (voiceGender === 'male') ? (voiceTimbre === 'rough' ? 0.84 : 0.9) : (voiceTimbre === 'rough' ? 0.96 : 1.08);
+            utterance.rate = (voiceTimbre === 'rough') ? 0.94 : (voiceTimbre === 'soft' ? 0.98 : 1);
+            if (voiceGender === 'male') {
+                utterance.pitch = matchedVoice ? (voiceTimbre === 'rough' ? 0.86 : 0.92) : 1;
+            } else {
+                utterance.pitch = (voiceTimbre === 'rough') ? 0.98 : 1.08;
+            }
             utterance.volume = 1;
             window.speechSynthesis.cancel();
             window.speechSynthesis.speak(utterance);
