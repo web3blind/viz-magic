@@ -55,6 +55,7 @@ const leaderboardJs = read('app/js/ui/screens/leaderboard.js');
 const characterJs = read('app/js/ui/screens/character.js');
 const marketplaceJs = read('app/js/ui/screens/marketplace.js');
 const leaderboardScreenJs = read('app/js/ui/screens/leaderboard.js');
+const characterScreenJs = read('app/js/ui/screens/character.js');
 const loginJs = read('app/js/ui/screens/login.js');
 const homeJs = read('app/js/ui/screens/home.js');
 const mainCss = read('app/css/main.css');
@@ -343,7 +344,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v47/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v48/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -392,7 +393,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v47/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v48/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -454,8 +455,8 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/forecast-card-effect/.test(homeJs + mainCss), 'forecast effect column needs its own thematic icon/card');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should sometimes appear in the forecast');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260712k/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260712k/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260713a/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260713a/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/home.js\?v=20260713a/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/quests.js\?v=20260712a/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260712b/.test(indexHtml), 'bottom tray nav must be cache-busted');
@@ -522,8 +523,19 @@ test('reported mobile UX issues have explicit fixes', function () {
 
 test('PWA icon and HP heart use expressive color accents', function () {
   assert.ok(/viz-magic-192\.png\?v=20260713a/.test(indexHtml), 'PWA icon link should be cache-busted after plus placement/color update');
-  assert.ok(/viz-magic-v47/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
+  assert.ok(/viz-magic-v48/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
   assert.ok(/label:'❤️ HP'/.test(homeJs), 'HP label should use a red heart emoji variant');
+});
+
+
+test('character screen uses current home-scale vitals and growth explainers', function () {
+  assert.ok(/character.js\?v=20260713a/.test(indexHtml), 'character screen should be cache-busted');
+  assert.ok(/CHARACTER_HP_DISPLAY_MAX = 5000/.test(characterScreenJs), 'character HP should use the same 5000 display scale as Home');
+  assert.ok(/label:'❤️ HP'/.test(characterScreenJs), 'character HP should have the red heart icon');
+  assert.ok(/label:'⭐ XP'/.test(characterScreenJs), 'character XP should have an icon and visible bar');
+  assert.ok(/char-mana-bar/.test(characterScreenJs), 'character screen should show current mana');
+  assert.ok(/char_xp_explainer/.test(characterScreenJs + ruJs + enJs), 'character screen should explain XP growth');
+  assert.ok(/char_mana_explainer/.test(characterScreenJs + ruJs + enJs), 'character screen should explain mana growth');
 });
 
 if (process.exitCode) {

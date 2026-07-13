@@ -1107,6 +1107,8 @@ var LangEN = {
 
     help_tip_mana: 'Mana regenerates ~1% per 1.2 hours. Plan your actions accordingly.',
     help_tip_armageddon: 'Armageddon Stone: drop from Thornvine Lv5+ or craft at level 10.',
-    char_hp_explainer: 'HP grows from level, Resilience, and class. Full formula is in the Guide.',
+    char_xp_explainer: '⭐ XP grows from hunts, Armageddon, quests, world boss fights, and other game actions. When enough XP is accumulated for the next level, leveling happens automatically.',
+    char_mana_explainer: '⚡ Mana is VIZ account energy. It regenerates over time: about 1% per 1.2 hours, roughly 5 days for a full refill. Hunts, Temple offerings, crafting, and other actions spend mana.',
+    char_hp_explainer: '❤️ HP grows from level, Resilience, and class. This screen uses the same display scale as Home: max 5000, so the value is easier to compare.',
     help_close: 'Got it'
 };

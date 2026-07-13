@@ -4,6 +4,9 @@
 var CharacterScreen = (function() {
     'use strict';
 
+    var CHARACTER_HP_DISPLAY_MAX = 5000;
+    var CHARACTER_XP_DISPLAY_MAX = 3000;
+
     function render() {
         var t = Helpers.t;
         var el = Helpers.$('screen-character');
@@ -21,6 +24,11 @@ var CharacterScreen = (function() {
         var totalSwf = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat) ? CharacterSystem.getTotalStat(ch, 'swf') : ((ch.swf || 0) + corePerStat);
         var totalInt = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat) ? CharacterSystem.getTotalStat(ch, 'int') : ((ch.int || 0) + corePerStat);
         var totalFor = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat) ? CharacterSystem.getTotalStat(ch, 'for_') : ((ch.for_ || 0) + corePerStat);
+        var xpNeeded = GameFormulas.xpForLevel(ch.level + 1) || 1000;
+        var xpCurrent = (ch.xp || 0) - GameFormulas.totalXpForLevel(ch.level);
+        if (xpCurrent < 0) xpCurrent = 0;
+        var hpShown = _scaleForDisplay(ch.hp, ch.maxHp, CHARACTER_HP_DISPLAY_MAX);
+        var xpShown = _scaleForDisplay(xpCurrent, xpNeeded, CHARACTER_XP_DISPLAY_MAX);
 
         el.innerHTML =
             '<div class="character-sheet">' +
@@ -30,8 +38,14 @@ var CharacterScreen = (function() {
                     '<div><h2>' + Helpers.escapeHtml(ch.name) + '</h2>' +
                     '<p>' + t('class_' + ch.className) + ' \u2022 ' + t('home_level') + ' ' + ch.level + '</p></div>' +
                 '</div>' +
-                ProgressBar.create({label:'HP', value:ch.hp, max:ch.maxHp, color:'#e53935'}) +
-                '<p class="quest-desc">' + t('char_hp_explainer') + '</p>' +
+                ProgressBar.create({id:'char-hp-bar', label:'❤️ HP', value:ch.hp, max:ch.maxHp, displayValue:hpShown, displayMax:CHARACTER_HP_DISPLAY_MAX, color:'#e53935'}) +
+                ProgressBar.create({id:'char-xp-bar', label:'⭐ XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:CHARACTER_XP_DISPLAY_MAX, color:'#ffc107'}) +
+                ProgressBar.create({id:'char-mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
+                '<div class="character-growth-notes">' +
+                    '<p class="quest-desc">' + t('char_hp_explainer') + '</p>' +
+                    '<p class="quest-desc">' + t('char_xp_explainer') + '</p>' +
+                    '<p class="quest-desc">' + t('char_mana_explainer') + '</p>' +
+                '</div>' +
                 '<h2>' + t('char_stats') + '</h2>' +
                 '<div class="stats-list">' +
                     _statRow(t('char_potency'), totalPot) +
@@ -47,6 +61,22 @@ var CharacterScreen = (function() {
                 '<h2>' + t('char_spells') + '</h2>' +
                 _renderSpells(ch) +
             '</div>';
+
+        if (user) {
+            VizAccount.getAccount(user, function(err, accountData) {
+                if (!err && accountData) {
+                    var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
+                    ProgressBar.update('char-mana-bar', currentEnergy / 100, 100);
+                }
+            });
+        }
+    }
+
+    function _scaleForDisplay(value, max, displayMax) {
+        if (!max || max <= 0) return 0;
+        var shown = Math.round(Math.max(0, value) * displayMax / max);
+        if (shown > displayMax) shown = displayMax;
+        return shown;
     }
 
     function _statRow(label, value) {
