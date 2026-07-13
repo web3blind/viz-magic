@@ -44,7 +44,7 @@ var HuntScreen = (function() {
                     (needsRest ? t('hunt_rest_button') : t('hunt_rest_full')) +
                 '</button>' +
             '</section>' +
-            '<h2>' + t('hunt_choose_creature') + '</h2>';
+            '<h2>🐾 ' + t('hunt_choose_creature') + '</h2>';
 
         if (!creatures.length) {
             html += '<div class="creature-list" role="status" aria-live="polite">' +
@@ -68,7 +68,7 @@ var HuntScreen = (function() {
             html += '</div>';
         }
 
-        html += '<h2>' + t('hunt_choose_spell') + '</h2>' +
+        html += '<h2>🪄 ' + t('hunt_choose_spell') + '</h2>' +
             '<div class="spell-grid" role="radiogroup" aria-label="' + t('hunt_choose_spell') + '">';
 
         for (var j = 0; j < spells.length; j++) {

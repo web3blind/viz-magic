@@ -135,8 +135,8 @@ var BattleNarrator = (function() {
             var voice = _selectVoice(lang);
             utterance.lang = lang;
             if (voice) utterance.voice = voice;
-            utterance.rate = (voiceTimbre === 'rough') ? 0.88 : (voiceTimbre === 'soft' ? 0.96 : 1);
-            utterance.pitch = (voiceGender === 'male') ? (voiceTimbre === 'rough' ? 0.65 : 0.82) : (voiceTimbre === 'rough' ? 0.9 : 1.08);
+            utterance.rate = (voiceTimbre === 'rough') ? 0.92 : (voiceTimbre === 'soft' ? 0.98 : 1);
+            utterance.pitch = (voiceGender === 'male') ? (voiceTimbre === 'rough' ? 0.84 : 0.9) : (voiceTimbre === 'rough' ? 0.96 : 1.08);
             utterance.volume = 1;
             window.speechSynthesis.cancel();
             window.speechSynthesis.speak(utterance);

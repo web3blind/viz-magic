@@ -13,7 +13,7 @@ var HelpScreen = (function() {
             { key: 'mana',        icon: '\u2728' },
             { key: 'hp',          icon: '\u2764\uFE0F' },
             { key: 'quests',      icon: '\uD83D\uDCDC' },
-            { key: 'hunt',        icon: '\u2694\uFE0F' },
+            { key: 'hunt',        icon: '\uD83C\uDFF9' },
             { key: 'armageddon',  icon: '\u26A0\uFE0F' },
             { key: 'crafting',    icon: '\uD83D\uDD28' },
             { key: 'marketplace', icon: '\uD83C\uDFEA' },

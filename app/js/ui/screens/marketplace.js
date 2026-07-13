@@ -219,7 +219,7 @@ var MarketplaceScreen = (function() {
                 var sRarity = ItemSystem.getRarityInfo(sItem.rarity);
                 var itemIds = group.items.map(function(it) { return it.id; }).join(',');
                 html += '<div class="market-sell-item ' + Helpers.rarityClass(sItem.rarity) + '" role="listitem" data-item="' + sItem.id + '">';
-                html += '<span class="sell-item-name rarity-color-' + sRarity.name + '">' + sRarity.symbol + ' ' + Helpers.escapeHtml(sName) +
+                html += '<span class="sell-item-name rarity-color-' + sRarity.name + '">' + _marketItemIcon(sItem) + ' ' + sRarity.symbol + ' ' + Helpers.escapeHtml(sName) +
                     (group.items.length > 1 ? ' <span class="sell-item-count">×' + group.items.length + '</span>' : '') + '</span>';
                 html += '<div class="sell-item-controls">';
                 html += '<label for="price-' + sItem.id + '" class="sr-only">' + t('market_set_price') + '</label>';
@@ -517,6 +517,27 @@ var MarketplaceScreen = (function() {
             if (typeLower.indexOf(searchLower) === -1) return false;
         }
         return true;
+    }
+
+    function _marketItemIcon(item) {
+        if (!item) return '✦';
+        var byType = {
+            chronicle_ink: '🖋️',
+            flame_votive_mark: '🔥',
+            labor_votive_mark: '🔨',
+            health_scroll: '📜',
+            mana_potion: '⚡',
+            fire_dust: '✦',
+            sparkdust: '✨',
+            shadow_shard: '◈'
+        };
+        if (byType[item.type]) return byType[item.type];
+        var template = ItemSystem.getItemTemplate(item.type);
+        if (template && template.category === 'material') return '✦';
+        if (template && template.category === 'scroll') return '📜';
+        if (template && template.category === 'focus') return '🪄';
+        if (template && template.category === 'ward') return '🛡️';
+        return '✦';
     }
 
     function _groupSellableItems(items) {

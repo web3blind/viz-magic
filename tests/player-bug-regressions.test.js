@@ -345,7 +345,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v53/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v54/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -394,7 +394,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v53/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v54/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -456,8 +456,8 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/forecast-card-effect/.test(homeJs + mainCss), 'forecast effect column needs its own thematic icon/card');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should sometimes appear in the forecast');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260713e/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260713e/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260713f/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260713f/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/home.js\?v=20260713d/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/quests.js\?v=20260712a/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260713a/.test(indexHtml), 'bottom tray nav must be cache-busted');
@@ -524,7 +524,7 @@ test('reported mobile UX issues have explicit fixes', function () {
 
 test('PWA icon and HP heart use expressive color accents', function () {
   assert.ok(/viz-magic-192\.png\?v=20260713a/.test(indexHtml), 'PWA icon link should be cache-busted after plus placement/color update');
-  assert.ok(/viz-magic-v53/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
+  assert.ok(/viz-magic-v54/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
   assert.ok(/label:'❤️ HP'/.test(homeJs), 'HP label should use a red heart emoji variant');
 });
 
@@ -541,7 +541,7 @@ test('character screen uses current home-scale vitals and growth explainers', fu
 
 
 test('hunt screen exposes explicit camp rest promised by Help', function () {
-  assert.ok(/hunt.js\?v=20260713c/.test(indexHtml), 'hunt screen should be cache-busted');
+  assert.ok(/hunt.js\?v=20260713d/.test(indexHtml), 'hunt screen should be cache-busted');
   assert.ok(/broadcast.js\?v=20260713a/.test(indexHtml), 'broadcast helper should be cache-busted for restAction');
   assert.ok(/state-engine.js\?v=20260713b/.test(indexHtml), 'state-engine should be cache-busted for processRestResult');
   assert.ok(/function restAction\(callback\)/.test(broadcastJs), 'broadcast helper should expose restAction');
@@ -555,13 +555,13 @@ test('hunt screen exposes explicit camp rest promised by Help', function () {
 test('narrator voice preferences support gender and timbre', function () {
   const settingsJs = read('app/js/ui/screens/settings.js');
   const narratorJs = read('app/js/ui/components/battle-narrator.js');
-  assert.ok(/battle-narrator.js\?v=20260713a/.test(indexHtml), 'battle narrator should be cache-busted');
-  assert.ok(/settings.js\?v=20260713a/.test(indexHtml), 'settings should be cache-busted');
+  assert.ok(/battle-narrator.js\?v=20260713b/.test(indexHtml), 'battle narrator should be cache-busted');
+  assert.ok(/settings.js\?v=20260713b/.test(indexHtml), 'settings should be cache-busted');
   assert.ok(/narrator-voice-gender/.test(settingsJs), 'settings should expose narrator gender select');
   assert.ok(/narrator-voice-timbre/.test(settingsJs), 'settings should expose narrator timbre select');
   assert.ok(/setVoiceOptions/.test(narratorJs), 'narrator should persist selectable voice options');
-  assert.ok(/voiceGender = 'male'/.test(narratorJs) && /voiceTimbre = 'rough'/.test(narratorJs), 'default narrator voice should be low male/rough');
-  assert.ok(/utterance\.pitch = \(voiceGender === 'male'\)/.test(narratorJs), 'narrator should adjust pitch by selected gender/timbre');
+  assert.ok(/voiceGender = 'male'/.test(narratorJs) && /voiceTimbre = 'rough'/.test(narratorJs), 'default narrator voice should be low/male-if-available');
+  assert.ok(/voiceTimbre === 'rough' \? 0\.84 : 0\.9/.test(narratorJs), 'low narrator voice should avoid harsh pseudo-male pitch distortion');
   assert.ok(/speechSynthesis\.getVoices/.test(narratorJs), 'narrator should try to select a matching system voice');
   assert.ok(/narrator_voice_hint/.test(settingsJs + ruJs + enJs), 'settings should explain browser voice limitations');
 });
@@ -600,14 +600,14 @@ test('temple offering gives immediate heard-prayer feedback', function () {
 
 
 test('hunt rest uses home-scale HP values', function () {
-  assert.ok(/hunt.js\?v=20260713c/.test(indexHtml), 'hunt screen should be cache-busted for HP display scale');
+  assert.ok(/hunt.js\?v=20260713d/.test(indexHtml), 'hunt screen should be cache-busted for HP display scale');
   assert.ok(/HUNT_HP_DISPLAY_MAX = 5000/.test(huntJs), 'hunt rest should use the same 5000 HP display scale');
   assert.ok(/hpShown[\s\S]*HUNT_HP_DISPLAY_MAX/.test(huntJs), 'hunt rest description should render scaled HP instead of raw max HP');
 });
 
 
 test('marketplace groups identical sellable items and supports quantity listing', function () {
-  assert.ok(/marketplace.js\?v=20260713a/.test(indexHtml), 'marketplace screen should be cache-busted');
+  assert.ok(/marketplace.js\?v=20260713b/.test(indexHtml), 'marketplace screen should be cache-busted');
   assert.ok(/function _groupSellableItems/.test(marketplaceJs), 'sell tab should group identical items');
   assert.ok(/sell-item-count/.test(marketplaceJs), 'sell tab should display grouped item count');
   assert.ok(/sell-qty-input/.test(marketplaceJs), 'sell tab should expose quantity input');
@@ -622,6 +622,30 @@ test('hunt and arena icons are distinct', function () {
   assert.ok(/hunt:\s*'\\uD83C\\uDFF9'/.test(homeJs), 'home Hunt tile should use bow icon');
   assert.ok(/arena:\s*'\\u2694\\uFE0F'/.test(homeJs), 'home Arena tile should keep crossed swords icon');
   assert.ok(/id: 'hunt'[\s\S]*icon: '\\uD83C\\uDFF9'/.test(navJs), 'bottom Hunt tab should use bow icon');
+});
+
+
+test('hunt headings and help use updated thematic icons', function () {
+  assert.ok(/hunt.js\?v=20260713d/.test(indexHtml), 'hunt screen should be cache-busted for heading icons');
+  assert.ok(/<h2>🐾 ' \+ t\('hunt_choose_creature'\)/.test(huntJs), 'hunt creature heading should have a thematic tracking icon');
+  assert.ok(/<h2>🪄 ' \+ t\('hunt_choose_spell'\)/.test(huntJs), 'hunt spell heading should use a magic wand icon');
+  assert.ok(/help.js\?v=20260713a/.test(indexHtml), 'help screen should be cache-busted for hunt icon');
+  assert.ok(/key: 'hunt'[\s\S]*\\uD83C\\uDFF9/.test(helpJs), 'help Hunt section should use bow icon, not arena swords');
+});
+
+
+test('crafting enchant tab has a back button to recipes', function () {
+  assert.ok(/crafting.js\?v=20260713a/.test(indexHtml), 'crafting screen should be cache-busted for tab back button');
+  assert.ok(/craft-tab-back-btn/.test(craftingJs), 'non-recipe crafting tabs should expose a back button');
+  assert.ok(/currentTab = 'recipes'[\s\S]*selectedRecipe = null/.test(craftingJs), 'crafting tab back button should return to recipes');
+});
+
+
+test('marketplace sell items have semantic item icons', function () {
+  assert.ok(/marketplace.js\?v=20260713b/.test(indexHtml), 'marketplace screen should be cache-busted for sell icons');
+  assert.ok(/function _marketItemIcon/.test(marketplaceJs), 'sell rows should compute semantic item icons');
+  assert.ok(/chronicle_ink:\s*'🖋️'/.test(marketplaceJs), 'Chronicle Ink should have an ink icon in sell rows');
+  assert.ok(/_marketItemIcon\(sItem\)/.test(marketplaceJs), 'sell row should render the item icon before the name');
 });
 
 if (process.exitCode) {
