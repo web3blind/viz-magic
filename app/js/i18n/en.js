@@ -108,6 +108,8 @@ var LangEN = {
     // Home
     home_welcome: 'Welcome',
     home_mana: 'Mana',
+    home_open_character: 'Open character stats',
+    magic_news_title: 'Magical News',
     home_level: 'Level',
     home_core_power: 'Core Power',
     home_daily_prophecy: 'Daily Prophecy',

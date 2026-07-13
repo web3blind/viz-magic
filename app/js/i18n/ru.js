@@ -108,6 +108,8 @@ var LangRU = {
     // Home
     home_welcome: 'Добро пожаловать',
     home_mana: 'Мана',
+    home_open_character: 'Открыть характеристики персонажа',
+    magic_news_title: 'Магические новости',
     home_level: 'Уровень',
     home_core_power: 'Сила Ядра',
     home_daily_prophecy: 'Ежедневное Пророчество',
