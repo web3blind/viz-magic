@@ -343,7 +343,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v45/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v46/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -392,7 +392,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v45/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v46/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -427,10 +427,14 @@ test('Russian crafting naming is unified as Workshop/Masterская', function (
 
 
 test('mobile shell prevents tray and tab controls from overflowing the viewport', function () {
-  assert.ok(/padding-bottom:\s*calc\(180px \+ env\(safe-area-inset-bottom\)\)/.test(mainCss), 'screens need enough bottom padding for the two-row mobile tray');
+  assert.ok(/padding-bottom:\s*calc\(128px \+ env\(safe-area-inset-bottom\)\)/.test(mainCss), 'screens need compact bottom padding for the two-row mobile tray');
   assert.ok(/#bottom-nav\.show[\s\S]*display:\s*grid[\s\S]*repeat\(5, minmax\(0, 1fr\)\)/.test(mainCss), 'bottom nav should fit all tabs without horizontal overflow');
   assert.ok(/\.nav-tab[\s\S]*min-width:\s*0/.test(mainCss), 'nav tabs must be allowed to shrink inside viewport');
   assert.ok(/\.nav-label[\s\S]*text-overflow:\s*ellipsis/.test(mainCss), 'long nav labels should not push tabs off screen');
+  assert.ok(/\.nav-tab[\s\S]*min-height:\s*38px/.test(mainCss), 'nav tray should be compact enough to preserve game viewport');
+  assert.ok(/\.nav-icon[\s\S]*font-size:\s*0\.95rem/.test(mainCss), 'nav icons should be smaller but still visible');
+  assert.ok(/@media \(max-width: 360px\)[\s\S]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/.test(mainCss), 'narrow screens should cap the tray at three rows for nine tabs');
+  assert.ok(/@media \(max-width: 360px\)[\s\S]*padding-bottom:\s*calc\(150px \+ env\(safe-area-inset-bottom\)\)/.test(mainCss), 'three-row tray should not steal excessive vertical space');
   assert.ok(/@media \(max-width: 480px\)[\s\S]*\.chronicle-tabs[\s\S]*grid-template-columns:\s*1fr/.test(mainCss), 'mobile chronicle tabs should stack instead of clipping');
   assert.ok(/@media \(max-width: 480px\)[\s\S]*\.craft-tabs[\s\S]*grid-template-columns:\s*1fr/.test(mainCss), 'mobile craft tabs should stack instead of clipping');
   assert.ok(/\.recipe-card[\s\S]*flex-wrap:\s*wrap/.test(mainCss), 'recipe cards should wrap on narrow screens');
@@ -457,7 +461,7 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/nav.js\?v=20260712b/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260712c/.test(indexHtml), 'leaderboard narrator fix must be cache-busted');
   assert.ok(/world-events.js\?v=20260712h/.test(indexHtml), 'world events forecast pool must be cache-busted');
-  assert.ok(/main.css\?v=20260712j/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/main.css\?v=20260712k/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
   assert.ok(/creatureAttackMod/.test(combatJs), 'weather should affect creature danger in hunt combat');
