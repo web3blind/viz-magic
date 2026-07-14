@@ -15,6 +15,7 @@ var App = (function() {
     var _syncVisible = false;
     var _lastSyncPercent = -1;
     var _deferredInstallPrompt = null;
+    var INSTALL_ACK_KEY = VizMagicConfig.STORAGE_PREFIX + 'install_shortcut_ack';
     var POLL_INTERVAL_MS = 3000;
 
     /**
@@ -27,6 +28,8 @@ var App = (function() {
         // Initialize accessibility
         A11y.init();
         A11y.initKeyboardShortcuts();
+
+        _showPendingInstallNotice();
 
         // Initialize Battle Narrator
         if (typeof BattleNarrator !== 'undefined') {
@@ -284,8 +287,9 @@ var App = (function() {
         });
         window.addEventListener('appinstalled', function() {
             _deferredInstallPrompt = null;
+            try { localStorage.setItem(INSTALL_ACK_KEY, '1'); } catch (e) {}
             if (typeof Toast !== 'undefined') {
-                Toast.success(Helpers.t('home_install_shortcut_installed'));
+                Toast.success(Helpers.t('home_install_shortcut_installed'), 7000, { key: 'install_shortcut_installed' });
             }
         });
         if ('serviceWorker' in navigator) {
@@ -297,23 +301,38 @@ var App = (function() {
         }
     }
 
+    function _showPendingInstallNotice() {
+        try {
+            if (localStorage.getItem(INSTALL_ACK_KEY) === '1') {
+                localStorage.removeItem(INSTALL_ACK_KEY);
+                setTimeout(function() {
+                    if (typeof Toast !== 'undefined') Toast.success(Helpers.t('home_install_shortcut_installed'), 7000, { key: 'install_shortcut_installed' });
+                }, 600);
+            }
+        } catch (e) {}
+    }
+
     function installShortcut() {
         if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
             if (typeof Toast !== 'undefined') Toast.info(Helpers.t('home_install_shortcut_already'), 5000, { key: 'install_shortcut_already' });
             return;
         }
         if (_deferredInstallPrompt) {
+            if (typeof Toast !== 'undefined') Toast.info(Helpers.t('home_install_shortcut_requested'), 7000, { key: 'install_shortcut_requested' });
             _deferredInstallPrompt.prompt();
             _deferredInstallPrompt.userChoice.then(function(choice) {
                 _deferredInstallPrompt = null;
                 if (choice && choice.outcome === 'accepted' && typeof Toast !== 'undefined') {
-                    Toast.success(Helpers.t('home_install_shortcut_installed'));
+                    try { localStorage.setItem(INSTALL_ACK_KEY, '1'); } catch (e) {}
+                    Toast.success(Helpers.t('home_install_shortcut_installed'), 7000, { key: 'install_shortcut_installed' });
                 } else {
+                    if (typeof Toast !== 'undefined') Toast.info(Helpers.t('home_install_shortcut_requested'), 7000, { key: 'install_shortcut_requested' });
                     _showInstallInstructions();
                 }
             });
             return;
         }
+        if (typeof Toast !== 'undefined') Toast.info(Helpers.t('home_install_shortcut_requested'), 7000, { key: 'install_shortcut_requested' });
         _showInstallInstructions();
     }
 

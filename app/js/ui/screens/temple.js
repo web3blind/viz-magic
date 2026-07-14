@@ -78,10 +78,8 @@ var TempleScreen = (function() {
         var last = temple[deity.id] || 0;
         var cooldownText = last ? t('temple_last_offering_recorded') : t('temple_no_offering_yet');
         return '<article class="temple-card temple-card-' + deity.id + '">' +
-            '<span class="temple-deity-fallback" aria-hidden="true">' + (deity.icon || '✦') + '</span>' +
-            '<img class="temple-deity-image" src="' + deity.image + '" alt="" aria-hidden="true" loading="eager" decoding="async">' +
             '<div class="temple-deity-copy">' +
-                '<h2>' + t('temple_' + deity.id + '_name') + '</h2>' +
+                '<h2><span aria-hidden="true">' + (deity.icon || '✦') + '</span> ' + t('temple_' + deity.id + '_name') + '</h2>' +
                 '<p class="temple-domain">' + t('temple_' + deity.id + '_domain') + '</p>' +
                 '<p>' + t('temple_' + deity.id + '_text') + '</p>' +
                 '<p class="temple-target">' + t('temple_offering_target') + ': <code>' + deity.target + '</code></p>' +

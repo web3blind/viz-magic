@@ -29,6 +29,12 @@ var DevelopersScreen = (function() {
         if (!user) {
             html += '<div class="empty-state">' + t('developers_login_required') + '</div>';
         } else {
+            html += '<div class="developers-custom-reward">';
+            html += '<label for="developers-custom-energy" class="input-label">' + t('developers_custom_reward_label') + '</label>';
+            html += '<input id="developers-custom-energy" class="input-field" type="number" min="0.01" max="100" step="0.01" inputmode="decimal" placeholder="0.25">';
+            html += '<p class="developers-note">' + t('developers_custom_reward_hint') + '</p>';
+            html += '<button type="button" class="btn btn-primary dev-custom-reward-btn">' + t('developers_custom_reward_button') + '</button>';
+            html += '</div>';
             html += '<div class="developers-reward-options" role="group" aria-label="' + t('developers_reward_title') + '">';
             for (var i = 0; i < REWARD_OPTIONS.length; i++) {
                 html += '<button type="button" class="btn btn-primary dev-reward-btn" data-energy="' + REWARD_OPTIONS[i] + '">' +
@@ -43,6 +49,20 @@ var DevelopersScreen = (function() {
     }
 
     function _bindEvents(el) {
+        var customBtn = el.querySelector('.dev-custom-reward-btn');
+        if (customBtn) {
+            customBtn.addEventListener('click', function() {
+                var input = el.querySelector('#developers-custom-energy');
+                var percent = input ? parseFloat(String(input.value || '').replace(',', '.')) : 0;
+                if (!(percent >= 0.01 && percent <= 100)) {
+                    Toast.error(Helpers.t('developers_reward_invalid'));
+                    SoundManager.play('error');
+                    return;
+                }
+                _confirmReward(Math.round(percent * 100));
+            });
+        }
+
         var buttons = el.querySelectorAll('.dev-reward-btn');
         for (var i = 0; i < buttons.length; i++) {
             buttons[i].addEventListener('click', function() {

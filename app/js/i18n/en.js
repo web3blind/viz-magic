@@ -584,6 +584,11 @@ var LangEN = {
     developers_reward_confirm_button: 'Send reward',
     developers_reward_success: 'Thank you! Developer reward sent.',
     developers_reward_error: 'Could not send the reward. Check login and try again.',
+    developers_custom_reward_label: 'Custom reward amount, % mana',
+    developers_custom_reward_hint: 'Enter 0.01 to 100. Example: 0.25 or 3.',
+    developers_custom_reward_button: 'Reward custom amount',
+    developers_reward_invalid: 'Enter an amount from 0.01 to 100.',
+    home_install_shortcut_requested: 'If the browser installed the shortcut, the game will say: “Shortcut installed.” If there is no message, open the browser menu and add the shortcut manually.',
     developers_reward_memo: 'thanks for Viz Magic',
 
     // Marketplace
@@ -889,7 +894,7 @@ var LangEN = {
     event_next_season: 'Season Change',
 
     magic_news_sun_wolf: 'A squad of battle mages met a sun wolf in the enchanted forest. The best healers of the Third Kingdom are treating the entire squad for temporary blindness.',
-    magic_news_forest_patrol: 'The forest watch asks mages not to feed talking stumps with promises. The stumps write everything down.',
+    magic_news_forest_patrol: 'The forest watch asks mages not to feed talking stumps with promises. They remember everything and demand a sequel...',
     magic_news_wand_union: 'The union of old wands announced a day of silence. Sparks are allowed only in whispers.',
     magic_news_frog_court: 'The Frog Court acquitted the rain: witnesses confirmed it was falling upward for a valid reason.',
     magic_news_dragon_shadow: 'The shadow of the Aether Dragon was seen near the map edge. The shadow claims it was only walking.',

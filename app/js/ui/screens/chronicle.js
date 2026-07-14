@@ -13,6 +13,7 @@ var ChronicleScreen = (function() {
     var REQUIRED_TAG = '#viz_magic';
     var cachedFeedHtml = {};
     var DRAFT_KEY = VizMagicConfig.STORAGE_PREFIX + 'chronicle_draft';
+    var FEED_CACHE_PREFIX = VizMagicConfig.STORAGE_PREFIX + 'chronicle_feed_';
 
     function render() {
         var t = Helpers.t;
@@ -60,6 +61,14 @@ var ChronicleScreen = (function() {
 
     function _setDraft(text) {
         try { localStorage.setItem(DRAFT_KEY, text || ''); } catch (e) {}
+    }
+
+    function _getCachedFeed(tab) {
+        try { return localStorage.getItem(FEED_CACHE_PREFIX + tab) || ''; } catch (e) { return ''; }
+    }
+
+    function _setCachedFeed(tab, html) {
+        try { localStorage.setItem(FEED_CACHE_PREFIX + tab, html || ''); } catch (e) {}
     }
 
     function _tabButton(id, label) {
@@ -122,6 +131,7 @@ var ChronicleScreen = (function() {
         var feed = Helpers.$('chronicle-feed');
         if (!feed) return;
 
+        if (!cachedFeedHtml[currentTab]) cachedFeedHtml[currentTab] = _getCachedFeed(currentTab);
         if (cachedFeedHtml[currentTab]) {
             feed.innerHTML = cachedFeedHtml[currentTab];
             _bindBlessButtons(feed);
@@ -300,6 +310,7 @@ var ChronicleScreen = (function() {
         }
         feed.innerHTML = html;
         cachedFeedHtml[currentTab] = html;
+        _setCachedFeed(currentTab, html);
         _bindBlessButtons(feed);
     }
 
