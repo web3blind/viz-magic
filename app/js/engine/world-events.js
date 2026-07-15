@@ -103,7 +103,7 @@ var WorldEvents = (function() {
         },
         {
             id: 'quiet_stars',
-            icon: '\u2728',
+            icon: '\uD83D\uDD6F\uFE0F',
             summaryKey: 'weather_quiet_stars',
             effectKey: 'weather_quiet_stars_effect',
             creatureAttackMod: 950,
@@ -111,7 +111,7 @@ var WorldEvents = (function() {
         },
         {
             id: 'forbidden_wind',
-            icon: '\uD83C\uDF2B\uFE0F',
+            icon: '\uD83E\uDE81',
             summaryKey: 'weather_forbidden_wind',
             effectKey: 'weather_forbidden_wind_effect',
             creatureAttackMod: 1150,
@@ -135,7 +135,7 @@ var WorldEvents = (function() {
         },
         {
             id: 'mirror_fog',
-            icon: '\uD83C\uDF2B\uFE0F',
+            icon: '\uD83E\uDE9E',
             summaryKey: 'weather_mirror_fog',
             effectKey: 'weather_mirror_fog_effect',
             creatureAttackMod: 1000,
@@ -199,7 +199,7 @@ var WorldEvents = (function() {
         },
         {
             id: 'borrowed_sun',
-            icon: '\u2600\uFE0F',
+            icon: '\uD83D\uDD2E',
             summaryKey: 'weather_borrowed_sun',
             effectKey: 'weather_borrowed_sun_effect',
             creatureAttackMod: 980,
@@ -207,7 +207,7 @@ var WorldEvents = (function() {
         },
         {
             id: 'ash_snow',
-            icon: '\u2744\uFE0F',
+            icon: '\uD83D\uDD25',
             summaryKey: 'weather_ash_snow',
             effectKey: 'weather_ash_snow_effect',
             creatureAttackMod: 1040,
@@ -239,7 +239,7 @@ var WorldEvents = (function() {
         },
         {
             id: 'golden_dust',
-            icon: '\u2728',
+            icon: '\uD83D\uDCB0',
             summaryKey: 'weather_golden_dust',
             effectKey: 'weather_golden_dust_effect',
             creatureAttackMod: 930,
@@ -247,7 +247,7 @@ var WorldEvents = (function() {
         },
         {
             id: 'black_rainbow',
-            icon: '\uD83C\uDF08',
+            icon: '\uD83D\uDDA4',
             summaryKey: 'weather_black_rainbow',
             effectKey: 'weather_black_rainbow_effect',
             creatureAttackMod: 1100,

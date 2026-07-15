@@ -19,7 +19,7 @@ var MapScreen = (function() {
         deep_currents:       '\uD83C\uDF0A',   // 🌊
         iron_root:           '\u26F0\uFE0F',    // ⛰️
         shattered_sky:       '\uD83C\uDF29\uFE0F', // 🌩️
-        the_veil:            '\uD83C\uDF11',    // 🌑
+        the_veil:            '\uD83C\uDF19',    // 🌙
         forklands:           '\u2694\uFE0F',    // ⚔️
         covenant_bazaar:     '\uD83C\uDFEA',   // 🏪
         duel_spires:         '\uD83C\uDFF0'    // 🏰
@@ -110,8 +110,8 @@ var MapScreen = (function() {
 
             var schoolCls = region.school ? Helpers.schoolClass(region.school) : '';
 
-            html += '<section class="region-card' + (isCurrent ? ' region-current' : '') + ' ' + schoolCls + '" ';
-            html += 'role="listitem" aria-label="' + region.name + '">';
+            html += '<section class="region-card region-card-' + regionId + (isCurrent ? ' region-current' : '') + ' ' + schoolCls + '" ';
+            html += 'role="listitem" data-region="' + regionId + '" aria-label="' + region.name + '">';
 
             // Region header
             html += '<div class="region-header">';

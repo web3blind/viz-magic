@@ -101,7 +101,7 @@ var CraftingScreen = (function() {
         var recipe = recipeInfo.recipe;
         var canCraft = recipeInfo.canCraft;
         var name = t(recipe.nameKey) || recipe.id.replace(/_/g, ' ');
-        var catIcon = _getCategoryIcon(recipe.category);
+        var catIcon = _getRecipeIcon(recipe);
 
         var html = '<div class="recipe-card' + (canCraft ? ' craftable' : ' locked') + '" ' +
                    'role="listitem" data-recipe="' + recipe.id + '" tabindex="0" ' +
@@ -355,6 +355,27 @@ var CraftingScreen = (function() {
         }
 
         return html;
+    }
+
+
+    function _getRecipeIcon(recipe) {
+        var recipeIcons = {
+            mana_potion: '\uD83E\uDDEA',
+            health_scroll: '\uD83E\uDE79',
+            ember_staff: '\uD83D\uDD25',
+            ash_wand: '\uD83E\uDE84',
+            thornwood_staff: '\uD83C\uDF3F',
+            shadow_blade: '\uD83D\uDDE1\uFE0F',
+            veilstone_helm: '\uD83E\uDE96',
+            windwalker_boots: '\uD83E\uDD7E',
+            ironbark_vest: '\uD83E\uDDBA',
+            fire_rune: '\uD83D\uDD25',
+            shadow_rune: '\uD83C\uDF11',
+            lucky_charm: '\uD83C\uDF40',
+            armageddon_stone: '\u2604\uFE0F'
+        };
+        if (recipe && recipeIcons[recipe.id]) return recipeIcons[recipe.id];
+        return _getCategoryIcon(recipe ? recipe.category : '');
     }
 
     /**

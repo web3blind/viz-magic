@@ -111,16 +111,19 @@ var ChronicleScreen = (function() {
             text = _ensureRequiredTag(text);
             if (!text || text.length > MAX_POST_LENGTH) return;
             SoundManager.play('bless_send');
+            var optimisticBlock = _injectLocalPost(text);
+            _renderLocalFeedNow();
+            Helpers.$('chronicle-input').value = '';
+            _setDraft('');
+            Helpers.$('chronicle-char-count').textContent = '0/' + MAX_POST_LENGTH;
 
             VizBroadcast.chroniclePost(text, function(err) {
                 if (err) {
+                    _removeLocalPost(optimisticBlock, text);
+                    _renderLocalFeedNow();
                     Toast.error(Helpers.t('error_network'));
                 } else {
-                    _injectLocalPost(text);
                     Toast.success('\u2728 ' + Helpers.t('chronicle_send'));
-                    Helpers.$('chronicle-input').value = '';
-                    _setDraft('');
-                    Helpers.$('chronicle-char-count').textContent = '0/' + MAX_POST_LENGTH;
                     _loadFeed();
                 }
             });
@@ -143,8 +146,9 @@ var ChronicleScreen = (function() {
         var entries = _collectPostEntries(state);
         var accounts = _getFeedAccounts(state);
 
+        _renderFeedEntries(_filterByTab(_dedupeEntries(entries), state));
+
         if (!accounts.length || typeof VoiceProtocol === 'undefined' || !VoiceProtocol.loadChronicle) {
-            _renderFeedEntries(_filterByTab(entries, state));
             return;
         }
 
@@ -347,16 +351,41 @@ var ChronicleScreen = (function() {
     function _injectLocalPost(text) {
         var state = StateEngine.getState();
         var user = VizAccount.getCurrentUser();
-        if (!state || !user) return;
+        if (!state || !user) return 0;
+        if (!state.recentActions) state.recentActions = [];
+        var optimisticBlock = (state.headBlock || 0) + 1;
         state.recentActions.push({
             type: 'chronicle_post',
             sender: user,
-            blockNum: (state.headBlock || 0) + 1,
+            blockNum: optimisticBlock,
             timestamp: Date.now(),
             text: text,
             message: { type: 'text', text: text },
+            optimistic: true,
             events: []
         });
+        cachedFeedHtml = {};
+        return optimisticBlock;
+    }
+
+    function _removeLocalPost(blockNum, text) {
+        var state = StateEngine.getState();
+        var user = VizAccount.getCurrentUser();
+        if (!state || !state.recentActions || !user) return;
+        for (var i = state.recentActions.length - 1; i >= 0; i--) {
+            var action = state.recentActions[i];
+            if (action && action.optimistic && action.sender === user && action.blockNum === blockNum && action.text === text) {
+                state.recentActions.splice(i, 1);
+                break;
+            }
+        }
+        cachedFeedHtml = {};
+    }
+
+    function _renderLocalFeedNow() {
+        var state = StateEngine.getState();
+        var entries = _collectPostEntries(state);
+        _renderFeedEntries(_filterByTab(_dedupeEntries(entries), state));
     }
 
     function _injectLocalBlessing(account, energy) {

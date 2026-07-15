@@ -5,8 +5,8 @@
 var HomeScreen = (function() {
     'use strict';
 
-    var PRIMARY_HOME_SCREENS = ['home', 'inventory', 'guild', 'crafting', 'hunt', 'map', 'arena', 'quests', 'marketplace', 'temple'];
-    var SECONDARY_HOME_SCREENS = ['chronicle', 'character', 'leaderboard', 'world-boss', 'settings', 'help', 'developers'];
+    var PRIMARY_HOME_SCREENS = ['home', 'inventory', 'guild', 'crafting', 'map', 'hunt', 'quests', 'arena', 'marketplace', 'temple', 'world-boss'];
+    var SECONDARY_HOME_SCREENS = ['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'];
     var HOME_HP_DISPLAY_MAX = 5000;
     var HOME_XP_DISPLAY_MAX = 3000;
 
@@ -213,12 +213,12 @@ var HomeScreen = (function() {
             t('festival_today_prefix') + ': ' + t(festival.nameKey) + '. ' + t(festival.descKey) + '</p>' : '';
         return '<section class="season-indicator magical-forecast" aria-label="' + t('weather_forecast_label') + '">' +
             '<div class="forecast-card forecast-card-season">' +
-                '<span class="forecast-icon" aria-hidden="true">' + season.icon + '</span>' +
+                '<span class="forecast-icon forecast-weather-icon" aria-hidden="true">\uD83E\uDDED</span>' +
                 '<span class="forecast-kicker">' + t('weather_forecast_title') + '</span>' +
                 '<p class="forecast-line">' + t(season.nameKey) + '</p>' +
             '</div>' +
             '<div class="forecast-card forecast-card-sky">' +
-                '<span class="forecast-icon" aria-hidden="true">' + (sky ? sky.icon : '\u26C5') + '</span>' +
+                '<span class="forecast-icon forecast-sky-icon" aria-hidden="true">' + (sky ? sky.icon : '\u26C5') + '</span>' +
                 '<span class="forecast-kicker">' + t('weather_sky_title') + '</span>' +
                 '<p class="forecast-line">' + skyText + '</p>' +
                 '<p class="forecast-omen">' + forecast + '</p>' +

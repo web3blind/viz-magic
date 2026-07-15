@@ -120,7 +120,7 @@ var LangRU = {
     home_map: 'Карта',
     home_chronicle: 'Хроника',
     home_primary_actions: 'Главная строка',
-    home_secondary_actions: 'Ещё разделы',
+    home_secondary_actions: 'Дополнительная строка',
     home_install_shortcut: 'Ярлык игры на телефоне',
     home_install_shortcut_text: 'Чтобы не искать сохранённую ссылку после закрытия окна, добавьте Viz Magic на главный экран телефона. Это обычная установка PWA-ярлыка без магазина приложений.',
     home_install_shortcut_button: 'Установить или показать инструкцию',

@@ -6,7 +6,7 @@ var DevelopersScreen = (function() {
     'use strict';
 
     var DEVELOPER_ACCOUNT = 'denis-skripnik';
-    var REWARD_OPTIONS = [50, 100, 250]; // basis points: 0.50%, 1.00%, 2.50%
+    var REWARD_OPTIONS = [100]; // one quick reward button: 1.00%
 
     function render() {
         var t = Helpers.t;

@@ -120,7 +120,7 @@ var LangEN = {
     home_map: 'Map',
     home_chronicle: 'Chronicle',
     home_primary_actions: 'Main bar',
-    home_secondary_actions: 'More sections',
+    home_secondary_actions: 'Additional bar',
     home_install_shortcut: 'Game shortcut on your phone',
     home_install_shortcut_text: 'Add Viz Magic to your phone home screen so you do not have to find a saved link after the game window closes. This is a normal PWA shortcut install, no app store needed.',
     home_install_shortcut_button: 'Install or show instructions',
