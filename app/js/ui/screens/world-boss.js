@@ -240,6 +240,13 @@ var WorldBossScreen = (function() {
     }
 
     function _renderLeaderboard(leaderboard, t) {
+        if (leaderboard && leaderboard.length) {
+            leaderboard = leaderboard.slice().sort(function(a, b) {
+                if ((b.damage || 0) !== (a.damage || 0)) return (b.damage || 0) - (a.damage || 0);
+                if ((b.attacks || 0) !== (a.attacks || 0)) return (b.attacks || 0) - (a.attacks || 0);
+                return String(a.account || '').localeCompare(String(b.account || ''));
+            });
+        }
         if (!leaderboard || leaderboard.length === 0) {
             return '<p class="empty-state">' + t('boss_no_attackers') + '</p>';
         }
@@ -326,8 +333,8 @@ var WorldBossScreen = (function() {
                                 ? CharacterSystem.getTotalStat(character, 'pot') : (character.pot || 10);
                             var estimatedDamage = pot * 5 + character.level * 10;
                             Toast.success(Helpers.t('boss_attack_success') + ' ~' + estimatedDamage + ' HP');
-                            // State-engine will process the real attack from blockchain and update bossState
-                            // Re-render will happen automatically on next block poll
+                            _schedulePostAttackRefresh();
+                            render();
                         });
                     });
                 });

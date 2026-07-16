@@ -834,7 +834,8 @@ var App = (function() {
             guild: true,
             arena: true,
             marketplace: true,
-            leaderboard: true
+            leaderboard: true,
+            'world-boss': true
         };
 
         if (!reactiveScreens[currentScreen]) return;
