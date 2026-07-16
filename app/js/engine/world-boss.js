@@ -14,6 +14,7 @@ var WorldBoss = (function() {
     /** Boss constants */
     var BASE_HP        = 100000;
     var HP_PER_PLAYER  = 5000;     // Scales with active players
+    var DEFAULT_ENCOUNTER_PLAYERS = 6; // deterministic public encounter size; keeps all browsers on one boss HP
     var BOSS_WINDOW    = 28800;    // ~1 day in blocks
     var LOOT_POOL_XP   = 50000;
     var COUNTERATTACK_BASE = 50;   // Base damage per counterattack
@@ -40,7 +41,10 @@ var WorldBoss = (function() {
      * @returns {Object} boss state
      */
     function spawnBoss(blockNum, activePlayerCount, author) {
-        var count = activePlayerCount || 1;
+        // Do not derive HP from a browser's local character cache: different
+        // players may have replayed different history windows. Keep the live
+        // encounter deterministic so all browsers see the same boss.
+        var count = DEFAULT_ENCOUNTER_PLAYERS;
         var scaledHp = BASE_HP + (count * HP_PER_PLAYER);
         return {
             active: true,
@@ -290,6 +294,7 @@ var WorldBoss = (function() {
     return {
         BOSS_ACCOUNT: BOSS_ACCOUNT,
         BASE_HP: BASE_HP,
+        DEFAULT_ENCOUNTER_PLAYERS: DEFAULT_ENCOUNTER_PLAYERS,
         spawnBoss: spawnBoss,
         attackBoss: attackBoss,
         processCounterattack: processCounterattack,

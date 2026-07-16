@@ -17,7 +17,7 @@ var WorldBossScreen = (function() {
         if ((!bossState || !bossState.active) && typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) {
             var bossEvent = WorldEvents.checkWorldBossWindow(blockNum);
             if (bossEvent && bossEvent.active) {
-                var playerCount = state.characters ? Object.keys(state.characters).length : 1;
+                var playerCount = WorldBoss.DEFAULT_ENCOUNTER_PLAYERS || (state.characters ? Object.keys(state.characters).length : 1);
                 bossState = WorldBoss.spawnBoss(bossEvent.spawnBlock || blockNum, playerCount, WorldBoss.BOSS_ACCOUNT);
             }
         }
@@ -33,6 +33,65 @@ var WorldBossScreen = (function() {
         }
 
         _bindActions(el, bossState, user, blockNum);
+        _ensureArchiveBackfill(bossState, blockNum);
+    }
+
+
+    var _backfillKey = '';
+
+    function _ensureArchiveBackfill(bossState, blockNum) {
+        if (!bossState || !bossState.active || bossState.defeated) return;
+        if (typeof HistorySource === 'undefined' || !HistorySource.getEventsRange) return;
+        var spawnBlock = bossState.spawnBlock || 0;
+        if (!spawnBlock || !blockNum || blockNum < spawnBlock) return;
+        var key = spawnBlock + ':' + Math.floor(blockNum / 50);
+        if (_backfillKey === key) return;
+        _backfillKey = key;
+
+        HistorySource.getEventsRange({
+            protocol: VizMagicConfig.PROTOCOLS.VM,
+            start: spawnBlock,
+            end: blockNum,
+            limit: 1000
+        }, function(err, events) {
+            if (err || !events || !events.length) return;
+            events.sort(function(a, b) {
+                if ((a.blockNum || 0) !== (b.blockNum || 0)) return (a.blockNum || 0) - (b.blockNum || 0);
+                if ((a.txIndex || 0) !== (b.txIndex || 0)) return (a.txIndex || 0) - (b.txIndex || 0);
+                return (a.opIndex || 0) - (b.opIndex || 0);
+            });
+
+            var grouped = {};
+            var order = [];
+            var state = StateEngine.getState();
+            var currentBoss = state.worldBoss || bossState;
+            for (var i = 0; i < events.length; i++) {
+                var ev = events[i] || {};
+                if (ev.type !== 'boss.attack') continue;
+                var sender = ev.sender || '';
+                var contrib = currentBoss.contributions && currentBoss.contributions[sender];
+                if (contrib && contrib.lastAttackBlock && contrib.lastAttackBlock >= ev.blockNum) continue;
+                var parsedAction = VMProtocol.parseAction(ev.raw && ev.raw.json ? ev.raw.json : JSON.stringify(ev.payload || {}));
+                if (!parsedAction) continue;
+                var block = ev.blockNum || 0;
+                if (!grouped[block]) {
+                    grouped[block] = { vmActions: [], voicePosts: [], veEvents: [], awards: [], blockHash: ev.block_id || ev.previous || '', blockNum: block, timestamp: ev.timestamp || '' };
+                    order.push(block);
+                }
+                grouped[block].vmActions.push({ sender: sender, action: parsedAction, blockNum: block, blockHash: ev.block_id || ev.previous || '', timestamp: ev.timestamp || '', raw: ev.raw || {} });
+            }
+            if (!order.length) return;
+            var emitted = [];
+            for (var j = 0; j < order.length; j++) {
+                var evts = StateEngine.processBlock(grouped[order[j]]) || [];
+                emitted = emitted.concat(evts);
+            }
+            for (var k = 0; k < emitted.length; k++) {
+                if (emitted[k].type) Helpers.EventBus.emit(emitted[k].type, emitted[k]);
+            }
+            StateEngine.saveCheckpoint(function() {});
+            render();
+        });
     }
 
     function _renderInactive(t, blockNum) {

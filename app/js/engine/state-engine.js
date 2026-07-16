@@ -1189,15 +1189,17 @@ var StateEngine = (function() {
     function _handleBossAttack(sender, data, blockNum, blockHash) {
         if (typeof WorldBoss === 'undefined') return [];
 
-        // Auto-spawn boss if attack arrives but no boss state exists
-        // (happens when boss spawn block is outside the sync window)
-        if (!worldState.worldBoss || !worldState.worldBoss.active) {
-            var playerCount = Object.keys(worldState.characters).length;
-            var spawnBlock = blockNum;
-            if (typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) {
-                var bossEvent = WorldEvents.checkWorldBossWindow(blockNum);
-                if (bossEvent && bossEvent.spawnBlock) spawnBlock = bossEvent.spawnBlock;
-            }
+        // Auto-spawn/reset the public boss from the deterministic schedule.
+        // This repairs browsers that first entered the window after spawn or
+        // after local checkpoints skipped earlier boss.attack events.
+        var playerCount = Object.keys(worldState.characters).length;
+        var spawnBlock = blockNum;
+        var bossEvent = null;
+        if (typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) {
+            bossEvent = WorldEvents.checkWorldBossWindow(blockNum);
+            if (bossEvent && bossEvent.spawnBlock) spawnBlock = bossEvent.spawnBlock;
+        }
+        if (!worldState.worldBoss || !worldState.worldBoss.active || (bossEvent && worldState.worldBoss.spawnBlock !== spawnBlock)) {
             worldState.worldBoss = WorldBoss.spawnBoss(spawnBlock, playerCount, WorldBoss.BOSS_ACCOUNT);
         }
 
