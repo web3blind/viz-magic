@@ -3,7 +3,7 @@
     "short_name": "VizMagic",
     "description": "Viz Magic — accessible browser RPG on the VIZ blockchain",
     "id": "https://vizmagic.web3blind.xyz/",
-    "start_url": "/?pwa=viz-magic-v63",
+    "start_url": "/?pwa=viz-magic-v64",
     "scope": "/",
     "display": "standalone",
     "display_override": ["standalone", "minimal-ui"],

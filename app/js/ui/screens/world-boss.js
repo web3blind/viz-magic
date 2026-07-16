@@ -14,11 +14,16 @@ var WorldBossScreen = (function() {
         var state = StateEngine.getState();
         var blockNum = state.headBlock || 0;
         var bossState = state.worldBoss || null;
-        if ((!bossState || !bossState.active) && typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) {
+        if (typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) {
             var bossEvent = WorldEvents.checkWorldBossWindow(blockNum);
             if (bossEvent && bossEvent.active) {
                 var playerCount = WorldBoss.DEFAULT_ENCOUNTER_PLAYERS || (state.characters ? Object.keys(state.characters).length : 1);
-                bossState = WorldBoss.spawnBoss(bossEvent.spawnBlock || blockNum, playerCount, WorldBoss.BOSS_ACCOUNT);
+                var scheduledBoss = WorldBoss.spawnBoss(bossEvent.spawnBlock || blockNum, playerCount, WorldBoss.BOSS_ACCOUNT);
+                if (!bossState || !bossState.active || bossState.spawnBlock !== scheduledBoss.spawnBlock || bossState.maxHp !== scheduledBoss.maxHp || bossState.currentHp > scheduledBoss.maxHp) {
+                    state.worldBoss = scheduledBoss;
+                    bossState = scheduledBoss;
+                    _backfillKey = '';
+                }
             }
         }
         bossState = bossState || WorldBoss.getDefaultState();

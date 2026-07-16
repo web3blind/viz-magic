@@ -115,7 +115,14 @@ async function run() {
       var expiredOutput = process(makeFixtureBlock(1200, 'expired-alpha', 'boss.attack', { spell: 'firebolt' }));
       var expiredAfter = StateEngine.getState().worldBoss.totalDamage;
 
-      // Scenario 3: high-power local fixture can defeat the boss and expose loot UI without chain mutation.
+      // Scenario 3: another account's boss attack must still contribute even when
+      // that character is not present in this browser's local state.
+      StateEngine.reset();
+      initCharacter('local-viewer', 10, 20);
+      var unknownOutput = process(makeFixtureBlock(3004, 'remote-alpha', 'boss.attack', { spell: 'firebolt' }));
+      var unknownBoss = StateEngine.getState().worldBoss;
+
+      // Scenario 4: high-power local fixture can defeat the boss and expose loot UI without chain mutation.
       StateEngine.reset();
       initCharacter('slayer-alpha', 5000, 20000);
       var defeatOutput = process(makeFixtureBlock(5000, 'slayer-alpha', 'boss.attack', { spell: 'firebolt' }));
@@ -149,6 +156,7 @@ async function run() {
       return {
         happy: happy,
         expired: { output: expiredOutput, before: expiredBefore, after: expiredAfter },
+        unknown: { output: unknownOutput, boss: unknownBoss },
         defeated: { output: defeatOutput, boss: defeatState.worldBoss, loot: loot, text: defeatedText, rerenderedText: rerenderedDefeatedText, xp: slayerXp, inventoryCount: slayerInventoryCount },
         defender: { outputs: defenderOutputs, territory: defenderTerritory }
       };
@@ -173,6 +181,9 @@ async function run() {
 
     assert.deepStrictEqual(result.expired.output.events, [], 'expired active boss should not accept attack: ' + JSON.stringify(result.expired));
     assert.strictEqual(result.expired.after, result.expired.before, 'expired boss damage must not mutate');
+
+    assert.ok(result.unknown.output.events.indexOf('boss_attacked') !== -1, 'unknown remote boss attacker should still emit boss_attacked');
+    assert.ok(result.unknown.boss && result.unknown.boss.contributions['remote-alpha'] && result.unknown.boss.contributions['remote-alpha'].damage > 0, 'unknown remote boss attacker should be counted in public boss state: ' + JSON.stringify(result.unknown));
 
     assert.ok(result.defeated.output.events.indexOf('boss_attacked') !== -1, 'defeat attack should emit boss_attacked');
     assert.ok(result.defeated.output.events.indexOf('boss_defeated') !== -1, 'high-power fixture should defeat boss');

@@ -1199,16 +1199,16 @@ var StateEngine = (function() {
             bossEvent = WorldEvents.checkWorldBossWindow(blockNum);
             if (bossEvent && bossEvent.spawnBlock) spawnBlock = bossEvent.spawnBlock;
         }
-        if (!worldState.worldBoss || !worldState.worldBoss.active || (bossEvent && worldState.worldBoss.spawnBlock !== spawnBlock)) {
-            worldState.worldBoss = WorldBoss.spawnBoss(spawnBlock, playerCount, WorldBoss.BOSS_ACCOUNT);
+        var scheduledBoss = WorldBoss.spawnBoss(spawnBlock, playerCount, WorldBoss.BOSS_ACCOUNT);
+        if (!worldState.worldBoss || !worldState.worldBoss.active || (bossEvent && (worldState.worldBoss.spawnBlock !== spawnBlock || worldState.worldBoss.maxHp !== scheduledBoss.maxHp || worldState.worldBoss.currentHp > scheduledBoss.maxHp))) {
+            worldState.worldBoss = scheduledBoss;
         }
 
-        var character = worldState.characters[sender];
-        if (!character) return [];
-
-        var pot = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat)
-            ? CharacterSystem.getTotalStat(character, 'pot') : (character.pot || 10);
-        var baseDamage = pot * 5 + character.level * 10;
+        var character = worldState.characters[sender] || null;
+        var level = character ? (character.level || 1) : 1;
+        var pot = character && typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat
+            ? CharacterSystem.getTotalStat(character, 'pot') : (character && character.pot ? character.pot : 14);
+        var baseDamage = pot * 5 + level * 10;
         var result = WorldBoss.attackBoss(worldState.worldBoss, sender, baseDamage, data.spell || '', blockNum, blockHash);
         if (!result.success) return [];
 
