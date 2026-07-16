@@ -13,7 +13,15 @@ var WorldBossScreen = (function() {
         var user = VizAccount.getCurrentUser();
         var state = StateEngine.getState();
         var blockNum = state.headBlock || 0;
-        var bossState = state.worldBoss || WorldBoss.getDefaultState();
+        var bossState = state.worldBoss || null;
+        if ((!bossState || !bossState.active) && typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) {
+            var bossEvent = WorldEvents.checkWorldBossWindow(blockNum);
+            if (bossEvent && bossEvent.active) {
+                var playerCount = state.characters ? Object.keys(state.characters).length : 1;
+                bossState = WorldBoss.spawnBoss(bossEvent.spawnBlock || blockNum, playerCount, WorldBoss.BOSS_ACCOUNT);
+            }
+        }
+        bossState = bossState || WorldBoss.getDefaultState();
         var status = WorldBoss.getBossStatus(bossState, user, blockNum);
 
         if (!status.active) {

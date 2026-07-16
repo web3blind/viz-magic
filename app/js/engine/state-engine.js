@@ -1193,7 +1193,12 @@ var StateEngine = (function() {
         // (happens when boss spawn block is outside the sync window)
         if (!worldState.worldBoss || !worldState.worldBoss.active) {
             var playerCount = Object.keys(worldState.characters).length;
-            worldState.worldBoss = WorldBoss.spawnBoss(blockNum, playerCount, WorldBoss.BOSS_ACCOUNT);
+            var spawnBlock = blockNum;
+            if (typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) {
+                var bossEvent = WorldEvents.checkWorldBossWindow(blockNum);
+                if (bossEvent && bossEvent.spawnBlock) spawnBlock = bossEvent.spawnBlock;
+            }
+            worldState.worldBoss = WorldBoss.spawnBoss(spawnBlock, playerCount, WorldBoss.BOSS_ACCOUNT);
         }
 
         var character = worldState.characters[sender];
