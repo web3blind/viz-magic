@@ -1909,3 +1909,18 @@ body,
 .recipe-card[aria-label*="Shadow Rune"] .recipe-icon { color: #e0c3ff; text-shadow: 0 0 14px rgba(190, 130, 255, 0.95), 0 0 24px rgba(88, 166, 255, 0.45); filter: brightness(1.35) saturate(1.4); }
 .sell-item-name { color: var(--color-text); font-weight: 650; }
 .sell-item-name::after { content: " 🖋️"; color: #a7d8ff; text-shadow: 0 0 10px rgba(88,166,255,0.7); }
+
+
+.event-effect-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255, 216, 88, 0.16);
+    border: 1px solid rgba(255, 216, 88, 0.55);
+    color: #ffe680;
+    font-weight: 800;
+    text-shadow: 0 0 10px rgba(255, 216, 88, 0.45);
+}

@@ -170,6 +170,7 @@ var HomeScreen = (function() {
             var target = evt.type === 'minor_rift' ? 'hunt' : '';
             var tag = target ? 'button' : 'div';
             var attrs = target ? ' type="button" data-screen="' + target + '"' : '';
+            var effectBadge = evt.type === 'weave_surge' ? '<span class="event-effect-badge">⚡ Мана ×' + (evt.manaRegenMultiplier || 2) + '</span>' : '';
             html += '<' + tag + ' class="event-banner-item event-banner-' + evt.type + (target ? ' event-banner-button' : '') + '"' + attrs + ' aria-label="' +
                 t(evt.nameKey) + (desc ? '. ' + desc : '') + ' ' + t('event_time_left', {time: timeStr}) + '">' +
                 '<span class="event-icon" aria-hidden="true">' + evt.icon + '</span>' +
@@ -177,6 +178,7 @@ var HomeScreen = (function() {
                     '<span class="event-name">' + t(evt.nameKey) + '</span>' +
                     (desc ? '<span class="event-desc">' + desc + '</span>' : '') +
                 '</span>' +
+                effectBadge +
                 '<span class="event-timer">' + timeStr + '</span>' +
             '</' + tag + '>';
         }

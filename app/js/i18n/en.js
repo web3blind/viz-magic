@@ -885,7 +885,7 @@ var LangEN = {
 
     // World Events
     event_weave_surge: 'Weave Surge',
-    event_weave_surge_desc: 'Mana regeneration doubled!',
+    event_weave_surge_desc: 'The Weave strengthens recovery: while this event is active, mana regenerates 2× faster.',
     event_minor_rift: 'Minor Rift',
     event_minor_rift_desc: 'Rare creatures appear more often in hunts. Press to go hunting while the rift is open.',
     event_time_left: '{time} left.',
