@@ -129,7 +129,7 @@ var WorldBossScreen = (function() {
     }
 
     function _renderDefeated(t, status, bossState) {
-        var loot = WorldBoss.distributeLoot(bossState);
+        var loot = WorldBoss.calculateLootDistribution ? WorldBoss.calculateLootDistribution(bossState) : WorldBoss.distributeLoot(bossState);
 
         var html = '<div class="boss-screen">' +
             '<h1>' + t('boss_title') + '</h1>' +

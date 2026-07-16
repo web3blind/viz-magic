@@ -120,9 +120,14 @@ async function run() {
       initCharacter('slayer-alpha', 5000, 20000);
       var defeatOutput = process(makeFixtureBlock(5000, 'slayer-alpha', 'boss.attack', { spell: 'firebolt' }));
       var defeatState = StateEngine.getState();
-      var loot = WorldBoss.distributeLoot(defeatState.worldBoss);
+      var loot = WorldBoss.calculateLootDistribution(defeatState.worldBoss);
+      var slayerXp = defeatState.characters['slayer-alpha'].xp;
+      var slayerInventoryCount = defeatState.inventories['slayer-alpha'].length;
       App.navigateTo('world-boss');
       var defeatedText = document.getElementById('screen-world-boss').innerText;
+      App.navigateTo('home');
+      App.navigateTo('world-boss');
+      var rerenderedDefeatedText = document.getElementById('screen-world-boss').innerText;
 
       // Scenario 4: defender wins an expired siege; territory must remain with defender guild.
       StateEngine.reset();
@@ -144,7 +149,7 @@ async function run() {
       return {
         happy: happy,
         expired: { output: expiredOutput, before: expiredBefore, after: expiredAfter },
-        defeated: { output: defeatOutput, boss: defeatState.worldBoss, loot: loot, text: defeatedText },
+        defeated: { output: defeatOutput, boss: defeatState.worldBoss, loot: loot, text: defeatedText, rerenderedText: rerenderedDefeatedText, xp: slayerXp, inventoryCount: slayerInventoryCount },
         defender: { outputs: defenderOutputs, territory: defenderTerritory }
       };
     }, [
@@ -174,7 +179,10 @@ async function run() {
     assert.strictEqual(result.defeated.boss.currentHp, 0, 'defeated boss HP should clamp to zero');
     assert.strictEqual(result.defeated.boss.defeated, true, 'defeated flag should be true');
     assert.ok(result.defeated.loot.length === 1 && result.defeated.loot[0].account === 'slayer-alpha', 'loot distribution should include contributor: ' + JSON.stringify(result.defeated.loot));
+    assert.ok(result.defeated.xp >= 50000, 'defeated boss should grant proportional XP to contributor: ' + JSON.stringify(result.defeated));
+    assert.ok(result.defeated.inventoryCount >= 3, 'defeated boss should grant tiered items to contributor: ' + JSON.stringify(result.defeated));
     assert.ok(result.defeated.text.indexOf('Defeated') !== -1 || result.defeated.text.indexOf('Повержен') !== -1, 'defeated UI should render loot/defeated state');
+    assert.ok(/slayer-alpha/.test(result.defeated.rerenderedText) && /50000 XP/.test(result.defeated.rerenderedText), 'defeated loot UI should survive rerender without mutating distribution: ' + result.defeated.rerenderedText);
 
     var defenderEvents = result.defender.outputs.reduce(function(acc, item) { return acc.concat(item.events); }, []);
     assert.ok(defenderEvents.indexOf('territory_claimed') !== -1, 'defender siege claim should resolve');

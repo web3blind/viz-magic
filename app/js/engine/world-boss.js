@@ -162,12 +162,12 @@ var WorldBoss = (function() {
     }
 
     /**
-     * Calculate loot distribution proportional to damage.
+     * Calculate loot distribution proportional to damage without mutating state.
      * @param {Object} bossState
      * @returns {Array} [{account, damage, share, xpReward, items}]
      */
-    function distributeLoot(bossState) {
-        if (!bossState || !bossState.defeated || bossState.lootDistributed) return [];
+    function calculateLootDistribution(bossState) {
+        if (!bossState || !bossState.defeated) return [];
 
         var distributions = [];
         var totalDmg = bossState.totalDamage || 1;
@@ -203,7 +203,18 @@ var WorldBoss = (function() {
 
         // Sort by damage descending
         distributions.sort(function(a, b) { return b.damage - a.damage; });
+        return distributions;
+    }
 
+    /**
+     * Mark loot as distributed and return the deterministic distribution once.
+     * Use calculateLootDistribution for UI previews/rerenders.
+     * @param {Object} bossState
+     * @returns {Array} [{account, damage, share, xpReward, items}]
+     */
+    function distributeLoot(bossState) {
+        if (!bossState || !bossState.defeated || bossState.lootDistributed) return [];
+        var distributions = calculateLootDistribution(bossState);
         bossState.lootDistributed = true;
         return distributions;
     }
@@ -283,6 +294,7 @@ var WorldBoss = (function() {
         attackBoss: attackBoss,
         processCounterattack: processCounterattack,
         defeatBoss: defeatBoss,
+        calculateLootDistribution: calculateLootDistribution,
         distributeLoot: distributeLoot,
         getBossStatus: getBossStatus,
         getDefaultState: getDefaultState

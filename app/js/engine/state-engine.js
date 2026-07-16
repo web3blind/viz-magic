@@ -1212,9 +1212,31 @@ var StateEngine = (function() {
 
         var events = [{ type: 'boss_attacked', account: sender, damage: result.damage, counterDamage: result.counterDamage, blockNum: blockNum }];
         if (result.bossDefeated) {
-            events.push({ type: 'boss_defeated', blockNum: blockNum, totalDamage: worldState.worldBoss.totalDamage });
+            var loot = _applyBossRewards(blockNum);
+            events.push({ type: 'boss_defeated', blockNum: blockNum, totalDamage: worldState.worldBoss.totalDamage, loot: loot });
         }
         return events;
+    }
+
+    function _applyBossRewards(blockNum) {
+        if (typeof WorldBoss === 'undefined' || !worldState.worldBoss || !worldState.worldBoss.defeated) return [];
+        var loot = WorldBoss.distributeLoot(worldState.worldBoss);
+        for (var i = 0; i < loot.length; i++) {
+            var entry = loot[i];
+            var character = worldState.characters[entry.account];
+            if (character && typeof CharacterSystem !== 'undefined' && CharacterSystem.addXp) {
+                if (typeof character.xp !== 'number' || isNaN(character.xp)) character.xp = 0;
+                CharacterSystem.addXp(character, entry.xpReward);
+            }
+            if (!worldState.inventories[entry.account]) worldState.inventories[entry.account] = [];
+            if (typeof ItemSystem !== 'undefined' && ItemSystem.createItem) {
+                for (var j = 0; j < entry.items.length; j++) {
+                    var rewardItem = ItemSystem.createItem(entry.items[j].type, entry.account, entry.items[j].rarity, blockNum, '', true);
+                    worldState.inventories[entry.account].push(rewardItem);
+                }
+            }
+        }
+        return loot;
     }
 
     function _handleLocCreate(sender, data, blockNum) {
