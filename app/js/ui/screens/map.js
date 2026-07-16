@@ -61,7 +61,7 @@ var MapScreen = (function() {
 
         var html = '';
         html += '<div class="map-screen" role="region" aria-label="' + t('map_title') + '">';
-        html += '<h1>' + t('map_title') + '</h1>';
+        html += '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🗺️</span> ' + t('map_title') + '</h1>';
 
         // Current location
         if (character) {

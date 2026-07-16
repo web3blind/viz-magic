@@ -18,7 +18,7 @@ var ArenaScreen = (function() {
         if (!el) return;
 
         var html = '<div class="arena-screen" role="region" aria-label="' + t('arena_title') + '">' +
-            '<h1>' + t('arena_title') + '</h1>' +
+            '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">⚔️</span> ' + t('arena_title') + '</h1>' +
             '<div class="arena-tabs" role="tablist" aria-label="' + t('arena_tabs') + '">' +
                 '<button class="btn ' + (currentTab === 'leaderboard' ? 'btn-primary' : 'btn-secondary') + '" ' +
                     'role="tab" aria-selected="' + (currentTab === 'leaderboard') + '" ' +
@@ -29,7 +29,7 @@ var ArenaScreen = (function() {
             '</div>' +
             '<div id="arena-content" role="tabpanel"></div>' +
             '<div class="arena-challenge">' +
-                '<h2>' + (t('arena_challenge') || 'Бросить вызов') + '</h2>' +
+                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🎯</span> ' + (t('arena_challenge') || 'Бросить вызов') + '</h2>' +
                 '<div class="form-group">' +
                     '<input type="text" id="arena-opponent" class="input-field" ' +
                         'placeholder="' + (t('arena_opponent_placeholder') || 'Имя оппонента') + '" ' +

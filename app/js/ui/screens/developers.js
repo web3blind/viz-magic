@@ -17,7 +17,7 @@ var DevelopersScreen = (function() {
         var html = '<div class="developers-screen">';
         html += '<h1>🛠️ ' + t('developers_title') + '</h1>';
         html += '<section class="developers-card" aria-label="' + t('developers_about_title') + '">';
-        html += '<h2>' + t('developers_about_title') + '</h2>';
+        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🧙</span> ' + t('developers_about_title') + '</h2>';
         html += '<p>' + t('developers_about_text') + '</p>';
         html += '<p><strong>' + t('developers_primary_dev') + ':</strong> @' + DEVELOPER_ACCOUNT + '</p>';
         html += '</section>';

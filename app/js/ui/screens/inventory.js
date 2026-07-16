@@ -28,7 +28,7 @@ var InventoryScreen = (function() {
         groups = _applyFilter(groups, filter);
         groups = _applySort(groups, sort);
 
-        var html = '<div class="inventory-screen"><h1>' + t('inv_title') + '</h1>';
+        var html = '<div class="inventory-screen"><h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🎒</span> ' + t('inv_title') + '</h1>';
         html += _renderControls(t, filter, sort, compact);
 
         if (groups.length === 0) {

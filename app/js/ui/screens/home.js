@@ -69,7 +69,7 @@ var HomeScreen = (function() {
                     '</div>' +
                 '</section>' +
                 '<section class="home-install" aria-label="' + t('home_install_shortcut') + '">' +
-                    '<h2>' + t('home_install_shortcut') + '</h2>' +
+                    '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">\uD83D\uDCF2</span> ' + t('home_install_shortcut') + '</h2>' +
                     '<p>' + t('home_install_shortcut_text') + '</p>' +
                     '<button type="button" class="btn btn-secondary" id="btn-install-shortcut">' + t('home_install_shortcut_button') + '</button>' +
                 '</section>' +
@@ -204,13 +204,17 @@ var HomeScreen = (function() {
 
         var sky = WorldEvents.getCurrentSky ? WorldEvents.getCurrentSky(blockNum) : null;
         var weather = WorldEvents.getCurrentWeather ? WorldEvents.getCurrentWeather(blockNum) : null;
-        var skyText = sky ? t(sky.summaryKey) : '';
+        var skyText = sky ? (sky.summaryText || t(sky.summaryKey)) : '';
         var forecast = weather ? t(weather.summaryKey) : '';
         var effect = weather ? t(weather.effectKey) : '';
         var festival = WorldEvents.getCurrentFestival ? WorldEvents.getCurrentFestival(blockNum) : null;
         var magicNews = WorldEvents.getCurrentMagicNews ? WorldEvents.getCurrentMagicNews(blockNum) : null;
-        var festivalHtml = festival ? '<p class="forecast-festival"><span aria-hidden="true">' + festival.icon + '</span> ' +
-            t('festival_today_prefix') + ': ' + t(festival.nameKey) + '. ' + t(festival.descKey) + '</p>' : '';
+        var festivalHtml = festival ? '<div class="forecast-card forecast-card-festival">' +
+                '<span class="forecast-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFE0</span>' +
+                '<span class="forecast-kicker">' + t('festival_today_prefix') + '</span>' +
+                '<p class="forecast-line"><span aria-hidden="true">' + festival.icon + '</span> ' + t(festival.nameKey) + '</p>' +
+                '<p class="forecast-omen">' + (festival.descText || t(festival.descKey)) + '</p>' +
+            '</div>' : '';
         return '<section class="season-indicator magical-forecast" aria-label="' + t('weather_forecast_label') + '">' +
             '<div class="forecast-card forecast-card-season">' +
                 '<span class="forecast-icon forecast-weather-icon" aria-hidden="true">\uD83E\uDDED</span>' +
@@ -221,15 +225,14 @@ var HomeScreen = (function() {
                 '<span class="forecast-icon forecast-sky-icon" aria-hidden="true">' + (sky ? sky.icon : '\u26C5') + '</span>' +
                 '<span class="forecast-kicker">' + t('weather_sky_title') + '</span>' +
                 '<p class="forecast-line">' + skyText + '</p>' +
-                '<p class="forecast-omen">' + forecast + '</p>' +
             '</div>' +
             '<div class="forecast-card forecast-card-effect">' +
-                '<span class="forecast-icon" aria-hidden="true">\u2694\uFE0F</span>' +
+                '<span class="forecast-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF9</span>' +
                 '<span class="forecast-kicker">' + t('season_effect_prefix') + '</span>' +
                 '<p class="season-bonus">' + t('school_' + season.dominant) + ' +20%, ' +
                     t('school_' + season.secondary) + ' +10%. ' + effect + '</p>' +
-                festivalHtml +
             '</div>' +
+            festivalHtml +
             (magicNews ? '<div class="forecast-card forecast-card-news">' +
                 '<span class="forecast-icon" aria-hidden="true">' + magicNews.icon + '</span>' +
                 '<span class="forecast-kicker">' + t('magic_news_title') + '</span>' +
@@ -246,11 +249,11 @@ var HomeScreen = (function() {
 
         return '<section class="home-prophecy" aria-label="' + t('home_daily_prophecy') + '">' +
             '<button type="button" class="prophecy-mini prophecy-mini-button" aria-label="' + t('home_daily_prophecy') + ': ' + t(prophecy.titleKey) + '">' +
-                '<span class="prophecy-icon" aria-hidden="true">\uD83D\uDD2E</span>' +
+                '<span class="prophecy-icon vmagic-breathe" aria-hidden="true">\uD83D\uDD2E</span>' +
                 '<div class="prophecy-info">' +
                     '<h3>' + t('home_daily_prophecy') + '</h3>' +
-                    '<p>' + t(prophecy.titleKey) + '</p>' +
-                    '<p><small>' + t('quest_daily_help_text') + '</small></p>' +
+                    '<p class="daily-quest-title">' + t(prophecy.titleKey) + '</p>' +
+                    '<p class="daily-quest-desc"><small>' + t(prophecy.descriptionKey) + '</small></p>' +
                     '<span class="prophecy-reward">\u2B50 ' + (prophecy.rewards ? prophecy.rewards.xp : 0) + ' XP</span>' +
                 '</div>' +
             '</button>' +

@@ -46,7 +46,7 @@ var GuildScreen = (function() {
         // Header / Banner
         html += '<div class="guild-hall" role="region" aria-label="' + t('guild_title') + '">';
         html += '<header class="guild-banner">';
-        html += '<h1 class="guild-name">' + _esc(guild.name) + '</h1>';
+        html += '<h1 class="guild-name"><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🛡️</span> ' + _esc(guild.name) + '</h1>';
         html += '<p class="guild-tag">[' + _esc(guild.tag) + ']</p>';
         if (guild.motto) {
             html += '<p class="guild-motto" aria-label="' + t('guild_motto') + '">' + _esc(guild.motto) + '</p>';
@@ -222,7 +222,7 @@ var GuildScreen = (function() {
         var html = '';
         var pendingInvites = _getPendingInvites(state, user);
         html += '<div class="guild-hall" role="region" aria-label="' + t('guild_title') + '">';
-        html += '<h1>' + t('guild_title') + '</h1>';
+        html += '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🛡️</span> ' + t('guild_title') + '</h1>';
 
         // Show sync hint if still catching up
         var guildList = _getGuildList(state);

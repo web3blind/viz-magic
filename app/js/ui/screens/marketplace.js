@@ -21,7 +21,7 @@ var MarketplaceScreen = (function() {
         if (!container) return;
 
         var html = '<div class="marketplace-screen">';
-        html += '<h1>' + t('market_title') + '</h1>';
+        html += '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🏪</span> ' + t('market_title') + '</h1>';
 
         // Tabs
         html += '<div class="market-tabs" role="tablist" aria-label="' + t('market_tabs') + '">';
@@ -184,7 +184,7 @@ var MarketplaceScreen = (function() {
             }
         }
 
-        html += '<h2>' + t('market_sell_title') + '</h2>';
+        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">Ⓥ</span> ' + t('market_sell_title') + '</h2>';
 
         // Active listings
         var myListings = _getDisplayListings({ seller: user });
@@ -244,14 +244,14 @@ var MarketplaceScreen = (function() {
         var t = Helpers.t;
         var html = '';
 
-        html += '<h2>' + t('market_warded_trade') + '</h2>';
+        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🔐</span> ' + t('market_warded_trade') + '</h2>';
         html += '<p class="market-trade-desc">' + t('market_warded_desc') + '</p>';
 
         html += '<div class="market-trade-form">';
-        html += '<label for="trade-recipient" class="input-label">' + t('market_trade_to') + '</label>';
+        html += '<label for="trade-recipient" class="input-label"><span class="section-icon vmagic-breathe" aria-hidden="true">🧙</span> ' + t('market_trade_to') + '</label>';
         html += '<input type="text" id="trade-recipient" class="input-field" placeholder="' + t('market_trade_to_placeholder') + '">';
 
-        html += '<label for="trade-item-select" class="input-label">' + t('market_trade_item') + '</label>';
+        html += '<label for="trade-item-select" class="input-label"><span class="section-icon vmagic-breathe" aria-hidden="true">🎒</span> ' + t('market_trade_item') + '</label>';
         html += '<select id="trade-item-select" class="input-field" aria-label="' + t('market_trade_item') + '">';
         html += '<option value="">' + t('market_select_item') + '</option>';
 
@@ -268,7 +268,7 @@ var MarketplaceScreen = (function() {
         }
         html += '</select>';
 
-        html += '<label for="trade-reason" class="input-label">' + t('market_trade_reason') + '</label>';
+        html += '<label for="trade-reason" class="input-label"><span class="section-icon vmagic-breathe" aria-hidden="true">✍️</span> ' + t('market_trade_reason') + '</label>';
         html += '<input type="text" id="trade-reason" class="input-field" placeholder="' + t('market_trade_reason_placeholder') + '">';
 
         html += '<button class="btn btn-primary market-send-trade-btn" id="btn-send-trade">' + t('market_send_trade') + '</button>';

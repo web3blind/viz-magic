@@ -21,7 +21,7 @@ var ChronicleScreen = (function() {
         if (!el) return;
 
         var html = '<div class="chronicle-screen" role="region" aria-label="' + t('chronicle_title') + '">' +
-            '<h1>' + t('chronicle_title') + '</h1>' +
+            '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">📝</span> ' + t('chronicle_title') + '</h1>' +
 
             // Tabs
             '<div class="chronicle-tabs" role="tablist" aria-label="' + t('chronicle_tabs') + '">' +

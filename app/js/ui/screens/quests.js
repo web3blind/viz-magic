@@ -24,7 +24,7 @@ var QuestsScreen = (function() {
 
         el.innerHTML =
             '<div class="quests-screen">' +
-                '<h1>' + t('quest_title') + '</h1>' +
+                '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">📜</span> ' + t('quest_title') + '</h1>' +
                 _renderTabs(t) +
                 '<div id="quests-content" role="region" aria-live="polite"></div>' +
             '</div>';
@@ -127,9 +127,9 @@ var QuestsScreen = (function() {
                 '<span class="prophecy-icon" aria-hidden="true">\uD83D\uDD2E</span>' +
                 '<h2>' + t('home_daily_prophecy') + '</h2>' +
             '</div>' +
-            '<h3>' + t(prophecy.titleKey) + '</h3>' +
+            '<h3 class="daily-quest-title"><span class="section-icon vmagic-breathe" aria-hidden="true">🧭</span> ' + t(prophecy.titleKey) + '</h3>' +
             '<p class="prophecy-desc">' + t(prophecy.descriptionKey) + '</p>' +
-            '<p class="quest-desc">' + t('quest_daily_help_text') + '</p>';
+            '<p class="quest-desc">🔮 Сначала выбери ежедневное пророчество, затем выполни его отдельную цель ниже. Благословения нужны только если сегодняшняя цель — благословить других магов.</p>';
 
         // Objectives
         html += '<div class="prophecy-objectives">';

@@ -32,7 +32,7 @@ var CharacterScreen = (function() {
 
         el.innerHTML =
             '<div class="character-sheet">' +
-                '<h1>' + t('char_title') + '</h1>' +
+                '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🧙</span> ' + t('char_title') + '</h1>' +
                 '<div class="char-header">' +
                     '<span class="char-icon" aria-hidden="true">' + Helpers.classIcon(ch.className) + '</span>' +
                     '<div><h2>' + Helpers.escapeHtml(ch.name) + '</h2>' +
@@ -44,7 +44,7 @@ var CharacterScreen = (function() {
                 '<p class="quest-desc character-vital-note">' + t('char_xp_explainer') + '</p>' +
                 ProgressBar.create({id:'char-mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
                 '<p class="quest-desc character-vital-note">' + t('char_mana_explainer') + '</p>' +
-                '<h2>' + t('char_stats') + '</h2>' +
+                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">📊</span> ' + t('char_stats') + '</h2>' +
                 '<div class="stats-list">' +
                     _statRow(t('char_potency'), totalPot) +
                     _statRow(t('char_resilience'), totalRes) +
@@ -53,10 +53,10 @@ var CharacterScreen = (function() {
                     _statRow(t('char_fortune'), totalFor) +
                 '</div>' +
                 '<p class="quest-desc">' + t('char_stats_growth_hint') + '</p>' +
-                '<h2>' + t('char_core') + '</h2>' +
+                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">💠</span> ' + t('char_core') + '</h2>' +
                 '<p>' + t('char_core_power') + ': ' + Helpers.formatNumber(ch.coreBonus) + '</p>' +
                 '<p>' + t('char_core_per_stat', { value: corePerStat }) + '</p>' +
-                '<h2>' + t('char_spells') + '</h2>' +
+                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🪄</span> ' + t('char_spells') + '</h2>' +
                 _renderSpells(ch) +
             '</div>';
 

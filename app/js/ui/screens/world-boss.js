@@ -229,7 +229,7 @@ var WorldBossScreen = (function() {
 
     function _renderBossLore(t) {
         return '<section class="boss-lore" aria-label="' + t('boss_lore_title') + '">' +
-            '<h3>' + t('boss_lore_title') + '</h3>' +
+            '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🕵️</span> ' + t('boss_lore_title') + '</h3>' +
             '<p>' + t('boss_lore_text') + '</p>' +
             '<ul>' +
                 '<li>' + t('boss_lore_rule_1') + '</li>' +

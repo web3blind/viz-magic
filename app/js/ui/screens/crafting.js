@@ -19,7 +19,7 @@ var CraftingScreen = (function() {
         if (!container) return;
 
         var html = '<div class="crafting-screen">';
-        html += '<h1>' + t('craft_title') + '</h1>';
+        html += '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🔨</span> ' + t('craft_title') + '</h1>';
 
         // Tabs
         html += '<div class="craft-tabs" role="tablist" aria-label="' + t('craft_tabs') + '">';
@@ -361,16 +361,16 @@ var CraftingScreen = (function() {
     function _getRecipeIcon(recipe) {
         var recipeIcons = {
             mana_potion: '\uD83E\uDDEA',
-            health_scroll: '\uD83E\uDE79',
-            ember_staff: '\uD83D\uDD25',
+            health_scroll: '\uD83D\uDCDC',
+            ember_staff: '\uD83E\uDE84',
             ash_wand: '\uD83E\uDE84',
-            thornwood_staff: '\uD83C\uDF3F',
+            thornwood_staff: '\uD83E\uDE84',
             shadow_blade: '\uD83D\uDDE1\uFE0F',
             veilstone_helm: '\uD83E\uDE96',
             windwalker_boots: '\uD83E\uDD7E',
             ironbark_vest: '\uD83E\uDDBA',
             fire_rune: '\uD83D\uDD25',
-            shadow_rune: '\uD83C\uDF11',
+            shadow_rune: '\uD83C\uDF11\uFE0F',
             lucky_charm: '\uD83C\uDF40',
             armageddon_stone: '\u2604\uFE0F'
         };

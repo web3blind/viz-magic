@@ -67,7 +67,7 @@ var SettingsScreen = (function() {
 
         el.innerHTML =
             '<div class="settings-screen">' +
-                '<h1>' + t('settings_title') + '</h1>' +
+                '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">⚙️</span> ' + t('settings_title') + '</h1>' +
 
                 // Language
                 '<section class="settings-section" aria-label="' + t('settings_language') + '">' +

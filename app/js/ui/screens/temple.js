@@ -42,7 +42,7 @@ var TempleScreen = (function() {
 
         var html = '<div class="temple-screen">' +
             '<div class="screen-header">' +
-                '<h1 data-screen-focus>' + t('temple_title') + '</h1>' +
+                '<h1 data-screen-focus><span class="screen-title-icon vmagic-breathe" aria-hidden="true">⛪</span> ' + t('temple_title') + '</h1>' +
                 '<p>' + t('temple_intro') + '</p>' +
                 '<p class="temple-balance-note">' + t('temple_balance_note') + '</p>' +
                 '<p id="temple-status-region" class="temple-status-region" role="status" aria-live="polite"></p>' +
@@ -55,7 +55,7 @@ var TempleScreen = (function() {
 
         html += '</div>' +
             '<section class="temple-rules" aria-label="' + t('temple_rules_title') + '">' +
-                '<h2>' + t('temple_rules_title') + '</h2>' +
+                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">📿</span> ' + t('temple_rules_title') + '</h2>' +
                 '<ul>' +
                     '<li>' + t('temple_rule_cost') + '</li>' +
                     '<li>' + t('temple_rule_cooldown') + '</li>' +

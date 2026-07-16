@@ -36,7 +36,7 @@ var HuntScreen = (function() {
         var hpShown = ch && ch.maxHp ? _scaleForDisplay(ch.hp || 0, ch.maxHp, HUNT_HP_DISPLAY_MAX) : 0;
         var hpText = ch && ch.maxHp ? (Helpers.formatNumber(hpShown) + ' / ' + Helpers.formatNumber(HUNT_HP_DISPLAY_MAX)) : '';
         var html = '<div class="hunt-screen">' +
-            '<h1>' + t('hunt_title') + '</h1>' +
+            '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🏹</span> ' + t('hunt_title') + '</h1>' +
             '<section class="hunt-rest-section" aria-label="' + t('hunt_rest_title') + '">' +
                 '<h2>⛺ ' + t('hunt_rest_title') + '</h2>' +
                 '<p class="quest-desc">' + t('hunt_rest_desc') + (hpText ? ' ' + t('hunt_rest_hp_now', {hp: hpText}) : '') + '</p>' +
