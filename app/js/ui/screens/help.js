@@ -29,7 +29,7 @@ var HelpScreen = (function() {
         ];
 
         var html = '<div class="help-screen">' +
-            '<h1>' + t('help_title') + '</h1>' +
+            '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">❓</span> ' + t('help_title') + '</h1>' +
             '<p class="help-intro">' + t('help_intro') + '</p>';
 
         for (var i = 0; i < sections.length; i++) {

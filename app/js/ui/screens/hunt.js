@@ -38,13 +38,13 @@ var HuntScreen = (function() {
         var html = '<div class="hunt-screen">' +
             '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🏹</span> ' + t('hunt_title') + '</h1>' +
             '<section class="hunt-rest-section" aria-label="' + t('hunt_rest_title') + '">' +
-                '<h2>⛺ ' + t('hunt_rest_title') + '</h2>' +
+                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">⛺</span> ' + t('hunt_rest_title') + '</h2>' +
                 '<p class="quest-desc">' + t('hunt_rest_desc') + (hpText ? ' ' + t('hunt_rest_hp_now', {hp: hpText}) : '') + '</p>' +
                 '<button class="btn btn-secondary" id="btn-rest-camp" type="button"' + (needsRest ? '' : ' disabled') + '>' +
                     (needsRest ? t('hunt_rest_button') : t('hunt_rest_full')) +
                 '</button>' +
             '</section>' +
-            '<h2>🐾 ' + t('hunt_choose_creature') + '</h2>';
+            '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🐾</span> ' + t('hunt_choose_creature') + '</h2>';
 
         if (!creatures.length) {
             html += '<div class="creature-list" role="status" aria-live="polite">' +
@@ -68,16 +68,20 @@ var HuntScreen = (function() {
             html += '</div>';
         }
 
-        html += '<h2>🪄 ' + t('hunt_choose_spell') + '</h2>' +
+        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🪄</span> ' + t('hunt_choose_spell') + '</h2>' +
+            '<p class="quest-desc">' + t('hunt_min_mana_hint') + '</p>' +
             '<div class="spell-grid" role="radiogroup" aria-label="' + t('hunt_choose_spell') + '">';
 
         for (var j = 0; j < spells.length; j++) {
             var s = spells[j];
-            html += '<button class="spell-btn ' + Helpers.schoolClass(s.school) + '" data-id="' + s.id + '" role="radio" aria-checked="false" ' +
+            var spellTooWeak = (s.manaCost || 0) < VizMagicConfig.ENERGY.MIN_HUNT_COST;
+            html += '<button class="spell-btn ' + Helpers.schoolClass(s.school) + (spellTooWeak ? ' spell-btn-disabled' : '') + '" data-id="' + s.id + '" role="radio" aria-checked="false" ' +
                 'tabindex="' + (j === 0 ? '0' : '-1') + '" type="button" ' +
-                'aria-label="' + s.name + '. ' + t('hunt_mana_cost', {cost: Helpers.bpToPercent(s.manaCost)}) + '">' +
+                (spellTooWeak ? 'disabled aria-disabled="true" ' : '') +
+                'aria-label="' + s.name + '. ' + t('hunt_mana_cost', {cost: Helpers.bpToPercent(s.manaCost)}) + (spellTooWeak ? '. ' + t('hunt_spell_too_weak') : '') + '">' +
                 '<span class="spell-name">' + s.name + '</span>' +
                 '<span class="spell-cost">' + Helpers.manaCost(s.manaCost) + '</span>' +
+                (spellTooWeak ? '<span class="spell-warning">' + t('hunt_spell_too_weak') + '</span>' : '') +
                 '</button>';
         }
 
@@ -261,6 +265,12 @@ var HuntScreen = (function() {
             var playerEnergy = 10000;
             if (!err && accountData) {
                 playerEnergy = VizAccount.calculateCurrentEnergy(accountData);
+            }
+
+            if ((spell.manaCost || 0) < VizMagicConfig.ENERGY.MIN_HUNT_COST) {
+                resultEl.innerHTML = '<p class="error">' + t('hunt_spell_too_weak') + '</p>';
+                btn.disabled = false;
+                return;
             }
 
             if (playerEnergy < spell.manaCost) {

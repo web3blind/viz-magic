@@ -421,6 +421,7 @@ var ChronicleScreen = (function() {
         var charInfo = StateEngine.getCharacter(entry.account);
         var charName = (charInfo && charInfo.name) || entry.account || '???';
         var icon = _getActionIcon(entry.actionType);
+        var text = _stripLeadingAuthor(entry.text, charName, entry.account);
         var timeStr = entry.timestamp ? Helpers.timeAgo(entry.timestamp) : '';
 
         var user = VizAccount.getCurrentUser();
@@ -446,9 +447,25 @@ var ChronicleScreen = (function() {
                 '<strong class="chronicle-author">' + Helpers.escapeHtml(charName) + '</strong>' +
                 (timeStr ? '<span class="chronicle-time">' + timeStr + '</span>' : '') +
             '</div>' +
-            '<p class="chronicle-text">' + Helpers.escapeHtml(entry.text) + '</p>' +
+            '<p class="chronicle-text">' + Helpers.escapeHtml(text) + '</p>' +
             actionsHtml +
             '</article>';
+    }
+
+
+    function _stripLeadingAuthor(text, charName, account) {
+        var out = String(text || '').replace(/^\s+/, '');
+        var names = [];
+        if (charName) names.push(charName);
+        if (account && account !== charName) names.push(account);
+        for (var i = 0; i < names.length; i++) {
+            var name = String(names[i] || '').replace(/^\s+|\s+$/g, '');
+            if (!name) continue;
+            if (out.indexOf(name + ' ') === 0) {
+                out = out.substring(name.length + 1).replace(/^[-—:,.!\s]+/, '');
+            }
+        }
+        return out;
     }
 
     function _onBless() {
@@ -617,7 +634,8 @@ var ChronicleScreen = (function() {
     function _getActionIcon(actionType) {
         var icons = {
             'chronicle_post': '\uD83D\uDCDD',
-            'hunt': '\u2694\uFE0F',
+            'hunt': '🏹',
+            'hunt.armageddon': '🏹',
             'hunt_victory': '\uD83C\uDFC6',
             'hunt_defeat': '\uD83D\uDCA8',
             'character_created': '\u2728',

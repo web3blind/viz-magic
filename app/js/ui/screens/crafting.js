@@ -258,9 +258,6 @@ var CraftingScreen = (function() {
         }
 
         // Enchantable items (equipped or in bag, with slots available)
-        html += '<h2>' + t('enchant_title') + '</h2>';
-        html += '<p class="enchant-desc">' + t('enchant_desc') + '</p>';
-
         var enchantableItems = [];
         var runeItems = [];
 
@@ -301,7 +298,8 @@ var CraftingScreen = (function() {
         // Item selection
         html += '<div class="enchant-section">';
         html += '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🪄</span> ' + t('enchant_title') + '</h3>';
-        html += '<label for="enchant-item-select" class="input-label"><span class="section-icon vmagic-breathe" aria-hidden="true">🛡️</span> ' + t('enchant_select_item') + '</label>';
+        html += '<p class="enchant-desc">' + t('enchant_desc') + '</p>';
+        html += '<label for="enchant-item-select" class="input-label"><span class="section-icon vmagic-breathe" aria-hidden="true">🧰</span> ' + t('enchant_select_item') + '</label>';
         html += '<select id="enchant-item-select" class="input-field" aria-label="' + t('enchant_select_item') + '">';
         html += '<option value="">' + t('enchant_choose_item') + '</option>';
         for (var ei = 0; ei < enchantableItems.length; ei++) {

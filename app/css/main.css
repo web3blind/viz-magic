@@ -1927,3 +1927,17 @@ body,
 }
 
 .ink-drop-icon { color: #1c2f66; filter: saturate(1.7) brightness(0.8); text-shadow: 0 0 8px rgba(40,70,150,0.55); }
+
+
+.spell-btn-disabled,
+.spell-btn:disabled {
+    opacity: 0.62;
+    cursor: not-allowed;
+}
+.spell-warning {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.78rem;
+    color: var(--color-warning);
+    line-height: 1.25;
+}

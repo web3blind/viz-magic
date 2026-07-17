@@ -350,7 +350,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v69/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v70/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/event\.request\.mode === 'navigate'[\s\S]*fetch\(event\.request\)/.test(swJs), 'navigation requests should prefer network to avoid stale cached index');
@@ -400,7 +400,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v69/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v70/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -462,14 +462,14 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/forecast-card-effect/.test(homeJs + mainCss), 'forecast effect column needs its own thematic icon/card');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should sometimes appear in the forecast');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260717a/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260717a/.test(indexHtml), 'English weather copy must be cache-busted');
-  assert.ok(/home.js\?v=20260717a/.test(indexHtml), 'home forecast layout must be cache-busted');
-  assert.ok(/js\/ui\/screens\/quests.js\?v=20260717a/.test(indexHtml), 'quest-limit UX must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260717b/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260717b/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/home.js\?v=20260717b/.test(indexHtml), 'home forecast layout must be cache-busted');
+  assert.ok(/js\/ui\/screens\/quests.js\?v=20260717b/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260716a/.test(indexHtml), 'bottom tray nav must be cache-busted');
-  assert.ok(/leaderboard.js\?v=20260716a/.test(indexHtml), 'leaderboard narrator fix must be cache-busted');
+  assert.ok(/leaderboard.js\?v=20260717b/.test(indexHtml), 'leaderboard narrator fix must be cache-busted');
   assert.ok(/world-events.js\?v=20260716c/.test(indexHtml), 'world events forecast pool must be cache-busted');
-  assert.ok(/main.css\?v=20260717a/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/main.css\?v=20260717b/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/prefers-reduced-motion: no-preference/.test(mainCss) && /vmagic-rune-pulse/.test(mainCss), 'ambient animation must be lightweight and respect reduced-motion');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
@@ -486,11 +486,11 @@ test('music volume, narrator speech, and PWA icons are durable', function () {
   assert.ok(/_setStoredNumber\('music_volume', this\.value \/ 100\)/.test(settingsJs), 'music slider should persist changes');
   assert.ok(/SpeechSynthesisUtterance/.test(narratorJs), 'battle narrator should speak audibly through Web Speech when available');
   assert.ok(/textContent = ''[\s\S]*textContent = message/.test(narratorJs), 'battle narrator should force live-region text replacement');
-  assert.ok(/manifest\.json\?v=20260717a/.test(indexHtml), 'manifest should be cache-busted for updated icon');
+  assert.ok(/manifest\.json\?v=20260717b/.test(indexHtml), 'manifest should be cache-busted for updated icon');
   assert.ok(/favicon\.ico\?v=20260712c/.test(indexHtml), 'favicon should be explicit for browser shortcut fallback');
-  assert.ok(/viz-magic-v69-192\.png\?v=20260717a/.test(indexHtml), 'launcher icon link should be cache-busted');
-  assert.ok(/assets\/icons\/viz-magic-v69-512\.png/.test(swJs), 'service worker should cache PWA launcher icons');
-  assert.ok(/viz-magic-v69-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
+  assert.ok(/viz-magic-v70-192\.png\?v=20260717b/.test(indexHtml), 'launcher icon link should be cache-busted');
+  assert.ok(/assets\/icons\/viz-magic-v70-512\.png/.test(swJs), 'service worker should cache PWA launcher icons');
+  assert.ok(/viz-magic-v70-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
 });
 
 
@@ -515,7 +515,7 @@ test('temple tab uses balanced on-chain offerings without direct pay-to-win stat
   assert.ok(/OFFERING_ENERGY = 50/.test(templeJs), 'offering cost should be small and explicit');
   assert.ok(/fire_goddess[\s\S]*target:\s*'null'/.test(templeJs), 'fire goddess should burn through null');
   assert.ok(/labor_god[\s\S]*target:\s*'committee'/.test(templeJs), 'labor god should support committee');
-  assert.ok(/screen-temple/.test(indexHtml) && /temple\.js\?v=20260714a/.test(indexHtml), 'temple screen should be loaded and cache-busted');
+  assert.ok(/screen-temple/.test(indexHtml) && /temple\.js\?v=20260717b/.test(indexHtml), 'temple screen should be loaded and cache-busted');
   assert.ok(/id: 'temple'/.test(navJs + homeJs) && /nav_temple/.test(ruJs + enJs), 'temple should be reachable from navigation/home');
 });
 
@@ -530,8 +530,8 @@ test('reported mobile UX issues have explicit fixes', function () {
 
 
 test('PWA icon and HP heart use expressive color accents', function () {
-  assert.ok(/viz-magic-v69-192\.png\?v=20260717a/.test(indexHtml), 'PWA icon link should be cache-busted after plus placement/color update');
-  assert.ok(/viz-magic-v69/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
+  assert.ok(/viz-magic-v70-192\.png\?v=20260717b/.test(indexHtml), 'PWA icon link should be cache-busted after plus placement/color update');
+  assert.ok(/viz-magic-v70/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
   assert.ok(/label:'❤️ HP'/.test(homeJs), 'HP label should use a red heart emoji variant');
 });
 
@@ -548,7 +548,7 @@ test('character screen uses current home-scale vitals and growth explainers', fu
 
 
 test('hunt screen exposes explicit camp rest promised by Help', function () {
-  assert.ok(/hunt.js\?v=20260713d/.test(indexHtml), 'hunt screen should be cache-busted');
+  assert.ok(/hunt.js\?v=20260717b/.test(indexHtml), 'hunt screen should be cache-busted');
   assert.ok(/broadcast.js\?v=20260713a/.test(indexHtml), 'broadcast helper should be cache-busted for restAction');
   assert.ok(/state-engine.js\?v=20260716a/.test(indexHtml), 'state-engine should be cache-busted for processRestResult');
   assert.ok(/function restAction\(callback\)/.test(broadcastJs), 'broadcast helper should expose restAction');
@@ -575,7 +575,7 @@ test('narrator voice preferences support gender and timbre', function () {
 
 
 test('home action tiles reflect Denis priority order', function () {
-  assert.ok(/home.js\?v=20260717a/.test(indexHtml), 'home screen should be cache-busted for action order');
+  assert.ok(/home.js\?v=20260717b/.test(indexHtml), 'home screen should be cache-busted for action order');
   assert.ok(/PRIMARY_HOME_SCREENS = \['home', 'inventory', 'guild', 'crafting', 'map', 'hunt', 'quests', 'arena', 'marketplace', 'temple', 'world-boss'\]/.test(homeJs), 'primary row should put Home, Bag, Guild and Workshop first');
   assert.ok(/SECONDARY_HOME_SCREENS = \['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'\]/.test(homeJs), 'secondary row should start Character, Rating, Chronicle and exclude World Boss');
   assert.ok(/home_secondary_actions: 'Дополнительная строка'/.test(ruJs), 'More sections should be renamed to Additional bar in Russian');
@@ -599,7 +599,7 @@ test('weave surge banner explains mana multiplier', function () {
 });
 
 test('minor rift banner explains itself and is actionable', function () {
-  assert.ok(/home.js\?v=20260717a/.test(indexHtml), 'home screen should be cache-busted for rift explanation');
+  assert.ok(/home.js\?v=20260717b/.test(indexHtml), 'home screen should be cache-busted for rift explanation');
   assert.ok(/event_minor_rift_desc/.test(homeJs + ruJs + enJs), 'minor rift should have visible explanatory copy');
   assert.ok(/evt\.type === 'minor_rift' \? 'hunt'/.test(homeJs), 'minor rift banner should navigate to Hunt');
   assert.ok(/event-banner-button/.test(homeJs + mainCss), 'actionable event banners should be styled and bound as buttons');
@@ -608,7 +608,7 @@ test('minor rift banner explains itself and is actionable', function () {
 
 
 test('temple offering gives immediate heard-prayer feedback', function () {
-  assert.ok(/temple\.js\?v=20260714a/.test(indexHtml), 'temple screen should be cache-busted for offering feedback');
+  assert.ok(/temple\.js\?v=20260717b/.test(indexHtml), 'temple screen should be cache-busted for offering feedback');
   assert.ok(/temple-status-region/.test(templeJs), 'temple should include an inline status region');
   assert.ok(/_setTempleStatus\(Helpers\.t\('temple_offering_success'\), true\)/.test(templeJs), 'temple success should update inline status immediately');
   assert.ok(/Твоя молитва услышана/.test(ruJs), 'Russian temple success should explicitly say the prayer was heard');
@@ -617,14 +617,14 @@ test('temple offering gives immediate heard-prayer feedback', function () {
 
 
 test('hunt rest uses home-scale HP values', function () {
-  assert.ok(/hunt.js\?v=20260713d/.test(indexHtml), 'hunt screen should be cache-busted for HP display scale');
+  assert.ok(/hunt.js\?v=20260717b/.test(indexHtml), 'hunt screen should be cache-busted for HP display scale');
   assert.ok(/HUNT_HP_DISPLAY_MAX = 5000/.test(huntJs), 'hunt rest should use the same 5000 HP display scale');
   assert.ok(/hpShown[\s\S]*HUNT_HP_DISPLAY_MAX/.test(huntJs), 'hunt rest description should render scaled HP instead of raw max HP');
 });
 
 
 test('marketplace groups identical sellable items and supports quantity listing', function () {
-  assert.ok(/marketplace.js\?v=20260717a/.test(indexHtml), 'marketplace screen should be cache-busted');
+  assert.ok(/marketplace.js\?v=20260717b/.test(indexHtml), 'marketplace screen should be cache-busted');
   assert.ok(/function _groupSellableItems/.test(marketplaceJs), 'sell tab should group identical items');
   assert.ok(/sell-item-count/.test(marketplaceJs), 'sell tab should display grouped item count');
   assert.ok(/sell-qty-input/.test(marketplaceJs), 'sell tab should expose quantity input');
@@ -643,22 +643,22 @@ test('hunt and arena icons are distinct', function () {
 
 
 test('hunt headings and help use updated thematic icons', function () {
-  assert.ok(/hunt.js\?v=20260713d/.test(indexHtml), 'hunt screen should be cache-busted for heading icons');
-  assert.ok(/<h2>🐾 ' \+ t\('hunt_choose_creature'\)/.test(huntJs), 'hunt creature heading should have a thematic tracking icon');
-  assert.ok(/<h2>🪄 ' \+ t\('hunt_choose_spell'\)/.test(huntJs), 'hunt spell heading should use a magic wand icon');
-  assert.ok(/help.js\?v=20260713a/.test(indexHtml), 'help screen should be cache-busted for hunt icon');
+  assert.ok(/hunt.js\?v=20260717b/.test(indexHtml), 'hunt screen should be cache-busted for heading icons');
+  assert.ok(/vmagic-breathe[\s\S]*🐾[\s\S]*hunt_choose_creature/.test(huntJs), 'hunt creature heading should have a thematic tracking icon');
+  assert.ok(/vmagic-breathe[\s\S]*🪄[\s\S]*hunt_choose_spell/.test(huntJs), 'hunt spell heading should use a magic wand icon');
+  assert.ok(/help.js\?v=20260717b/.test(indexHtml), 'help screen should be cache-busted for hunt icon');
   assert.ok(/key: 'hunt'[\s\S]*\\uD83C\\uDFF9/.test(helpJs), 'help Hunt section should use bow icon, not arena swords');
 });
 
 
 test('crafting enchant tab does not show misleading local back button', function () {
-  assert.ok(/crafting.js\?v=20260717a/.test(indexHtml), 'crafting screen should be cache-busted for enchant tab cleanup');
+  assert.ok(/crafting.js\?v=20260717b/.test(indexHtml), 'crafting screen should be cache-busted for enchant tab cleanup');
   assert.ok(!/craft-tab-back-btn/.test(craftingJs), 'enchant tab should not expose a non-working local back button');
 });
 
 
 test('marketplace sell items have semantic item icons', function () {
-  assert.ok(/marketplace.js\?v=20260717a/.test(indexHtml), 'marketplace screen should be cache-busted for sell icons');
+  assert.ok(/marketplace.js\?v=20260717b/.test(indexHtml), 'marketplace screen should be cache-busted for sell icons');
   assert.ok(/function _marketItemIcon/.test(marketplaceJs), 'sell rows should compute semantic item icons');
   assert.ok(/chronicle_ink:\s*'🖋️'/.test(marketplaceJs), 'Chronicle Ink should show the pen icon before the name');
   assert.ok(/_marketItemIcon\(sItem\)[\s\S]*_marketItemAfterIcon\(sItem\)/.test(marketplaceJs), 'sell row should render the item icon before the name and optional after-icon after the name');
@@ -727,15 +727,15 @@ test('Denis feedback UI polish batch uses calendar days and calmer icons', funct
   assert.ok(/_getMoscowSeasonIndex/.test(worldEventsJs) && /June–August/.test(worldEventsJs), 'season should follow real Moscow calendar months');
   assert.ok(/festival_wind_dance/.test(worldEventsJs + ruJs + enJs), 'wind dance festival should be available');
   assert.ok(/magic_news_dead_wasteland/.test(worldEventsJs + ruJs + enJs), 'dead wasteland news should be available');
-  assert.ok(/festival\.icon \?/.test(homeJs), 'festival card should not force a repeated default icon before the title');
+  assert.ok(/🎆/.test(homeJs), 'festival card should use a single fireworks icon before the title');
   assert.ok(!/boss-alert-icon/.test(homeJs), 'home boss alert should not show an extra small dragon icon');
   assert.ok(/boss-title-centered/.test(worldBossJs + mainCss), 'world boss title should be centered');
   assert.ok(/💰/.test(worldBossJs) && /⚡/.test(worldBossJs), 'world boss contribution and counterattack sections should have thematic icons');
 });
 
 test('Denis feedback item and motion icons are semantic', function () {
-  assert.ok(/viz-magic-v69-192\.png\?v=20260717a/.test(indexHtml), 'launcher icon should use the thinner v69 titlo-style plus asset');
-  assert.ok(/assets\/icons\/viz-magic-v69-512\.png/.test(read('app/sw.js')), 'service worker should cache v69 icon');
+  assert.ok(/viz-magic-v70-192\.png\?v=20260717b/.test(indexHtml), 'launcher icon should use the thinner v70 titlo-style plus asset');
+  assert.ok(/assets\/icons\/viz-magic-v70-512\.png/.test(read('app/sw.js')), 'service worker should cache v70 icon');
   assert.ok(/ember_staff:\s*'🪵'/.test(craftingJs) && /fire_rune:\s*'\\uD83D\\uDD25'/.test(craftingJs), 'ash staff and fire rune recipes should not share the same flame icon');
   assert.ok(/market_sell_title/.test(marketplaceJs) && /💵/.test(marketplaceJs), 'sell tab should use a brighter money icon');
   assert.ok(!/sell-item-name::after/.test(mainCss), 'bazaar rows should not append a pen icon to every item');
@@ -754,8 +754,26 @@ test('Denis feedback item and motion icons are semantic', function () {
   assert.ok(/🪄/.test(craftingJs) && /💠/.test(craftingJs) && /🔨/.test(craftingJs) && /🧰/.test(craftingJs), 'enchanting and reforging blocks should have thematic labels');
 });
 
+
+test('Denis v70 polish keeps motion icons, honest low-mana hunt, and chronicle names clean', function () {
+  assert.ok(/forecast-line[\s\S]*🎆/.test(homeJs), 'world festival card should use a fireworks icon');
+  assert.ok(!/html \+= '<h2>' \+ t\('enchant_title'\)/.test(craftingJs), 'enchant tab should not repeat a standalone Enchanting title above blocks');
+  assert.ok(/<h3><span[\s\S]*enchant_title[\s\S]*enchant-desc[\s\S]*enchant-item-select/.test(craftingJs), 'enchant description should live inside the Enchanting block');
+  assert.ok(/reforge-item-select[\s\S]*🧰/.test(craftingJs) && /enchant-item-select[\s\S]*🧰/.test(craftingJs), 'reforge and enchant item labels should use the same item icon');
+  assert.ok(/hunt-rest-section[\s\S]*vmagic-breathe[\s\S]*⛺/.test(huntJs), 'camp rest icon should breathe');
+  assert.ok(/vmagic-breathe[\s\S]*🐾[\s\S]*hunt_choose_creature/.test(huntJs), 'hunt prey icon should breathe');
+  assert.ok(/vmagic-breathe[\s\S]*🪄[\s\S]*hunt_choose_spell/.test(huntJs), 'hunt spell icon should breathe');
+  assert.ok(/temple-deity-copy[\s\S]*vmagic-breathe/.test(templeJs), 'temple deity icons should breathe');
+  assert.ok(/screen-title-icon section-icon vmagic-breathe/.test(leaderboardJs), 'leaderboard title icon should breathe');
+  assert.ok(/leaderboard_hunts:\s*'Охота'/.test(ruJs), 'leaderboard Hunts header should keep the final Russian letter');
+  assert.ok(/help_title/.test(helpJs) && /❓/.test(helpJs), 'Help title should include the help button icon');
+  assert.ok(/spellTooWeak/.test(huntJs) && /MIN_HUNT_COST/.test(huntJs) && /hunt_spell_too_weak/.test(huntJs + ruJs + enJs), '0.1% hunt spells should be blocked with honest copy instead of silently losing');
+  assert.ok(/function _stripLeadingAuthor/.test(chronicleJs), 'chronicle should strip repeated leading author from entry text');
+  assert.ok(/'hunt': '🏹'/.test(chronicleJs), 'chronicle hunt-start entries should use bow icon');
+});
+
 test('chronicle draft survives rerenders while feed loads', function () {
-  assert.ok(/chronicle.js\?v=20260717a/.test(indexHtml), 'chronicle screen should be cache-busted for draft preservation');
+  assert.ok(/chronicle.js\?v=20260717b/.test(indexHtml), 'chronicle screen should be cache-busted for draft preservation');
   assert.ok(/DRAFT_KEY/.test(chronicleJs), 'chronicle should keep a draft key');
   assert.ok(/FEED_CACHE_PREFIX/.test(chronicleJs), 'chronicle should cache rendered old feed entries per tab for instant return');
   assert.ok(/_renderFeedEntries\(_filterByTab\(_dedupeEntries\(entries\), state\)\)/.test(chronicleJs), 'chronicle should render local entries before slow VoiceProtocol refresh');
