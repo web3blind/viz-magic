@@ -115,7 +115,7 @@ var WorldBossScreen = (function() {
         }
 
         return '<div class="boss-screen">' +
-            '<h1>' + t('boss_title') + '</h1>' +
+            '<h1 class="boss-title-centered">' + t('boss_title') + '</h1>' +
             '<div class="boss-dormant">' +
                 '<div class="boss-icon-large" aria-hidden="true">\uD83D\uDC32</div>' +
                 '<h2>' + t('boss_dormant') + '</h2>' +
@@ -134,7 +134,7 @@ var WorldBossScreen = (function() {
         var timeStr = timeRemaining > 60 ? Math.floor(timeRemaining / 60) + 'h ' + (timeRemaining % 60) + 'm' : timeRemaining + 'm';
 
         var html = '<div class="boss-screen">' +
-            '<h1>' + t('boss_title') + '</h1>' +
+            '<h1 class="boss-title-centered">' + t('boss_title') + '</h1>' +
 
             // Boss portrait and HP
             '<div class="boss-portrait">' +
@@ -160,7 +160,7 @@ var WorldBossScreen = (function() {
 
             // Player contribution
             '<div class="boss-my-contribution">' +
-                '<h3>' + t('boss_your_contribution') + '</h3>' +
+                '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">💰</span> ' + t('boss_your_contribution') + '</h3>' +
                 '<div class="boss-my-stats">' +
                     '<span>' + t('boss_damage_dealt') + ': ' + _formatNum(status.myDamage) + '</span>' +
                     '<span>' + t('boss_attacks') + ': ' + status.myAttacks + '</span>' +
@@ -178,13 +178,13 @@ var WorldBossScreen = (function() {
 
             // Leaderboard
             '<div class="boss-leaderboard">' +
-                '<h3>' + t('boss_leaderboard') + '</h3>' +
+                '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🧙</span> ' + t('boss_leaderboard') + '</h3>' +
                 _renderLeaderboard(status.leaderboard, t) +
             '</div>' +
 
             // Counterattack log
             '<div class="boss-counter-log" role="log" aria-live="polite" aria-label="' + t('boss_counter_log') + '">' +
-                '<h3>' + t('boss_counter_log') + '</h3>' +
+                '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">⚡</span> ' + t('boss_counter_log') + '</h3>' +
                 _renderCounterLog(status.recentCounterattacks, t) +
             '</div>' +
         '</div>';
@@ -196,7 +196,7 @@ var WorldBossScreen = (function() {
         var loot = WorldBoss.calculateLootDistribution ? WorldBoss.calculateLootDistribution(bossState) : WorldBoss.distributeLoot(bossState);
 
         var html = '<div class="boss-screen">' +
-            '<h1>' + t('boss_title') + '</h1>' +
+            '<h1 class="boss-title-centered">' + t('boss_title') + '</h1>' +
             '<div class="boss-defeated">' +
                 '<div class="boss-icon-large defeated" aria-hidden="true">\uD83D\uDC32</div>' +
                 '<h2>' + t('boss_defeated') + '!</h2>' +

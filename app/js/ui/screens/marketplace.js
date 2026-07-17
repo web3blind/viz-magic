@@ -184,7 +184,7 @@ var MarketplaceScreen = (function() {
             }
         }
 
-        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">Ⓥ</span> ' + t('market_sell_title') + '</h2>';
+        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">💵</span> ' + t('market_sell_title') + '</h2>';
 
         // Active listings
         var myListings = _getDisplayListings({ seller: user });
@@ -523,7 +523,8 @@ var MarketplaceScreen = (function() {
     function _marketItemIcon(item) {
         if (!item) return '✦';
         var byType = {
-            chronicle_ink: '🖋️',
+            chronicle_ink: '💧',
+            altar_spark: '✨',
             flame_votive_mark: '🔥',
             labor_votive_mark: '🔨',
             health_scroll: '📜',

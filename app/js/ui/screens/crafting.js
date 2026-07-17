@@ -362,9 +362,9 @@ var CraftingScreen = (function() {
         var recipeIcons = {
             mana_potion: '\uD83E\uDDEA',
             health_scroll: '\uD83D\uDCDC',
-            ember_staff: '\uD83E\uDE84',
+            ember_staff: '🔥',
             ash_wand: '\uD83E\uDE84',
-            thornwood_staff: '\uD83E\uDE84',
+            thornwood_staff: '🌿',
             shadow_blade: '\uD83D\uDDE1\uFE0F',
             veilstone_helm: '\uD83E\uDE96',
             windwalker_boots: '\uD83E\uDD7E',

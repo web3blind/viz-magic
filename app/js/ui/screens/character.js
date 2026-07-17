@@ -34,7 +34,7 @@ var CharacterScreen = (function() {
             '<div class="character-sheet">' +
                 '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🧙</span> ' + t('char_title') + '</h1>' +
                 '<div class="char-header">' +
-                    '<span class="char-icon" aria-hidden="true">' + Helpers.classIcon(ch.className) + '</span>' +
+                    '<span class="char-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(ch.className) + '</span>' +
                     '<div><h2>' + Helpers.escapeHtml(ch.name) + '</h2>' +
                     '<p>' + t('class_' + ch.className) + ' \u2022 ' + t('home_level') + ' ' + ch.level + '</p></div>' +
                 '</div>' +

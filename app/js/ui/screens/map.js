@@ -115,7 +115,7 @@ var MapScreen = (function() {
 
             // Region header
             html += '<div class="region-header">';
-            html += '<span class="region-icon" aria-hidden="true">' + icon + '</span>';
+            html += '<span class="region-icon vmagic-breathe" aria-hidden="true">' + icon + '</span>';
             html += '<div class="region-info">';
             html += '<h2 class="region-name">' + region.name + '</h2>';
             html += '<span class="region-level">' + t('map_level') + ' ' + region.minLevel + '-' + region.maxLevel + '</span>';

@@ -70,7 +70,7 @@ var GuildScreen = (function() {
 
         // Quest Board
         html += '<section class="guild-quests" aria-label="' + t('guild_quest_board') + '">';
-        html += '<h2>' + t('guild_quest_board') + '</h2>';
+        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">📜</span> ' + t('guild_quest_board') + '</h2>';
         if (guild.quests && guild.quests.length > 0) {
             html += '<ul class="guild-quest-list" role="list">';
             for (var q = 0; q < guild.quests.length; q++) {
@@ -93,7 +93,7 @@ var GuildScreen = (function() {
 
         // Territory section
         html += '<section class="guild-territories" aria-label="' + t('guild_territories') + '">';
-        html += '<h2>' + t('guild_territories') + '</h2>';
+        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🗺️</span> ' + t('guild_territories') + '</h2>';
         if (territories.length > 0) {
             html += '<ul class="territory-list" role="list">';
             for (var ti = 0; ti < territories.length; ti++) {
@@ -132,7 +132,7 @@ var GuildScreen = (function() {
 
         // Members list
         html += '<section class="guild-member-list" aria-label="' + t('guild_members') + '">';
-        html += '<h2>' + t('guild_members') + '</h2>';
+        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🧑‍🚀</span> ' + t('guild_members') + '</h2>';
         html += '<ul class="member-list" role="list">';
         for (var m = 0; m < members.length; m++) {
             var member = members[m];
@@ -166,7 +166,7 @@ var GuildScreen = (function() {
 
         // Guild Board (Announcements)
         html += '<section class="guild-board" aria-label="' + t('guild_board') + '">';
-        html += '<h2>' + t('guild_board') + '</h2>';
+        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">📣</span> ' + t('guild_board') + '</h2>';
         if (guild.announcements && guild.announcements.length > 0) {
             html += '<ul class="announcement-list" role="list">';
             for (var a = guild.announcements.length - 1; a >= Math.max(0, guild.announcements.length - 5); a--) {
@@ -262,7 +262,7 @@ var GuildScreen = (function() {
         var guildList = _getGuildList(state);
         if (guildList.length > 0) {
             html += '<section class="recommended-guilds" aria-label="' + t('guild_recommended') + '">';
-            html += '<h2>' + t('guild_recommended') + '</h2>';
+            html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🛡️</span> ' + t('guild_recommended') + '</h2>';
             html += '<ul class="guild-list" role="list">';
             for (var i = 0; i < guildList.length; i++) {
                 var g = guildList[i];

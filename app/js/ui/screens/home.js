@@ -193,7 +193,6 @@ var HomeScreen = (function() {
         if (!bossStatus || !bossStatus.active) return '';
 
         return '<button class="boss-alert" role="alert" aria-label="' + t('boss_active_alert') + '">' +
-            '<span class="boss-alert-icon" aria-hidden="true">\uD83D\uDC32</span>' +
             '<span class="boss-alert-text">' + t('boss_active_alert') + '</span>' +
             '<span class="boss-alert-hp">' + bossStatus.hpPercent + '% HP</span>' +
         '</button>';
@@ -212,9 +211,8 @@ var HomeScreen = (function() {
         var festival = WorldEvents.getCurrentFestival ? WorldEvents.getCurrentFestival(blockNum) : null;
         var magicNews = WorldEvents.getCurrentMagicNews ? WorldEvents.getCurrentMagicNews(blockNum) : null;
         var festivalHtml = festival ? '<div class="forecast-card forecast-card-festival">' +
-                '<span class="forecast-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFE0</span>' +
                 '<span class="forecast-kicker">' + t('festival_today_prefix') + '</span>' +
-                '<p class="forecast-line"><span aria-hidden="true">' + festival.icon + '</span> ' + t(festival.nameKey) + '</p>' +
+                '<p class="forecast-line">' + (festival.icon ? '<span aria-hidden="true">' + festival.icon + '</span> ' : '') + t(festival.nameKey) + '</p>' +
                 '<p class="forecast-omen">' + (festival.descText || t(festival.descKey)) + '</p>' +
             '</div>' : '';
         return '<section class="season-indicator magical-forecast" aria-label="' + t('weather_forecast_label') + '">' +

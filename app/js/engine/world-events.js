@@ -1,7 +1,7 @@
 /**
  * Viz Magic — World Events System
- * Seasonal cycles, Weave Surges, Minor Rifts, World Boss spawns.
- * All deterministic from block number.
+ * Calendar seasons, daily Moscow-time forecast text, Weave Surges, Minor Rifts, World Boss spawns.
+ * Daily text blocks rotate at 00:00 Moscow time; chain events remain block-scheduled.
  */
 var WorldEvents = (function() {
     'use strict';
@@ -9,7 +9,6 @@ var WorldEvents = (function() {
     var cfg = VizMagicConfig;
 
     /** Block intervals */
-    var SEASON_LENGTH     = 2419200;  // ~84 days
     var SURGE_INTERVAL    = 864000;   // ~30 days
     var RIFT_INTERVAL     = 100000;   // ~3.5 days
     var BOSS_INTERVAL     = 864000;   // ~30 days (offset from surge)
@@ -17,6 +16,29 @@ var WorldEvents = (function() {
     var SURGE_DURATION    = 28800;    // ~1 day
     var RIFT_DURATION     = 14400;    // ~12 hours
     var BOSS_WINDOW       = 28800;    // ~1 day
+
+
+
+    /** Daily text blocks rotate at Moscow midnight (UTC+3). */
+    function _getMoscowDate(nowMs) {
+        var d = new Date(typeof nowMs === 'number' ? nowMs : Date.now());
+        // Moscow is UTC+3 without DST. Shift timestamp, then read UTC fields.
+        return new Date(d.getTime() + 3 * 60 * 60 * 1000);
+    }
+
+    function _getMoscowDayIndex(nowMs) {
+        var d = _getMoscowDate(nowMs);
+        return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) / 86400000);
+    }
+
+    function _getMoscowSeasonIndex(nowMs) {
+        var d = _getMoscowDate(nowMs);
+        var m = d.getUTCMonth();
+        if (m >= 2 && m <= 4) return 0;  // March–May
+        if (m >= 5 && m <= 7) return 1;  // June–August
+        if (m >= 8 && m <= 10) return 2; // September–November
+        return 3;                         // December–February
+    }
 
     /** Season definitions */
     var SEASONS = [
@@ -72,7 +94,8 @@ var WorldEvents = (function() {
         { icon: '⚔️', summaryKey: 'magic_news_arena_helmets' },
         { icon: '🔮', summaryKey: 'magic_news_prophet_sneeze' },
         { icon: '🌧️', summaryKey: 'magic_news_upward_rain' },
-        { icon: '🧪', summaryKey: 'magic_news_healers_busy' }
+        { icon: '🧪', summaryKey: 'magic_news_healers_busy' },
+        { icon: '✨', summaryKey: 'magic_news_dead_wasteland' }
     ];
 
     /** Magical weather definitions. These are in-world, not real-world forecasts. */
@@ -326,7 +349,8 @@ var WorldEvents = (function() {
     /** Occasional magical holidays tied to game sections. */
     var FESTIVALS = [
         { id: 'hearth_spirit_day', icon: '\uD83C\uDFE0', screen: 'home', nameKey: 'festival_hearth_spirit_day', descKey: 'festival_hearth_spirit_day_desc' },
-        { id: 'hunt_tribute', icon: '\u2694\uFE0F', screen: 'hunt', nameKey: 'festival_hunt_tribute', descKey: 'festival_hunt_tribute_desc' },
+        { id: 'hunt_tribute', icon: '', screen: 'hunt', nameKey: 'festival_hunt_tribute', descKey: 'festival_hunt_tribute_desc' },
+        { id: 'wind_dance', icon: '', screen: 'map', nameKey: 'festival_wind_dance', descKey: 'festival_wind_dance_desc' },
         { id: 'guild_dance', icon: '\uD83D\uDEE1\uFE0F', screen: 'guild', nameKey: 'festival_guild_dance', descKey: 'festival_guild_dance_desc' },
         { id: 'chronicle_ink_night', icon: '\uD83D\uDCDD', screen: 'chronicle', nameKey: 'festival_chronicle_ink_night', descKey: 'festival_chronicle_ink_night_desc' },
         { id: 'bazaar_bell_day', icon: '\uD83C\uDFEA', screen: 'marketplace', nameKey: 'festival_bazaar_bell_day', descKey: 'festival_bazaar_bell_day_desc' },
@@ -424,22 +448,30 @@ var WorldEvents = (function() {
     ];
 
     /**
-     * Get the current season based on block number.
-     * @param {number} blockNum
+     * Get the current real-world calendar season in Moscow time.
+     * @param {number} blockNum kept for API compatibility
      * @returns {Object} season definition
      */
     function getCurrentSeason(blockNum) {
-        var seasonIndex = Math.floor(blockNum / SEASON_LENGTH) % 4;
+        var seasonIndex = _getMoscowSeasonIndex();
         return SEASONS[seasonIndex];
     }
 
     /**
-     * Get blocks remaining until next season change.
-     * @param {number} blockNum
+     * Approximate blocks until the next real calendar season in Moscow time.
+     * @param {number} blockNum kept for API compatibility
      * @returns {number}
      */
     function blocksUntilSeasonChange(blockNum) {
-        return SEASON_LENGTH - (blockNum % SEASON_LENGTH);
+        var d = _getMoscowDate();
+        var y = d.getUTCFullYear();
+        var m = d.getUTCMonth();
+        var nextMonth = (m < 2) ? 2 : (m < 5 ? 5 : (m < 8 ? 8 : (m < 11 ? 11 : 14)));
+        var nextYear = y + Math.floor(nextMonth / 12);
+        nextMonth = nextMonth % 12;
+        var nextUtc = Date.UTC(nextYear, nextMonth, 1) - 3 * 60 * 60 * 1000;
+        var ms = Math.max(0, nextUtc - Date.now());
+        return Math.ceil(ms / 3000);
     }
 
     /**
@@ -467,13 +499,12 @@ var WorldEvents = (function() {
      * @returns {Object|null}
      */
     function getCurrentFestival(blockNum) {
-        var day = Math.floor(blockNum / 28800);
+        var day = _getMoscowDayIndex();
         var idx = day % FESTIVALS.length;
         var festival = FESTIVALS[idx];
-        var twist = FESTIVAL_TWISTS[Math.floor(day / FESTIVALS.length) % FESTIVAL_TWISTS.length];
         var out = {};
         for (var key in festival) if (festival.hasOwnProperty(key)) out[key] = festival[key];
-        out.descText = twist;
+        out.descText = null;
         return out;
     }
 
@@ -483,7 +514,7 @@ var WorldEvents = (function() {
      * @returns {Object}
      */
     function getCurrentSky(blockNum) {
-        var day = Math.floor(blockNum / 28800);
+        var day = _getMoscowDayIndex();
         var idx = day % SKY_SIGNS.length;
         if (idx < 0) idx = 0;
         var sky = SKY_SIGNS[idx];
@@ -509,7 +540,7 @@ var WorldEvents = (function() {
      * @returns {Object}
      */
     function getCurrentWeather(blockNum) {
-        var day = Math.floor(blockNum / 28800);
+        var day = _getMoscowDayIndex();
         var idx = Math.floor(day / SKY_SIGNS.length) % WEATHER.length;
         if (idx < 0) idx = 0;
         return WEATHER[idx];
@@ -522,9 +553,8 @@ var WorldEvents = (function() {
      * @returns {Object|null}
      */
     function getCurrentMagicNews(blockNum) {
-        var day = Math.floor(blockNum / 28800);
-        if (day % 2 !== 0) return null;
-        var idx = Math.floor(day / 2) % MAGIC_NEWS.length;
+        var day = _getMoscowDayIndex();
+        var idx = day % MAGIC_NEWS.length;
         if (idx < 0) idx = 0;
         return MAGIC_NEWS[idx];
     }
@@ -615,16 +645,7 @@ var WorldEvents = (function() {
     function checkEventTriggers(blockNum, prevBlock) {
         var events = [];
 
-        // Season change
-        var prevSeason = Math.floor(prevBlock / SEASON_LENGTH) % 4;
-        var curSeason = Math.floor(blockNum / SEASON_LENGTH) % 4;
-        if (prevSeason !== curSeason && prevBlock > 0) {
-            events.push({
-                type: 'season_changed',
-                season: SEASONS[curSeason],
-                blockNum: blockNum
-            });
-        }
+        // Calendar seasons are real-world/Moscow-time now, not block-triggered.
 
         // Surge start
         var prevSurgePos = prevBlock % SURGE_INTERVAL;
@@ -669,7 +690,7 @@ var WorldEvents = (function() {
             type: 'season_change',
             nameKey: 'event_next_season',
             blocksUntil: blocksUntilSeasonChange(blockNum),
-            nextSeason: SEASONS[(Math.floor(blockNum / SEASON_LENGTH) + 1) % 4]
+            nextSeason: SEASONS[(_getMoscowSeasonIndex() + 1) % 4]
         });
 
         // Next surge

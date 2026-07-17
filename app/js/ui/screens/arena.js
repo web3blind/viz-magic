@@ -304,7 +304,7 @@ var ArenaScreen = (function() {
 
         // Level filter
         var html = '<div class="arena-filter">' +
-            '<label for="level-filter" class="input-label">' + t('arena_filter_level') + '</label>' +
+            '<label for="level-filter" class="input-label"><span class="section-icon vmagic-breathe" aria-hidden="true">🛢️</span> ' + t('arena_filter_level') + '</label>' +
             '<select id="level-filter" class="input-field" aria-label="' + t('arena_filter_level') + '">' +
                 '<option value="all">' + t('arena_all_levels') + '</option>' +
                 '<option value="1-10">1-10</option>' +
@@ -424,7 +424,7 @@ var ArenaScreen = (function() {
         // Sort by level descending
         players.sort(function(a, b) { return b.level - a.level; });
 
-        var html = '<h3>' + (t('arena_known_players') || 'Известные маги') + '</h3>';
+        var html = '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🧙</span> ' + (t('arena_known_players') || 'Известные маги') + '</h3>';
         html += '<div class="arena-players-list" role="list">';
         for (var i = 0; i < Math.min(players.length, 50); i++) {
             var p = players[i];
