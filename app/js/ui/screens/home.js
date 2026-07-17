@@ -193,6 +193,7 @@ var HomeScreen = (function() {
         if (!bossStatus || !bossStatus.active) return '';
 
         return '<button class="boss-alert" role="alert" aria-label="' + t('boss_active_alert') + '">' +
+            '<span class="boss-alert-mark" aria-hidden="true">🐲</span>' +
             '<span class="boss-alert-text">' + t('boss_active_alert') + '</span>' +
             '<span class="boss-alert-hp">' + bossStatus.hpPercent + '% HP</span>' +
         '</button>';

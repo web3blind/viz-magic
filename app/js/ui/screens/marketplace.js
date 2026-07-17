@@ -219,7 +219,7 @@ var MarketplaceScreen = (function() {
                 var sRarity = ItemSystem.getRarityInfo(sItem.rarity);
                 var itemIds = group.items.map(function(it) { return it.id; }).join(',');
                 html += '<div class="market-sell-item ' + Helpers.rarityClass(sItem.rarity) + '" role="listitem" data-item="' + sItem.id + '">';
-                html += '<span class="sell-item-name">' + _marketItemIcon(sItem) + ' ' + Helpers.escapeHtml(sName) +
+                html += '<span class="sell-item-name">' + _marketItemIcon(sItem) + ' ' + Helpers.escapeHtml(sName) + _marketItemAfterIcon(sItem) +
                     (group.items.length > 1 ? ' <span class="sell-item-count">×' + group.items.length + '</span>' : '') +
                     ' <span class="sell-item-rarity rarity-color-' + sRarity.name + '">' + sRarity.symbol + '</span></span>';
                 html += '<div class="sell-item-controls">';
@@ -523,7 +523,7 @@ var MarketplaceScreen = (function() {
     function _marketItemIcon(item) {
         if (!item) return '✦';
         var byType = {
-            chronicle_ink: '💧',
+            chronicle_ink: '🖋️',
             altar_spark: '✨',
             flame_votive_mark: '🔥',
             labor_votive_mark: '🔨',
@@ -540,6 +540,14 @@ var MarketplaceScreen = (function() {
         if (template && template.category === 'focus') return '🪄';
         if (template && template.category === 'ward') return '🛡️';
         return '✦';
+    }
+
+
+
+    function _marketItemAfterIcon(item) {
+        if (!item) return '';
+        if (item.type === 'chronicle_ink') return ' <span class="ink-drop-icon" aria-hidden="true">💧</span>';
+        return '';
     }
 
     function _groupSellableItems(items) {

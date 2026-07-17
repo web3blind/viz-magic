@@ -262,7 +262,7 @@ var GuildScreen = (function() {
         var guildList = _getGuildList(state);
         if (guildList.length > 0) {
             html += '<section class="recommended-guilds" aria-label="' + t('guild_recommended') + '">';
-            html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🛡️</span> ' + t('guild_recommended') + '</h2>';
+            html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🤺</span> ' + t('guild_recommended') + '</h2>';
             html += '<ul class="guild-list" role="list">';
             for (var i = 0; i < guildList.length; i++) {
                 var g = guildList[i];

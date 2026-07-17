@@ -32,12 +32,12 @@ var LandingScreen = (function() {
                 '</header>' +
                 '<section class="landing-cards" aria-label="Features">' +
                     '<div class="feature-card">' +
-                        '<span class="feature-icon" aria-hidden="true">\u2694\uFE0F</span>' +
+                        '<span class="feature-icon" aria-hidden="true">🏹</span>' +
                         '<h3>' + t('landing_card_hunt') + '</h3>' +
                         '<p>' + t('landing_card_hunt_desc') + '</p>' +
                     '</div>' +
                     '<div class="feature-card">' +
-                        '<span class="feature-icon" aria-hidden="true">\uD83C\uDFAF</span>' +
+                        '<span class="feature-icon" aria-hidden="true">⚔️</span>' +
                         '<h3>' + t('landing_card_duel') + '</h3>' +
                         '<p>' + t('landing_card_duel_desc') + '</p>' +
                     '</div>' +

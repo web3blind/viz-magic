@@ -282,9 +282,26 @@ var CraftingScreen = (function() {
             }
         }
 
+        // Reforge section
+        html += '<div class="enchant-section reforge-section">';
+        html += '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🔨</span> ' + t('enchant_reforge_title') + '</h3>';
+        html += '<p class="enchant-desc">' + t('enchant_reforge_desc') + '</p>';
+        html += '<label for="reforge-item-select" class="input-label"><span class="section-icon vmagic-breathe" aria-hidden="true">🧰</span> ' + t('enchant_select_item') + '</label>';
+        html += '<select id="reforge-item-select" class="input-field" aria-label="' + t('enchant_reforge_item') + '">';
+        html += '<option value="">' + t('enchant_choose_item') + '</option>';
+        for (var fi = 0; fi < enchantableItems.length; fi++) {
+            var fItem = enchantableItems[fi];
+            var fName = t('item_' + fItem.type) || fItem.type.replace(/_/g, ' ');
+            html += '<option value="' + fItem.id + '">' + fName + '</option>';
+        }
+        html += '</select>';
+        html += '<button class="btn btn-secondary reforge-btn" id="btn-reforge">' + t('enchant_reforge') + '</button>';
+        html += '</div>';
+
         // Item selection
         html += '<div class="enchant-section">';
-        html += '<label for="enchant-item-select" class="input-label">' + t('enchant_select_item') + '</label>';
+        html += '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🪄</span> ' + t('enchant_title') + '</h3>';
+        html += '<label for="enchant-item-select" class="input-label"><span class="section-icon vmagic-breathe" aria-hidden="true">🛡️</span> ' + t('enchant_select_item') + '</label>';
         html += '<select id="enchant-item-select" class="input-field" aria-label="' + t('enchant_select_item') + '">';
         html += '<option value="">' + t('enchant_choose_item') + '</option>';
         for (var ei = 0; ei < enchantableItems.length; ei++) {
@@ -296,7 +313,7 @@ var CraftingScreen = (function() {
         html += '</select>';
 
         // Rune selection
-        html += '<label for="enchant-rune-select" class="input-label">' + t('enchant_select_rune') + '</label>';
+        html += '<label for="enchant-rune-select" class="input-label"><span class="section-icon vmagic-breathe" aria-hidden="true">💠</span> ' + t('enchant_select_rune') + '</label>';
         html += '<select id="enchant-rune-select" class="input-field" aria-label="' + t('enchant_select_rune') + '">';
         html += '<option value="">' + t('enchant_choose_rune') + '</option>';
         for (var ri = 0; ri < runeItems.length; ri++) {
@@ -307,22 +324,6 @@ var CraftingScreen = (function() {
         html += '</select>';
 
         html += '<button class="btn btn-primary enchant-apply-btn" id="btn-enchant-apply">' + t('enchant_apply') + '</button>';
-        html += '</div>';
-
-        // Reforge section
-        html += '<div class="enchant-section reforge-section">';
-        html += '<h3>' + t('enchant_reforge_title') + '</h3>';
-        html += '<p class="enchant-desc">' + t('enchant_reforge_desc') + '</p>';
-        html += '<label for="reforge-item-select" class="input-label">' + t('enchant_select_item') + '</label>';
-        html += '<select id="reforge-item-select" class="input-field" aria-label="' + t('enchant_reforge_item') + '">';
-        html += '<option value="">' + t('enchant_choose_item') + '</option>';
-        for (var fi = 0; fi < enchantableItems.length; fi++) {
-            var fItem = enchantableItems[fi];
-            var fName = t('item_' + fItem.type) || fItem.type.replace(/_/g, ' ');
-            html += '<option value="' + fItem.id + '">' + fName + '</option>';
-        }
-        html += '</select>';
-        html += '<button class="btn btn-secondary reforge-btn" id="btn-reforge">' + t('enchant_reforge') + '</button>';
         html += '</div>';
 
         // Consumables section
@@ -362,7 +363,7 @@ var CraftingScreen = (function() {
         var recipeIcons = {
             mana_potion: '\uD83E\uDDEA',
             health_scroll: '\uD83D\uDCDC',
-            ember_staff: '🔥',
+            ember_staff: '🪵',
             ash_wand: '\uD83E\uDE84',
             thornwood_staff: '🌿',
             shadow_blade: '\uD83D\uDDE1\uFE0F',

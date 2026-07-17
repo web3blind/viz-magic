@@ -127,7 +127,7 @@ var QuestsScreen = (function() {
                 '<span class="prophecy-icon" aria-hidden="true">\uD83D\uDD2E</span>' +
                 '<h2>' + t('home_daily_prophecy') + '</h2>' +
             '</div>' +
-            '<h3 class="daily-quest-title"><span class="section-icon vmagic-breathe" aria-hidden="true">' + (prophecy.type === 'duel' ? '⚔️' : '🧭') + '</span> ' + t(prophecy.titleKey) + '</h3>' +
+            '<h3 class="daily-quest-title"><span class="section-icon vmagic-breathe" aria-hidden="true">' + (prophecy.type === 'duel' ? '⚔️' : (prophecy.type === 'craft' ? '🔨' : '🧭')) + '</span> ' + t(prophecy.titleKey) + '</h3>' +
             '<p class="prophecy-desc">' + t(prophecy.descriptionKey) + '</p>' +
             '<p class="quest-desc">Сначала выбери ежедневное пророчество, затем выполни его отдельную цель ниже. Благословения нужны только если сегодняшняя цель — благословить других магов.</p>';
 

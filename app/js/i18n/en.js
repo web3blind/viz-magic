@@ -253,6 +253,7 @@ var LangEN = {
     chronicle_narrative_hunt_win: '{name} defeated {creature}!',
     chronicle_narrative_hunt_lose: '{name} fell in battle with {creature}.',
     chronicle_narrative_awaken: '{name} awakened in the World of Viz!',
+    chronicle_narrative_boss_attack: 'struck the Aether Dragon!',
     chronicle_narrative_rest: '{name} rests by the campfire.',
     chronicle_narrative_temple: '{name} offered a prayer at the Temple: {deity} heard the call.',
     chronicle_narrative_bless: '{name} blesses mage {target}.',

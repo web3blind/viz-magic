@@ -541,7 +541,7 @@ var ChronicleScreen = (function() {
                 }
                 return null;
             case 'boss.attack':
-                return name + ' ' + (t('boss_attack') || 'attacks the boss') + '!';
+                return t('chronicle_narrative_boss_attack');
             case 'challenge':
             case 'reveal':
                 return null; // Duel steps are noisy, skip
@@ -624,7 +624,8 @@ var ChronicleScreen = (function() {
             'rest_complete': '\uD83D\uDCA4',
             'blessing_sent': '\u2728',
             'duel_completed': '\u2694\uFE0F',
-            'duel_forfeit': '\uD83C\uDFF3\uFE0F'
+            'duel_forfeit': '\uD83C\uDFF3\uFE0F',
+            'boss.attack': '⚡'
         };
         return icons[actionType] || '\uD83D\uDCDC';
     }
