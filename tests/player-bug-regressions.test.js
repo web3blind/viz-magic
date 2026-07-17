@@ -68,6 +68,7 @@ const mainCss = read('app/css/main.css');
 const stateEngineJs = read('app/js/engine/state-engine.js');
 const combatJs = read('app/js/engine/combat.js');
 const worldEventsJs = read('app/js/engine/world-events.js');
+const spellsJs = read('app/js/data/spells.js');
 const questsJs = read('app/js/data/quests.js');
 const indexHtml = read('app/index.html');
 const ruJs = read('app/js/i18n/ru.js');
@@ -767,7 +768,10 @@ test('Denis v70 polish keeps motion icons, honest low-mana hunt, and chronicle n
   assert.ok(/screen-title-icon section-icon vmagic-breathe/.test(leaderboardJs), 'leaderboard title icon should breathe');
   assert.ok(/leaderboard_hunts:\s*'Охота'/.test(ruJs), 'leaderboard Hunts header should keep the final Russian letter');
   assert.ok(/help_title/.test(helpJs) && /❓/.test(helpJs), 'Help title should include the help button icon');
-  assert.ok(/spellTooWeak/.test(huntJs) && /MIN_HUNT_COST/.test(huntJs) && /hunt_spell_too_weak/.test(huntJs + ruJs + enJs), '0.1% hunt spells should be blocked with honest copy instead of silently losing');
+  assert.ok(/spellTooWeak/.test(huntJs) && /MIN_HUNT_COST/.test(huntJs) && /hunt_spell_too_weak/.test(huntJs + ruJs + enJs), 'hunt should guard against any combat spell below the 1% minimum');
+  ['stone_wall', 'firebolt', 'shadow_step', 'binding_vine'].forEach(function(id) {
+    assert.ok(new RegExp(id + '[\\s\\S]*manaCost: 100').test(spellsJs), id + ' should be a usable 1% starter combat spell, not a 0.1% trap');
+  });
   assert.ok(/function _stripLeadingAuthor/.test(chronicleJs), 'chronicle should strip repeated leading author from entry text');
   assert.ok(/'hunt': '🏹'/.test(chronicleJs), 'chronicle hunt-start entries should use bow icon');
 });
