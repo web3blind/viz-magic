@@ -346,18 +346,28 @@ var WorldEvents = (function() {
 
 
 
-    /** Occasional magical holidays tied to game sections. */
-    var FESTIVALS = [
-        { id: 'hearth_spirit_day', icon: '\uD83C\uDFE0', screen: 'home', nameKey: 'festival_hearth_spirit_day', descKey: 'festival_hearth_spirit_day_desc' },
-        { id: 'hunt_tribute', icon: '', screen: 'hunt', nameKey: 'festival_hunt_tribute', descKey: 'festival_hunt_tribute_desc' },
-        { id: 'wind_dance', icon: '', screen: 'map', nameKey: 'festival_wind_dance', descKey: 'festival_wind_dance_desc' },
-        { id: 'guild_dance', icon: '\uD83D\uDEE1\uFE0F', screen: 'guild', nameKey: 'festival_guild_dance', descKey: 'festival_guild_dance_desc' },
-        { id: 'chronicle_ink_night', icon: '\uD83D\uDCDD', screen: 'chronicle', nameKey: 'festival_chronicle_ink_night', descKey: 'festival_chronicle_ink_night_desc' },
-        { id: 'bazaar_bell_day', icon: '\uD83C\uDFEA', screen: 'marketplace', nameKey: 'festival_bazaar_bell_day', descKey: 'festival_bazaar_bell_day_desc' },
-        { id: 'hammer_sparks', icon: '\uD83D\uDD28', screen: 'crafting', nameKey: 'festival_hammer_sparks', descKey: 'festival_hammer_sparks_desc' },
-        { id: 'bag_whisper', icon: '\uD83C\uDF92', screen: 'inventory', nameKey: 'festival_bag_whisper', descKey: 'festival_bag_whisper_desc' },
-        { id: 'prophecy_candle', icon: '\uD83D\uDD2E', screen: 'quests', nameKey: 'festival_prophecy_candle', descKey: 'festival_prophecy_candle_desc' },
-        { id: 'dragon_mask_day', icon: '\uD83D\uDC32', screen: 'world-boss', nameKey: 'festival_dragon_mask_day', descKey: 'festival_dragon_mask_day_desc' }
+    /** Calendar magical holidays tied to game sections. Month is 1-12, day is 1-31 (Moscow time). */
+    var GREAT_FESTIVALS = [
+        { id: 'hearth_spirit_day', month: 1, day: 7, type: 'great', icon: '\uD83C\uDFE0', screen: 'home', nameKey: 'festival_hearth_spirit_day', descKey: 'festival_hearth_spirit_day_desc' },
+        { id: 'chronicle_ink_night', month: 2, day: 14, type: 'great', icon: '\uD83D\uDCDD', screen: 'chronicle', nameKey: 'festival_chronicle_ink_night', descKey: 'festival_chronicle_ink_night_desc' },
+        { id: 'wind_dance', month: 3, day: 21, type: 'great', icon: '\uD83C\uDF00', screen: 'map', nameKey: 'festival_wind_dance', descKey: 'festival_wind_dance_desc' },
+        { id: 'bazaar_bell_day', month: 4, day: 12, type: 'great', icon: '\uD83C\uDFEA', screen: 'marketplace', nameKey: 'festival_bazaar_bell_day', descKey: 'festival_bazaar_bell_day_desc' },
+        { id: 'victory_day', month: 5, day: 9, type: 'great', icon: '\uD83C\uDFC6', screen: 'guild', nameKey: 'festival_victory_day', descKey: 'festival_victory_day_desc' },
+        { id: 'hunt_tribute', month: 6, day: 21, type: 'great', icon: '\uD83C\uDFF9', screen: 'hunt', nameKey: 'festival_hunt_tribute', descKey: 'festival_hunt_tribute_desc' },
+        { id: 'hammer_sparks', month: 7, day: 17, type: 'great', icon: '\uD83D\uDD28', screen: 'crafting', nameKey: 'festival_hammer_sparks', descKey: 'festival_hammer_sparks_desc' },
+        { id: 'bag_whisper', month: 8, day: 8, type: 'great', icon: '\uD83C\uDF92', screen: 'inventory', nameKey: 'festival_bag_whisper', descKey: 'festival_bag_whisper_desc' },
+        { id: 'prophecy_candle', month: 9, day: 1, type: 'great', icon: '\uD83D\uDD2E', screen: 'quests', nameKey: 'festival_prophecy_candle', descKey: 'festival_prophecy_candle_desc' },
+        { id: 'dragon_mask_day', month: 10, day: 31, type: 'great', icon: '\uD83D\uDC32', screen: 'world-boss', nameKey: 'festival_dragon_mask_day', descKey: 'festival_dragon_mask_day_desc' },
+        { id: 'first_spark_tournament', month: 11, day: 11, type: 'great', icon: '\u2694\uFE0F', screen: 'arena', nameKey: 'festival_first_spark_tournament', descKey: 'festival_first_spark_tournament_desc' },
+        { id: 'great_year_weave', month: 12, day: 31, type: 'great', icon: '\uD83C\uDF86', screen: 'chronicle', nameKey: 'festival_great_year_weave', descKey: 'festival_great_year_weave_desc' }
+    ];
+
+    var MINOR_FESTIVALS = [
+        { id: 'ink_drop_day', month: 2, day: 3, type: 'minor', icon: '\uD83D\uDD8B\uFE0F', screen: 'chronicle', nameKey: 'festival_ink_drop_day', descKey: 'festival_ink_drop_day_desc' },
+        { id: 'quiet_anvil', month: 4, day: 23, type: 'minor', icon: '\u2692\uFE0F', screen: 'crafting', nameKey: 'festival_quiet_anvil', descKey: 'festival_quiet_anvil_desc' },
+        { id: 'map_knot_day', month: 6, day: 3, type: 'minor', icon: '\uD83D\uDDFA\uFE0F', screen: 'map', nameKey: 'festival_map_knot_day', descKey: 'festival_map_knot_day_desc' },
+        { id: 'temple_steps_day', month: 9, day: 23, type: 'minor', icon: '\uD83D\uDD6F\uFE0F', screen: 'temple', nameKey: 'festival_temple_steps_day', descKey: 'festival_temple_steps_day_desc' },
+        { id: 'winter_bag_check', month: 12, day: 13, type: 'minor', icon: '\uD83C\uDF92', screen: 'inventory', nameKey: 'festival_winter_bag_check', descKey: 'festival_winter_bag_check_desc' }
     ];
 
     /** Everyday magical sky signs. Combined with omens, this gives a year-sized forecast pool. */
@@ -493,17 +503,29 @@ var WorldEvents = (function() {
 
 
 
+    function _findFestivalForDate(list, month, day) {
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].month === month && list[i].day === day) return list[i];
+        }
+        return null;
+    }
+
     /**
-     * Get occasional magical holiday. Appears roughly every fifth in-world day.
-     * @param {number} blockNum
+     * Get today's magical holiday from the authored Moscow calendar.
+     * Most days intentionally have no festival, so holidays feel like events.
+     * @param {number} blockNum kept for API compatibility
+     * @param {number=} nowMs optional timestamp for deterministic tests
      * @returns {Object|null}
      */
-    function getCurrentFestival(blockNum) {
-        var day = _getMoscowDayIndex();
-        var idx = day % FESTIVALS.length;
-        var festival = FESTIVALS[idx];
+    function getCurrentFestival(blockNum, nowMs) {
+        var d = _getMoscowDate(nowMs);
+        var month = d.getUTCMonth() + 1;
+        var day = d.getUTCDate();
+        var festival = _findFestivalForDate(GREAT_FESTIVALS, month, day) || _findFestivalForDate(MINOR_FESTIVALS, month, day);
+        if (!festival) return null;
         var out = {};
         for (var key in festival) if (festival.hasOwnProperty(key)) out[key] = festival[key];
+        out.prefixKey = out.type === 'great' ? 'festival_great_prefix' : 'festival_today_prefix';
         out.descText = null;
         return out;
     }
