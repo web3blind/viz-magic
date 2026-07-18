@@ -3,7 +3,7 @@
     "short_name": "VizMagic",
     "description": "Viz Magic — accessible browser RPG on the VIZ blockchain",
     "id": "https://vizmagic.web3blind.xyz/",
-    "start_url": "/?pwa=viz-magic-v71",
+    "start_url": "/?pwa=viz-magic-v72",
     "scope": "/",
     "display": "standalone",
     "display_override": [
@@ -15,25 +15,25 @@
     "lang": "ru",
     "icons": [
         {
-            "src": "/assets/icons/viz-magic-v71-192.png",
+            "src": "/assets/icons/viz-magic-v72-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/assets/icons/viz-magic-v71-192.png",
+            "src": "/assets/icons/viz-magic-v72-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "maskable"
         },
         {
-            "src": "/assets/icons/viz-magic-v71-512.png",
+            "src": "/assets/icons/viz-magic-v72-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/assets/icons/viz-magic-v71-512.png",
+            "src": "/assets/icons/viz-magic-v72-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"

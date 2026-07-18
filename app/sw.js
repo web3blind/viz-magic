@@ -1,12 +1,12 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v71';
+var CACHE_NAME = 'viz-magic-v72';
 var APP_SHELL_ASSETS = [
     '/',
     '/index.html',
     '/manifest.json',
     '/favicon.ico',
-    '/assets/icons/viz-magic-v71-192.png',
-    '/assets/icons/viz-magic-v71-512.png',
+    '/assets/icons/viz-magic-v72-192.png',
+    '/assets/icons/viz-magic-v72-512.png',
     '/css/main.css',
     '/css/themes.css',
     '/css/accessibility.css'
