@@ -3,39 +3,45 @@
     "short_name": "VizMagic",
     "description": "Viz Magic — accessible browser RPG on the VIZ blockchain",
     "id": "https://vizmagic.web3blind.xyz/",
-    "start_url": "/?pwa=viz-magic-v70",
+    "start_url": "/?pwa=viz-magic-v71",
     "scope": "/",
     "display": "standalone",
-    "display_override": ["standalone", "minimal-ui"],
+    "display_override": [
+        "standalone",
+        "minimal-ui"
+    ],
     "theme_color": "#7c35ff",
     "background_color": "#0d1117",
     "lang": "ru",
     "icons": [
         {
-            "src": "/assets/icons/viz-magic-v70-192.png",
+            "src": "/assets/icons/viz-magic-v71-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/assets/icons/viz-magic-v70-192.png",
+            "src": "/assets/icons/viz-magic-v71-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "maskable"
         },
         {
-            "src": "/assets/icons/viz-magic-v70-512.png",
+            "src": "/assets/icons/viz-magic-v71-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/assets/icons/viz-magic-v70-512.png",
+            "src": "/assets/icons/viz-magic-v71-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
         }
     ],
-    "categories": ["games", "entertainment"],
+    "categories": [
+        "games",
+        "entertainment"
+    ],
     "orientation": "portrait-primary"
 }

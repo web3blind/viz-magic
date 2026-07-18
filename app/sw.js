@@ -1,78 +1,34 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v70';
-var ASSETS = [
+var CACHE_NAME = 'viz-magic-v71';
+var APP_SHELL_ASSETS = [
     '/',
     '/index.html',
     '/manifest.json',
     '/favicon.ico',
-    '/assets/icons/viz-magic-v70-192.png',
-    '/assets/icons/viz-magic-v70-512.png',
+    '/assets/icons/viz-magic-v71-192.png',
+    '/assets/icons/viz-magic-v71-512.png',
     '/css/main.css',
     '/css/themes.css',
-    '/css/accessibility.css',
-    '/lib/viz.min.js',
-    '/js/config.js',
-    '/js/i18n/ru.js',
-    '/js/i18n/en.js',
-    '/js/utils/helpers.js',
-    '/js/utils/crypto.js',
-    '/js/utils/a11y.js',
-    '/js/blockchain/connection.js',
-    '/js/blockchain/history-source.js',
-    '/js/blockchain/account.js',
-    '/js/blockchain/broadcast.js',
-    '/js/blockchain/invite.js',
-    '/js/protocols/vm-protocol.js',
-    '/js/protocols/voice.js',
-    '/js/data/creatures.js',
-    '/js/data/spells.js',
-    '/js/data/recipes.js',
-    '/js/data/regions.js',
-    '/js/engine/types.js',
-    '/js/engine/formulas.js',
-    '/js/engine/character.js',
-    '/js/engine/items.js',
-    '/js/engine/combat.js',
-    '/js/engine/validator.js',
-    '/js/engine/checkpoint.js',
-    '/js/engine/block-processor.js',
-    '/js/engine/state-engine.js',
-    '/js/engine/daily-leaderboard-storage.js',
-    '/js/engine/daily-leaderboard.js',
-    '/js/ui/sound.js',
-    '/js/ui/components/progress-bar.js',
-    '/js/ui/components/toast.js',
-    '/js/ui/components/modal.js',
-    '/js/ui/components/nav.js',
-    '/js/ui/screens/landing.js',
-    '/js/ui/screens/onboarding.js',
-    '/js/ui/screens/login.js',
-    '/js/ui/screens/home.js',
-    '/js/ui/screens/character.js',
-    '/js/ui/screens/hunt.js',
-    '/js/ui/screens/inventory.js',
-    '/js/ui/screens/chronicle.js',
-    '/js/ui/screens/arena.js',
-    '/js/ui/screens/guild.js',
-    '/js/ui/screens/map.js',
-    '/js/ui/screens/marketplace.js',
-    '/js/ui/screens/crafting.js',
-    '/js/ui/screens/quests.js',
-    '/js/ui/screens/world-boss.js',
-    '/js/ui/screens/settings.js',
-    '/js/ui/screens/help.js',
-    '/js/ui/screens/leaderboard.js',
-    '/js/ui/app.js'
+    '/css/accessibility.css'
 ];
 
+function _cacheAppShell() {
+    return caches.open(CACHE_NAME).then(function(cache) {
+        return Promise.all(
+            APP_SHELL_ASSETS.map(function(url) {
+                return cache.add(url).catch(function(err) {
+                    console.warn('Optional app-shell cache failed:', url, err);
+                });
+            })
+        );
+    });
+}
+
 self.addEventListener('install', function(event) {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(function(cache) {
-            return cache.addAll(ASSETS);
-        }).then(function() {
-            return self.skipWaiting();
-        })
-    );
+    // Keep install fast: cache only the minimal shell and icons. Runtime JS is cached lazily.
+    event.waitUntil(_cacheAppShell().then(function() {
+        return self.skipWaiting();
+    }));
 });
 
 self.addEventListener('activate', function(event) {
@@ -108,14 +64,28 @@ self.addEventListener('fetch', function(event) {
         return;
     }
 
+    var url = new URL(event.request.url);
+    var isRuntimeAsset = /\.(js|css|json)$/.test(url.pathname) || url.pathname === '/manifest.json';
+
+    if (isRuntimeAsset) {
+        event.respondWith(
+            fetch(event.request).then(function(response) {
+                if (response && response.status === 200 && response.type === 'basic') {
+                    var clone = response.clone();
+                    caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, clone); });
+                }
+                return response;
+            }).catch(function() { return caches.match(event.request); })
+        );
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request).then(function(cached) {
             return cached || fetch(event.request).then(function(response) {
                 if (response && response.status === 200 && response.type === 'basic') {
                     var clone = response.clone();
-                    caches.open(CACHE_NAME).then(function(cache) {
-                        cache.put(event.request, clone);
-                    });
+                    caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, clone); });
                 }
                 return response;
             });
