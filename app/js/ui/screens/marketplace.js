@@ -219,7 +219,7 @@ var MarketplaceScreen = (function() {
                 var sRarity = ItemSystem.getRarityInfo(sItem.rarity);
                 var itemIds = group.items.map(function(it) { return it.id; }).join(',');
                 html += '<div class="market-sell-item ' + Helpers.rarityClass(sItem.rarity) + '" role="listitem" data-item="' + sItem.id + '">';
-                html += '<span class="sell-item-name">' + _marketItemIcon(sItem) + ' ' + Helpers.escapeHtml(sName) + _marketItemAfterIcon(sItem) +
+                html += '<span class="sell-item-name"><span class="market-item-icon vmagic-breathe" aria-hidden="true">' + _marketItemIcon(sItem) + '</span> ' + Helpers.escapeHtml(sName) + _marketItemAfterIcon(sItem) +
                     (group.items.length > 1 ? ' <span class="sell-item-count">×' + group.items.length + '</span>' : '') +
                     ' <span class="sell-item-rarity rarity-color-' + sRarity.name + '">' + sRarity.symbol + '</span></span>';
                 html += '<div class="sell-item-controls">';

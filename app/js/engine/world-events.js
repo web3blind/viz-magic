@@ -91,11 +91,18 @@ var WorldEvents = (function() {
         { icon: '🕯️', summaryKey: 'magic_news_temple_candles' },
         { icon: '🏪', summaryKey: 'magic_news_bazaar_prices' },
         { icon: '📜', summaryKey: 'magic_news_chronicle_blots' },
-        { icon: '⚔️', summaryKey: 'magic_news_arena_helmets' },
+        { icon: '🪖', summaryKey: 'magic_news_arena_helmets' },
         { icon: '🔮', summaryKey: 'magic_news_prophet_sneeze' },
         { icon: '🌧️', summaryKey: 'magic_news_upward_rain' },
         { icon: '🧪', summaryKey: 'magic_news_healers_busy' },
-        { icon: '✨', summaryKey: 'magic_news_dead_wasteland' }
+        { icon: '✨', summaryKey: 'magic_news_dead_wasteland' },
+        { icon: '⚒️', summaryKey: 'magic_news_living_anvil' },
+        { icon: '☁️', summaryKey: 'magic_news_sky_painting' },
+        { icon: '🤫', summaryKey: 'magic_news_secret_knowledge' },
+        { icon: '🧹', summaryKey: 'magic_news_broom_inspection' },
+        { icon: '🐭', summaryKey: 'magic_news_royal_mouse' },
+        { icon: '🧦', summaryKey: 'magic_news_sock_portal' },
+        { icon: '🔍', summaryKey: 'magic_news_mirror_union' }
     ];
 
     /** Magical weather definitions. These are in-world, not real-world forecasts. */
@@ -356,7 +363,7 @@ var WorldEvents = (function() {
         { id: 'hunt_tribute', month: 6, day: 21, type: 'great', icon: '\uD83C\uDFF9', screen: 'hunt', nameKey: 'festival_hunt_tribute', descKey: 'festival_hunt_tribute_desc' },
         { id: 'hammer_sparks', month: 7, day: 17, type: 'great', icon: '\uD83D\uDD28', screen: 'crafting', nameKey: 'festival_hammer_sparks', descKey: 'festival_hammer_sparks_desc' },
         { id: 'bag_whisper', month: 8, day: 8, type: 'great', icon: '\uD83C\uDF92', screen: 'inventory', nameKey: 'festival_bag_whisper', descKey: 'festival_bag_whisper_desc' },
-        { id: 'prophecy_candle', month: 9, day: 1, type: 'great', icon: '\uD83D\uDD2E', screen: 'quests', nameKey: 'festival_prophecy_candle', descKey: 'festival_prophecy_candle_desc' },
+        { id: 'secret_knowledge_day', month: 9, day: 1, type: 'great', icon: '\uD83D\uDD2E', screen: 'quests', nameKey: 'festival_secret_knowledge_day', descKey: 'festival_secret_knowledge_day_desc' },
         { id: 'dragon_mask_day', month: 10, day: 31, type: 'great', icon: '\uD83D\uDC32', screen: 'world-boss', nameKey: 'festival_dragon_mask_day', descKey: 'festival_dragon_mask_day_desc' },
         { id: 'first_spark_tournament', month: 11, day: 11, type: 'great', icon: '\u2694\uFE0F', screen: 'arena', nameKey: 'festival_first_spark_tournament', descKey: 'festival_first_spark_tournament_desc' },
         { id: 'great_year_weave', month: 12, day: 31, type: 'great', icon: '\uD83C\uDF86', screen: 'chronicle', nameKey: 'festival_great_year_weave', descKey: 'festival_great_year_weave_desc' }
@@ -368,6 +375,22 @@ var WorldEvents = (function() {
         { id: 'map_knot_day', month: 6, day: 3, type: 'minor', icon: '\uD83D\uDDFA\uFE0F', screen: 'map', nameKey: 'festival_map_knot_day', descKey: 'festival_map_knot_day_desc' },
         { id: 'temple_steps_day', month: 9, day: 23, type: 'minor', icon: '\uD83D\uDD6F\uFE0F', screen: 'temple', nameKey: 'festival_temple_steps_day', descKey: 'festival_temple_steps_day_desc' },
         { id: 'winter_bag_check', month: 12, day: 13, type: 'minor', icon: '\uD83C\uDF92', screen: 'inventory', nameKey: 'festival_winter_bag_check', descKey: 'festival_winter_bag_check_desc' }
+    ];
+
+    var DAILY_FESTIVALS = [
+        { icon: '🎨', nameKey: 'festival_daily_sky_painting', descKey: 'festival_daily_sky_painting_desc' },
+        { icon: '🤫', nameKey: 'festival_daily_secret_silence', descKey: 'festival_daily_secret_silence_desc' },
+        { icon: '☕', nameKey: 'festival_daily_teacup_oracle', descKey: 'festival_daily_teacup_oracle_desc' },
+        { icon: '🧦', nameKey: 'festival_daily_sock_portal', descKey: 'festival_daily_sock_portal_desc' },
+        { icon: '🧹', nameKey: 'festival_daily_broom_parade', descKey: 'festival_daily_broom_parade_desc' },
+        { icon: '🐭', nameKey: 'festival_daily_royal_mouse', descKey: 'festival_daily_royal_mouse_desc' },
+        { icon: '🔍', nameKey: 'festival_daily_polite_mirrors', descKey: 'festival_daily_polite_mirrors_desc' },
+        { icon: '🔔', nameKey: 'festival_daily_bell_rehearsal', descKey: 'festival_daily_bell_rehearsal_desc' },
+        { icon: '🥨', nameKey: 'festival_daily_knotty_bread', descKey: 'festival_daily_knotty_bread_desc' },
+        { icon: '🪄', nameKey: 'festival_daily_wand_nap', descKey: 'festival_daily_wand_nap_desc' },
+        { icon: '🧀', nameKey: 'festival_daily_moon_cheese', descKey: 'festival_daily_moon_cheese_desc' },
+        { icon: '📦', nameKey: 'festival_daily_box_of_maybes', descKey: 'festival_daily_box_of_maybes_desc' },
+        { icon: '🪁', nameKey: 'festival_daily_kite_prophecy', descKey: 'festival_daily_kite_prophecy_desc' }
     ];
 
     /** Everyday magical sky signs. Combined with omens, this gives a year-sized forecast pool. */
@@ -522,12 +545,26 @@ var WorldEvents = (function() {
         var month = d.getUTCMonth() + 1;
         var day = d.getUTCDate();
         var festival = _findFestivalForDate(GREAT_FESTIVALS, month, day) || _findFestivalForDate(MINOR_FESTIVALS, month, day);
-        if (!festival) return null;
+        if (!festival) festival = _getGeneratedDailyFestival(_getMoscowDayIndex(nowMs));
         var out = {};
         for (var key in festival) if (festival.hasOwnProperty(key)) out[key] = festival[key];
         out.prefixKey = out.type === 'great' ? 'festival_great_prefix' : 'festival_today_prefix';
         out.descText = null;
         return out;
+    }
+
+    function _getGeneratedDailyFestival(dayIndex) {
+        var idx = dayIndex % DAILY_FESTIVALS.length;
+        if (idx < 0) idx = 0;
+        var base = DAILY_FESTIVALS[idx];
+        return {
+            id: 'daily_smile_' + idx,
+            type: 'minor',
+            icon: base.icon,
+            screen: 'home',
+            nameKey: base.nameKey,
+            descKey: base.descKey
+        };
     }
 
     /**

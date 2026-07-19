@@ -420,7 +420,7 @@ var ChronicleScreen = (function() {
         var t = Helpers.t;
         var charInfo = StateEngine.getCharacter(entry.account);
         var charName = (charInfo && charInfo.name) || entry.account || '???';
-        var icon = _getActionIcon(entry.actionType);
+        var icon = _getEntryIcon(entry);
         var text = _stripLeadingAuthor(entry.text, charName, entry.account);
         var timeStr = entry.timestamp ? Helpers.timeAgo(entry.timestamp) : '';
 
@@ -631,13 +631,20 @@ var ChronicleScreen = (function() {
         return entries;
     }
 
+    function _getEntryIcon(entry) {
+        var ev0 = (entry && entry.events && entry.events.length > 0) ? entry.events[0] : null;
+        if (ev0 && ev0.type === 'hunt_defeat') return '\u2694\uFE0F';
+        if (ev0 && ev0.type === 'hunt_victory') return '\uD83C\uDFC6';
+        return _getActionIcon(entry ? entry.actionType : '');
+    }
+
     function _getActionIcon(actionType) {
         var icons = {
             'chronicle_post': '\uD83D\uDCDD',
             'hunt': '🏹',
             'hunt.armageddon': '🏹',
             'hunt_victory': '\uD83C\uDFC6',
-            'hunt_defeat': '\uD83D\uDCA8',
+            'hunt_defeat': '\u2694\uFE0F',
             'character_created': '\u2728',
             'rest_complete': '\uD83D\uDCA4',
             'blessing_sent': '\u2728',

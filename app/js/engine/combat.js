@@ -44,6 +44,8 @@ var CombatSystem = (function() {
 
         // Calculate player attack
         var playerPot = CharacterSystem.getTotalStat(player, 'pot');
+        var playerInt = CharacterSystem.getTotalStat(player, 'int');
+        var patientPower = Math.max(playerPot, playerInt);
         var playerAttack = GameFormulas.calculateAttack(
             playerPot,
             spell.multiplier,
@@ -88,12 +90,14 @@ var CombatSystem = (function() {
         var totalDamageToCreature = 0;
         var totalDamageToPlayer = 0;
         var rounds = 0;
-        var maxRounds = 20; // safety cap
+        // Economical hunts are slower, not hopeless: low-mana players can win by endurance.
+        var maxRounds = playerEnergy <= 100 ? 45 : (playerEnergy <= 300 ? 35 : 25); // safety cap
 
         while (creatureHpLeft > 0 && playerHpLeft > 0 && rounds < maxRounds) {
             // Player hits creature
             var roundDmgToCreature = GameFormulas.calculateDamage(playerAttack, creatureDefense);
-            if (roundDmgToCreature < 1) roundDmgToCreature = 1; // minimum 1 damage per round
+            var patientMinDamage = Math.max(1, Math.floor((player.level + patientPower) * Math.max(100, playerEnergy) / 3000));
+            if (roundDmgToCreature < patientMinDamage) roundDmgToCreature = patientMinDamage; // patient hunt minimum damage
             creatureHpLeft -= roundDmgToCreature;
             totalDamageToCreature += roundDmgToCreature;
 

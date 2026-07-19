@@ -293,8 +293,13 @@ var App = (function() {
             }
         });
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function() {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function(registration) {
                 console.log('Service Worker Registered');
+                if (registration && registration.update) {
+                    registration.update().catch(function(updateErr) {
+                        console.log('SW update check failed:', updateErr);
+                    });
+                }
             }).catch(function(err) {
                 console.log('SW registration failed:', err);
             });

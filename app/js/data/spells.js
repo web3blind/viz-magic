@@ -24,9 +24,9 @@ var GameSpells = (function() {
             name: 'Stone Fist',
             school: 'terra',
             className: 'stonewarden',
-            manaCost: 100,       // 100 energy out of 10000 = 1%
+            manaCost: 300,       // 3% energy — a stronger economical alternative
             levelReq: 1,
-            multiplier: 1000,    // 1.0x + 10% RES bonus
+            multiplier: 1100,    // 1.1x + patient hunt pressure
             intent: 'strike',
             effect: 'damage',
             description: 'Smash with a fist of living stone.'

@@ -213,7 +213,7 @@ var HomeScreen = (function() {
         var magicNews = WorldEvents.getCurrentMagicNews ? WorldEvents.getCurrentMagicNews(blockNum) : null;
         var festivalHtml = festival ? '<div class="forecast-card forecast-card-festival">' +
                 '<span class="forecast-kicker">' + t(festival.prefixKey || 'festival_today_prefix') + '</span>' +
-                '<p class="forecast-line"><span class="forecast-icon vmagic-breathe" aria-hidden="true">' + (festival.icon || '🎆') + '</span> ' + t(festival.nameKey) + '</p>' +
+                '<p class="forecast-line"><span class="forecast-icon vmagic-breathe" aria-hidden="true">' + (festival.icon || '🎆') + '</span> ' + (festival.nameText || t(festival.nameKey)) + '</p>' +
                 '<p class="forecast-omen">' + (festival.descText || t(festival.descKey)) + '</p>' +
             '</div>' : '';
         return '<section class="season-indicator magical-forecast" aria-label="' + t('weather_forecast_label') + '">' +
