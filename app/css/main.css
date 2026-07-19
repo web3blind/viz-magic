@@ -1903,6 +1903,8 @@ body,
 
 .screen-title-icon, .section-icon { display: inline-block; margin-right: 0.25em; }
 .daily-quest-title { color: #f3a4ff; font-weight: 800; text-shadow: 0 0 10px rgba(156,39,176,0.55); }
+.daily-journey-title { color: #7ee7c8; text-shadow: 0 0 10px rgba(46, 204, 113, 0.45); }
+.quest-map-objective-icon, .chronicle-author-prefix { display: inline-block; margin-right: 0.25em; }
 .boss-title-centered { text-align: center; }
 .daily-quest-desc { color: var(--color-text); opacity: 0.9; }
 .forecast-card-festival { border-color: rgba(255, 193, 7, 0.55); background: rgba(255, 193, 7, 0.08); }
@@ -1926,7 +1928,7 @@ body,
     text-shadow: 0 0 10px rgba(255, 216, 88, 0.45);
 }
 
-.ink-drop-icon { color: #1c2f66; filter: saturate(1.7) brightness(0.8); text-shadow: 0 0 8px rgba(40,70,150,0.55); }
+.ink-drop-icon { color: #102052; filter: saturate(1.9) brightness(0.65); text-shadow: 0 0 8px rgba(22,44,120,0.55); }
 
 
 .spell-btn-disabled,

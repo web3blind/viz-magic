@@ -23,7 +23,7 @@ var DevelopersScreen = (function() {
         html += '</section>';
 
         html += '<section class="developers-card" aria-label="' + t('developers_reward_title') + '">';
-        html += '<h2>💎 ' + t('developers_reward_title') + '</h2>';
+        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">💎</span> ' + t('developers_reward_title') + '</h2>';
         html += '<p>' + t('developers_reward_text') + '</p>';
         html += '<p class="developers-note">' + t('developers_reward_note') + '</p>';
         if (!user) {

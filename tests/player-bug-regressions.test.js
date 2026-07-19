@@ -351,7 +351,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v73/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v74/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/registration\.update\(\)/.test(read('app/js/ui/app.js')), 'app should ask the browser to check for the newest service worker after registration');
@@ -405,7 +405,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v73/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v74/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -470,11 +470,11 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/i18n\/ru.js\?v=20260718c/.test(indexHtml), 'Russian weather copy must be cache-busted');
   assert.ok(/i18n\/en.js\?v=20260718c/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/home.js\?v=20260718c/.test(indexHtml), 'home forecast layout must be cache-busted');
-  assert.ok(/js\/ui\/screens\/quests.js\?v=20260717c/.test(indexHtml), 'quest-limit UX must be cache-busted');
+  assert.ok(/js\/ui\/screens\/quests.js\?v=20260719a/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260716a/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260717c/.test(indexHtml), 'leaderboard narrator fix must be cache-busted');
   assert.ok(/world-events.js\?v=20260718c/.test(indexHtml), 'world events forecast pool must be cache-busted');
-  assert.ok(/main.css\?v=20260717c/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/main.css\?v=20260719a/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/prefers-reduced-motion: no-preference/.test(mainCss) && /vmagic-rune-pulse/.test(mainCss), 'ambient animation must be lightweight and respect reduced-motion');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
@@ -491,11 +491,11 @@ test('music volume, narrator speech, and PWA icons are durable', function () {
   assert.ok(/_setStoredNumber\('music_volume', this\.value \/ 100\)/.test(settingsJs), 'music slider should persist changes');
   assert.ok(/SpeechSynthesisUtterance/.test(narratorJs), 'battle narrator should speak audibly through Web Speech when available');
   assert.ok(/textContent = ''[\s\S]*textContent = message/.test(narratorJs), 'battle narrator should force live-region text replacement');
-  assert.ok(/manifest\.json\?v=20260718c/.test(indexHtml), 'manifest should be cache-busted for updated icon');
+  assert.ok(/manifest\.json\?v=20260719a/.test(indexHtml), 'manifest should be cache-busted for updated icon');
   assert.ok(/favicon\.ico\?v=20260712c/.test(indexHtml), 'favicon should be explicit for browser shortcut fallback');
-  assert.ok(/viz-magic-v73-192\.png\?v=20260718c/.test(indexHtml), 'launcher icon link should be cache-busted');
-  assert.ok(/assets\/icons\/viz-magic-v73-512\.png/.test(read('app/sw.js')), 'service worker should cache PWA launcher icons');
-  assert.ok(/viz-magic-v73-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
+  assert.ok(/viz-magic-v74-192\.png\?v=20260719a/.test(indexHtml), 'launcher icon link should be cache-busted');
+  assert.ok(/assets\/icons\/viz-magic-v74-512\.png/.test(read('app/sw.js')), 'service worker should cache PWA launcher icons');
+  assert.ok(/viz-magic-v74-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
 });
 
 
@@ -535,8 +535,8 @@ test('reported mobile UX issues have explicit fixes', function () {
 
 
 test('PWA icon and HP heart use expressive color accents', function () {
-  assert.ok(/viz-magic-v73-192\.png\?v=20260718c/.test(indexHtml), 'PWA icon link should be cache-busted after expressive icon update');
-  assert.ok(/viz-magic-v73/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
+  assert.ok(/viz-magic-v74-192\.png\?v=20260719a/.test(indexHtml), 'PWA icon link should be cache-busted after expressive icon update');
+  assert.ok(/viz-magic-v74/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
   assert.ok(/label:'❤️ HP'/.test(homeJs), 'HP label should use a red heart emoji variant');
 });
 
@@ -629,7 +629,7 @@ test('hunt rest uses home-scale HP values', function () {
 
 
 test('marketplace groups identical sellable items and supports quantity listing', function () {
-  assert.ok(/marketplace.js\?v=20260718c/.test(indexHtml), 'marketplace screen should be cache-busted');
+  assert.ok(/marketplace.js\?v=20260719a/.test(indexHtml), 'marketplace screen should be cache-busted');
   assert.ok(/function _groupSellableItems/.test(marketplaceJs), 'sell tab should group identical items');
   assert.ok(/sell-item-count/.test(marketplaceJs), 'sell tab should display grouped item count');
   assert.ok(/sell-qty-input/.test(marketplaceJs), 'sell tab should expose quantity input');
@@ -651,7 +651,7 @@ test('hunt headings and help use updated thematic icons', function () {
   assert.ok(/hunt.js\?v=20260718c/.test(indexHtml), 'hunt screen should be cache-busted for heading icons');
   assert.ok(/vmagic-breathe[\s\S]*🐾[\s\S]*hunt_choose_creature/.test(huntJs), 'hunt creature heading should have a thematic tracking icon');
   assert.ok(/vmagic-breathe[\s\S]*🪄[\s\S]*hunt_choose_spell/.test(huntJs), 'hunt spell heading should use a magic wand icon');
-  assert.ok(/help.js\?v=20260717c/.test(indexHtml), 'help screen should be cache-busted for hunt icon');
+  assert.ok(/help.js\?v=20260719a/.test(indexHtml), 'help screen should be cache-busted for hunt icon');
   assert.ok(/key: 'hunt'[\s\S]*\\uD83C\\uDFF9/.test(helpJs), 'help Hunt section should use bow icon, not arena swords');
 });
 
@@ -663,7 +663,7 @@ test('crafting enchant tab does not show misleading local back button', function
 
 
 test('marketplace sell items have semantic item icons', function () {
-  assert.ok(/marketplace.js\?v=20260718c/.test(indexHtml), 'marketplace screen should be cache-busted for sell icons');
+  assert.ok(/marketplace.js\?v=20260719a/.test(indexHtml), 'marketplace screen should be cache-busted for sell icons');
   assert.ok(/function _marketItemIcon/.test(marketplaceJs), 'sell rows should compute semantic item icons');
   assert.ok(/chronicle_ink:\s*'🖋️'/.test(marketplaceJs), 'Chronicle Ink should show the pen icon before the name');
   assert.ok(/_marketItemIcon\(sItem\)[\s\S]*_marketItemAfterIcon\(sItem\)/.test(marketplaceJs), 'sell row should render the item icon before the name and optional after-icon after the name');
@@ -700,7 +700,7 @@ test('reported visual icon polish is explicit and cache-busted', function () {
 
 test('developers screen offers optional non-advantage award', function () {
   assert.ok(/screen-developers/.test(indexHtml), 'index should include developers screen container');
-  assert.ok(/developers.js\?v=20260716a/.test(indexHtml), 'developers screen should be loaded and cache-busted');
+  assert.ok(/developers.js\?v=20260719a/.test(indexHtml), 'developers screen should be loaded and cache-busted');
   assert.ok(/developers-custom-energy/.test(developersJs) && /developers_custom_reward_label/.test(ruJs + enJs), 'developers screen should allow a custom 0.01-100 reward amount');
   assert.ok(/REWARD_OPTIONS = \[100\]/.test(developersJs), 'developers screen should keep only one fixed 1% quick reward');
   assert.ok(/app.js\?v=20260718c/.test(indexHtml), 'app controller should be cache-busted for developers route');
@@ -744,18 +744,18 @@ test('Denis feedback UI polish batch uses calendar days and calmer icons', funct
 });
 
 
-test('v73 PWA icon keeps previous launcher visual with thinner plus', function () {
-  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v73-192.png')), 'v73 192px thinner-plus icon should exist');
-  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v73-512.png')), 'v73 512px thinner-plus icon should exist');
-  assert.ok(/viz-magic-v73-192\.png\?v=20260718c/.test(indexHtml), 'index should point at the v71 launcher icon');
-  assert.ok(/"start_url":\s*"\/\?pwa=viz-magic-v73"/.test(read('app/manifest.json')), 'manifest start_url should force OS launcher refresh');
-  assert.ok(/"id":\s*"https:\/\/vizmagic\.web3blind\.xyz\/\?pwa=viz-magic-v73"/.test(read('app/manifest.json')), 'manifest id should change so Android can refresh launcher identity');
-  assert.ok(/APP_SHELL_ASSETS[\s\S]*viz-magic-v73-512\.png/.test(read('app/sw.js')), 'fast install shell should still include restored launcher icons');
+test('v74 PWA icon keeps previous launcher visual with lower thinner plus', function () {
+  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v74-192.png')), 'v74 192px lower thinner-plus icon should exist');
+  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v74-512.png')), 'v74 512px lower thinner-plus icon should exist');
+  assert.ok(/viz-magic-v74-192\.png\?v=20260719a/.test(indexHtml), 'index should point at the v74 launcher icon');
+  assert.ok(/"start_url":\s*"\/\?pwa=viz-magic-v74"/.test(read('app/manifest.json')), 'manifest start_url should force OS launcher refresh');
+  assert.ok(/"id":\s*"https:\/\/vizmagic\.web3blind\.xyz\/\?pwa=viz-magic-v74"/.test(read('app/manifest.json')), 'manifest id should change so Android can refresh launcher identity');
+  assert.ok(/APP_SHELL_ASSETS[\s\S]*viz-magic-v74-512\.png/.test(read('app/sw.js')), 'fast install shell should still include restored launcher icons');
 });
 
 test('Denis feedback item and motion icons are semantic', function () {
-  assert.ok(/viz-magic-v73-192\.png\?v=20260718c/.test(indexHtml), 'launcher icon should use the v73 thinner-plus launcher icon');
-  assert.ok(/assets\/icons\/viz-magic-v73-512\.png/.test(read('app/sw.js')), 'service worker should cache v71 icon');
+  assert.ok(/viz-magic-v74-192\.png\?v=20260719a/.test(indexHtml), 'launcher icon should use the v74 lower thinner-plus launcher icon');
+  assert.ok(/assets\/icons\/viz-magic-v74-512\.png/.test(read('app/sw.js')), 'service worker should cache v74 icon');
   assert.ok(/ember_staff:\s*'🪵'/.test(craftingJs) && /fire_rune:\s*'\\uD83D\\uDD25'/.test(craftingJs), 'ash staff and fire rune recipes should not share the same flame icon');
   assert.ok(/market_sell_title/.test(marketplaceJs) && /💵/.test(marketplaceJs), 'sell tab should use a brighter money icon');
   assert.ok(/market-item-icon vmagic-breathe/.test(marketplaceJs), 'bazaar sell item icons should breathe');
@@ -763,7 +763,8 @@ test('Denis feedback item and motion icons are semantic', function () {
   assert.ok(/chronicle_ink:\s*'🖋️'/.test(marketplaceJs) && /function _marketItemAfterIcon/.test(marketplaceJs) && /ink-drop-icon/.test(marketplaceJs + mainCss), 'chronicle ink should show pen before the name and a darker ink drop after the name');
   assert.ok(/region-icon vmagic-breathe/.test(mapJs), 'world map region icons should breathe');
   assert.ok(/char-icon vmagic-breathe/.test(characterJs), 'character class icon should breathe');
-  assert.ok(/prophecy\.type === 'duel' \? '⚔️' : \(prophecy\.type === 'craft' \? '🔨' : '🧭'\)/.test(questScreenJs), 'daily craft prophecy should use hammer and duel prophecy should use crossed swords');
+  assert.ok(/prophecy\.type === 'explore' \? '🗺️'/.test(questScreenJs), 'daily travel prophecy should use the map button icon');
+  assert.ok(/daily-journey-title/.test(questScreenJs + mainCss), 'daily travel title should have a color distinct from daily prophecy');
   assert.ok(/guild_recommended/.test(guildJs) && /🤺/.test(guildJs), 'recommended guilds should avoid repeated shield icon');
   assert.ok(/arena_filter_level/.test(arenaJs) && /🔍/.test(arenaJs), 'arena level filter should use a clearer filter/search icon');
   assert.ok(/arena_known_players/.test(arenaJs) && /🧙/.test(arenaJs), 'known mages should have a character-style icon');
@@ -771,6 +772,9 @@ test('Denis feedback item and motion icons are semantic', function () {
   assert.ok(/landing_card_hunt/.test(read('app/js/ui/screens/landing.js')) && /🏹/.test(read('app/js/ui/screens/landing.js')) && /⚔️/.test(read('app/js/ui/screens/landing.js')), 'landing hunt and duel cards should use bow and crossed swords');
   assert.ok(/boss-alert-mark/.test(homeJs + mainCss) && !/\\uD83D\\uDC32 Эфирный Дракон/.test(ruJs), 'home boss alert should use one enlarged dragon mark, not duplicate the emoji in text');
   assert.ok(/chronicle_narrative_boss_attack/.test(chronicleJs + ruJs) && /'boss\.attack': '⚡'/.test(chronicleJs), 'chronicle boss attacks should use lightning and avoid repeating the player name in text');
+  assert.ok(/chronicle-author-prefix/.test(chronicleJs + mainCss) && /_isHuntDefeatEntry/.test(chronicleJs), 'hunt defeat entries should show crossed swords beside the player name, not only the feed action icon');
+  assert.ok(/help-section[\s\S]*section-icon vmagic-breathe/.test(helpJs), 'help detail block icons should breathe');
+  assert.ok(/developers_reward_title[\s\S]*section-icon vmagic-breathe/.test(developersJs), 'developer thanks icon should breathe');
   assert.ok(/reforge-section[\s\S]*btn-reforge[\s\S]*enchant-item-select/.test(craftingJs), 'enchant tab should render reforging before enchanting');
   assert.ok(/🪄/.test(craftingJs) && /💠/.test(craftingJs) && /🔨/.test(craftingJs) && /🧰/.test(craftingJs), 'enchanting and reforging blocks should have thematic labels');
 });
@@ -814,7 +818,7 @@ test('Denis v70 polish keeps motion icons, honest low-mana hunt, and chronicle n
 });
 
 test('chronicle draft survives rerenders while feed loads', function () {
-  assert.ok(/chronicle.js\?v=20260718c/.test(indexHtml), 'chronicle screen should be cache-busted for draft preservation');
+  assert.ok(/chronicle.js\?v=20260719a/.test(indexHtml), 'chronicle screen should be cache-busted for draft preservation');
   assert.ok(/DRAFT_KEY/.test(chronicleJs), 'chronicle should keep a draft key');
   assert.ok(/FEED_CACHE_PREFIX/.test(chronicleJs), 'chronicle should cache rendered old feed entries per tab for instant return');
   assert.ok(/_renderFeedEntries\(_filterByTab\(_dedupeEntries\(entries\), state\)\)/.test(chronicleJs), 'chronicle should render local entries before slow VoiceProtocol refresh');

@@ -122,12 +122,15 @@ var QuestsScreen = (function() {
         }
         var prophecy = QuestSystem.generateDailyProphecy(blockNum, character.level);
 
+        var titleClass = 'daily-quest-title' + (prophecy.type === 'explore' ? ' daily-journey-title' : '');
+        var titleIcon = prophecy.type === 'duel' ? '⚔️' : (prophecy.type === 'craft' ? '🔨' : (prophecy.type === 'explore' ? '🗺️' : '🧭'));
+
         var html = '<div class="daily-prophecy-card">' +
             '<div class="prophecy-header">' +
                 '<span class="prophecy-icon" aria-hidden="true">\uD83D\uDD2E</span>' +
                 '<h2>' + t('home_daily_prophecy') + '</h2>' +
             '</div>' +
-            '<h3 class="daily-quest-title"><span class="section-icon vmagic-breathe" aria-hidden="true">' + (prophecy.type === 'duel' ? '⚔️' : (prophecy.type === 'craft' ? '🔨' : '🧭')) + '</span> ' + t(prophecy.titleKey) + '</h3>' +
+            '<h3 class="' + titleClass + '"><span class="section-icon vmagic-breathe" aria-hidden="true">' + titleIcon + '</span> ' + t(prophecy.titleKey) + '</h3>' +
             '<p class="prophecy-desc">' + t(prophecy.descriptionKey) + '</p>' +
             '<p class="quest-desc">Сначала выбери ежедневное пророчество, затем выполни его отдельную цель ниже. Благословения нужны только если сегодняшняя цель — благословить других магов.</p>';
 
@@ -399,7 +402,7 @@ var QuestsScreen = (function() {
 
     function _describeObjective(obj, t) {
         if (!obj) return '';
-        if (obj.type === 'explore') return t('quest_obj_explore_detail', { count: obj.required });
+        if (obj.type === 'explore') return '<span class="quest-map-objective-icon vmagic-breathe" aria-hidden="true">🗺️</span> ' + t('quest_obj_explore_detail', { count: obj.required });
         if (obj.type === 'social' && obj.target === 'blessing') return t('quest_obj_bless_detail', { count: obj.required });
         if (obj.type === 'social' && obj.target === 'guild_join') return t('quest_obj_guild_join_detail', { count: obj.required });
         if (obj.type === 'territory' && obj.target === 'siege') return t('quest_obj_territory_detail', { count: obj.required });

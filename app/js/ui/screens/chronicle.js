@@ -422,6 +422,7 @@ var ChronicleScreen = (function() {
         var charName = (charInfo && charInfo.name) || entry.account || '???';
         var icon = _getEntryIcon(entry);
         var text = _stripLeadingAuthor(entry.text, charName, entry.account);
+        var authorPrefixIcon = _getAuthorPrefixIcon(entry, text);
         var timeStr = entry.timestamp ? Helpers.timeAgo(entry.timestamp) : '';
 
         var user = VizAccount.getCurrentUser();
@@ -444,6 +445,7 @@ var ChronicleScreen = (function() {
         return '<article class="chronicle-entry" role="article" aria-label="' + Helpers.escapeHtml(charName) + '">' +
             '<div class="chronicle-entry-header">' +
                 '<span class="chronicle-icon" aria-hidden="true">' + icon + '</span>' +
+                (authorPrefixIcon ? '<span class="chronicle-author-prefix" aria-hidden="true">' + authorPrefixIcon + '</span>' : '') +
                 '<strong class="chronicle-author">' + Helpers.escapeHtml(charName) + '</strong>' +
                 (timeStr ? '<span class="chronicle-time">' + timeStr + '</span>' : '') +
             '</div>' +
@@ -466,6 +468,22 @@ var ChronicleScreen = (function() {
             }
         }
         return out;
+    }
+
+    function _getAuthorPrefixIcon(entry, text) {
+        if (_isHuntDefeatEntry(entry, text)) return '\u2694\uFE0F';
+        return '';
+    }
+
+    function _isHuntDefeatEntry(entry, text) {
+        var ev0 = (entry && entry.events && entry.events.length > 0) ? entry.events[0] : null;
+        if (ev0 && ev0.type === 'hunt_defeat') return true;
+        if (entry && entry.actionType === 'hunt_defeat') return true;
+        if (entry && (entry.actionType === 'hunt' || entry.actionType === 'hunt.armageddon')) {
+            var s = String(text || entry.text || '').toLowerCase();
+            return s.indexOf('пал в бою') !== -1 || s.indexOf('fell in battle') !== -1;
+        }
+        return false;
     }
 
     function _onBless() {
@@ -633,7 +651,7 @@ var ChronicleScreen = (function() {
 
     function _getEntryIcon(entry) {
         var ev0 = (entry && entry.events && entry.events.length > 0) ? entry.events[0] : null;
-        if (ev0 && ev0.type === 'hunt_defeat') return '\u2694\uFE0F';
+        if (_isHuntDefeatEntry(entry, entry ? entry.text : '')) return '\u2694\uFE0F';
         if (ev0 && ev0.type === 'hunt_victory') return '\uD83C\uDFC6';
         return _getActionIcon(entry ? entry.actionType : '');
     }

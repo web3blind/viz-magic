@@ -35,7 +35,7 @@ var HelpScreen = (function() {
         for (var i = 0; i < sections.length; i++) {
             var s = sections[i];
             html += '<section class="help-section" aria-label="' + t('help_section_' + s.key) + '">' +
-                '<h2>' + s.icon + ' ' + t('help_section_' + s.key) + '</h2>' +
+                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">' + s.icon + '</span> ' + t('help_section_' + s.key) + '</h2>' +
                 '<p>' + t('help_' + s.key + '_text') + '</p>' +
                 '</section>';
         }
