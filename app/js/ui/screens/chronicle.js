@@ -446,7 +446,7 @@ var ChronicleScreen = (function() {
         return '<article class="chronicle-entry" role="article" aria-label="' + Helpers.escapeHtml(charName) + '">' +
             '<div class="chronicle-entry-header">' +
                 (icon ? '<span class="chronicle-icon" aria-hidden="true">' + icon + '</span>' : '') +
-                (authorPrefixIcon ? '<span class="chronicle-author-prefix" aria-hidden="true">' + authorPrefixIcon + '</span>' : '') +
+                (authorPrefixIcon ? '<span class="chronicle-author-prefix vmagic-breathe" aria-hidden="true">' + authorPrefixIcon + '</span>' : '') +
                 '<strong class="chronicle-author">' + Helpers.escapeHtml(charName) + '</strong>' +
                 (timeStr ? '<span class="chronicle-time">' + timeStr + '</span>' : '') +
             '</div>' +

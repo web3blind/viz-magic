@@ -97,7 +97,7 @@ var WorldEvents = (function() {
         { icon: '🧪', summaryKey: 'magic_news_healers_busy' },
         { icon: '✨', summaryKey: 'magic_news_dead_wasteland' },
         { icon: '⚒️', summaryKey: 'magic_news_living_anvil' },
-        { icon: '☁️', summaryKey: 'magic_news_sky_painting' },
+        { icon: '🧮', summaryKey: 'magic_news_school_math' },
         { icon: '🤫', summaryKey: 'magic_news_secret_knowledge' },
         { icon: '🧹', summaryKey: 'magic_news_broom_inspection' },
         { icon: '🐭', summaryKey: 'magic_news_royal_mouse' },

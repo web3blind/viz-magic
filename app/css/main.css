@@ -1914,6 +1914,7 @@ body,
     .boss-icon-large, .boss-alert-icon { display: inline-block; animation: vmagic-boss-breathe 3.0s ease-in-out infinite; }
     .magical-forecast .forecast-icon { display: inline-block; animation: vmagic-weather-drift 2.8s ease-in-out infinite; }
     .magical-forecast .forecast-hunt-icon { animation: vmagic-soft-breathe 4.2s ease-in-out infinite; }
+    .vmagic-soft-icon { display: inline-block; animation: vmagic-soft-breathe 4.0s ease-in-out infinite; }
     .action-tile .tile-icon { display: inline-block; animation: vmagic-tile-shimmer 4.0s ease-in-out infinite; }
 }
 
@@ -1931,6 +1932,7 @@ body,
 .daily-journey-title { color: #7ee7c8; text-shadow: 0 0 10px rgba(46, 204, 113, 0.45); }
 .daily-duel-title { color: #ffcf6e; text-shadow: 0 0 10px rgba(255, 172, 64, 0.5); }
 .quest-map-objective-icon, .chronicle-author-prefix { display: inline-block; margin-right: 0.25em; }
+.item-icon, .market-item-icon { display: inline-block; }
 .boss-title-centered { text-align: center; }
 .daily-quest-desc { color: var(--color-text); opacity: 0.9; }
 .forecast-card-festival { border-color: rgba(255, 193, 7, 0.55); background: rgba(255, 193, 7, 0.08); }

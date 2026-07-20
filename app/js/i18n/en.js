@@ -928,7 +928,7 @@ var LangEN = {
     magic_news_healers_busy: 'The best healers of the Third Kingdom opened appointments for consequences of curiosity.',
     magic_news_dead_wasteland: 'Deep in the dead wasteland, flashes of light are visible again at night. Scouts are sure dark mages are making a new cadaver...',
     magic_news_living_anvil: 'In the workshop, an anvil suddenly came alive and wrecked the forge. The smith brigade escaped. The dangerous enchantment is being investigated by the famous exorcist Rough Hill.',
-    magic_news_sky_painting: 'Sky Painting: today people paint clouds with their dreams and then rain them back onto their own heads.',
+    magic_news_school_math: 'A first-year student at the magic school made a great discovery: magical mathematics can calculate not only a levitation path, but also the speed at which wishes come true — depending on their intensity.',
     magic_news_secret_knowledge: 'The Academy announced a day of secret knowledge. Students are silent; teachers pretend this was the lesson plan.',
     magic_news_broom_inspection: 'The city broom inspection checked speed, bristles, and sense of humor. Three brooms were reprimanded for overly cheerful flight.',
     magic_news_royal_mouse: 'The Bazaar prepares for a royal mouse visit. Cheese stalls are nervous; cats have suddenly taken up diplomacy.',
@@ -1228,6 +1228,6 @@ var LangEN = {
     help_tip_armageddon: 'Armageddon Stone: drop from Thornvine Lv5+ or craft at level 10.',
     char_xp_explainer: '⭐ XP grows from hunts, Armageddon, quests, world boss fights, and other game actions. When enough XP is accumulated for the next level, leveling happens automatically.',
     char_mana_explainer: '⚡ Mana is VIZ account energy. It regenerates over time: about 1% per 1.2 hours, roughly 5 days for a full refill. Hunts, Temple offerings, crafting, and other actions spend mana.',
-    char_hp_explainer: '❤️ HP grows from level, Resilience, and class. This screen uses the same display scale as Home: max 5000, so the value is easier to compare.',
+    char_hp_explainer: '❤️ HP grows from level, Resilience, and class. This screen displays HP the same way as Home: real game HP is multiplied by 10 for display only. Internal balance, damage, healing and spending do not change.',
     help_close: 'Got it'
 };

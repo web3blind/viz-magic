@@ -232,7 +232,7 @@ var InventoryScreen = (function() {
 
         return '<div class="item-card ' + Helpers.rarityClass(item.rarity) + '" role="listitem" tabindex="0" ' +
             'aria-label="' + Helpers.escapeHtml(aria) + '">' +
-            '<span class="item-icon" aria-hidden="true">' + itemIcon + '</span>' +
+            '<span class="item-icon vmagic-breathe" aria-hidden="true">' + itemIcon + '</span>' +
             '<span class="item-rarity" aria-hidden="true">' + rInfo.symbol + '</span>' +
             '<span class="item-name">' + Helpers.escapeHtml(label) + ' (' + Helpers.escapeHtml(rarityName) + ')</span>' +
             (group.count > 1 ? '<span class="item-badge">×' + group.count + '</span>' : '') +
