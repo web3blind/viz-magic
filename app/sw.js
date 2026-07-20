@@ -1,12 +1,12 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v75';
+var CACHE_NAME = 'viz-magic-v76';
 var APP_SHELL_ASSETS = [
     '/',
     '/index.html',
     '/manifest.json',
     '/favicon.ico',
-    '/assets/icons/viz-magic-v74-192.png',
-    '/assets/icons/viz-magic-v74-512.png',
+    '/assets/icons/viz-magic-v76-192.png',
+    '/assets/icons/viz-magic-v76-512.png',
     '/css/main.css',
     '/css/themes.css',
     '/css/accessibility.css'
@@ -25,10 +25,10 @@ function _cacheAppShell() {
 }
 
 self.addEventListener('install', function(event) {
-    // Keep install fast: cache only the minimal shell and icons. Runtime JS is cached lazily.
-    event.waitUntil(_cacheAppShell().then(function() {
-        return self.skipWaiting();
-    }));
+    // Keep install fast: do not make Android/Chrome wait for app-shell downloads.
+    // Runtime fetch remains network-first and fills the cache lazily after install.
+    event.waitUntil(self.skipWaiting());
+    _cacheAppShell();
 });
 
 self.addEventListener('activate', function(event) {

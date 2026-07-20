@@ -738,13 +738,13 @@ var GuildScreen = (function() {
         var html = '<section class="guild-active-key" aria-label="' + t('guild_active_key_section') + '">';
         if (VizAccount.hasActiveKey()) {
             html += '<div class="active-key-status active-key-ok">';
-            html += '<span class="active-key-icon" aria-hidden="true">🔑</span> ';
+            html += '<span class="active-key-icon vmagic-breathe" aria-hidden="true">🔑</span> ';
             html += '<span>' + t('guild_active_key_saved') + '</span>';
             html += ' <button class="btn btn-sm btn-secondary" id="btn-clear-active-key">' + t('guild_active_key_clear') + '</button>';
             html += '</div>';
         } else {
             html += '<div class="active-key-status active-key-missing">';
-            html += '<p class="active-key-notice">' + t('guild_active_key_needed') + '</p>';
+            html += '<p class="active-key-notice"><span class="active-key-icon vmagic-breathe" aria-hidden="true">🔐</span> ' + t('guild_active_key_needed') + '</p>';
             html += '<label class="input-label" for="input-active-key">' + t('guild_active_key_label') + '</label>';
             html += '<input type="password" class="input-field" id="input-active-key" placeholder="5J..." autocomplete="off" aria-label="' + t('guild_active_key_label') + '">';
             html += '<button class="btn btn-primary btn-sm" id="btn-save-active-key">' + t('guild_active_key_save') + '</button>';

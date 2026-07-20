@@ -122,7 +122,8 @@ var QuestsScreen = (function() {
         }
         var prophecy = QuestSystem.generateDailyProphecy(blockNum, character.level);
 
-        var titleClass = 'daily-quest-title' + (prophecy.type === 'explore' ? ' daily-journey-title' : '');
+        var titleClass = 'daily-quest-title' + (prophecy.type === 'explore' ? ' daily-journey-title' : '') +
+            (prophecy.type === 'duel' ? ' daily-duel-title' : '');
         var titleIcon = prophecy.type === 'duel' ? '⚔️' : (prophecy.type === 'craft' ? '🔨' : (prophecy.type === 'explore' ? '🗺️' : '🧭'));
 
         var html = '<div class="daily-prophecy-card">' +

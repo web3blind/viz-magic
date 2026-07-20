@@ -1688,6 +1688,10 @@ body,
     margin: 2px 0 0;
 }
 
+.active-key-icon {
+    display: inline-block;
+}
+
 .forecast-line,
 .forecast-omen,
 .magical-forecast .season-bonus {
@@ -1904,10 +1908,12 @@ body,
     @keyframes vmagic-rune-pulse { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255,216,88,0)); transform: scale(1) rotate(0deg); } 50% { filter: drop-shadow(0 0 14px rgba(255,216,88,0.75)); transform: scale(1.12) rotate(-3deg); } }
     @keyframes vmagic-boss-breathe { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(124,53,255,0)); } 50% { transform: scale(1.10); filter: drop-shadow(0 0 16px rgba(124,53,255,0.65)); } }
     @keyframes vmagic-weather-drift { 0%, 100% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 0 0 rgba(88,166,255,0)); } 50% { transform: translateY(-5px) rotate(4deg) scale(1.10); filter: drop-shadow(0 0 12px rgba(88,166,255,0.65)); } }
+    @keyframes vmagic-soft-breathe { 0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0 rgba(255,216,88,0)); } 50% { transform: translateY(-1px) scale(1.035); filter: drop-shadow(0 0 7px rgba(255,216,88,0.35)); } }
     @keyframes vmagic-tile-shimmer { 0%, 100% { transform: translateY(0) scale(1); filter: saturate(1); } 50% { transform: translateY(-3px) scale(1.08); filter: saturate(1.45) drop-shadow(0 0 10px rgba(88,166,255,0.5)); } }
     .recipe-icon, .craft-icon-anim, .vmagic-breathe, .screen-title-icon, .section-icon, .prophecy-icon, .nav-icon, .region-icon, .char-icon { display: inline-block; animation: vmagic-rune-pulse 2.4s ease-in-out infinite; }
     .boss-icon-large, .boss-alert-icon { display: inline-block; animation: vmagic-boss-breathe 3.0s ease-in-out infinite; }
     .magical-forecast .forecast-icon { display: inline-block; animation: vmagic-weather-drift 2.8s ease-in-out infinite; }
+    .magical-forecast .forecast-hunt-icon { animation: vmagic-soft-breathe 4.2s ease-in-out infinite; }
     .action-tile .tile-icon { display: inline-block; animation: vmagic-tile-shimmer 4.0s ease-in-out infinite; }
 }
 
@@ -1923,6 +1929,7 @@ body,
 .screen-title-icon, .section-icon { display: inline-block; margin-right: 0.25em; }
 .daily-quest-title { color: #f3a4ff; font-weight: 800; text-shadow: 0 0 10px rgba(156,39,176,0.55); }
 .daily-journey-title { color: #7ee7c8; text-shadow: 0 0 10px rgba(46, 204, 113, 0.45); }
+.daily-duel-title { color: #ffcf6e; text-shadow: 0 0 10px rgba(255, 172, 64, 0.5); }
 .quest-map-objective-icon, .chronicle-author-prefix { display: inline-block; margin-right: 0.25em; }
 .boss-title-centered { text-align: center; }
 .daily-quest-desc { color: var(--color-text); opacity: 0.9; }

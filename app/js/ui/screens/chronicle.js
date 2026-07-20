@@ -423,6 +423,7 @@ var ChronicleScreen = (function() {
         var icon = _getEntryIcon(entry);
         var text = _stripLeadingAuthor(entry.text, charName, entry.account);
         var authorPrefixIcon = _getAuthorPrefixIcon(entry, text);
+        if (authorPrefixIcon && authorPrefixIcon === icon) icon = '';
         var timeStr = entry.timestamp ? Helpers.timeAgo(entry.timestamp) : '';
 
         var user = VizAccount.getCurrentUser();
@@ -444,7 +445,7 @@ var ChronicleScreen = (function() {
 
         return '<article class="chronicle-entry" role="article" aria-label="' + Helpers.escapeHtml(charName) + '">' +
             '<div class="chronicle-entry-header">' +
-                '<span class="chronicle-icon" aria-hidden="true">' + icon + '</span>' +
+                (icon ? '<span class="chronicle-icon" aria-hidden="true">' + icon + '</span>' : '') +
                 (authorPrefixIcon ? '<span class="chronicle-author-prefix" aria-hidden="true">' + authorPrefixIcon + '</span>' : '') +
                 '<strong class="chronicle-author">' + Helpers.escapeHtml(charName) + '</strong>' +
                 (timeStr ? '<span class="chronicle-time">' + timeStr + '</span>' : '') +
@@ -664,7 +665,8 @@ var ChronicleScreen = (function() {
             'hunt_victory': '\uD83C\uDFC6',
             'hunt_defeat': '\u2694\uFE0F',
             'character_created': '\u2728',
-            'rest_complete': '\uD83D\uDCA4',
+            'rest': '\u26FA',
+            'rest_complete': '\u26FA',
             'blessing_sent': '\u2728',
             'duel_completed': '\u2694\uFE0F',
             'duel_forfeit': '\uD83C\uDFF3\uFE0F',
