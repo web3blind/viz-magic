@@ -405,14 +405,16 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v74/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v75/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
-test('home dashboard uses Denis-approved visual scales and keeps real mana percent', function () {
-  assert.ok(/HOME_HP_DISPLAY_MAX = 5000/.test(homeJs), 'home HP visual scale should top at 5000');
+test('home dashboard puts mana first and uses a story-readable HP scale', function () {
+  assert.ok(/HOME_HP_DISPLAY_FACTOR = 10/.test(homeJs), 'home HP should use a readable 100 → 1000 display scale');
   assert.ok(/HOME_XP_DISPLAY_MAX = 3000/.test(homeJs), 'home XP visual scale should top at 3000');
-  assert.ok(/displayMax:HOME_HP_DISPLAY_MAX/.test(homeJs), 'HP bar should show the visual HP scale');
+  assert.ok(/mana-bar[\s\S]*hp-bar[\s\S]*xp-bar/.test(homeJs), 'home summary should place Mana above HP, then XP');
+  assert.ok(/function _scaleHpForDisplay/.test(homeJs), 'HP display scale should be calculated separately from real combat HP');
+  assert.ok(/displayMax:hpDisplay\.max/.test(homeJs), 'HP bar should show the calculated visual HP scale');
   assert.ok(/displayMax:HOME_XP_DISPLAY_MAX/.test(homeJs), 'XP bar should show the visual XP scale');
   assert.ok(/ProgressBar\.update\('mana-bar', currentEnergy \/ 100, 100\)/.test(homeJs), 'mana should remain real VIZ energy as 0-100 percent');
   assert.ok(/displayValue/.test(read('app/js/ui/components/progress-bar.js')), 'progress bar should separate real ratio from displayed scale');
@@ -464,17 +466,19 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/var SKY_SIGNS/.test(worldEventsJs), 'forecast should combine omens with sky signs');
   assert.ok(/function getForecastVariantCount/.test(worldEventsJs), 'forecast should expose total variant count');
   assert.ok(((worldEventsJs.match(/summaryKey: 'sky_/g) || []).length * (worldEventsJs.match(/summaryKey: 'weather_/g) || []).length) >= 365, 'forecast pool should cover a year of daily surprise');
-  assert.ok(/forecast-card-effect/.test(homeJs + mainCss), 'forecast effect column needs its own thematic icon/card');
+  assert.ok(/forecast-card-hunt-summary/.test(homeJs + mainCss), 'forecast should merge season and hunt effect into the first summary card');
+  assert.ok(/weather_hunt_effect_sentence/.test(homeJs + ruJs + enJs), 'merged weather card should say that magical weather affects hunting');
+  assert.ok(/forecast-weather-icon vmagic-breathe/.test(homeJs) && /forecast-hunt-icon vmagic-breathe/.test(homeJs), 'merged weather card should breathe compass and bow icons');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should appear only from the authored calendar');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260718c/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260718c/.test(indexHtml), 'English weather copy must be cache-busted');
-  assert.ok(/home.js\?v=20260718c/.test(indexHtml), 'home forecast layout must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260719b/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260719b/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/home.js\?v=20260719b/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/js\/ui\/screens\/quests.js\?v=20260719a/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260716a/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260717c/.test(indexHtml), 'leaderboard narrator fix must be cache-busted');
   assert.ok(/world-events.js\?v=20260718c/.test(indexHtml), 'world events forecast pool must be cache-busted');
-  assert.ok(/main.css\?v=20260719a/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/main.css\?v=20260719b/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/prefers-reduced-motion: no-preference/.test(mainCss) && /vmagic-rune-pulse/.test(mainCss), 'ambient animation must be lightweight and respect reduced-motion');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
@@ -580,7 +584,7 @@ test('narrator voice preferences support gender and timbre', function () {
 
 
 test('home action tiles reflect Denis priority order', function () {
-  assert.ok(/home.js\?v=20260718c/.test(indexHtml), 'home screen should be cache-busted for action order');
+  assert.ok(/home.js\?v=20260719b/.test(indexHtml), 'home screen should be cache-busted for action order');
   assert.ok(/PRIMARY_HOME_SCREENS = \['home', 'inventory', 'guild', 'crafting', 'map', 'hunt', 'quests', 'arena', 'marketplace', 'temple', 'world-boss'\]/.test(homeJs), 'primary row should put Home, Bag, Guild and Workshop first');
   assert.ok(/SECONDARY_HOME_SCREENS = \['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'\]/.test(homeJs), 'secondary row should start Character, Rating, Chronicle and exclude World Boss');
   assert.ok(/home_secondary_actions: 'Дополнительная строка'/.test(ruJs), 'More sections should be renamed to Additional bar in Russian');
@@ -604,7 +608,7 @@ test('weave surge banner explains mana multiplier', function () {
 });
 
 test('minor rift banner explains itself and is actionable', function () {
-  assert.ok(/home.js\?v=20260718c/.test(indexHtml), 'home screen should be cache-busted for rift explanation');
+  assert.ok(/home.js\?v=20260719b/.test(indexHtml), 'home screen should be cache-busted for rift explanation');
   assert.ok(/event_minor_rift_desc/.test(homeJs + ruJs + enJs), 'minor rift should have visible explanatory copy');
   assert.ok(/evt\.type === 'minor_rift' \? 'hunt'/.test(homeJs), 'minor rift banner should navigate to Hunt');
   assert.ok(/event-banner-button/.test(homeJs + mainCss), 'actionable event banners should be styled and bound as buttons');

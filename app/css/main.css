@@ -1625,6 +1625,10 @@ body,
     gap: var(--space-sm);
 }
 
+.forecast-head .forecast-icon {
+    margin-bottom: 0;
+}
+
 .forecast-line {
     margin: 0;
     color: var(--color-text);
@@ -1652,6 +1656,12 @@ body,
     background: rgba(255,255,255,0.03);
 }
 
+.forecast-card-hunt-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .forecast-icon {
     display: block;
     font-size: 1.6rem;
@@ -1667,6 +1677,15 @@ body,
     margin-bottom: 4px;
     text-transform: uppercase;
     letter-spacing: 0.02em;
+}
+
+.forecast-hunt-copy {
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.forecast-hunt-icon {
+    margin: 2px 0 0;
 }
 
 .forecast-line,

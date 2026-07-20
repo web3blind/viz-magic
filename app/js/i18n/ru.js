@@ -791,6 +791,7 @@ var LangRU = {
 
     weather_forecast_label: 'Магическая сводка погоды',
     weather_forecast_title: 'Магическая погода',
+    weather_hunt_effect_sentence: 'Магическая погода влияет на охоту.',
     weather_sky_title: 'Небо',
     season_effect_prefix: 'Влияет на охоту',
     weather_frog_rain: 'Дождь с лягушками. Следите за котлом и не наступайте на квакающие круги.',

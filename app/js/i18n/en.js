@@ -791,6 +791,7 @@ var LangEN = {
 
     weather_forecast_label: 'Magical weather forecast',
     weather_forecast_title: 'Magical weather',
+    weather_hunt_effect_sentence: 'Magical weather affects hunting.',
     weather_sky_title: 'Sky',
     season_effect_prefix: 'Affects hunts',
     weather_frog_rain: 'Frog rain. Watch the cauldron and avoid the croaking circles.',
