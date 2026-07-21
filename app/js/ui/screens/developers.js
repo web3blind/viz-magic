@@ -27,7 +27,6 @@ var DevelopersScreen = (function() {
         html += '<p>' + t('developers_links_text') + '</p>';
         html += '<div class="developers-link-list">';
         html += '<a class="btn btn-secondary developers-link" href="https://github.com/web3blind/viz-magic" target="_blank" rel="noopener noreferrer">' + t('developers_link_github') + '</a>';
-        html += '<a class="btn btn-secondary developers-link" href="https://vizmagic.web3blind.xyz/" target="_blank" rel="noopener noreferrer">' + t('developers_link_game') + '</a>';
         html += '<a class="btn btn-secondary developers-link" href="https://viz.world/" target="_blank" rel="noopener noreferrer">' + t('developers_link_viz') + '</a>';
         html += '</div>';
         html += '</section>';

@@ -202,7 +202,7 @@ var HomeScreen = (function() {
         if (!bossStatus || !bossStatus.active) return '';
 
         return '<button class="boss-alert" role="alert" aria-label="' + t('boss_active_alert') + '">' +
-            '<span class="boss-alert-mark" aria-hidden="true">🐲</span>' +
+            '<span class="boss-alert-mark boss-alert-icon vmagic-breathe" aria-hidden="true">🐲</span>' +
             '<span class="boss-alert-text">' + t('boss_active_alert') + '</span>' +
             '<span class="boss-alert-hp">' + bossStatus.hpPercent + '% HP</span>' +
         '</button>';
@@ -215,7 +215,7 @@ var HomeScreen = (function() {
 
         var sky = WorldEvents.getCurrentSky ? WorldEvents.getCurrentSky(blockNum) : null;
         var weather = WorldEvents.getCurrentWeather ? WorldEvents.getCurrentWeather(blockNum) : null;
-        var skyText = sky ? (sky.summaryText || t(sky.summaryKey)) : '';
+        var skyText = sky ? (t(sky.summaryKey) + (sky.twistText ? ' ' + sky.twistText : '')) : '';
         var effect = weather ? t(weather.effectKey) : '';
         var festival = WorldEvents.getCurrentFestival ? WorldEvents.getCurrentFestival(blockNum) : null;
         var magicNews = WorldEvents.getCurrentMagicNews ? WorldEvents.getCurrentMagicNews(blockNum) : null;
@@ -236,14 +236,18 @@ var HomeScreen = (function() {
                     t('school_' + season.secondary) + ' +10%. ' + effect + '</p>' +
             '</div>' +
             '<div class="forecast-card forecast-card-sky">' +
-                '<span class="forecast-icon forecast-sky-icon" aria-hidden="true">' + (sky ? sky.icon : '\u26C5') + '</span>' +
-                '<span class="forecast-kicker">' + t('weather_sky_title') + '</span>' +
+                '<div class="forecast-head">' +
+                    '<span class="forecast-icon forecast-sky-icon" aria-hidden="true">' + (sky ? sky.icon : '\u26C5') + '</span>' +
+                    '<span class="forecast-kicker">' + t('weather_sky_title') + '</span>' +
+                '</div>' +
                 '<p class="forecast-line">' + skyText + '</p>' +
             '</div>' +
             festivalHtml +
             (magicNews ? '<div class="forecast-card forecast-card-news">' +
-                '<span class="forecast-icon" aria-hidden="true">' + magicNews.icon + '</span>' +
-                '<span class="forecast-kicker">' + t('magic_news_title') + '</span>' +
+                '<div class="forecast-head">' +
+                    '<span class="forecast-icon" aria-hidden="true">' + magicNews.icon + '</span>' +
+                    '<span class="forecast-kicker">' + t('magic_news_title') + '</span>' +
+                '</div>' +
                 '<p class="forecast-line">' + t(magicNews.summaryKey) + (magicNews.twistText ? ' ' + magicNews.twistText : '') + '</p>' +
             '</div>' : '') +
         '</section>';

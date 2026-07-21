@@ -1915,6 +1915,7 @@ body,
     .magical-forecast .forecast-icon { display: inline-block; animation: vmagic-weather-drift 2.8s ease-in-out infinite; }
     .magical-forecast .forecast-hunt-icon { animation: vmagic-soft-breathe 4.2s ease-in-out infinite; }
     .vmagic-soft-icon { display: inline-block; animation: vmagic-soft-breathe 4.0s ease-in-out infinite; }
+    .leaderboard-title-icon { display: inline-block; animation: vmagic-rune-pulse 2.4s ease-in-out infinite !important; }
     .action-tile .tile-icon { display: inline-block; animation: vmagic-tile-shimmer 4.0s ease-in-out infinite; }
 }
 
@@ -1930,6 +1931,7 @@ body,
 .screen-title-icon, .section-icon { display: inline-block; margin-right: 0.25em; }
 .daily-quest-title { color: #f3a4ff; font-weight: 800; text-shadow: 0 0 10px rgba(156,39,176,0.55); }
 .daily-journey-title { color: #7ee7c8; text-shadow: 0 0 10px rgba(46, 204, 113, 0.45); }
+.daily-workshop-title { color: #8fd8ff; text-shadow: 0 0 10px rgba(88, 166, 255, 0.5); }
 .daily-duel-title { color: #ffcf6e; text-shadow: 0 0 10px rgba(255, 172, 64, 0.5); }
 .quest-map-objective-icon, .chronicle-author-prefix { display: inline-block; margin-right: 0.25em; }
 .item-icon, .market-item-icon { display: inline-block; }
