@@ -1940,6 +1940,9 @@ body,
 .recipe-card[aria-label*="Руна Тени"] .recipe-icon,
 .recipe-card[aria-label*="Shadow Rune"] .recipe-icon { color: #e0c3ff; text-shadow: 0 0 14px rgba(190, 130, 255, 0.95), 0 0 24px rgba(88, 166, 255, 0.45); filter: brightness(1.35) saturate(1.4); }
 .sell-item-name { color: var(--color-text); font-weight: 650; }
+.developers-link-list { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; }
+.developers-link { min-width: 150px; justify-content: center; }
+.chronicle-icon { display: inline-block; margin-right: 0.25em; }
 
 
 .event-effect-badge {

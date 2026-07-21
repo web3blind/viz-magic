@@ -73,7 +73,7 @@ var LeaderboardScreen = (function() {
 
         if (!rows.length) {
             el.innerHTML =
-                '<div class="screen-header"><h2><span class="screen-title-icon section-icon vmagic-soft-icon" aria-hidden="true">🏆</span> ' + t('leaderboard_title') + '</h2></div>' +
+                '<div class="screen-header"><h2><span class="screen-title-icon section-icon vmagic-breathe" aria-hidden="true">🏆</span> ' + t('leaderboard_title') + '</h2></div>' +
                 statusHtml +
                 '<div class="leaderboard-empty" role="status">' +
                     (snapshot.loading ? '' : t('leaderboard_empty')) +
@@ -116,7 +116,7 @@ var LeaderboardScreen = (function() {
 
         el.innerHTML =
             '<div class="screen-header">' +
-                '<h2 id="leaderboard-heading"><span class="screen-title-icon section-icon vmagic-soft-icon" aria-hidden="true">🏆</span> ' + t('leaderboard_title') + '</h2>' +
+                '<h2 id="leaderboard-heading"><span class="screen-title-icon section-icon vmagic-breathe" aria-hidden="true">🏆</span> ' + t('leaderboard_title') + '</h2>' +
             '</div>' +
             rankBanner +
             statusHtml +

@@ -244,7 +244,7 @@ var HomeScreen = (function() {
             (magicNews ? '<div class="forecast-card forecast-card-news">' +
                 '<span class="forecast-icon" aria-hidden="true">' + magicNews.icon + '</span>' +
                 '<span class="forecast-kicker">' + t('magic_news_title') + '</span>' +
-                '<p class="forecast-line">' + t(magicNews.summaryKey) + '</p>' +
+                '<p class="forecast-line">' + t(magicNews.summaryKey) + (magicNews.twistText ? ' ' + magicNews.twistText : '') + '</p>' +
             '</div>' : '') +
         '</section>';
     }

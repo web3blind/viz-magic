@@ -744,7 +744,7 @@ var GuildScreen = (function() {
             html += '</div>';
         } else {
             html += '<div class="active-key-status active-key-missing">';
-            html += '<p class="active-key-notice">' + t('guild_active_key_needed') + '</p>';
+            html += '<p class="active-key-notice"><span class="active-key-icon vmagic-breathe" aria-hidden="true">🔐</span> ' + t('guild_active_key_needed') + '</p>';
             html += '<label class="input-label" for="input-active-key">' + t('guild_active_key_label') + '</label>';
             html += '<input type="password" class="input-field" id="input-active-key" placeholder="5J..." autocomplete="off" aria-label="' + t('guild_active_key_label') + '">';
             html += '<button class="btn btn-primary btn-sm" id="btn-save-active-key">' + t('guild_active_key_save') + '</button>';

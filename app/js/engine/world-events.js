@@ -364,7 +364,7 @@ var WorldEvents = (function() {
         { id: 'hammer_sparks', month: 7, day: 17, type: 'great', icon: '\uD83D\uDD28', screen: 'crafting', nameKey: 'festival_hammer_sparks', descKey: 'festival_hammer_sparks_desc' },
         { id: 'bag_whisper', month: 8, day: 8, type: 'great', icon: '\uD83C\uDF92', screen: 'inventory', nameKey: 'festival_bag_whisper', descKey: 'festival_bag_whisper_desc' },
         { id: 'secret_knowledge_day', month: 9, day: 1, type: 'great', icon: '\uD83D\uDD2E', screen: 'quests', nameKey: 'festival_secret_knowledge_day', descKey: 'festival_secret_knowledge_day_desc' },
-        { id: 'dragon_mask_day', month: 10, day: 31, type: 'great', icon: '\uD83D\uDC32', screen: 'world-boss', nameKey: 'festival_dragon_mask_day', descKey: 'festival_dragon_mask_day_desc' },
+        { id: 'warband_dance', month: 10, day: 31, type: 'great', icon: '\uD83D\uDC32', screen: 'guild', nameKey: 'festival_warband_dance', descKey: 'festival_warband_dance_desc' },
         { id: 'first_spark_tournament', month: 11, day: 11, type: 'great', icon: '\u2694\uFE0F', screen: 'arena', nameKey: 'festival_first_spark_tournament', descKey: 'festival_first_spark_tournament_desc' },
         { id: 'great_year_weave', month: 12, day: 31, type: 'great', icon: '\uD83C\uDF86', screen: 'chronicle', nameKey: 'festival_great_year_weave', descKey: 'festival_great_year_weave_desc' }
     ];
@@ -480,6 +480,28 @@ var WorldEvents = (function() {
         'небо обещает новый странный текст завтра и держит слово.'
     ];
 
+    var NEWS_TWISTS = [
+        'Репортёры добавляют: очевидцы спорят, было ли это пророчеством или чьей-то неудачной шуткой.',
+        'Хроника уточняет: подробности меняются каждый час, но настроение у новости устойчиво магическое.',
+        'Базар уже продаёт сувениры по мотивам события, хотя никто не понял, что именно произошло.',
+        'Гильдии требуют расследования, награды и чай, не обязательно в этом порядке.',
+        'Академия просит не повторять эксперимент дома, в Храме и особенно на Арене.',
+        'Старшие маги делают серьёзные лица, что почти всегда означает хорошую историю.',
+        'Охотники считают это следом крупной добычи; писцы считают это поводом для новой главы.',
+        'По городу ходит слух, что завтра всё окажется ещё страннее.',
+        'Очевидцы уверяют, что новость видели лично, но она быстро ушла за угол.',
+        'Местные мудрецы молчат: значит, либо знают слишком много, либо ещё не придумали объяснение.',
+        'Драконьи маски продаются лучше обычного, хотя дракон официально ни при чём.',
+        'Редакция обещает следить за развитием событий и за тем, чтобы события следили за собой.',
+        'Пока спорят учёные, игроки уже делают из этого легенду.',
+        'Ветер разнёс подробности по крышам, поэтому версии отличаются этажностью.',
+        'Если верить домовым, всё началось с маленькой ошибки в большом заклинании.',
+        'К вечеру новость обещает стать старой, но только снаружи.',
+        'Самые осторожные маги записали это как знак и пошли проверять сумки.',
+        'Провидцы уверены, что именно этого они вчера и не предсказывали.',
+        'Никто не пострадал, кроме здравого смысла; его обещали вылечить завтра.'
+    ];
+
     /**
      * Get the current real-world calendar season in Moscow time.
      * @param {number} blockNum kept for API compatibility
@@ -549,21 +571,23 @@ var WorldEvents = (function() {
         var out = {};
         for (var key in festival) if (festival.hasOwnProperty(key)) out[key] = festival[key];
         out.prefixKey = out.type === 'great' ? 'festival_great_prefix' : 'festival_today_prefix';
-        out.descText = null;
         return out;
     }
 
     function _getGeneratedDailyFestival(dayIndex) {
-        var idx = dayIndex % DAILY_FESTIVALS.length;
-        if (idx < 0) idx = 0;
-        var base = DAILY_FESTIVALS[idx];
+        var baseIdx = dayIndex % DAILY_FESTIVALS.length;
+        if (baseIdx < 0) baseIdx = 0;
+        var twistIdx = Math.floor(dayIndex / DAILY_FESTIVALS.length) % FESTIVAL_TWISTS.length;
+        if (twistIdx < 0) twistIdx = 0;
+        var base = DAILY_FESTIVALS[baseIdx];
         return {
-            id: 'daily_smile_' + idx,
+            id: 'daily_smile_' + baseIdx + '_' + twistIdx,
             type: 'minor',
             icon: base.icon,
             screen: 'home',
             nameKey: base.nameKey,
-            descKey: base.descKey
+            descKey: base.descKey,
+            descText: FESTIVAL_TWISTS[twistIdx]
         };
     }
 
@@ -592,6 +616,14 @@ var WorldEvents = (function() {
         return SKY_SIGNS.length * WEATHER.length;
     }
 
+    function getFestivalVariantCount() {
+        return DAILY_FESTIVALS.length * FESTIVAL_TWISTS.length;
+    }
+
+    function getMagicNewsVariantCount() {
+        return MAGIC_NEWS.length * NEWS_TWISTS.length;
+    }
+
     /**
      * Get current magical weather based on block number.
      * This is a deterministic in-game forecast and affects hunts.
@@ -615,7 +647,13 @@ var WorldEvents = (function() {
         var day = _getMoscowDayIndex();
         var idx = day % MAGIC_NEWS.length;
         if (idx < 0) idx = 0;
-        return MAGIC_NEWS[idx];
+        var twistIdx = Math.floor(day / MAGIC_NEWS.length) % NEWS_TWISTS.length;
+        if (twistIdx < 0) twistIdx = 0;
+        var base = MAGIC_NEWS[idx];
+        var out = {};
+        for (var key in base) if (base.hasOwnProperty(key)) out[key] = base[key];
+        out.twistText = NEWS_TWISTS[twistIdx];
+        return out;
     }
 
     /**
@@ -782,6 +820,8 @@ var WorldEvents = (function() {
         getCurrentWeather: getCurrentWeather,
         getCurrentSky: getCurrentSky,
         getForecastVariantCount: getForecastVariantCount,
+        getFestivalVariantCount: getFestivalVariantCount,
+        getMagicNewsVariantCount: getMagicNewsVariantCount,
         getCurrentFestival: getCurrentFestival,
         getCurrentMagicNews: getCurrentMagicNews,
         getActiveEvents: getActiveEvents,

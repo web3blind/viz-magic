@@ -22,6 +22,16 @@ var DevelopersScreen = (function() {
         html += '<p><strong>' + t('developers_primary_dev') + ':</strong> @' + DEVELOPER_ACCOUNT + '</p>';
         html += '</section>';
 
+        html += '<section class="developers-card developers-links" aria-label="' + t('developers_links_title') + '">';
+        html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🔗</span> ' + t('developers_links_title') + '</h2>';
+        html += '<p>' + t('developers_links_text') + '</p>';
+        html += '<div class="developers-link-list">';
+        html += '<a class="btn btn-secondary developers-link" href="https://github.com/web3blind/viz-magic" target="_blank" rel="noopener noreferrer">' + t('developers_link_github') + '</a>';
+        html += '<a class="btn btn-secondary developers-link" href="https://vizmagic.web3blind.xyz/" target="_blank" rel="noopener noreferrer">' + t('developers_link_game') + '</a>';
+        html += '<a class="btn btn-secondary developers-link" href="https://viz.world/" target="_blank" rel="noopener noreferrer">' + t('developers_link_viz') + '</a>';
+        html += '</div>';
+        html += '</section>';
+
         html += '<section class="developers-card" aria-label="' + t('developers_reward_title') + '">';
         html += '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">💎</span> ' + t('developers_reward_title') + '</h2>';
         html += '<p>' + t('developers_reward_text') + '</p>';
