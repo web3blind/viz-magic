@@ -796,6 +796,9 @@ var LangEN = {
 
     weather_forecast_label: 'Magical weather forecast',
     weather_forecast_title: 'Magical weather',
+    weather_dynamic_effect_prefix: 'Hunting changes today',
+    weather_dynamic_creature: 'prey strength',
+    weather_dynamic_defense: 'mage defense',
     weather_hunt_effect_sentence: 'Magical weather affects hunting.',
     weather_sky_title: 'Sky',
     season_effect_prefix: 'Affects hunts',
@@ -1030,6 +1033,9 @@ var LangEN = {
     quest_type_explore: 'Explore',
     quest_type_social: 'Social',
     quest_type_territory: 'Territory',
+    quest_type_skill: 'Skill',
+    quest_type_agility: 'Agility',
+    quest_type_help: 'Help',
     quest_obj_hunt: 'Kill creatures',
     quest_obj_craft: 'Craft items',
     quest_obj_duel: 'Win duels',
@@ -1235,6 +1241,6 @@ var LangEN = {
     help_tip_armageddon: 'Armageddon Stone: drop from Thornvine Lv5+ or craft at level 10.',
     char_xp_explainer: '⭐ XP grows from hunts, Armageddon, quests, world boss fights, and other game actions. When enough XP is accumulated for the next level, leveling happens automatically.',
     char_mana_explainer: '⚡ Mana is VIZ account energy. It regenerates over time: about 1% per 1.2 hours, roughly 5 days for a full refill. Hunts, Temple offerings, crafting, and other actions spend mana.',
-    char_hp_explainer: '❤️ HP grows from level, Resilience, and class. This screen displays HP the same way as Home: real game HP is multiplied by 10 for display only. Internal balance, damage, healing and spending do not change.',
+    char_hp_explainer: '❤️ HP grows from level, Resilience, and class. This screen displays HP the same way as Home: real game HP is scaled to a clean 1000 display bar only. Internal balance, damage, healing and spending do not change.',
     help_close: 'Got it'
 };

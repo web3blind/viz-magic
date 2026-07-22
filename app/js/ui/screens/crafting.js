@@ -281,7 +281,7 @@ var CraftingScreen = (function() {
 
         // Reforge section
         html += '<div class="enchant-section reforge-section">';
-        html += '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🔨</span> ' + t('enchant_reforge_title') + '</h3>';
+        html += '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">⚒️</span> ' + t('enchant_reforge_title') + '</h3>';
         html += '<p class="enchant-desc">' + t('enchant_reforge_desc') + '</p>';
         html += '<label for="reforge-item-select" class="input-label"><span class="section-icon vmagic-breathe" aria-hidden="true">🧰</span> ' + t('enchant_select_item') + '</label>';
         html += '<select id="reforge-item-select" class="input-field" aria-label="' + t('enchant_reforge_item') + '">';

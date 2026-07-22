@@ -481,6 +481,10 @@ var WorldEvents = (function() {
         'небо обещает новый странный текст завтра и держит слово.'
     ];
 
+    var LEGEND_TWISTS = [
+        'Когда на горизонте появляется Эфирный Дракон — охотники считают его крупной добычей, а писцы — поводом для новой главы...'
+    ];
+
     var NEWS_TWISTS = [
         'Репортёры добавляют: очевидцы спорят, было ли это пророчеством или чьей-то неудачной шуткой.',
         'Хроника уточняет: подробности меняются каждый час, но настроение у новости устойчиво магическое.',
@@ -488,7 +492,6 @@ var WorldEvents = (function() {
         'Гильдии требуют расследования, награды и чай, не обязательно в этом порядке.',
         'Академия просит не повторять эксперимент дома, в Храме и особенно на Арене.',
         'Старшие маги делают серьёзные лица, что почти всегда означает хорошую историю.',
-        'Охотники считают это следом крупной добычи; писцы считают это поводом для новой главы.',
         'По городу ходит слух, что завтра всё окажется ещё страннее.',
         'Очевидцы уверяют, что новость видели лично, но она быстро ушла за угол.',
         'Местные мудрецы молчат: значит, либо знают слишком много, либо ещё не придумали объяснение.',
@@ -631,11 +634,23 @@ var WorldEvents = (function() {
      * @param {number} blockNum
      * @returns {Object}
      */
+    function _copyWeatherWithDailyVariation(weather, day) {
+        var out = {};
+        for (var key in weather) if (weather.hasOwnProperty(key)) out[key] = weather[key];
+        var attackDelta = ((day * 7 + 3) % 5) - 2;
+        var defenseDelta = ((day * 11 + 1) % 5) - 2;
+        if (out.creatureAttackMod && out.creatureAttackMod !== 1000) out.creatureAttackMod += attackDelta * 10;
+        if (out.playerDefenseMod && out.playerDefenseMod !== 1000) out.playerDefenseMod += defenseDelta * 10;
+        out.dailyAttackDelta = attackDelta;
+        out.dailyDefenseDelta = defenseDelta;
+        return out;
+    }
+
     function getCurrentWeather(blockNum) {
         var day = _getMoscowDayIndex();
         var idx = Math.floor(day / SKY_SIGNS.length) % WEATHER.length;
         if (idx < 0) idx = 0;
-        return WEATHER[idx];
+        return _copyWeatherWithDailyVariation(WEATHER[idx], day);
     }
 
 
@@ -823,6 +838,7 @@ var WorldEvents = (function() {
         getForecastVariantCount: getForecastVariantCount,
         getFestivalVariantCount: getFestivalVariantCount,
         getMagicNewsVariantCount: getMagicNewsVariantCount,
+        LEGEND_TWISTS: LEGEND_TWISTS,
         getCurrentFestival: getCurrentFestival,
         getCurrentMagicNews: getCurrentMagicNews,
         getActiveEvents: getActiveEvents,

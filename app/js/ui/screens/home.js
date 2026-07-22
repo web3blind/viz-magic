@@ -7,8 +7,8 @@ var HomeScreen = (function() {
 
     var PRIMARY_HOME_SCREENS = ['home', 'inventory', 'guild', 'crafting', 'map', 'hunt', 'quests', 'arena', 'marketplace', 'temple', 'world-boss'];
     var SECONDARY_HOME_SCREENS = ['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'];
-    var HOME_HP_DISPLAY_FACTOR = 10;
-    var HOME_XP_DISPLAY_MAX = 3000;
+    var HOME_HP_DISPLAY_MAX = 1000;
+    var HOME_XP_DISPLAY_MAX = 10000;
 
     function render() {
         var t = Helpers.t;
@@ -27,7 +27,7 @@ var HomeScreen = (function() {
         var xpNeeded = GameFormulas.xpForLevel(character.level + 1) || 1000;
         var xpCurrent = character.xp - GameFormulas.totalXpForLevel(character.level);
         if (xpCurrent < 0) xpCurrent = 0;
-        var hpDisplay = _scaleHpForDisplay(character.hp, character.maxHp);
+        var hpShown = _scaleForDisplay(character.hp, character.maxHp, HOME_HP_DISPLAY_MAX);
         var xpShown = _scaleForDisplay(xpCurrent, xpNeeded, HOME_XP_DISPLAY_MAX);
 
         el.innerHTML =
@@ -43,7 +43,7 @@ var HomeScreen = (function() {
                     '<p>' + Helpers.classIcon(character.className) + ' ' + t('class_' + character.className) +
                         ' \u2022 ' + t('home_level') + ' ' + character.level + '</p>' +
                     ProgressBar.create({id:'mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
-                    ProgressBar.create({id:'hp-bar', label:'❤️ HP', value:character.hp, max:character.maxHp, displayValue:hpDisplay.value, displayMax:hpDisplay.max, color:'#e53935'}) +
+                    ProgressBar.create({id:'hp-bar', label:'❤️ HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
                     ProgressBar.create({id:'xp-bar', label:'⭐ XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'}) +
                     '<button class="help-tip-btn" aria-label="' + t('help_tip_mana') + '" ' +
                     'title="' + t('help_tip_mana') + '" ' +
@@ -152,15 +152,6 @@ var HomeScreen = (function() {
         return shown;
     }
 
-    function _scaleHpForDisplay(value, max) {
-        var safeMax = Math.max(1, max || 100);
-        var safeValue = Math.max(0, value || 0);
-        return {
-            value: Math.round(safeValue * HOME_HP_DISPLAY_FACTOR),
-            max: Math.round(safeMax * HOME_HP_DISPLAY_FACTOR)
-        };
-    }
-
     function _renderWorldEventBanner(state, blockNum, t) {
         if (typeof WorldEvents === 'undefined') return '';
 
@@ -195,6 +186,24 @@ var HomeScreen = (function() {
         return html;
     }
 
+
+    function _formatSignedPercent(value) {
+        var pct = Math.round((value - 1000) / 10);
+        return (pct > 0 ? '+' : '') + pct + '%';
+    }
+
+    function _formatWeatherEffect(weather, t) {
+        var parts = [];
+        if (weather.creatureAttackMod && weather.creatureAttackMod !== 1000) {
+            parts.push(t('weather_dynamic_creature') + ' ' + _formatSignedPercent(weather.creatureAttackMod));
+        }
+        if (weather.playerDefenseMod && weather.playerDefenseMod !== 1000) {
+            parts.push(t('weather_dynamic_defense') + ' ' + _formatSignedPercent(weather.playerDefenseMod));
+        }
+        if (!parts.length) return t(weather.effectKey);
+        return t('weather_dynamic_effect_prefix') + ': ' + parts.join(', ') + '.';
+    }
+
     function _renderBossAlert(state, blockNum, t) {
         if (!state.worldBoss || !state.worldBoss.active || state.worldBoss.defeated) return '';
 
@@ -216,12 +225,15 @@ var HomeScreen = (function() {
         var sky = WorldEvents.getCurrentSky ? WorldEvents.getCurrentSky(blockNum) : null;
         var weather = WorldEvents.getCurrentWeather ? WorldEvents.getCurrentWeather(blockNum) : null;
         var skyText = sky ? (t(sky.summaryKey) + (sky.twistText ? ' ' + sky.twistText : '')) : '';
-        var effect = weather ? t(weather.effectKey) : '';
+        var effect = weather ? _formatWeatherEffect(weather, t) : '';
         var festival = WorldEvents.getCurrentFestival ? WorldEvents.getCurrentFestival(blockNum) : null;
         var magicNews = WorldEvents.getCurrentMagicNews ? WorldEvents.getCurrentMagicNews(blockNum) : null;
         var festivalHtml = festival ? '<div class="forecast-card forecast-card-festival">' +
-                '<span class="forecast-kicker">' + t(festival.prefixKey || 'festival_today_prefix') + '</span>' +
-                '<p class="forecast-line"><span class="forecast-icon vmagic-breathe" aria-hidden="true">' + (festival.icon || '🎆') + '</span> ' + (festival.nameText || t(festival.nameKey)) + '</p>' +
+                '<div class="forecast-head">' +
+                    '<span class="forecast-icon vmagic-breathe" aria-hidden="true">' + (festival.icon || '🎆') + '</span>' +
+                    '<span class="forecast-kicker">' + t(festival.prefixKey || 'festival_today_prefix') + '</span>' +
+                '</div>' +
+                '<p class="forecast-line">' + (festival.nameText || t(festival.nameKey)) + '</p>' +
                 '<p class="forecast-omen">' + (festival.descText || t(festival.descKey)) + '</p>' +
             '</div>' : '';
         return '<section class="season-indicator magical-forecast" aria-label="' + t('weather_forecast_label') + '">' +
@@ -230,8 +242,7 @@ var HomeScreen = (function() {
                     '<span class="forecast-icon forecast-weather-icon vmagic-breathe" aria-hidden="true">\uD83E\uDDED</span>' +
                     '<p class="forecast-line">' + t(season.nameKey) + '</p>' +
                 '</div>' +
-                '<p class="forecast-kicker forecast-hunt-copy">' + t('weather_hunt_effect_sentence') + '</p>' +
-                '<span class="forecast-icon forecast-hunt-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF9</span>' +
+                '<p class="forecast-kicker forecast-hunt-copy">' + t('weather_hunt_effect_sentence') + ' <span class="forecast-icon forecast-hunt-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF9</span></p>' +
                 '<p class="season-bonus">' + t('school_' + season.dominant) + ' +20%, ' +
                     t('school_' + season.secondary) + ' +10%. ' + effect + '</p>' +
             '</div>' +

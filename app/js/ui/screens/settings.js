@@ -71,7 +71,7 @@ var SettingsScreen = (function() {
 
                 // Language
                 '<section class="settings-section" aria-label="' + t('settings_language') + '">' +
-                    '<h2>' + t('settings_language') + '</h2>' +
+                    '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">👅</span> ' + t('settings_language') + '</h2>' +
                     '<div class="settings-toggle-group">' +
                         '<button class="btn btn-sm' + (currentLang === 'ru' ? ' btn-primary' : ' btn-secondary') + '" id="lang-ru" aria-pressed="' + (currentLang === 'ru') + '">\uD83C\uDDF7\uD83C\uDDFA Русский</button>' +
                         '<button class="btn btn-sm' + (currentLang === 'en' ? ' btn-primary' : ' btn-secondary') + '" id="lang-en" aria-pressed="' + (currentLang === 'en') + '">\uD83C\uDDEC\uD83C\uDDE7 English</button>' +
@@ -80,7 +80,7 @@ var SettingsScreen = (function() {
 
                 // Sound
                 '<section class="settings-section" aria-label="' + t('settings_sound') + '">' +
-                    '<h2>' + t('settings_sound') + '</h2>' +
+                    '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">🔊</span> ' + t('settings_sound') + '</h2>' +
                     _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume) +
                     _renderSlider('music-volume', t('settings_music'), musicVolume) +
                     _renderToggle('narrator-toggle', t('narrator_toggle'), narratorEnabled) +
@@ -108,14 +108,14 @@ var SettingsScreen = (function() {
 
                 // Accessibility
                 '<section class="settings-section" aria-label="' + t('settings_accessibility') + '">' +
-                    '<h2>' + t('settings_accessibility') + '</h2>' +
+                    '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">♿</span> ' + t('settings_accessibility') + '</h2>' +
                     _renderToggle('contrast-toggle', t('settings_high_contrast'), highContrast) +
                     _renderToggle('motion-toggle', t('settings_reduced_motion'), reducedMotion) +
                 '</section>' +
 
                 // Notifications
                 '<section class="settings-section" aria-label="' + t('settings_notifications') + '">' +
-                    '<h2>' + t('settings_notifications') + '</h2>' +
+                    '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">✉️</span> ' + t('settings_notifications') + '</h2>' +
                     _renderToggle('notif-events', t('settings_notif_events'), true) +
                     _renderToggle('notif-boss', t('settings_notif_boss'), true) +
                     _renderToggle('notif-quests', t('settings_notif_quests'), true) +
@@ -123,7 +123,7 @@ var SettingsScreen = (function() {
 
                 // Account
                 '<section class="settings-section" aria-label="' + t('settings_account') + '">' +
-                    '<h2>' + t('settings_account') + '</h2>' +
+                    '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">🧙</span> ' + t('settings_account') + '</h2>' +
                     (user ? (
                         '<div class="settings-account-info">' +
                             '<div class="account-row"><span class="account-label">' + t('settings_account_name') + '</span><span class="account-value">' + Helpers.escapeHtml(user) + '</span></div>' +
@@ -133,7 +133,7 @@ var SettingsScreen = (function() {
 
                 // About
                 '<section class="settings-section" aria-label="' + t('settings_about') + '">' +
-                    '<h2>' + t('settings_about') + '</h2>' +
+                    '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">ℹ️</span> ' + t('settings_about') + '</h2>' +
                     '<div class="settings-about">' +
                         '<p><strong>Viz Magic</strong> v' + VizMagicConfig.APP_VERSION + '</p>' +
                         '<p>' + t('settings_about_desc') + '</p>' +
@@ -280,8 +280,7 @@ var SettingsScreen = (function() {
         if (realmBtn) realmBtn.addEventListener('click', function() {
             Modal.show(
                 Helpers.t('settings_realm_magic'),
-                '<p>' + Helpers.t('settings_realm_magic_desc') + '</p>',
-                [{ label: Helpers.t('close'), action: function() { Modal.close(); } }]
+                '<p>' + Helpers.t('settings_realm_magic_desc') + '</p>'
             );
         });
 

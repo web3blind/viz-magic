@@ -211,10 +211,18 @@ var QuestsScreen = (function() {
         return String(q.id || '').replace(/^q_/, '').replace(/_/g, ' ');
     }
 
+    function _questTypeLabel(quest, t) {
+        if (!quest) return '';
+        if (quest.type === 'craft') return t('quest_type_skill');
+        if (quest.type === 'hunt') return t('quest_type_agility');
+        if (quest.type === 'social') return t('quest_type_help');
+        return t('quest_type_' + quest.type);
+    }
+
     function _renderQuestCard(quest, t, showActions) {
         var html = '<li class="quest-card' + (quest.completed ? ' quest-ready' : '') + '" role="listitem">';
         html += '<div class="quest-card-header">';
-        html += '<span class="quest-type-badge">' + t('quest_type_' + quest.type) + '</span>';
+        html += '<span class="quest-type-badge">' + _questTypeLabel(quest, t) + '</span>';
         html += '<h3 class="quest-name">' + t(quest.titleKey) + '</h3>';
         html += '</div>';
 
@@ -252,7 +260,7 @@ var QuestsScreen = (function() {
     function _renderAvailableCard(quest, t, playerQuests) {
         var html = '<li class="quest-card quest-available" role="listitem">';
         html += '<div class="quest-card-header">';
-        html += '<span class="quest-type-badge">' + t('quest_type_' + quest.type) + '</span>';
+        html += '<span class="quest-type-badge">' + _questTypeLabel(quest, t) + '</span>';
         html += '<h3 class="quest-name">' + t(quest.titleKey) + '</h3>';
         html += '</div>';
         html += '<p class="quest-desc">' + t(quest.descriptionKey) + '</p>';

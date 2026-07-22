@@ -349,9 +349,7 @@ var App = (function() {
                 '<li>' + Helpers.t('home_install_step_3') + '</li>' +
             '</ol>';
         if (typeof Modal !== 'undefined' && Modal.show) {
-            Modal.show(Helpers.t('home_install_shortcut'), text, [
-                { label: Helpers.t('close'), action: function() { Modal.close(); } }
-            ]);
+            Modal.show(Helpers.t('home_install_shortcut'), text);
             return;
         }
         if (typeof Toast !== 'undefined') {

@@ -312,7 +312,7 @@ test('large stale checkpoint catch-up uses archive events instead of replaying e
   assert.ok(/HistorySource\.getEventsRange/.test(appJs), 'archive catch-up should query event ranges');
   assert.ok(/state\.headBlock = endBlock/.test(appJs), 'archive catch-up should advance checkpoint past empty blocks');
   assert.ok(/arena: true/.test(appJs), 'arena should refresh when duel events arrive during catch-up');
-  assert.ok(/js\/ui\/app\.js\?v=20260720e/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
+  assert.ok(/js\/ui\/app\.js\?v=20260720f/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
 });
 
 test('guild joining explains and enforces preparation requirements', function () {
@@ -351,7 +351,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v80/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v81/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/registration\.update\(\)/.test(read('app/js/ui/app.js')), 'app should ask the browser to check for the newest service worker after registration');
@@ -407,16 +407,15 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v80/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v81/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
 test('home dashboard puts mana first and uses a story-readable HP scale', function () {
-  assert.ok(/HOME_HP_DISPLAY_FACTOR = 10/.test(homeJs), 'home HP should use a readable 100 → 1000 display scale');
-  assert.ok(/HOME_XP_DISPLAY_MAX = 3000/.test(homeJs), 'home XP visual scale should top at 3000');
+  assert.ok(/HOME_HP_DISPLAY_MAX = 1000/.test(homeJs), 'home HP should use a readable 1000 display scale');
+  assert.ok(/HOME_XP_DISPLAY_MAX = 10000/.test(homeJs), 'home XP visual scale should top at 10000');
   assert.ok(/mana-bar[\s\S]*hp-bar[\s\S]*xp-bar/.test(homeJs), 'home summary should place Mana above HP, then XP');
-  assert.ok(/function _scaleHpForDisplay/.test(homeJs), 'HP display scale should be calculated separately from real combat HP');
-  assert.ok(/displayMax:hpDisplay\.max/.test(homeJs), 'HP bar should show the calculated visual HP scale');
+  assert.ok(/displayMax:HOME_HP_DISPLAY_MAX/.test(homeJs), 'HP bar should show the fixed visual HP scale');
   assert.ok(/displayMax:HOME_XP_DISPLAY_MAX/.test(homeJs), 'XP bar should show the visual XP scale');
   assert.ok(/ProgressBar\.update\('mana-bar', currentEnergy \/ 100, 100\)/.test(homeJs), 'mana should remain real VIZ energy as 0-100 percent');
   assert.ok(/displayValue/.test(read('app/js/ui/components/progress-bar.js')), 'progress bar should separate real ratio from displayed scale');
@@ -473,14 +472,14 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/forecast-weather-icon vmagic-breathe/.test(homeJs) && /forecast-hunt-icon vmagic-breathe/.test(homeJs), 'merged weather card should breathe compass and bow icons');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should appear only from the authored calendar');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260720e/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260720e/.test(indexHtml), 'English weather copy must be cache-busted');
-  assert.ok(/home.js\?v=20260720e/.test(indexHtml), 'home forecast layout must be cache-busted');
-  assert.ok(/js\/ui\/screens\/quests.js\?v=20260720e/.test(indexHtml), 'quest-limit UX must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260720f/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260720f/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/home.js\?v=20260720f/.test(indexHtml), 'home forecast layout must be cache-busted');
+  assert.ok(/js\/ui\/screens\/quests.js\?v=20260720f/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260716a/.test(indexHtml), 'bottom tray nav must be cache-busted');
-  assert.ok(/leaderboard.js\?v=20260720e/.test(indexHtml), 'leaderboard icon motion must be cache-busted');
-  assert.ok(/world-events.js\?v=20260720e/.test(indexHtml), 'world events news and festival copy must be cache-busted');
-  assert.ok(/main.css\?v=20260720e/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/leaderboard.js\?v=20260720f/.test(indexHtml), 'leaderboard icon motion must be cache-busted');
+  assert.ok(/world-events.js\?v=20260720f/.test(indexHtml), 'world events news and festival copy must be cache-busted');
+  assert.ok(/main.css\?v=20260720f/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/prefers-reduced-motion: no-preference/.test(mainCss) && /vmagic-rune-pulse/.test(mainCss), 'ambient animation must be lightweight and respect reduced-motion');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
@@ -497,9 +496,9 @@ test('music volume, narrator speech, and PWA icons are durable', function () {
   assert.ok(/_setStoredNumber\('music_volume', this\.value \/ 100\)/.test(settingsJs), 'music slider should persist changes');
   assert.ok(/SpeechSynthesisUtterance/.test(narratorJs), 'battle narrator should speak audibly through Web Speech when available');
   assert.ok(/textContent = ''[\s\S]*textContent = message/.test(narratorJs), 'battle narrator should force live-region text replacement');
-  assert.ok(/manifest\.json\?v=20260720e/.test(indexHtml), 'manifest should be cache-busted for updated icon');
-  assert.ok(/favicon\.ico\?v=20260720e/.test(indexHtml), 'favicon should be explicit for browser shortcut fallback');
-  assert.ok(/viz-magic-v78-192\.png\?v=20260720e/.test(indexHtml), 'launcher icon link should be cache-busted');
+  assert.ok(/manifest\.json\?v=20260720f/.test(indexHtml), 'manifest should be cache-busted for updated icon');
+  assert.ok(/favicon\.ico\?v=20260720f/.test(indexHtml), 'favicon should be explicit for browser shortcut fallback');
+  assert.ok(/viz-magic-v78-192\.png\?v=20260720f/.test(indexHtml), 'launcher icon link should be cache-busted');
   assert.ok(/assets\/icons\/viz-magic-v78-512\.png/.test(read('app/sw.js')), 'service worker should cache PWA launcher icons');
   assert.ok(/viz-magic-v78-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
 });
@@ -532,7 +531,7 @@ test('temple tab uses balanced on-chain offerings without direct pay-to-win stat
 
 
 test('reported mobile UX issues have explicit fixes', function () {
-  assert.ok(/quest_limit_reached_toast/.test(questsJs + ruJs + enJs), 'quest limit should be explained before/after accept attempts');
+  assert.ok(/quest_limit_reached_toast/.test(questScreenJs + ruJs + enJs), 'quest limit should be explained before/after accept attempts');
   assert.ok(/MAX_ACTIVE_QUESTS/.test(questScreenJs), 'quest screen should use the five-quest limit');
   assert.ok(!/BattleNarrator\.announce/.test(leaderboardScreenJs), 'leaderboard should not wake Battle Narrator speech synthesis');
   assert.ok(!/id: 'help'/.test(navJs), 'Help should be removed from bottom tray');
@@ -541,17 +540,18 @@ test('reported mobile UX issues have explicit fixes', function () {
 
 
 test('PWA icon and HP heart use expressive color accents', function () {
-  assert.ok(/viz-magic-v78-192\.png\?v=20260720e/.test(indexHtml), 'PWA icon link should be cache-busted after expressive icon update');
+  assert.ok(/viz-magic-v78-192\.png\?v=20260720f/.test(indexHtml), 'PWA icon link should be cache-busted after expressive icon update');
   assert.ok(/viz-magic-v78/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
   assert.ok(/label:'❤️ HP'/.test(homeJs), 'HP label should use a red heart emoji variant');
 });
 
 
 test('character screen uses current home-scale vitals and growth explainers', function () {
-  assert.ok(/character.js\?v=20260720e/.test(indexHtml), 'character screen should be cache-busted');
-  assert.ok(/CHARACTER_HP_DISPLAY_FACTOR = 10/.test(characterScreenJs), 'character HP should use the same 100 → 1000 display factor as Home');
+  assert.ok(/character.js\?v=20260720f/.test(indexHtml), 'character screen should be cache-busted');
+  assert.ok(/CHARACTER_HP_DISPLAY_MAX = 1000/.test(characterScreenJs), 'character HP should use the same 1000 visual scale as Home');
+  assert.ok(/CHARACTER_XP_DISPLAY_MAX = 10000/.test(characterScreenJs), 'character XP visual scale should top at 10000');
   assert.ok(/char-mana-bar[\s\S]*char-hp-bar[\s\S]*char-xp-bar/.test(characterScreenJs), 'character vitals should follow Home order: Mana, HP, XP');
-  assert.ok(/displayMax:hpDisplay\.max/.test(characterScreenJs), 'character HP display should be separate from real combat HP');
+  assert.ok(/displayMax:CHARACTER_HP_DISPLAY_MAX/.test(characterScreenJs), 'character HP display should be separate from real combat HP');
   assert.ok(/label:'❤️ HP'/.test(characterScreenJs), 'character HP should have the red heart icon');
   assert.ok(/label:'⭐ XP'/.test(characterScreenJs), 'character XP should have an icon and visible bar');
   assert.ok(/char-mana-bar/.test(characterScreenJs), 'character screen should show current mana');
@@ -576,7 +576,7 @@ test('narrator voice preferences support gender and timbre', function () {
   const settingsJs = read('app/js/ui/screens/settings.js');
   const narratorJs = read('app/js/ui/components/battle-narrator.js');
   assert.ok(/battle-narrator.js\?v=20260713c/.test(indexHtml), 'battle narrator should be cache-busted');
-  assert.ok(/settings.js\?v=20260713b/.test(indexHtml), 'settings should be cache-busted');
+  assert.ok(/settings.js\?v=20260720f/.test(indexHtml), 'settings should be cache-busted');
   assert.ok(/narrator-voice-gender/.test(settingsJs), 'settings should expose narrator gender select');
   assert.ok(/narrator-voice-timbre/.test(settingsJs), 'settings should expose narrator timbre select');
   assert.ok(/setVoiceOptions/.test(narratorJs), 'narrator should persist selectable voice options');
@@ -588,7 +588,7 @@ test('narrator voice preferences support gender and timbre', function () {
 
 
 test('home action tiles reflect Denis priority order', function () {
-  assert.ok(/home.js\?v=20260720e/.test(indexHtml), 'home screen should be cache-busted for action order');
+  assert.ok(/home.js\?v=20260720f/.test(indexHtml), 'home screen should be cache-busted for action order');
   assert.ok(/PRIMARY_HOME_SCREENS = \['home', 'inventory', 'guild', 'crafting', 'map', 'hunt', 'quests', 'arena', 'marketplace', 'temple', 'world-boss'\]/.test(homeJs), 'primary row should put Home, Bag, Guild and Workshop first');
   assert.ok(/SECONDARY_HOME_SCREENS = \['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'\]/.test(homeJs), 'secondary row should start Character, Rating, Chronicle and exclude World Boss');
   assert.ok(/home_secondary_actions: 'Дополнительная строка'/.test(ruJs), 'More sections should be renamed to Additional bar in Russian');
@@ -596,7 +596,7 @@ test('home action tiles reflect Denis priority order', function () {
 
 
 test('character vital explainers are placed immediately after their bars', function () {
-  assert.ok(/character.js\?v=20260720e/.test(indexHtml), 'character screen should be cache-busted for vital layout');
+  assert.ok(/character.js\?v=20260720f/.test(indexHtml), 'character screen should be cache-busted for vital layout');
   assert.ok(/char-mana-bar[\s\S]*char_mana_explainer[\s\S]*char-hp-bar[\s\S]*char_hp_explainer[\s\S]*char-xp-bar[\s\S]*char_xp_explainer/.test(characterScreenJs), 'character vital explanations should follow Mana, HP and XP bars respectively');
   assert.ok(!/character-growth-notes/.test(characterScreenJs), 'vital explanations should not be grouped away from their bars');
 });
@@ -612,7 +612,7 @@ test('weave surge banner explains mana multiplier', function () {
 });
 
 test('minor rift banner explains itself and is actionable', function () {
-  assert.ok(/home.js\?v=20260720e/.test(indexHtml), 'home screen should be cache-busted for rift explanation');
+  assert.ok(/home.js\?v=20260720f/.test(indexHtml), 'home screen should be cache-busted for rift explanation');
   assert.ok(/event_minor_rift_desc/.test(homeJs + ruJs + enJs), 'minor rift should have visible explanatory copy');
   assert.ok(/evt\.type === 'minor_rift' \? 'hunt'/.test(homeJs), 'minor rift banner should navigate to Hunt');
   assert.ok(/event-banner-button/.test(homeJs + mainCss), 'actionable event banners should be styled and bound as buttons');
@@ -637,7 +637,7 @@ test('hunt rest uses home-scale HP values', function () {
 
 
 test('marketplace groups identical sellable items and supports quantity listing', function () {
-  assert.ok(/marketplace.js\?v=20260720e/.test(indexHtml), 'marketplace screen should be cache-busted');
+  assert.ok(/marketplace.js\?v=20260720f/.test(indexHtml), 'marketplace screen should be cache-busted');
   assert.ok(/function _groupSellableItems/.test(marketplaceJs), 'sell tab should group identical items');
   assert.ok(/sell-item-count/.test(marketplaceJs), 'sell tab should display grouped item count');
   assert.ok(/sell-qty-input/.test(marketplaceJs), 'sell tab should expose quantity input');
@@ -665,13 +665,13 @@ test('hunt headings and help use updated thematic icons', function () {
 
 
 test('crafting enchant tab does not show misleading local back button', function () {
-  assert.ok(/crafting.js\?v=20260717c/.test(indexHtml), 'crafting screen should be cache-busted for enchant tab cleanup');
+  assert.ok(/crafting.js\?v=20260720f/.test(indexHtml), 'crafting screen should be cache-busted for enchant tab cleanup');
   assert.ok(!/craft-tab-back-btn/.test(craftingJs), 'enchant tab should not expose a non-working local back button');
 });
 
 
 test('marketplace sell items have semantic item icons', function () {
-  assert.ok(/marketplace.js\?v=20260720e/.test(indexHtml), 'marketplace screen should be cache-busted for sell icons');
+  assert.ok(/marketplace.js\?v=20260720f/.test(indexHtml), 'marketplace screen should be cache-busted for sell icons');
   assert.ok(/function _marketItemIcon/.test(marketplaceJs), 'sell rows should compute semantic item icons');
   assert.ok(/chronicle_ink:\s*'🖋️'/.test(marketplaceJs), 'Chronicle Ink should show the pen icon before the name');
   assert.ok(/_marketItemIcon\(sItem\)[\s\S]*_marketItemAfterIcon\(sItem\)/.test(marketplaceJs), 'sell row should render the item icon before the name and optional after-icon after the name');
@@ -708,10 +708,10 @@ test('reported visual icon polish is explicit and cache-busted', function () {
 
 test('developers screen offers optional non-advantage award', function () {
   assert.ok(/screen-developers/.test(indexHtml), 'index should include developers screen container');
-  assert.ok(/developers.js\?v=20260720e/.test(indexHtml), 'developers screen should be loaded and cache-busted');
+  assert.ok(/developers.js\?v=20260720f/.test(indexHtml), 'developers screen should be loaded and cache-busted');
   assert.ok(/developers-custom-energy/.test(developersJs) && /developers_custom_reward_label/.test(ruJs + enJs), 'developers screen should allow a custom 0.01-100 reward amount');
   assert.ok(/REWARD_OPTIONS = \[100\]/.test(developersJs), 'developers screen should keep only one fixed 1% quick reward');
-  assert.ok(/app.js\?v=20260720e/.test(indexHtml), 'app controller should be cache-busted for developers route');
+  assert.ok(/app.js\?v=20260720f/.test(indexHtml), 'app controller should be cache-busted for developers route');
   assert.ok(/'developers'/.test(appJs), 'app should register developers as a navigable screen');
   assert.ok(/DevelopersScreen\.render/.test(appJs), 'app should render developers screen');
   assert.ok(/SECONDARY_HOME_SCREENS = \['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'\]/.test(homeJs), 'home secondary actions should include Developers without World Boss');
@@ -777,14 +777,14 @@ test('Denis feedback UI polish batch uses calendar days and calmer icons', funct
 test('v78 PWA icon removes the yellow outline around the plus', function () {
   assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v78-192.png')), 'v78 192px no-outline icon should exist');
   assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v78-512.png')), 'v78 512px no-outline icon should exist');
-  assert.ok(/viz-magic-v78-192\.png\?v=20260720e/.test(indexHtml), 'index should point at the v78 launcher icon');
+  assert.ok(/viz-magic-v78-192\.png\?v=20260720f/.test(indexHtml), 'index should point at the v78 launcher icon');
   assert.ok(/"start_url":\s*"\/\?pwa=viz-magic-v78"/.test(read('app/manifest.json')), 'manifest start_url should force OS launcher refresh');
   assert.ok(/"id":\s*"https:\/\/vizmagic\.web3blind\.xyz\/\?pwa=viz-magic-v78"/.test(read('app/manifest.json')), 'manifest id should change so Android can refresh launcher identity');
   assert.ok(/APP_SHELL_ASSETS[\s\S]*viz-magic-v78-512\.png/.test(read('app/sw.js')), 'fast install shell should still include current launcher icons');
 });
 
 test('Denis feedback item and motion icons are semantic', function () {
-  assert.ok(/viz-magic-v78-192\.png\?v=20260720e/.test(indexHtml), 'launcher icon should use the v78 no-yellow-outline launcher icon');
+  assert.ok(/viz-magic-v78-192\.png\?v=20260720f/.test(indexHtml), 'launcher icon should use the v78 no-yellow-outline launcher icon');
   assert.ok(/assets\/icons\/viz-magic-v78-512\.png/.test(read('app/sw.js')), 'service worker should cache v78 icon');
   assert.ok(/ember_staff:\s*'🪵'/.test(craftingJs) && /fire_rune:\s*'\\uD83D\\uDD25'/.test(craftingJs), 'ash staff and fire rune recipes should not share the same flame icon');
   assert.ok(/market_sell_title/.test(marketplaceJs) && /💵/.test(marketplaceJs), 'sell tab should use a brighter money icon');
@@ -854,7 +854,7 @@ test('Denis v70 polish keeps motion icons, honest low-mana hunt, and chronicle n
 });
 
 test('chronicle draft survives rerenders while feed loads', function () {
-  assert.ok(/chronicle.js\?v=20260720e/.test(indexHtml), 'chronicle screen should be cache-busted for draft preservation');
+  assert.ok(/chronicle.js\?v=20260720f/.test(indexHtml), 'chronicle screen should be cache-busted for draft preservation');
   assert.ok(/DRAFT_KEY/.test(chronicleJs), 'chronicle should keep a draft key');
   assert.ok(/FEED_CACHE_PREFIX/.test(chronicleJs), 'chronicle should cache rendered old feed entries per tab for instant return');
   assert.ok(/_renderFeedEntries\(_filterByTab\(_dedupeEntries\(entries\), state\)\)/.test(chronicleJs), 'chronicle should render local entries before slow VoiceProtocol refresh');
@@ -865,3 +865,20 @@ test('chronicle draft survives rerenders while feed loads', function () {
 if (process.exitCode) {
   process.exit(process.exitCode);
 }
+
+
+test('v81 feedback polish keeps home, quest, settings, and modal details tidy', function () {
+  assert.ok(/forecast-hunt-copy[\s\S]*forecast-hunt-icon/.test(homeJs), 'summer hunt bow icon should sit in the same line as the season/hunt copy');
+  assert.ok(/forecast-card-festival[\s\S]*forecast-head[\s\S]*festival\.icon[\s\S]*festival_today_prefix/.test(homeJs), 'festival icon should sit before Today in the World heading');
+  assert.ok(/weather_dynamic_effect_prefix/.test(homeJs + ruJs + enJs), 'weather hunt numbers should use daily dynamic copy');
+  assert.ok(/_copyWeatherWithDailyVariation/.test(worldEventsJs), 'weather effect numbers should vary by day');
+  assert.ok(!/Охотники считают это следом крупной добычи/.test(worldEventsJs), 'dragon hunter/scribe phrase should leave magic news');
+  assert.ok(/LEGEND_TWISTS/.test(worldEventsJs), 'dragon hunter/scribe phrase should be saved for world legends');
+  assert.ok(/⚒️/.test(read('app/js/ui/screens/crafting.js')), 'reforge heading should use an anvil/forge icon instead of repeating the hammer');
+  assert.ok(/quest_type_skill/.test(questScreenJs + ruJs + enJs), 'craft quest badge should say Skill/Навык');
+  assert.ok(/quest_type_agility/.test(questScreenJs + ruJs + enJs), 'hunt quest badge should say Agility/Ловкость');
+  assert.ok(/quest_type_help/.test(questScreenJs + ruJs + enJs), 'social quest badge should say Help/Помощь');
+  assert.ok(/settings-section-icon vmagic-breathe/.test(read('app/js/ui/screens/settings.js')), 'settings sections should have breathing thematic icons');
+  assert.ok(/Modal\.show\(Helpers\.t\('home_install_shortcut'\), text\)/.test(appJs), 'install instructions should not pass a duplicate close button');
+  assert.ok(/Modal\.show\([\s\S]*settings_realm_magic[\s\S]*settings_realm_magic_desc[\s\S]*\);/.test(read('app/js/ui/screens/settings.js')), 'realm magic modal should rely on the default single close button');
+});
