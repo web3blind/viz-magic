@@ -60,6 +60,20 @@ The game uses three protocols on VIZ custom operations:
 - **Accessibility**: WCAG 2.1, screen reader support, keyboard navigation, Battle Narrator
 - **PWA**: Installable, works offline
 
+
+## Current functionality
+
+- **Home**: character summary, Mana → HP → XP bar order, quick actions, seasonal magical weather with daily numeric effects, and tabs for Today in the World, Magic News, Magical Nature, World Legends, and Magic Spells.
+- **Hunt**: zone, creature, and spell selection; fair block-entropy resolution; camp rest; rare Armageddon mode with explicit requirements and explanatory feedback when locked.
+- **Character**: class, level, stats, and visual Mana/HP/XP bars; HP and XP can be scaled for display only while combat math remains unchanged.
+- **Inventory and Workshop**: item browsing, materials, rarity tiers, recipes, crafting requirements, and readable thematic icons.
+- **Bazaar**: active listings, item sales, and direct mage-to-mage transfer; market state is rebuilt from game events.
+- **Guilds**: creation, joining, ranks, invitations, promotion, wars, and siege preparation.
+- **Quests**: story quests and daily tasks, including daily prophecies and hunting assignments.
+- **Realm Chronicle**: social posts and game-event narrative through the Voice protocol.
+- **Leaderboard**: top mages by XP with accessible current-player highlighting.
+- **Settings and accessibility**: Russian/English language, theme, sound, music, haptics, Battle Narrator, screen-reader support, and mobile PWA installation.
+
 ## HP & Recovery
 
 HP does not regenerate automatically to full. Passive regen slowly restores up to **30% of max HP** (+1 HP every 100 blocks, ~5 min). Full recovery requires visiting the Hunt screen (camp rest) or using a **Health Scroll** (craftable or dropped by creatures).
