@@ -129,6 +129,10 @@ var LangEN = {
     home_install_step_2: 'Choose Add to Home screen, Install app, or a similar item.',
     home_install_step_3: 'Confirm the Viz Magic shortcut.',
     home_install_shortcut_installed: 'Viz Magic shortcut installed.',
+    home_lore_pages_label: 'Home magical pages',
+    home_magic_nature_title: 'Magical Nature',
+    home_world_legends_title: 'World Legends',
+    home_magic_spells_title: 'Magical Spells',
     home_install_shortcut_already: 'The game is already running as an installed app.',
 
     // Character
@@ -210,6 +214,7 @@ var LangEN = {
     hunt_armageddon_confirm: 'I understand that after using Armageddon I will not be able to play until my Mana fully regenerates (~5 days).',
     hunt_armageddon_launch: 'UNLEASH ARMAGEDDON !!!',
     hunt_armageddon_victory: 'ARMAGEDDON!',
+    hunt_armageddon_envy: 'Armageddon is locked: you need an Armageddon Stone, the right level, and full Mana. Envy it and grow toward it.',
     hunt_armageddon_xp: 'XP gained (Armageddon)',
 
     // Inventory
@@ -561,6 +566,7 @@ var LangEN = {
 
     // Chronicle (guild narratives)
     chronicle_narrative_guild_created: '{name} founded the guild {guild}!',
+    chronicle_narrative_guild_join_unknown: '{name} joined an unknown guild.',
     chronicle_narrative_guild_join: '{name} joined the guild {guild}.',
     chronicle_narrative_guild_war: 'War! {attacker} declared war on {defender}!',
     chronicle_narrative_siege: 'Siege! {guild} is besieging {territory}!',

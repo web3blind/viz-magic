@@ -68,6 +68,7 @@ var HomeScreen = (function() {
                         _renderActionTiles(SECONDARY_HOME_SCREENS, false) +
                     '</div>' +
                 '</section>' +
+                _renderLorePages(blockNum, t) +
                 '<section class="home-install" aria-label="' + t('home_install_shortcut') + '">' +
                     '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">\uD83D\uDCF2</span> ' + t('home_install_shortcut') + '</h2>' +
                     '<p>' + t('home_install_shortcut_text') + '</p>' +
@@ -192,6 +193,11 @@ var HomeScreen = (function() {
         return (pct > 0 ? '+' : '') + pct + '%';
     }
 
+    function _formatSeasonBonus(value) {
+        var pct = Math.round((value || 0) / 10);
+        return (pct > 0 ? '+' : '') + pct + '%';
+    }
+
     function _formatWeatherEffect(weather, t) {
         var parts = [];
         if (weather.creatureAttackMod && weather.creatureAttackMod !== 1000) {
@@ -226,6 +232,9 @@ var HomeScreen = (function() {
         var weather = WorldEvents.getCurrentWeather ? WorldEvents.getCurrentWeather(blockNum) : null;
         var skyText = sky ? (t(sky.summaryKey) + (sky.twistText ? ' ' + sky.twistText : '')) : '';
         var effect = weather ? _formatWeatherEffect(weather, t) : '';
+        var bonuses = WorldEvents.getSeasonalBonuses ? WorldEvents.getSeasonalBonuses(blockNum) : null;
+        var dominantBonus = bonuses && bonuses[season.dominant] !== undefined ? bonuses[season.dominant] : season.dominantBonus;
+        var secondaryBonus = bonuses && bonuses[season.secondary] !== undefined ? bonuses[season.secondary] : season.secondaryBonus;
         var festival = WorldEvents.getCurrentFestival ? WorldEvents.getCurrentFestival(blockNum) : null;
         var magicNews = WorldEvents.getCurrentMagicNews ? WorldEvents.getCurrentMagicNews(blockNum) : null;
         var festivalHtml = festival ? '<div class="forecast-card forecast-card-festival">' +
@@ -243,8 +252,8 @@ var HomeScreen = (function() {
                     '<p class="forecast-line">' + t(season.nameKey) + '</p>' +
                 '</div>' +
                 '<p class="forecast-kicker forecast-hunt-copy">' + t('weather_hunt_effect_sentence') + ' <span class="forecast-icon forecast-hunt-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF9</span></p>' +
-                '<p class="season-bonus">' + t('school_' + season.dominant) + ' +20%, ' +
-                    t('school_' + season.secondary) + ' +10%. ' + effect + '</p>' +
+                '<p class="season-bonus">' + t('school_' + season.dominant) + ' ' + _formatSeasonBonus(dominantBonus) + ', ' +
+                    t('school_' + season.secondary) + ' ' + _formatSeasonBonus(secondaryBonus) + '. ' + effect + '</p>' +
             '</div>' +
             '<div class="forecast-card forecast-card-sky">' +
                 '<div class="forecast-head">' +
@@ -262,6 +271,22 @@ var HomeScreen = (function() {
                 '<p class="forecast-line">' + t(magicNews.summaryKey) + (magicNews.twistText ? ' ' + magicNews.twistText : '') + '</p>' +
             '</div>' : '') +
         '</section>';
+    }
+
+    function _renderLorePages(blockNum, t) {
+        if (typeof WorldEvents === 'undefined' || !WorldEvents.getCurrentLorePages) return '';
+        var pages = WorldEvents.getCurrentLorePages(blockNum) || [];
+        if (!pages.length) return '';
+        var html = '<section class="home-lore-pages" aria-label="' + t('home_lore_pages_label') + '">';
+        for (var i = 0; i < pages.length; i++) {
+            var page = pages[i];
+            html += '<article class="home-lore-card">' +
+                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">' + page.icon + '</span> ' + t(page.titleKey) + '</h2>' +
+                '<p>' + page.text + '</p>' +
+            '</article>';
+        }
+        html += '</section>';
+        return html;
     }
 
     function _renderDailyProphecy(character, state, blockNum, t) {

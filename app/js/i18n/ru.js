@@ -129,6 +129,10 @@ var LangRU = {
     home_install_step_2: 'Выберите «Добавить на главный экран», «Установить приложение» или похожий пункт.',
     home_install_step_3: 'Подтвердите добавление ярлыка Viz Magic.',
     home_install_shortcut_installed: 'Ярлык Viz Magic установлен.',
+    home_lore_pages_label: 'Магические страницы Дома',
+    home_magic_nature_title: 'Магическая природа',
+    home_world_legends_title: 'Легенды мира',
+    home_magic_spells_title: 'Магические заклинания',
     home_install_shortcut_already: 'Игра уже открыта как установленное приложение.',
 
     // Character
@@ -210,6 +214,7 @@ var LangRU = {
     hunt_armageddon_confirm: 'Я понимаю, что после запуска Армагеддона не смогу играть, пока мана не восстановится полностью (~5 дней).',
     hunt_armageddon_launch: 'UNLEASH ARMAGEDDON !!!',
     hunt_armageddon_victory: 'АРМАГЕДДОН!',
+    hunt_armageddon_envy: 'Армагеддон пока недоступен: нужен Камень Армагеддона, подходящий уровень и полная мана. Завидуй и стремись.',
     hunt_armageddon_xp: 'Получено XP (Армагеддон)',
 
     // Inventory
@@ -561,6 +566,7 @@ var LangRU = {
 
     // Chronicle (guild narratives)
     chronicle_narrative_guild_created: '{name} основал гильдию {guild}!',
+    chronicle_narrative_guild_join_unknown: '{name} вступил в неизвестную гильдию.',
     chronicle_narrative_guild_join: '{name} вступил в гильдию {guild}.',
     chronicle_narrative_guild_war: 'Война! {attacker} объявила войну {defender}!',
     chronicle_narrative_siege: 'Осада! {guild} осаждает {territory}!',

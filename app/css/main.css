@@ -1976,3 +1976,21 @@ body,
     color: var(--color-warning);
     line-height: 1.25;
 }
+
+
+.home-lore-pages {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-sm);
+    margin: 12px 0;
+}
+.home-lore-card {
+    padding: var(--space-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.03);
+}
+.home-lore-card h2 { font-size: 1rem; margin-bottom: 6px; }
+.home-lore-card p { margin: 0; color: var(--color-text-muted); line-height: 1.45; }
+.daily-hunt-title { color: #7ee7c8; text-shadow: 0 0 10px rgba(46, 204, 113, 0.45); }
+@media (max-width: 560px) { .home-lore-pages { grid-template-columns: 1fr; } }

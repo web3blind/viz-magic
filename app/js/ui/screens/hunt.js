@@ -103,7 +103,7 @@ var HuntScreen = (function() {
         }
 
         var armageddonSectionHtml = '<div class="armageddon-section">' +
-            '<h2>&#9888;&#65039; ' + t('hunt_armageddon_title') + ' !!!' +
+            '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">&#9888;&#65039;</span> ' + t('hunt_armageddon_title') + ' !!!' +
             '<button class="help-tip-btn" aria-label="' + t('help_tip_armageddon') + '" ' +
             'title="' + t('help_tip_armageddon') + '" ' +
             'onclick="Helpers.EventBus.emit(\'navigate\', \'help\')">❓</button>' +
@@ -112,11 +112,12 @@ var HuntScreen = (function() {
 
         if (!hasStone) {
             armageddonSectionHtml += '<p class="armageddon-note">' + t('hunt_armageddon_no_stone') + '</p>';
+            armageddonSectionHtml += '<button class="btn btn-danger armageddon-locked-btn" type="button" data-armageddon-lock="stone" style="width:100%"><span class="section-icon vmagic-breathe" aria-hidden="true">&#9888;&#65039;</span> ' + t('hunt_armageddon_launch') + '</button>';
         } else {
             armageddonSectionHtml += '<label class="armageddon-label">' +
                 '<input type="checkbox" id="armageddon-confirm-cb"> ' +
                 t('hunt_armageddon_confirm') + '</label>' +
-                '<button class="btn btn-danger" id="btn-armageddon" disabled style="width:100%">' +
+                '<button class="btn btn-danger" id="btn-armageddon" disabled style="width:100%"><span class="section-icon vmagic-breathe" aria-hidden="true">&#9888;&#65039;</span> ' +
                 t('hunt_armageddon_launch') + '</button>';
         }
         armageddonSectionHtml += '</div>';
@@ -194,8 +195,18 @@ var HuntScreen = (function() {
                 armaBtn.disabled = !armaCb.checked;
             });
             armaBtn.addEventListener('click', function() {
-                if (!armaCb.checked) return;
+                if (!armaCb.checked) {
+                    Toast.info(Helpers.t('hunt_armageddon_envy'));
+                    return;
+                }
                 _doArmageddon(stoneItemId);
+            });
+        }
+        var lockedBtns = el.querySelectorAll('.armageddon-locked-btn');
+        for (var lb = 0; lb < lockedBtns.length; lb++) {
+            lockedBtns[lb].addEventListener('click', function() {
+                SoundManager.play('tap');
+                Toast.info(Helpers.t('hunt_armageddon_envy'));
             });
         }
     }

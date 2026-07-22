@@ -570,6 +570,7 @@ var ChronicleScreen = (function() {
                 return t('chronicle_narrative_guild_created', { name: name, guild: guildName });
             case 'guild.accept':
                 var gJoin = _guildDisplayName(ev0 && ev0.guildId, ev0 && ev0.guildName);
+                if (gJoin === t('chronicle_unknown_guild')) return t('chronicle_narrative_guild_join_unknown', { name: name });
                 return t('chronicle_narrative_guild_join', { name: name, guild: gJoin });
             case 'temple.offering':
                 if (ev0 && ev0.type === 'temple_offering') {
@@ -670,7 +671,8 @@ var ChronicleScreen = (function() {
             'blessing_sent': '\u2728',
             'duel_completed': '\u2694\uFE0F',
             'duel_forfeit': '\uD83C\uDFF3\uFE0F',
-            'boss.attack': '⚡'
+            'boss.attack': '⚡',
+            'guild.accept': '🛡️'
         };
         return icons[actionType] || '\uD83D\uDCDC';
     }

@@ -455,7 +455,7 @@ var WorldEvents = (function() {
         'базарные колокольчики спорят с монетами о честной цене.',
         'молотки мастерской сегодня стучат в ритме маленького парада.',
         'сумки шепчут владельцам, что лишних вещей не бывает, бывают маленькие карманы.',
-        'свечи пророчества горят ровно, и тени от них рассказывают многое...',
+        'Свечи горят ровно, и тени от них рассказывают многое...',
         'маски дракона примеряют даже те, кто уверяет, что совсем не боится.',
         'маги обмениваются короткими благословениями и длинными подозрениями.',
         'карты разворачивают сами себя, если попросить достаточно вежливо.',
@@ -479,6 +479,86 @@ var WorldEvents = (function() {
         'Хроника ставит свежую закладку и требует красивой истории.',
         'мана в воздухе звенит чаще: это знак плетения, а не бухгалтерская ошибка.',
         'небо обещает новый странный текст завтра и держит слово.'
+    ];
+
+
+    var NATURE_PAGES = [
+        { icon: '🪶', titleKey: 'home_magic_nature_title', text: 'Миграция безликих птиц приобрела угрожающие масштабы. Над территориями Запредельного Острова запрещена левитация...' },
+        { icon: '🌿', titleKey: 'home_magic_nature_title', text: 'Впервые за десять лет зацвёл вечный папоротник. Те, кто нашёл соцветия, летают над домами...' },
+        { icon: '🐚', titleKey: 'home_magic_nature_title', text: 'Водные обитатели Западной заводи выучили общий хор и теперь пугают рыбаков правильной дикцией.' },
+        { icon: '🦋', titleKey: 'home_magic_nature_title', text: 'Стеклянные бабочки снова откладывают отражения на листьях. Садовники просят не смотреть на грядки слишком честно.' },
+        { icon: '🍄', titleKey: 'home_magic_nature_title', text: 'Грибы-шептуны ушли в сезонный спор. Победивший гриб обещает назвать дождь своим учеником.' },
+        { icon: '🪷', titleKey: 'home_magic_nature_title', text: 'В болотах проснулись лилии памяти. Каждая помнит того, кто её не срывал.' },
+        { icon: '🐌', titleKey: 'home_magic_nature_title', text: 'Лесные улитки объявили неделю спешки и за день продвинулись на целую легенду.' },
+        { icon: '🦉', titleKey: 'home_magic_nature_title', text: 'Совы-счётчики пересчитали звёзды и нашли одну лишнюю, но та отказалась уходить.' },
+        { icon: '🌊', titleKey: 'home_magic_nature_title', text: 'Прибрежные волны научились возвращать вопросы, если бросить их в воду достаточно громко.' },
+        { icon: '🪨', titleKey: 'home_magic_nature_title', text: 'Камни у старой дороги меняют места, чтобы путники думали, будто дорога стала умнее.' },
+        { icon: '🌾', titleKey: 'home_magic_nature_title', text: 'Колосья на полях слушают ветер и записывают прогноз прямо на собственных стеблях.' },
+        { icon: '🦌', titleKey: 'home_magic_nature_title', text: 'Олени тумана выходят только к тем, кто умеет не смотреть слишком настойчиво.' }
+    ];
+
+    var LEGEND_PAGES = [
+        { icon: '🐉', titleKey: 'home_world_legends_title', text: 'В одно из пришествий Эфирного Дракона Цветомудрец улыбнулся и превратил его в радугу. С тех пор дракон боится радуги...' },
+        { icon: '📖', titleKey: 'home_world_legends_title', text: 'Когда на горизонте появляется Эфирный Дракон — охотники считают его крупной добычей, а писцы — поводом для новой главы...' },
+        { icon: '🌈', titleKey: 'home_world_legends_title', text: 'Старая радуга утверждает, что была мостом, пока по ней не начали ходить пророчества без сменной обуви.' },
+        { icon: '🕯️', titleKey: 'home_world_legends_title', text: 'Говорят, первая тень в Мире появилась не от света, а от слишком уверенного предсказания.' },
+        { icon: '🛡️', titleKey: 'home_world_legends_title', text: 'Щит первого послушника был так честен, что отражал не удары, а намерения. Поэтому его быстро спрятали.' },
+        { icon: '🧠', titleKey: 'home_world_legends_title', text: 'Однажды мудрец доказал, что дверь не существует. Дверь обиделась и ушла вместе со стеной.' },
+        { icon: '🔍', titleKey: 'home_world_legends_title', text: 'Лупа первого мага показывала не лицо, а следующий неудачный совет.' },
+        { icon: '🏰', titleKey: 'home_world_legends_title', text: 'Башня на краю карты растёт вниз, потому что наверху слишком много уверенных героев.' },
+        { icon: '🧵', titleKey: 'home_world_legends_title', text: 'Нить судьбы однажды запуталась в кошке, и с тех пор судьба иногда мурчит.' },
+        { icon: '🕳️', titleKey: 'home_world_legends_title', text: 'Пустая тень получила имя раньше хозяина и до сих пор этим пользуется.' },
+        { icon: '⚖️', titleKey: 'home_world_legends_title', text: 'Судья ветров вынес приговор сквозняку, но сквозняк вышел через другую дверь.' },
+        { icon: '👑', titleKey: 'home_world_legends_title', text: 'Корона без короля правила три минуты, после чего устала от ответственности.' }
+    ];
+
+    var SPELL_PAGES = [
+        { icon: '🪄', titleKey: 'home_magic_spells_title', text: 'Остановись не глядя, стой молча — и тогда обойдёт тебя порча...' },
+        { icon: '✨', titleKey: 'home_magic_spells_title', text: 'Хохотать на заре, не в угаре — золотые бразды мир подарит...' },
+        { icon: '🐦', titleKey: 'home_magic_spells_title', text: 'Замри не надысь, в птицу превратись...' },
+        { icon: '🌀', titleKey: 'home_magic_spells_title', text: 'Шагни через мысль, не тронь колокольчик, и ветер назовёт тебя родственником.' },
+        { icon: '🔮', titleKey: 'home_magic_spells_title', text: 'Если шар предсказаний молчит, положи рядом ложку. Иногда будущему нужен прибор.' },
+        { icon: '🗝️', titleKey: 'home_magic_spells_title', text: 'Ключ без замка, замок без двери — открой осторожно то, чего нет в квартире.' },
+        { icon: '🪶', titleKey: 'home_magic_spells_title', text: 'Пером по воздуху, словом по льду — пусть невозможное выйдет в саду.' },
+        { icon: '🔥', titleKey: 'home_magic_spells_title', text: 'Не жги огня, попроси свет — и тёплый ответ перепишет запрет.' },
+        { icon: '💧', titleKey: 'home_magic_spells_title', text: 'Капля назад, река вперёд — кто не забыл, тот путь найдёт.' },
+        { icon: '🌙', titleKey: 'home_magic_spells_title', text: 'Луна на ладони, сон на весу — тихо ступай по чужому часу.' },
+        { icon: '🪨', titleKey: 'home_magic_spells_title', text: 'Камень не тронь, имя скажи — пусть он решит, кому служить.' },
+        { icon: '🕯️', titleKey: 'home_magic_spells_title', text: 'Свеча не гори, но свет сохрани — тень обмани и дверь поверни.' }
+    ];
+
+    var LORE_DAILY_TAILS = [
+        'Сегодня этот слух подписан синими чернилами.',
+        'К полуночи по Москве смысл обещает стать чуть другим.',
+        'Свидетели спорят, но все требуют продолжения.',
+        'Писцы добавили пометку: не читать стоя на ковре.',
+        'Гильдии советуют относиться к этому почти серьёзно.',
+        'Хроника оставила место для возмущённых комментариев.',
+        'Один послушник уже пытается вывести из этого закон.',
+        'Базарные оценщики не согласны, но улыбаются.',
+        'Охотники проверят версию после безопасного завтрака.',
+        'Мастерская просит не повторять опыт без наковальни.',
+        'Карты мира делают вид, что знали это заранее.',
+        'Свечи молчат, значит версия временно принята.',
+        'Дракон, вероятно, отрицает причастность.',
+        'Тень автора убежала, но оставила подпись.',
+        'Наблюдатели считают это почти научным фактом.',
+        'Запредельный Остров прислал невнятное подтверждение.',
+        'Ученики записали фразу наоборот для надёжности.',
+        'Ветер унёс возражения в сторону арены.',
+        'Никто не понял, но всем стало интереснее.',
+        'Следующая проверка назначена на очень странный рассвет.',
+        'Левитация рядом разрешена только мысленно.',
+        'Сумки игроков делают вид, что это их не касается.',
+        'В хронике уже пахнет новой главой.',
+        'Старшие маги просят не смеяться слишком громко.',
+        'Младшие маги, конечно, смеются.',
+        'Пророческая пыль легла на последнюю точку.',
+        'Если текст кажется понятным, это временный эффект.',
+        'Если текст кажется бредом, значит защита работает.',
+        'Компас повернулся к нему спиной.',
+        'Лук со стрелой просит не вмешивать его без повода.',
+        'До следующей полуночи версия считается официальной.'
     ];
 
     var LEGEND_TWISTS = [
@@ -511,9 +591,17 @@ var WorldEvents = (function() {
      * @param {number} blockNum kept for API compatibility
      * @returns {Object} season definition
      */
+    function _copySeasonWithDailyVariation(season, day) {
+        var out = {};
+        for (var key in season) if (season.hasOwnProperty(key)) out[key] = season[key];
+        out.dominantBonus = season.dominantBonus + (((day * 5 + 1) % 7) - 3) * 10;
+        out.secondaryBonus = season.secondaryBonus + (((day * 3 + 2) % 5) - 2) * 10;
+        return out;
+    }
+
     function getCurrentSeason(blockNum) {
         var seasonIndex = _getMoscowSeasonIndex();
-        return SEASONS[seasonIndex];
+        return _copySeasonWithDailyVariation(SEASONS[seasonIndex], _getMoscowDayIndex());
     }
 
     /**
@@ -626,6 +714,27 @@ var WorldEvents = (function() {
 
     function getMagicNewsVariantCount() {
         return MAGIC_NEWS.length * NEWS_TWISTS.length;
+    }
+
+    function _dailyFromPool(pool, day, offset) {
+        var idx = (day + offset) % pool.length;
+        if (idx < 0) idx = 0;
+        var tailIdx = Math.floor((day + offset) / pool.length) % LORE_DAILY_TAILS.length;
+        if (tailIdx < 0) tailIdx = 0;
+        var base = pool[idx];
+        var out = {};
+        for (var key in base) if (base.hasOwnProperty(key)) out[key] = base[key];
+        out.text = base.text + ' ' + LORE_DAILY_TAILS[tailIdx];
+        return out;
+    }
+
+    function getCurrentLorePages(blockNum) {
+        var day = _getMoscowDayIndex();
+        return [
+            _dailyFromPool(NATURE_PAGES, day, 0),
+            _dailyFromPool(LEGEND_PAGES, day, 4),
+            _dailyFromPool(SPELL_PAGES, day, 8)
+        ];
     }
 
     /**
@@ -841,6 +950,7 @@ var WorldEvents = (function() {
         LEGEND_TWISTS: LEGEND_TWISTS,
         getCurrentFestival: getCurrentFestival,
         getCurrentMagicNews: getCurrentMagicNews,
+        getCurrentLorePages: getCurrentLorePages,
         getActiveEvents: getActiveEvents,
         checkEventTriggers: checkEventTriggers,
         checkWeaveSurge: checkWeaveSurge,

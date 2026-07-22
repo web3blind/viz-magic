@@ -122,10 +122,10 @@ var QuestsScreen = (function() {
         }
         var prophecy = QuestSystem.generateDailyProphecy(blockNum, character.level);
 
-        var titleClass = 'daily-quest-title' + (prophecy.type === 'explore' ? ' daily-journey-title' : '') +
+        var titleClass = 'daily-quest-title' + (prophecy.type === 'hunt' ? ' daily-hunt-title' : '') + (prophecy.type === 'explore' ? ' daily-journey-title' : '') +
             (prophecy.type === 'duel' ? ' daily-duel-title' : '') +
             (prophecy.type === 'craft' ? ' daily-workshop-title' : '');
-        var titleIcon = prophecy.type === 'duel' ? '⚔️' : (prophecy.type === 'craft' ? '🔨' : (prophecy.type === 'explore' ? '🗺️' : '🧭'));
+        var titleIcon = prophecy.type === 'duel' ? '⚔️' : (prophecy.type === 'craft' ? '🔨' : (prophecy.type === 'hunt' ? '🏹' : (prophecy.type === 'explore' ? '🗺️' : '🧭')));
 
         var html = '<div class="daily-prophecy-card">' +
             '<div class="prophecy-header">' +
@@ -215,6 +215,7 @@ var QuestsScreen = (function() {
         if (!quest) return '';
         if (quest.type === 'craft') return t('quest_type_skill');
         if (quest.type === 'hunt') return t('quest_type_agility');
+        if (quest.type === 'social' && quest.titleKey === 'quest_join_guild_title') return t('quest_type_social');
         if (quest.type === 'social') return t('quest_type_help');
         return t('quest_type_' + quest.type);
     }

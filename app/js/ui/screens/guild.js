@@ -62,7 +62,7 @@ var GuildScreen = (function() {
 
         // Your rank
         html += '<div class=\"guild-my-rank\" aria-label=\"' + t('guild_your_rank') + '\">';
-        html += GuildSystem.RANK_ICONS[myMember.rank] + ' ' + t('rank_' + myMember.rank);
+        html += '<span class="section-icon vmagic-breathe" aria-hidden="true">' + GuildSystem.RANK_ICONS[myMember.rank] + '</span> ' + t('rank_' + myMember.rank);
         html += '</div>';
 
         // Active key section (required for delegation / patronage)
@@ -138,7 +138,7 @@ var GuildScreen = (function() {
             var member = members[m];
             var icon = GuildSystem.RANK_ICONS[member.rank] || '\uD83E\uDDD9';
             html += '<li class="member-item">';
-            html += '<span class="member-icon" aria-hidden="true">' + icon + '</span>';
+            html += '<span class="member-icon vmagic-breathe" aria-hidden="true">' + icon + '</span>';
             html += '<span class="member-name">' + _esc(member.account) + '</span>';
             html += '<span class="member-rank">' + t('rank_' + member.rank) + '</span>';
             if (member.delegatedShares > 0) {
