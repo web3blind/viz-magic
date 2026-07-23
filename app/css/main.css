@@ -1296,37 +1296,89 @@ body {
     .help-screen { max-width: 640px; }
 }
 
-/* ===== Help Screen ===== */
+/* ===== Magical Guide / Help Screen ===== */
 .help-screen {
     padding: 16px;
-    max-width: 640px;
+    max-width: 760px;
     margin: 0 auto;
+}
+.help-book {
+    position: relative;
+    overflow: hidden;
+    padding: 18px 18px 20px 30px;
+    border: 1px solid rgba(255, 216, 88, 0.35);
+    border-radius: 18px 10px 10px 18px;
+    background:
+        radial-gradient(circle at 18% 0%, rgba(255, 216, 88, 0.12), transparent 32%),
+        linear-gradient(90deg, rgba(80, 45, 18, 0.5) 0, rgba(80, 45, 18, 0.18) 18px, transparent 42px),
+        var(--color-surface, #161b22);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28), inset 0 0 26px rgba(255, 216, 88, 0.05);
+}
+.help-book-binding {
+    position: absolute;
+    left: 12px;
+    top: 18px;
+    bottom: 18px;
+    width: 6px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #8b5a24, #f0c040, #6a3f18);
+    box-shadow: 0 0 16px rgba(240, 192, 64, 0.42);
+}
+.help-book-cover {
+    padding: 8px 8px 14px;
+    border-bottom: 1px solid rgba(255, 216, 88, 0.2);
+    margin-bottom: 16px;
 }
 .help-screen h1 {
     margin-bottom: 8px;
 }
-.help-intro {
+.help-intro,
+.help-lore-intro {
     color: var(--color-text-muted, #8b949e);
-    margin-bottom: 24px;
     font-size: 0.95em;
+    line-height: 1.5;
 }
-.help-section {
-    margin-bottom: 20px;
+.help-intro { margin: 0; }
+.help-book-chapter {
+    margin: 16px 0 10px;
+    font-size: 1.05rem;
+    color: var(--color-accent, #f0c040);
+}
+.help-practical-pages,
+.help-lore-pages {
+    display: grid;
+    gap: 12px;
+}
+.help-section,
+.help-lore-page {
+    margin-bottom: 0;
     padding: 14px 16px;
-    background: var(--color-surface, #161b22);
-    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.045), rgba(255,216,88,0.035));
+    border-radius: 12px;
+    border: 1px solid rgba(255, 216, 88, 0.18);
     border-left: 3px solid var(--color-accent, #f0c040);
 }
-.help-section h2 {
+.help-section h3,
+.help-lore-page h3 {
     font-size: 1em;
     margin: 0 0 6px 0;
     color: var(--color-accent, #f0c040);
 }
-.help-section p {
+.help-section p,
+.help-lore-page p {
     margin: 0;
     font-size: 0.9em;
     line-height: 1.5;
     color: var(--color-text, #e6edf3);
+}
+.help-lore-page-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+@media (max-width: 680px) {
+    .help-lore-page-grid { grid-template-columns: 1fr; }
+    .help-book { padding-left: 26px; }
 }
 
 /* Tooltip / hint button */
@@ -1911,6 +1963,12 @@ body,
     @keyframes vmagic-soft-breathe { 0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0 rgba(255,216,88,0)); } 50% { transform: translateY(-1px) scale(1.035); filter: drop-shadow(0 0 7px rgba(255,216,88,0.35)); } }
     @keyframes vmagic-tile-shimmer { 0%, 100% { transform: translateY(0) scale(1); filter: saturate(1); } 50% { transform: translateY(-3px) scale(1.08); filter: saturate(1.45) drop-shadow(0 0 10px rgba(88,166,255,0.5)); } }
     .recipe-icon, .craft-icon-anim, .vmagic-breathe, .screen-title-icon, .section-icon, .prophecy-icon, .nav-icon, .region-icon, .char-icon { display: inline-block; animation: vmagic-rune-pulse 2.4s ease-in-out infinite; }
+    .screen-title-icon { animation-duration: 2.8s; animation-delay: -0.35s; }
+    .section-icon:nth-child(odd), .vmagic-breathe:nth-child(odd) { animation-delay: -0.75s; }
+    .section-icon:nth-child(even), .vmagic-breathe:nth-child(even) { animation-duration: 3.1s; animation-delay: -1.2s; }
+    .help-page:nth-child(3n+1) .section-icon, .help-lore-page:nth-child(3n+1) .section-icon { animation-delay: -0.45s; }
+    .help-page:nth-child(3n+2) .section-icon, .help-lore-page:nth-child(3n+2) .section-icon { animation-delay: -1.05s; animation-duration: 2.9s; }
+    .help-page:nth-child(3n) .section-icon, .help-lore-page:nth-child(3n) .section-icon { animation-delay: -1.65s; animation-duration: 3.3s; }
     .boss-icon-large, .boss-alert-icon { display: inline-block; animation: vmagic-boss-breathe 3.0s ease-in-out infinite; }
     .magical-forecast .forecast-icon { display: inline-block; animation: vmagic-weather-drift 2.8s ease-in-out infinite; }
     .magical-forecast .forecast-hunt-icon { animation: vmagic-soft-breathe 4.2s ease-in-out infinite; }

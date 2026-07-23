@@ -1,5 +1,5 @@
 /**
- * Viz Magic — Help / Game Guide Screen
+ * Viz Magic — Magical Guide Screen
  */
 var HelpScreen = (function() {
     'use strict';
@@ -28,20 +28,52 @@ var HelpScreen = (function() {
             { key: 'blockchain',  icon: '\u26D3\uFE0F' }
         ];
 
-        var html = '<div class="help-screen">' +
-            '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">❓</span> ' + t('help_title') + '</h1>' +
-            '<p class="help-intro">' + t('help_intro') + '</p>';
+        var html = '<div class="help-screen magical-guide-screen">' +
+            '<article class="help-book" aria-labelledby="magical-guide-title">' +
+                '<div class="help-book-binding" aria-hidden="true"></div>' +
+                '<header class="help-book-cover">' +
+                    '<h1 id="magical-guide-title"><span class="screen-title-icon vmagic-breathe" aria-hidden="true">📖</span> ' + t('help_title') + '</h1>' +
+                    '<p class="help-intro">' + t('help_intro') + '</p>' +
+                '</header>' +
+                '<section class="help-practical-pages" aria-label="' + t('help_practical_label') + '">' +
+                    '<h2 class="help-book-chapter"><span class="section-icon vmagic-breathe" aria-hidden="true">🔖</span> ' + t('help_practical_title') + '</h2>';
 
         for (var i = 0; i < sections.length; i++) {
             var s = sections[i];
-            html += '<section class="help-section" aria-label="' + t('help_section_' + s.key) + '">' +
-                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">' + s.icon + '</span> ' + t('help_section_' + s.key) + '</h2>' +
+            html += '<section class="help-section help-page" aria-label="' + t('help_section_' + s.key) + '">' +
+                '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">' + s.icon + '</span> ' + t('help_section_' + s.key) + '</h3>' +
                 '<p>' + t('help_' + s.key + '_text') + '</p>' +
                 '</section>';
         }
 
-        html += '</div>';
+        html += '</section>' + _renderLorePages(t) + '</article></div>';
         el.innerHTML = html;
+    }
+
+    function _renderLorePages(t) {
+        if (typeof WorldEvents === 'undefined' || !WorldEvents.getCurrentLorePages) return '';
+        var state = (typeof StateEngine !== 'undefined' && StateEngine.getState) ? StateEngine.getState() : null;
+        var blockNum = state && state.headBlock ? state.headBlock : 0;
+        var pages = WorldEvents.getCurrentLorePages(blockNum) || [];
+        if (!pages.length) return '';
+
+        var html = '<section class="help-lore-pages" aria-label="' + t('help_lore_label') + '">' +
+            '<h2 class="help-book-chapter"><span class="section-icon vmagic-breathe" aria-hidden="true">✨</span> ' + t('help_lore_title') + '</h2>' +
+            '<p class="help-lore-intro">' + t('help_lore_intro') + '</p>' +
+            '<div class="help-lore-page-grid">';
+
+        for (var i = 0; i < pages.length; i++) {
+            var page = pages[i];
+            var title = t(page.titleKey);
+            var text = page.text || '';
+            html += '<article class="help-lore-page">' +
+                '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">' + page.icon + '</span> ' + title + '</h3>' +
+                '<p>' + Helpers.escapeHtml(text) + '</p>' +
+            '</article>';
+        }
+
+        html += '</div></section>';
+        return html;
     }
 
     return { render: render };

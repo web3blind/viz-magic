@@ -351,7 +351,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v82/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v8[23]/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/registration\.update\(\)/.test(read('app/js/ui/app.js')), 'app should ask the browser to check for the newest service worker after registration');
@@ -407,7 +407,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v82/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v8[23]/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -479,7 +479,7 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/nav.js\?v=20260716a/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260720g/.test(indexHtml), 'leaderboard icon motion must be cache-busted');
   assert.ok(/world-events.js\?v=20260720g/.test(indexHtml), 'world events news and festival copy must be cache-busted');
-  assert.ok(/main.css\?v=20260720g/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/main.css\?v=2026072[02][ag]/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/prefers-reduced-motion: no-preference/.test(mainCss) && /vmagic-rune-pulse/.test(mainCss), 'ambient animation must be lightweight and respect reduced-motion');
   assert.ok(/season_effect_prefix/.test(homeJs + ruJs + enJs), 'home forecast should explain gameplay effect');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
@@ -659,7 +659,7 @@ test('hunt headings and help use updated thematic icons', function () {
   assert.ok(/hunt.js\?v=20260720g/.test(indexHtml), 'hunt screen should be cache-busted for heading icons');
   assert.ok(/vmagic-breathe[\s\S]*🐾[\s\S]*hunt_choose_creature/.test(huntJs), 'hunt creature heading should have a thematic tracking icon');
   assert.ok(/vmagic-breathe[\s\S]*🪄[\s\S]*hunt_choose_spell/.test(huntJs), 'hunt spell heading should use a magic wand icon');
-  assert.ok(/help.js\?v=20260719a/.test(indexHtml), 'help screen should be cache-busted for hunt icon');
+  assert.ok(/help.js\?v=202607(19|22)a/.test(indexHtml), 'help screen should be cache-busted for hunt icon');
   assert.ok(/key: 'hunt'[\s\S]*\\uD83C\\uDFF9/.test(helpJs), 'help Hunt section should use bow icon, not arena swords');
 });
 
@@ -840,7 +840,7 @@ test('Denis v70 polish keeps motion icons, honest low-mana hunt, and chronicle n
   assert.ok(/temple-deity-copy[\s\S]*vmagic-breathe/.test(templeJs), 'temple deity icons should breathe');
   assert.ok(/screen-title-icon section-icon vmagic-breathe leaderboard-title-icon/.test(leaderboardJs), 'leaderboard title icon should visibly breathe');
   assert.ok(/leaderboard_hunts:\s*'Охота'/.test(ruJs), 'leaderboard Hunts header should keep the final Russian letter');
-  assert.ok(/help_title/.test(helpJs) && /❓/.test(helpJs), 'Help title should include the help button icon');
+  assert.ok(/help_title/.test(helpJs) && /[❓📖]/.test(helpJs), 'Help title should include a visible guide icon');
   assert.ok(/spellTooWeak/.test(huntJs) && /MIN_HUNT_COST/.test(huntJs) && /hunt_spell_too_weak/.test(huntJs + ruJs + enJs), 'hunt should guard against any combat spell below the 1% minimum');
   ['stone_wall', 'firebolt', 'shadow_step', 'binding_vine'].forEach(function(id) {
     assert.ok(new RegExp(id + '[\\s\\S]*manaCost: 100').test(spellsJs), id + ' should be a usable 1% starter combat spell, not a 0.1% trap');
@@ -887,7 +887,7 @@ test('v81 feedback polish keeps home, quest, settings, and modal details tidy', 
 test('v82 Denis feedback polish is explicit and cache-busted', function () {
   const swJsV82 = read('app/sw.js');
   const settingsJsV82 = read('app/js/ui/screens/settings.js');
-  assert.ok(/viz-magic-v82/.test(swJsV82), 'service worker should use v82 cache');
+  assert.ok(/viz-magic-v8[23]/.test(swJsV82), 'service worker should use at least v82 cache');
   assert.ok(/home\.js\?v=20260720g/.test(indexHtml), 'Home should be cache-busted for v82');
   assert.ok(/world-events\.js\?v=20260720g/.test(indexHtml), 'world events should be cache-busted for v82');
   assert.ok(/hunt\.js\?v=20260720g/.test(indexHtml), 'Hunt should be cache-busted for Armageddon lock feedback');
@@ -907,4 +907,23 @@ test('v82 Denis feedback polish is explicit and cache-busted', function () {
   assert.ok(/chronicle_narrative_guild_join_unknown/.test(chronicleJs + ruJs), 'unknown guild join copy should be grammatically correct');
   assert.ok(/settings_music/.test(settingsJsV82) && /🎵/.test(settingsJsV82), 'music setting should have a breathing notes icon');
   assert.ok(/settings_haptics/.test(settingsJsV82) && /📳/.test(settingsJsV82), 'haptics setting should have a breathing vibration icon');
+});
+
+
+test('magical guide replaces extra magical pages tab without shuffling practical help', function () {
+  const swJsV83 = read('app/sw.js');
+  assert.ok(/nav_help:\s*'Магический справочник'/.test(ruJs), 'RU nav should say Magical Guide');
+  assert.ok(/help_title:\s*'Магический справочник'/.test(ruJs), 'RU title should say Magical Guide');
+  assert.ok(/nav_help:\s*'Magical Guide'/.test(enJs), 'EN nav should say Magical Guide');
+  assert.ok(/help_title:\s*'Magical Guide'/.test(enJs), 'EN title should say Magical Guide');
+  assert.ok(/help-book/.test(helpJs) && /help-book-binding/.test(helpJs), 'help screen should render as a magic book');
+  assert.ok(/help-practical-pages/.test(helpJs) && /help-lore-pages/.test(helpJs), 'guide should contain stable practical pages and optional lore pages');
+  assert.ok(/help_lore_intro/.test(helpJs + ruJs + enJs), 'guide lore intro copy should exist');
+  assert.ok(/WorldEvents\.getCurrentLorePages/.test(helpJs), 'lore pages may rotate inside the guide');
+  assert.ok(/var sections = \[[\s\S]*mana[\s\S]*hp[\s\S]*quests[\s\S]*hunt[\s\S]*armageddon/.test(helpJs), 'practical help order should remain fixed in source');
+  assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
+  assert.ok(/help\.js\?v=20260722a/.test(indexHtml), 'Help should be cache-busted for guide redesign');
+  assert.ok(/main\.css\?v=20260722a/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
+  assert.ok(/viz-magic-v83/.test(swJsV83), 'service worker should use v83 cache');
+  assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
