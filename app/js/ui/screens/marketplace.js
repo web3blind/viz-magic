@@ -531,7 +531,10 @@ var MarketplaceScreen = (function() {
             mana_potion: '⚡',
             fire_dust: '✦',
             sparkdust: '✨',
-            shadow_shard: '◈'
+            shadow_shard: '◈',
+            thorn_essence: '🌵',
+            ancient_shard: '🏺',
+            spirit_tunic: '👘'
         };
         if (byType[item.type]) return byType[item.type];
         var template = ItemSystem.getItemTemplate(item.type);

@@ -112,12 +112,12 @@ var HuntScreen = (function() {
 
         if (!hasStone) {
             armageddonSectionHtml += '<p class="armageddon-note">' + t('hunt_armageddon_no_stone') + '</p>';
-            armageddonSectionHtml += '<button class="btn btn-danger armageddon-locked-btn" type="button" data-armageddon-lock="stone" style="width:100%"><span class="section-icon vmagic-breathe" aria-hidden="true">&#9888;&#65039;</span> <span class="armageddon-explosion-icon" aria-hidden="true">💥</span> ' + t('hunt_armageddon_launch') + '</button>';
+            armageddonSectionHtml += '<button class="btn btn-danger armageddon-locked-btn" type="button" data-armageddon-lock="stone" style="width:100%"><span class="armageddon-explosion-icon" aria-hidden="true">💥</span> ' + t('hunt_armageddon_launch') + '</button>';
         } else {
             armageddonSectionHtml += '<label class="armageddon-label">' +
                 '<input type="checkbox" id="armageddon-confirm-cb"> ' +
                 t('hunt_armageddon_confirm') + '</label>' +
-                '<button class="btn btn-danger" id="btn-armageddon" disabled style="width:100%"><span class="section-icon vmagic-breathe" aria-hidden="true">&#9888;&#65039;</span> <span class="armageddon-explosion-icon" aria-hidden="true">💥</span> ' +
+                '<button class="btn btn-danger" id="btn-armageddon" disabled style="width:100%"><span class="armageddon-explosion-icon" aria-hidden="true">💥</span> ' +
                 t('hunt_armageddon_launch') + '</button>';
         }
         armageddonSectionHtml += '</div>';

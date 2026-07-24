@@ -174,7 +174,7 @@ var HomeScreen = (function() {
             var effectBadge = evt.type === 'weave_surge' ? '<span class="event-effect-badge">⚡ Мана ×' + (evt.manaRegenMultiplier || 2) + '</span>' : '';
             html += '<' + tag + ' class="event-banner-item event-banner-' + evt.type + (target ? ' event-banner-button' : '') + '"' + attrs + ' aria-label="' +
                 t(evt.nameKey) + (desc ? '. ' + desc : '') + ' ' + t('event_time_left', {time: timeStr}) + '">' +
-                '<span class="event-icon" aria-hidden="true">' + evt.icon + '</span>' +
+                '<span class="event-icon vmagic-breathe" aria-hidden="true">' + evt.icon + '</span>' +
                 '<span class="event-copy">' +
                     '<span class="event-name">' + t(evt.nameKey) + '</span>' +
                     (desc ? '<span class="event-desc">' + desc + '</span>' : '') +
@@ -207,11 +207,27 @@ var HomeScreen = (function() {
             parts.push(t('weather_dynamic_defense') + ' ' + _formatSignedPercent(weather.playerDefenseMod));
         }
         if (!parts.length) return t(weather.effectKey);
-        return t('weather_dynamic_effect_prefix') + ': ' + parts.join(', ') + '.';
+        return parts.join(', ') + '.';
+    }
+
+    function _formatWeatherReport(season, dominantBonus, secondaryBonus, weather, t) {
+        var daySeed = (typeof WorldEvents !== 'undefined' && WorldEvents.getMoscowDayIndex) ? WorldEvents.getMoscowDayIndex() : 0;
+        var warmth = 16 + Math.round((dominantBonus || 0) / 10) + (daySeed % 5);
+        var water = Math.max(0, 35 + Math.round((secondaryBonus || 0) / 10) + ((daySeed * 3) % 12));
+        var wind = 3 + ((daySeed + (weather && weather.creatureAttackMod ? weather.creatureAttackMod : 0)) % 10);
+        var rainy = weather && /rain|swamp|fog|snow|hail|thunder|lightning|storm|mushroom|grass/.test(weather.id || '');
+        return t('weather_report_air') + ' +' + warmth + '; ' +
+            t('weather_report_water') + ' +' + water + '; ' +
+            t('weather_report_wind') + ' ' + wind + ' ' + t('weather_report_wind_unit') + ', ' +
+            (rainy ? t('weather_report_light_rain') : t('weather_report_no_rain')) + '.';
     }
 
     function _renderBossAlert(state, blockNum, t) {
+        var bossWindow = (typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) ? WorldEvents.checkWorldBossWindow(blockNum) : null;
+        if (!bossWindow || !bossWindow.active) return '';
         if (!state.worldBoss || !state.worldBoss.active || state.worldBoss.defeated) return '';
+        if (state.worldBoss.endBlock && blockNum > state.worldBoss.endBlock) return '';
+        if (bossWindow.spawnBlock && state.worldBoss.spawnBlock && state.worldBoss.spawnBlock !== bossWindow.spawnBlock) return '';
 
         var bossStatus = (typeof WorldBoss !== 'undefined') ? WorldBoss.getBossStatus(state.worldBoss, '', blockNum) : null;
         if (!bossStatus || !bossStatus.active) return '';
@@ -252,9 +268,8 @@ var HomeScreen = (function() {
                     '<span class="forecast-icon forecast-weather-icon vmagic-breathe" aria-hidden="true">\uD83E\uDDED</span>' +
                     '<p class="forecast-line">' + t(season.nameKey) + '</p>' +
                 '</div>' +
-                '<p class="forecast-kicker forecast-hunt-copy">' + t('weather_hunt_effect_sentence') + ' <span class="forecast-icon forecast-hunt-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF9</span></p>' +
-                '<p class="season-bonus">' + t('school_' + season.dominant) + ' ' + _formatSeasonBonus(dominantBonus) + ', ' +
-                    t('school_' + season.secondary) + ' ' + _formatSeasonBonus(secondaryBonus) + '. ' + effect + '</p>' +
+                '<p class="forecast-kicker forecast-hunt-copy"><span class="forecast-icon forecast-hunt-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF9</span> ' + t('weather_hunt_effect_sentence') + '</p>' +
+                '<p class="season-bonus">' + _formatWeatherReport(season, dominantBonus, secondaryBonus, weather, t) + ' ' + t('weather_dynamic_effect_prefix') + ': ' + effect + '</p>' +
             '</div>' +
             '<div class="forecast-card forecast-card-sky">' +
                 '<div class="forecast-head">' +

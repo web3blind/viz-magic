@@ -83,7 +83,7 @@ var SettingsScreen = (function() {
                 '<section class="settings-section" aria-label="' + t('settings_sound') + '">' +
                     '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">🔊</span> ' + t('settings_sound') + '</h2>' +
                     _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume) +
-                    _renderSlider('music-volume', '<span class=\"section-icon vmagic-breathe\" aria-hidden=\"true\">🎵</span> ' + t('settings_music'), musicVolume) +
+                    _renderSlider('music-volume', t('settings_music'), musicVolume) +
                     _renderToggle('narrator-toggle', t('narrator_toggle'), narratorEnabled) +
                     _renderSelect('narrator-voice-gender', t('narrator_voice_gender'), [
                         { value: 'male', label: t('narrator_voice_male') },
@@ -104,7 +104,7 @@ var SettingsScreen = (function() {
                             '<option value="rich">' + t('settings_density_rich') + '</option>' +
                         '</select>' +
                     '</div>' +
-                    _renderToggle('haptics-toggle', '<span class=\"section-icon vmagic-breathe\" aria-hidden=\"true\">📳</span> ' + t('settings_haptics'), true) +
+                    _renderToggle('haptics-toggle', t('settings_haptics'), true) +
                 '</section>' +
 
                 // Accessibility

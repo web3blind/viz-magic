@@ -550,7 +550,6 @@ var WorldEvents = (function() {
         'Охотники проверят версию после безопасного завтрака.',
         'Мастерская просит не повторять опыт без наковальни.',
         'Карты мира делают вид, что знали это заранее.',
-        'Свечи молчат, значит версия временно принята.',
         'Дракон, вероятно, отрицает причастность.',
         'Тень автора убежала, но оставила подпись.',
         'Наблюдатели считают это почти научным фактом.',
@@ -958,6 +957,7 @@ var WorldEvents = (function() {
     return {
         SEASONS: SEASONS,
         WORLD_DAYS: WORLD_DAYS,
+        getMoscowDayIndex: _getMoscowDayIndex,
         getCurrentWorldDay: getCurrentWorldDay,
         getCurrentSeason: getCurrentSeason,
         getSeasonalBonuses: getSeasonalBonuses,

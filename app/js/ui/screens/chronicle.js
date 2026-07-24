@@ -472,7 +472,9 @@ var ChronicleScreen = (function() {
     }
 
     function _getAuthorPrefixIcon(entry, text) {
+        var ev0 = (entry && entry.events && entry.events.length > 0) ? entry.events[0] : null;
         if (_isHuntDefeatEntry(entry, text)) return '\u2694\uFE0F';
+        if (ev0 && ev0.type === 'hunt_victory') return '\u2694\uFE0F';
         return '';
     }
 
@@ -661,8 +663,8 @@ var ChronicleScreen = (function() {
     function _getActionIcon(actionType) {
         var icons = {
             'chronicle_post': '\uD83D\uDCDD',
-            'hunt': '🏹',
-            'hunt.armageddon': '🏹',
+            'hunt': '\u2694\uFE0F',
+            'hunt.armageddon': '\u2694\uFE0F',
             'hunt_victory': '\uD83C\uDFC6',
             'hunt_defeat': '\u2694\uFE0F',
             'character_created': '\u2728',

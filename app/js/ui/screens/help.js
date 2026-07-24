@@ -11,7 +11,6 @@ var HelpScreen = (function() {
 
         var sections = [
             { key: 'mana',        icon: '\u2728' },
-            { key: 'world_days',  icon: '\uD83C\uDF0C' },
             { key: 'hp',          icon: '\u2764\uFE0F' },
             { key: 'quests',      icon: '\uD83D\uDCDC' },
             { key: 'hunt',        icon: '\uD83C\uDFF9' },
@@ -52,29 +51,15 @@ var HelpScreen = (function() {
     }
 
     function _renderLorePages(t) {
-        if (typeof WorldEvents === 'undefined' || !WorldEvents.getCurrentLorePages) return '';
-        var state = (typeof StateEngine !== 'undefined' && StateEngine.getState) ? StateEngine.getState() : null;
-        var blockNum = state && state.headBlock ? state.headBlock : 0;
-        var pages = WorldEvents.getCurrentLorePages(blockNum) || [];
-        if (!pages.length) return '';
-
-        var html = '<section class="help-lore-pages" aria-label="' + t('help_lore_label') + '">' +
+        return '<section class="help-lore-pages" aria-label="' + t('help_lore_label') + '">' +
             '<h2 class="help-book-chapter"><span class="section-icon vmagic-breathe" aria-hidden="true">✨</span> ' + t('help_lore_title') + '</h2>' +
             '<p class="help-lore-intro">' + t('help_lore_intro') + '</p>' +
-            '<div class="help-lore-page-grid">';
-
-        for (var i = 0; i < pages.length; i++) {
-            var page = pages[i];
-            var title = t(page.titleKey);
-            var text = page.text || '';
-            html += '<article class="help-lore-page">' +
-                '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">' + page.icon + '</span> ' + title + '</h3>' +
-                '<p>' + Helpers.escapeHtml(text) + '</p>' +
-            '</article>';
-        }
-
-        html += '</div></section>';
-        return html;
+            '<div class="help-lore-page-grid">' +
+                '<article class="help-lore-page">' +
+                    '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🌌</span> ' + t('help_section_world_days') + '</h3>' +
+                    '<p>' + t('help_world_days_text') + '</p>' +
+                '</article>' +
+            '</div></section>';
     }
 
     return { render: render };
