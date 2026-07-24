@@ -352,7 +352,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v8[2-5]/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v8[2-6]/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/registration\.update\(\)/.test(read('app/js/ui/app.js')), 'app should ask the browser to check for the newest service worker after registration');
@@ -408,7 +408,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v8[2-5]/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v8[2-6]/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -481,7 +481,7 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/nav.js\?v=20260716a/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260720g/.test(indexHtml), 'leaderboard icon motion must be cache-busted');
   assert.ok(/world-events.js\?v=20260724b/.test(indexHtml), 'world events news and festival copy must be cache-busted');
-  assert.ok(/main.css\?v=20260724b/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/main.css\?v=20260724c/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/prefers-reduced-motion: no-preference/.test(mainCss) && /vmagic-rune-pulse/.test(mainCss), 'ambient animation must be lightweight and respect reduced-motion');
   assert.ok(/weather_report_air/.test(homeJs + ruJs + enJs), 'home forecast should render readable air/water/wind weather instead of raw school percentages');
   assert.ok(/weather_dynamic_effect_prefix: 'Влияние на охоту'/.test(ruJs), 'hunt influence copy should replace the old hunt changes phrase');
@@ -502,7 +502,10 @@ test('player-requested icon motion and Armageddon warning controls exist', funct
   assert.ok(/settings_icon_motion_sparkle/.test(settingsJs + ruJs + enJs), 'settings should expose staggered sparkle option');
   assert.ok(/data-icon-motion/.test(settingsJs + mainCss), 'icon motion mode should use a persistent DOM hook');
   assert.ok(/body\[data-icon-motion=\"off\"\][\s\S]*animation:\s*none !important/.test(mainCss), 'off mode should stop icon animation');
-  assert.ok(/body\[data-icon-motion=\"sync\"\][\s\S]*animation-delay:\s*0s/.test(mainCss), 'sync mode should remove staggered delays');
+  assert.ok(/body\[data-icon-motion=\"sync\"\][\s\S]*animation-delay:\s*0s !important[\s\S]*animation-duration:\s*2\.4s !important/.test(mainCss), 'sync mode should force every icon class to one shared timing');
+  assert.ok(/body\[data-icon-motion=\"sync\"][\s\S]*\.boss-alert-icon[\s\S]*\.magical-forecast \.forecast-icon[\s\S]*\.action-tile \.tile-icon/.test(mainCss), 'sync mode should cover boss, forecast, and action tile icons too');
+  assert.ok(/body\[data-icon-motion=\"sparkle\"][\s\S]*\.boss-alert-icon[\s\S]*animation-delay:\s*-1\.05s !important[\s\S]*\.magical-forecast \.forecast-icon[\s\S]*animation-delay:\s*-1\.65s !important/.test(mainCss), 'sparkle mode should give non-list icon families different delays too');
+  assert.ok(/body\[data-icon-motion=\"sparkle\"][\s\S]*\.action-tile:nth-child\(3n\+1\)[\s\S]*\.forecast-card:nth-child\(3n\+2\)[\s\S]*\.chronicle-entry:nth-child\(3n\)/.test(mainCss), 'sparkle mode should stagger icons across common repeated UI blocks');
   assert.ok(/settings_reduced_motion_hint/.test(settingsJs + ruJs + enJs), 'reduced motion should explain its broader purpose');
   assert.ok(/armageddon-explosion-icon/.test(huntJs + mainCss), 'Armageddon button should include the strict explosion warning marker');
   assert.ok(!/btn-armageddon[\s\S]*&#9888;&#65039;[\s\S]*armageddon-explosion-icon/.test(huntJs), 'Armageddon button should not duplicate exclamation warning beside explosion');
@@ -919,7 +922,7 @@ test('v81 feedback polish keeps home, quest, settings, and modal details tidy', 
 test('v82 Denis feedback polish is explicit and cache-busted', function () {
   const swJsV82 = read('app/sw.js');
   const settingsJsV82 = read('app/js/ui/screens/settings.js');
-  assert.ok(/viz-magic-v8[2-5]/.test(swJsV82), 'service worker should use at least v82 cache');
+  assert.ok(/viz-magic-v8[2-6]/.test(swJsV82), 'service worker should use at least v82 cache');
   assert.ok(/home\.js\?v=20260724b/.test(indexHtml), 'Home should be cache-busted for v82');
   assert.ok(/world-events\.js\?v=20260724b/.test(indexHtml), 'world events should be cache-busted for v82');
   assert.ok(/hunt\.js\?v=20260724b/.test(indexHtml), 'Hunt should be cache-busted for Armageddon lock feedback');
@@ -955,7 +958,7 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(/var sections = \[[\s\S]*mana[\s\S]*hp[\s\S]*quests[\s\S]*hunt[\s\S]*armageddon/.test(helpJs), 'practical help order should remain fixed in source');
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260724b/.test(indexHtml), 'Help should be cache-busted for guide redesign');
-  assert.ok(/main\.css\?v=20260724b/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v85/.test(swJsV83), 'service worker should use the current v85 cache');
+  assert.ok(/main\.css\?v=20260724c/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
+  assert.ok(/viz-magic-v86/.test(swJsV83), 'service worker should use the current v86 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
