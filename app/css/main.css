@@ -1701,17 +1701,20 @@ body,
 }
 
 .forecast-card {
+    position: relative;
     min-width: 0;
     padding: var(--space-sm);
     border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-primary);
     border-radius: var(--radius-sm);
-    background: rgba(255,255,255,0.03);
+    background: var(--color-surface);
 }
 
 .forecast-card-hunt-summary {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    padding-right: 3rem;
 }
 
 .forecast-icon {
@@ -1737,7 +1740,10 @@ body,
 }
 
 .forecast-hunt-icon {
-    margin: 2px 0 0;
+    position: absolute;
+    top: var(--space-sm);
+    right: var(--space-sm);
+    margin: 0;
 }
 
 .active-key-icon {
@@ -1964,17 +1970,53 @@ body,
     @keyframes vmagic-tile-shimmer { 0%, 100% { transform: translateY(0) scale(1); filter: saturate(1); } 50% { transform: translateY(-3px) scale(1.08); filter: saturate(1.45) drop-shadow(0 0 10px rgba(88,166,255,0.5)); } }
     .recipe-icon, .craft-icon-anim, .vmagic-breathe, .screen-title-icon, .section-icon, .prophecy-icon, .nav-icon, .region-icon, .char-icon { display: inline-block; animation: vmagic-rune-pulse 2.4s ease-in-out infinite; }
     .screen-title-icon { animation-duration: 2.8s; animation-delay: -0.35s; }
-    .section-icon:nth-child(odd), .vmagic-breathe:nth-child(odd) { animation-delay: -0.75s; }
-    .section-icon:nth-child(even), .vmagic-breathe:nth-child(even) { animation-duration: 3.1s; animation-delay: -1.2s; }
-    .help-page:nth-child(3n+1) .section-icon, .help-lore-page:nth-child(3n+1) .section-icon { animation-delay: -0.45s; }
-    .help-page:nth-child(3n+2) .section-icon, .help-lore-page:nth-child(3n+2) .section-icon { animation-delay: -1.05s; animation-duration: 2.9s; }
-    .help-page:nth-child(3n) .section-icon, .help-lore-page:nth-child(3n) .section-icon { animation-delay: -1.65s; animation-duration: 3.3s; }
+    body[data-icon-motion="sparkle"] .section-icon:nth-child(odd), body[data-icon-motion="sparkle"] .vmagic-breathe:nth-child(odd) { animation-delay: -0.75s; }
+    body[data-icon-motion="sparkle"] .section-icon:nth-child(even), body[data-icon-motion="sparkle"] .vmagic-breathe:nth-child(even) { animation-duration: 3.1s; animation-delay: -1.2s; }
+    body[data-icon-motion="sparkle"] .help-page:nth-child(3n+1) .section-icon, body[data-icon-motion="sparkle"] .help-lore-page:nth-child(3n+1) .section-icon { animation-delay: -0.45s; }
+    body[data-icon-motion="sparkle"] .help-page:nth-child(3n+2) .section-icon, body[data-icon-motion="sparkle"] .help-lore-page:nth-child(3n+2) .section-icon { animation-delay: -1.05s; animation-duration: 2.9s; }
+    body[data-icon-motion="sparkle"] .help-page:nth-child(3n) .section-icon, body[data-icon-motion="sparkle"] .help-lore-page:nth-child(3n) .section-icon { animation-delay: -1.65s; animation-duration: 3.3s; }
+    body[data-icon-motion="sync"] .recipe-icon, body[data-icon-motion="sync"] .craft-icon-anim, body[data-icon-motion="sync"] .vmagic-breathe, body[data-icon-motion="sync"] .screen-title-icon, body[data-icon-motion="sync"] .section-icon, body[data-icon-motion="sync"] .prophecy-icon, body[data-icon-motion="sync"] .nav-icon, body[data-icon-motion="sync"] .region-icon, body[data-icon-motion="sync"] .char-icon { animation-delay: 0s; animation-duration: 2.4s; }
     .boss-icon-large, .boss-alert-icon { display: inline-block; animation: vmagic-boss-breathe 3.0s ease-in-out infinite; }
     .magical-forecast .forecast-icon { display: inline-block; animation: vmagic-weather-drift 2.8s ease-in-out infinite; }
     .magical-forecast .forecast-hunt-icon { animation: vmagic-soft-breathe 4.2s ease-in-out infinite; }
     .vmagic-soft-icon { display: inline-block; animation: vmagic-soft-breathe 4.0s ease-in-out infinite; }
     .leaderboard-title-icon { display: inline-block; animation: vmagic-rune-pulse 2.4s ease-in-out infinite !important; }
     .action-tile .tile-icon { display: inline-block; animation: vmagic-tile-shimmer 4.0s ease-in-out infinite; }
+}
+
+body[data-icon-motion="off"] .recipe-icon,
+body[data-icon-motion="off"] .craft-icon-anim,
+body[data-icon-motion="off"] .vmagic-breathe,
+body[data-icon-motion="off"] .screen-title-icon,
+body[data-icon-motion="off"] .section-icon,
+body[data-icon-motion="off"] .prophecy-icon,
+body[data-icon-motion="off"] .nav-icon,
+body[data-icon-motion="off"] .region-icon,
+body[data-icon-motion="off"] .char-icon,
+body[data-icon-motion="off"] .boss-icon-large,
+body[data-icon-motion="off"] .boss-alert-icon,
+body[data-icon-motion="off"] .magical-forecast .forecast-icon,
+body[data-icon-motion="off"] .vmagic-soft-icon,
+body[data-icon-motion="off"] .leaderboard-title-icon,
+body[data-icon-motion="off"] .action-tile .tile-icon {
+    animation: none !important;
+    filter: none !important;
+}
+
+.armageddon-explosion-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45em;
+    height: 1.45em;
+    margin: 0 0.15em;
+    border: 2px solid #0b0b0b;
+    border-radius: 4px;
+    background: #ffd858;
+    color: #111;
+    font-size: 0.95em;
+    line-height: 1;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
 }
 
 .map-region-the_veil .region-icon,
@@ -2044,11 +2086,14 @@ body,
 }
 .home-lore-card {
     padding: var(--space-sm);
-    border: 1px solid var(--color-border);
+    border: 1px solid rgba(126, 231, 200, 0.72);
+    border-left: 3px solid var(--color-primary);
     border-radius: var(--radius-sm);
-    background: rgba(255,255,255,0.03);
+    background: var(--color-surface);
 }
-.home-lore-card h2 { font-size: 1rem; margin-bottom: 6px; }
-.home-lore-card p { margin: 0; color: var(--color-text-muted); line-height: 1.45; }
+.home-lore-card:nth-child(2) { border-color: rgba(247, 231, 214, 0.78); border-left-color: var(--color-primary); }
+.home-lore-card:nth-child(3) { border-color: rgba(248, 81, 73, 0.74); border-left-color: var(--color-primary); }
+.home-lore-card h2 { font-size: 1rem; margin-bottom: 6px; color: var(--color-text); }
+.home-lore-card p { margin: 0; color: var(--color-text-muted); font-size: 0.82rem; line-height: 1.4; overflow-wrap: anywhere; }
 .daily-hunt-title { color: #7ee7c8; text-shadow: 0 0 10px rgba(46, 204, 113, 0.45); }
 @media (max-width: 560px) { .home-lore-pages { grid-template-columns: 1fr; } }

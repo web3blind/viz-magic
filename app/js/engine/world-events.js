@@ -81,6 +81,17 @@ var WorldEvents = (function() {
     ];
 
 
+    /** Daily world-name cycle for the Sky block. Home does not call these weekdays. */
+    var WORLD_DAYS = [
+        { id: 'sky', nameKey: 'world_day_sky' },
+        { id: 'earth', nameKey: 'world_day_earth' },
+        { id: 'water', nameKey: 'world_day_water' },
+        { id: 'air', nameKey: 'world_day_air' },
+        { id: 'wind', nameKey: 'world_day_wind' },
+        { id: 'fire', nameKey: 'world_day_fire' },
+        { id: 'aether', nameKey: 'world_day_aether' }
+    ];
+
     /** Daily magical news: flavor-only, deterministic from block-day. */
     var MAGIC_NEWS = [
         { icon: '📰', summaryKey: 'magic_news_sun_wolf' },
@@ -544,7 +555,6 @@ var WorldEvents = (function() {
         'Тень автора убежала, но оставила подпись.',
         'Наблюдатели считают это почти научным фактом.',
         'Запредельный Остров прислал невнятное подтверждение.',
-        'Ученики записали фразу наоборот для надёжности.',
         'Ветер унёс возражения в сторону арены.',
         'Никто не понял, но всем стало интереснее.',
         'Следующая проверка назначена на очень странный рассвет.',
@@ -768,6 +778,13 @@ var WorldEvents = (function() {
      * @param {number} blockNum
      * @returns {Object|null}
      */
+    function getCurrentWorldDay(nowMs) {
+        var day = _getMoscowDayIndex(nowMs);
+        var idx = day % WORLD_DAYS.length;
+        if (idx < 0) idx = 0;
+        return WORLD_DAYS[idx];
+    }
+
     function getCurrentMagicNews(blockNum) {
         var day = _getMoscowDayIndex();
         var idx = day % MAGIC_NEWS.length;
@@ -940,6 +957,8 @@ var WorldEvents = (function() {
 
     return {
         SEASONS: SEASONS,
+        WORLD_DAYS: WORLD_DAYS,
+        getCurrentWorldDay: getCurrentWorldDay,
         getCurrentSeason: getCurrentSeason,
         getSeasonalBonuses: getSeasonalBonuses,
         getCurrentWeather: getCurrentWeather,

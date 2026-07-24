@@ -161,6 +161,14 @@ var A11y = (function() {
         return !!fallback;
     }
 
+    function _getStoredText(key, fallback) {
+        try {
+            var raw = localStorage.getItem(STORAGE_PREFIX + key);
+            if (raw !== null && raw !== '') return raw;
+        } catch (e) {}
+        return fallback;
+    }
+
     function setHighContrast(enabled) {
         if (!document || !document.body) return;
         if (enabled) {
@@ -179,9 +187,16 @@ var A11y = (function() {
         _setStoredBool('reduced_motion', enabled);
     }
 
+    function setIconMotion(mode) {
+        if (!document || !document.body) return;
+        if (mode !== 'off' && mode !== 'sync' && mode !== 'sparkle') mode = 'sparkle';
+        document.body.setAttribute('data-icon-motion', mode);
+    }
+
     function applyPreferences() {
         setHighContrast(_getStoredBool('high_contrast', false));
         setReducedMotion(_getStoredBool('reduced_motion', false));
+        setIconMotion(_getStoredText('icon_motion', 'sparkle'));
     }
 
     function bindRadioGroup(container, selector, onSelect) {
@@ -285,6 +300,7 @@ var A11y = (function() {
         bindRadioGroup: bindRadioGroup,
         setHighContrast: setHighContrast,
         setReducedMotion: setReducedMotion,
+        setIconMotion: setIconMotion,
         applyPreferences: applyPreferences,
         prefersReducedMotion: prefersReducedMotion,
         likelyScreenReader: likelyScreenReader

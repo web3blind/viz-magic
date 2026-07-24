@@ -11,6 +11,7 @@ var HelpScreen = (function() {
 
         var sections = [
             { key: 'mana',        icon: '\u2728' },
+            { key: 'world_days',  icon: '\uD83C\uDF0C' },
             { key: 'hp',          icon: '\u2764\uFE0F' },
             { key: 'quests',      icon: '\uD83D\uDCDC' },
             { key: 'hunt',        icon: '\uD83C\uDFF9' },

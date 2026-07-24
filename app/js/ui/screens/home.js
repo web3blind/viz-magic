@@ -229,6 +229,7 @@ var HomeScreen = (function() {
         if (!season) return '';
 
         var sky = WorldEvents.getCurrentSky ? WorldEvents.getCurrentSky(blockNum) : null;
+        var worldDay = WorldEvents.getCurrentWorldDay ? WorldEvents.getCurrentWorldDay() : null;
         var weather = WorldEvents.getCurrentWeather ? WorldEvents.getCurrentWeather(blockNum) : null;
         var skyText = sky ? (t(sky.summaryKey) + (sky.twistText ? ' ' + sky.twistText : '')) : '';
         var effect = weather ? _formatWeatherEffect(weather, t) : '';
@@ -258,7 +259,7 @@ var HomeScreen = (function() {
             '<div class="forecast-card forecast-card-sky">' +
                 '<div class="forecast-head">' +
                     '<span class="forecast-icon forecast-sky-icon" aria-hidden="true">' + (sky ? sky.icon : '\u26C5') + '</span>' +
-                    '<span class="forecast-kicker">' + t('weather_sky_title') + '</span>' +
+                    '<span class="forecast-kicker">' + (worldDay ? t(worldDay.nameKey) : t('weather_sky_title')) + '</span>' +
                 '</div>' +
                 '<p class="forecast-line">' + skyText + '</p>' +
             '</div>' +

@@ -56,6 +56,7 @@ var SettingsScreen = (function() {
         var currentLang = Helpers.getCurrentLang ? Helpers.getCurrentLang() : 'ru';
         var highContrast = _getStoredBool('high_contrast', false);
         var reducedMotion = _getStoredBool('reduced_motion', false);
+        var iconMotion = _getStoredText('icon_motion', 'sparkle');
         var sfxVolume = Math.round(_getStoredNumber('sfx_volume', 0.5) * 100);
         var musicVolume = Math.round(_getStoredNumber('music_volume', 0.5) * 100);
         var narratorEnabled = (typeof BattleNarrator !== 'undefined' && BattleNarrator.isEnabled) ? BattleNarrator.isEnabled() : _getStoredBool('battle_narrator', false);
@@ -111,6 +112,9 @@ var SettingsScreen = (function() {
                     '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">♿</span> ' + t('settings_accessibility') + '</h2>' +
                     _renderToggle('contrast-toggle', t('settings_high_contrast'), highContrast) +
                     _renderToggle('motion-toggle', t('settings_reduced_motion'), reducedMotion) +
+                    '<p class="settings-help-text">' + t('settings_reduced_motion_hint') + '</p>' +
+                    _renderIconMotionOptions(iconMotion, t) +
+                    '<p class="settings-help-text">' + t('settings_icon_motion_hint') + '</p>' +
                 '</section>' +
 
                 // Notifications
@@ -171,6 +175,22 @@ var SettingsScreen = (function() {
         '</div>';
     }
 
+    function _renderIconMotionOptions(currentMode, t) {
+        var options = [
+            { value: 'off', label: t('settings_icon_motion_off') },
+            { value: 'sync', label: t('settings_icon_motion_sync') },
+            { value: 'sparkle', label: t('settings_icon_motion_sparkle') }
+        ];
+        var html = '<div class="settings-field settings-icon-motion" role="group" aria-label="' + t('settings_icon_motion') + '">' +
+            '<span class="input-label">' + t('settings_icon_motion') + '</span>' +
+            '<div class="settings-toggle-group settings-choice-group">';
+        for (var i = 0; i < options.length; i++) {
+            html += '<button type="button" class="btn btn-sm ' + (currentMode === options[i].value ? 'btn-primary' : 'btn-secondary') + ' icon-motion-option" ' +
+                'data-icon-motion="' + options[i].value + '" aria-pressed="' + (currentMode === options[i].value) + '">' + options[i].label + '</button>';
+        }
+        return html + '</div></div>';
+    }
+
     function _renderSelect(id, label, options, selectedValue) {
         var html = '<div class="settings-field">' +
             '<label for="' + id + '" class="input-label">' + label + '</label>' +
@@ -208,6 +228,18 @@ var SettingsScreen = (function() {
         if (musicSlider) musicSlider.addEventListener('input', function() {
             _setStoredNumber('music_volume', this.value / 100);
         });
+
+        // Icon motion buttons
+        var motionOptions = el.querySelectorAll('.icon-motion-option');
+        for (var mo = 0; mo < motionOptions.length; mo++) {
+            motionOptions[mo].addEventListener('click', function() {
+                var mode = this.getAttribute('data-icon-motion') || 'sparkle';
+                try { localStorage.setItem(STORAGE_PREFIX + 'icon_motion', mode); } catch (e) {}
+                if (document && document.body) document.body.setAttribute('data-icon-motion', mode);
+                SoundManager.play('tap');
+                render();
+            });
+        }
 
         // Toggle buttons
         var toggleBtns = el.querySelectorAll('.settings-toggle-btn');
