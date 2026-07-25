@@ -352,7 +352,7 @@ test('high-traffic UI narration, screen announcements, and inventory stat labels
 
 test('service worker updates quickly and keeps navigations network-first', function () {
   const swJs = read('app/sw.js');
-  assert.ok(/viz-magic-v8[2-6]/.test(swJs), 'service worker cache version should be bumped');
+  assert.ok(/viz-magic-v8[2-7]/.test(swJs), 'service worker cache version should be bumped');
   assert.ok(/self\.skipWaiting\(\)/.test(swJs), 'service worker should activate new cache without waiting for all tabs to close');
   assert.ok(/self\.clients\.claim\(\)/.test(swJs), 'service worker should claim clients after activation');
   assert.ok(/registration\.update\(\)/.test(read('app/js/ui/app.js')), 'app should ask the browser to check for the newest service worker after registration');
@@ -408,7 +408,7 @@ test('mobile entry helpers cover keyboard paste, home-screen shortcut, nav parit
   assert.ok(/SoundManager\.setVolume\(sfxVolume \/ 100\)/.test(read('app/js/ui/screens/settings.js')), 'settings should apply stored SFX volume on render');
   assert.ok(/localStorage\.setItem\(STORAGE_PREFIX \+ 'sfx_volume'/.test(read('app/js/ui/sound.js')), 'sound manager should persist SFX volume');
   assert.ok(/var volume = _getStoredNumber\('sfx_volume', 0\.5\)/.test(read('app/js/ui/sound.js')), 'sound manager should restore persisted SFX volume');
-  assert.ok(/viz-magic-v8[2-6]/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
+  assert.ok(/viz-magic-v8[2-7]/.test(read('app/sw.js')), 'service worker cache should be bumped for UI changes');
 });
 
 
@@ -474,24 +474,26 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/event-icon vmagic-breathe/.test(homeJs), 'minor rift banner icon should breathe with other icons');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should appear only from the authored calendar');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260724b/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260724b/.test(indexHtml), 'English weather copy must be cache-busted');
-  assert.ok(/home.js\?v=20260724b/.test(indexHtml), 'home forecast layout must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260724d/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260724d/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/home.js\?v=20260724d/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/js\/ui\/screens\/quests.js\?v=20260720g/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260716a/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260720g/.test(indexHtml), 'leaderboard icon motion must be cache-busted');
-  assert.ok(/world-events.js\?v=20260724b/.test(indexHtml), 'world events news and festival copy must be cache-busted');
-  assert.ok(/main.css\?v=20260724c/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/world-events.js\?v=20260724d/.test(indexHtml), 'world events news and festival copy must be cache-busted');
+  assert.ok(/main.css\?v=20260724d/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/prefers-reduced-motion: no-preference/.test(mainCss) && /vmagic-rune-pulse/.test(mainCss), 'ambient animation must be lightweight and respect reduced-motion');
   assert.ok(/weather_report_air/.test(homeJs + ruJs + enJs), 'home forecast should render readable air/water/wind weather instead of raw school percentages');
-  assert.ok(/weather_dynamic_effect_prefix: 'Влияние на охоту'/.test(ruJs), 'hunt influence copy should replace the old hunt changes phrase');
+  assert.ok(/weather_hunt_effect_sentence: 'Магическая погода влияет на охоту\.'/.test(ruJs), 'summer card should restore the calm yellow hunt-weather sentence');
+  assert.ok(!/weather_dynamic_effect_prefix' \+ ': ' \+ effect/.test(homeJs), 'summer card description should not repeat hunt influence wording before the effect');
+  assert.ok(/seasonId === 'summer'[\s\S]*18 \+ \(daySeed % 13\)[\s\S]*if \(air > 30\) air = 30[\s\S]*seasonId === 'summer'[\s\S]*daySeed % 21/.test(homeJs), 'summer forecast should cap air at +30 and show water only in summer from 0 to +20');
   assert.ok(/seasonBonuses\[spell\.school\]/.test(combatJs), 'season school bonus should affect spell attack');
   assert.ok(/creatureAttackMod/.test(combatJs), 'weather should affect creature danger in hunt combat');
   assert.ok(/playerDefenseMod/.test(combatJs), 'weather should affect player defense in hunt combat');
   assert.ok(/function getCurrentWorldDay/.test(worldEventsJs), 'sky block should have a daily world-name cycle');
   assert.ok(/world_day_sky/.test(worldEventsJs + homeJs + ruJs + enJs), 'world day names should be localized and rendered on Home');
   assert.ok(!/Ученики записали фразу наоборот/.test(worldEventsJs), 'repeated pupils-backwards lore tail should be removed');
-  assert.ok(/forecast-card-hunt-summary[\s\S]*padding-right:\s*3rem/.test(mainCss), 'season card should leave room for top-right hunt icon');
+  assert.ok(/forecast-card-hunt-summary[\s\S]*padding-right:\s*3\.4rem/.test(mainCss), 'season card should leave enough room for top-right hunt icon');
   assert.ok(/forecast-hunt-icon[\s\S]*position:\s*absolute[\s\S]*right:\s*var\(--space-sm\)/.test(mainCss), 'hunt bow icon should sit in top-right corner');
 });
 
@@ -619,7 +621,7 @@ test('narrator voice preferences support gender and timbre', function () {
 
 
 test('home action tiles reflect Denis priority order', function () {
-  assert.ok(/home.js\?v=20260724b/.test(indexHtml), 'home screen should be cache-busted for action order');
+  assert.ok(/home.js\?v=20260724d/.test(indexHtml), 'home screen should be cache-busted for action order');
   assert.ok(/PRIMARY_HOME_SCREENS = \['home', 'inventory', 'guild', 'crafting', 'map', 'hunt', 'quests', 'arena', 'marketplace', 'temple', 'world-boss'\]/.test(homeJs), 'primary row should put Home, Bag, Guild and Workshop first');
   assert.ok(/SECONDARY_HOME_SCREENS = \['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'\]/.test(homeJs), 'secondary row should start Character, Rating, Chronicle and exclude World Boss');
   assert.ok(/home_secondary_actions: 'Дополнительная строка'/.test(ruJs), 'More sections should be renamed to Additional bar in Russian');
@@ -643,7 +645,7 @@ test('weave surge banner explains mana multiplier', function () {
 });
 
 test('minor rift banner explains itself and is actionable', function () {
-  assert.ok(/home.js\?v=20260724b/.test(indexHtml), 'home screen should be cache-busted for rift explanation');
+  assert.ok(/home.js\?v=20260724d/.test(indexHtml), 'home screen should be cache-busted for rift explanation');
   assert.ok(/event_minor_rift_desc/.test(homeJs + ruJs + enJs), 'minor rift should have visible explanatory copy');
   assert.ok(/evt\.type === 'minor_rift' \? 'hunt'/.test(homeJs), 'minor rift banner should navigate to Hunt');
   assert.ok(/event-banner-button/.test(homeJs + mainCss), 'actionable event banners should be styled and bound as buttons');
@@ -757,6 +759,13 @@ test('developers screen offers optional non-advantage award', function () {
   assert.ok(!/vizmagic.web3blind.xyz/.test(developersJs) && /https:\/\/viz.world\//.test(developersJs), 'developers useful links should keep GitHub and VIZ but not duplicate the game launcher');
 });
 
+
+test('summer weather copy and repeated lore tails stay deduplicated', function () {
+  assert.strictEqual((worldEventsJs.match(/По городу ходит слух, что завтра всё окажется ещё страннее/g) || []).length, 1, 'city rumor should appear in only one text pool');
+  assert.strictEqual((worldEventsJs.match(/Карты мира делают вид, что знали это заранее/g) || []).length, 1, 'map tail should remain in only one text block');
+  assert.ok(!/Влияние на охоту/.test(homeJs), 'summer card body should not hardcode hunt influence wording');
+  assert.ok(/forecast-hunt-icon[\s\S]*position:\s*absolute[\s\S]*right:\s*var\(--space-sm\)[\s\S]*left:\s*auto/.test(mainCss), 'bow icon should be pinned to the top-right, opposite the compass');
+});
 
 test('reported ux polish issues have explicit fixes', function () {
   assert.ok(/magic_news_school_math/.test(worldEventsJs + ruJs + enJs), 'Home magical news should use the school mathematics item instead of sky painting');
@@ -903,9 +912,9 @@ if (process.exitCode) {
 
 
 test('v81 feedback polish keeps home, quest, settings, and modal details tidy', function () {
-  assert.ok(/forecast-hunt-copy[\s\S]*forecast-hunt-icon/.test(homeJs), 'summer hunt bow icon should sit in the same line as the season/hunt copy');
+  assert.ok(/forecast-hunt-icon vmagic-breathe[\s\S]*forecast-hunt-copy/.test(homeJs), 'summer hunt bow icon should be outside text flow before the yellow copy');
   assert.ok(/forecast-card-festival[\s\S]*forecast-head[\s\S]*festival\.icon[\s\S]*festival_today_prefix/.test(homeJs), 'festival icon should sit before Today in the World heading');
-  assert.ok(/weather_dynamic_effect_prefix/.test(homeJs + ruJs + enJs), 'weather hunt numbers should use daily dynamic copy');
+  assert.ok(/weather_hunt_effect_sentence/.test(homeJs + ruJs + enJs), 'weather hunt copy should use the calm weather sentence');
   assert.ok(/_copyWeatherWithDailyVariation/.test(worldEventsJs), 'weather effect numbers should vary by day');
   assert.ok(!/Охотники считают это следом крупной добычи/.test(worldEventsJs), 'dragon hunter/scribe phrase should leave magic news');
   assert.ok(/LEGEND_TWISTS/.test(worldEventsJs), 'dragon hunter/scribe phrase should be saved for world legends');
@@ -922,12 +931,12 @@ test('v81 feedback polish keeps home, quest, settings, and modal details tidy', 
 test('v82 Denis feedback polish is explicit and cache-busted', function () {
   const swJsV82 = read('app/sw.js');
   const settingsJsV82 = read('app/js/ui/screens/settings.js');
-  assert.ok(/viz-magic-v8[2-6]/.test(swJsV82), 'service worker should use at least v82 cache');
-  assert.ok(/home\.js\?v=20260724b/.test(indexHtml), 'Home should be cache-busted for v82');
-  assert.ok(/world-events\.js\?v=20260724b/.test(indexHtml), 'world events should be cache-busted for v82');
+  assert.ok(/viz-magic-v8[2-7]/.test(swJsV82), 'service worker should use at least v82 cache');
+  assert.ok(/home\.js\?v=20260724d/.test(indexHtml), 'Home should be cache-busted for v82');
+  assert.ok(/world-events\.js\?v=20260724d/.test(indexHtml), 'world events should be cache-busted for v82');
   assert.ok(/hunt\.js\?v=20260724b/.test(indexHtml), 'Hunt should be cache-busted for Armageddon lock feedback');
   assert.ok(/settings\.js\?v=20260724b/.test(indexHtml), 'Settings should be cache-busted for sound icons');
-  assert.ok(/_copySeasonWithDailyVariation/.test(worldEventsJs) && /_formatSeasonBonus/.test(homeJs), 'season elemental percentages should vary daily instead of fixed +20/+10 text');
+  assert.ok(/function _formatWeatherReport/.test(homeJs) && /_formatSignedTemperature/.test(homeJs), 'season card should render readable temperatures instead of elemental percentages');
   assert.ok(!/\+20%,[\s\S]*\+10%/.test(homeJs), 'Home should not hardcode confusing elemental percentage text');
   assert.ok(/Свечи горят ровно, и тени от них рассказывают многое/.test(worldEventsJs), 'air prophecy festival copy should avoid repeated prophecy word');
   assert.ok(/NATURE_PAGES/.test(worldEventsJs) && /LEGEND_PAGES/.test(worldEventsJs) && /SPELL_PAGES/.test(worldEventsJs), 'new lower Home lore blocks should exist');
@@ -958,7 +967,7 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(/var sections = \[[\s\S]*mana[\s\S]*hp[\s\S]*quests[\s\S]*hunt[\s\S]*armageddon/.test(helpJs), 'practical help order should remain fixed in source');
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260724b/.test(indexHtml), 'Help should be cache-busted for guide redesign');
-  assert.ok(/main\.css\?v=20260724c/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v86/.test(swJsV83), 'service worker should use the current v86 cache');
+  assert.ok(/main\.css\?v=20260724d/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
+  assert.ok(/viz-magic-v87/.test(swJsV83), 'service worker should use the current v87 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });

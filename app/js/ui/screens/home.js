@@ -210,16 +210,31 @@ var HomeScreen = (function() {
         return parts.join(', ') + '.';
     }
 
+    function _formatSignedTemperature(value) {
+        return (value > 0 ? '+' : '') + value;
+    }
+
     function _formatWeatherReport(season, dominantBonus, secondaryBonus, weather, t) {
         var daySeed = (typeof WorldEvents !== 'undefined' && WorldEvents.getMoscowDayIndex) ? WorldEvents.getMoscowDayIndex() : 0;
-        var warmth = 16 + Math.round((dominantBonus || 0) / 10) + (daySeed % 5);
-        var water = Math.max(0, 35 + Math.round((secondaryBonus || 0) / 10) + ((daySeed * 3) % 12));
+        var seasonId = season && season.id ? season.id : '';
+        var air = 0;
+        if (seasonId === 'winter') air = -30 + (daySeed % 31);
+        else if (seasonId === 'summer') air = 18 + (daySeed % 13);
+        else if (seasonId === 'spring') air = -5 + (daySeed % 21);
+        else air = -10 + (daySeed % 26);
+        if (air > 30) air = 30;
+        if (air < -30) air = -30;
         var wind = 3 + ((daySeed + (weather && weather.creatureAttackMod ? weather.creatureAttackMod : 0)) % 10);
         var rainy = weather && /rain|swamp|fog|snow|hail|thunder|lightning|storm|mushroom|grass/.test(weather.id || '');
-        return t('weather_report_air') + ' +' + warmth + '; ' +
-            t('weather_report_water') + ' +' + water + '; ' +
-            t('weather_report_wind') + ' ' + wind + ' ' + t('weather_report_wind_unit') + ', ' +
-            (rainy ? t('weather_report_light_rain') : t('weather_report_no_rain')) + '.';
+        var parts = [
+            t('weather_report_air') + ' ' + _formatSignedTemperature(air)
+        ];
+        if (seasonId === 'summer') {
+            parts.push(t('weather_report_water') + ' +' + (daySeed % 21));
+        }
+        parts.push(t('weather_report_wind') + ' ' + wind + ' ' + t('weather_report_wind_unit') + ', ' +
+            (rainy ? t('weather_report_light_rain') : t('weather_report_no_rain')));
+        return parts.join('; ') + '.';
     }
 
     function _renderBossAlert(state, blockNum, t) {
@@ -268,8 +283,9 @@ var HomeScreen = (function() {
                     '<span class="forecast-icon forecast-weather-icon vmagic-breathe" aria-hidden="true">\uD83E\uDDED</span>' +
                     '<p class="forecast-line">' + t(season.nameKey) + '</p>' +
                 '</div>' +
-                '<p class="forecast-kicker forecast-hunt-copy"><span class="forecast-icon forecast-hunt-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF9</span> ' + t('weather_hunt_effect_sentence') + '</p>' +
-                '<p class="season-bonus">' + _formatWeatherReport(season, dominantBonus, secondaryBonus, weather, t) + ' ' + t('weather_dynamic_effect_prefix') + ': ' + effect + '</p>' +
+                '<span class="forecast-icon forecast-hunt-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF9</span>' +
+                '<p class="forecast-kicker forecast-hunt-copy">' + t('weather_hunt_effect_sentence') + '</p>' +
+                '<p class="season-bonus">' + _formatWeatherReport(season, dominantBonus, secondaryBonus, weather, t) + ' ' + effect + '</p>' +
             '</div>' +
             '<div class="forecast-card forecast-card-sky">' +
                 '<div class="forecast-head">' +

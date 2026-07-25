@@ -807,7 +807,7 @@ var LangRU = {
     weather_dynamic_effect_prefix: 'Влияние на охоту',
     weather_dynamic_creature: 'сила добычи',
     weather_dynamic_defense: 'защита мага',
-    weather_hunt_effect_sentence: 'Влияние на охоту:' ,
+    weather_hunt_effect_sentence: 'Магическая погода влияет на охоту.',
     weather_sky_title: 'Небо',
     weather_report_air: 'Воздух',
     weather_report_water: 'Вода',

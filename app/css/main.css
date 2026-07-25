@@ -1714,7 +1714,7 @@ body,
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding-right: 3rem;
+    padding-right: 3.4rem;
 }
 
 .forecast-icon {
@@ -1737,13 +1737,17 @@ body,
 .forecast-hunt-copy {
     text-transform: none;
     letter-spacing: 0;
+    padding-right: 0.25rem;
 }
 
 .forecast-hunt-icon {
     position: absolute;
     top: var(--space-sm);
     right: var(--space-sm);
+    left: auto;
     margin: 0;
+    z-index: 1;
+    pointer-events: none;
 }
 
 .active-key-icon {

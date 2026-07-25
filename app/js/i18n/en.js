@@ -807,7 +807,7 @@ var LangEN = {
     weather_dynamic_effect_prefix: 'Hunting changes today',
     weather_dynamic_creature: 'prey strength',
     weather_dynamic_defense: 'mage defense',
-    weather_hunt_effect_sentence: 'Hunt influence:' ,
+    weather_hunt_effect_sentence: 'Magical weather affects hunting.',
     weather_sky_title: 'Sky',
     weather_report_air: 'Air',
     weather_report_water: 'Water',
