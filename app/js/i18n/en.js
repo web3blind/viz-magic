@@ -1045,6 +1045,7 @@ var LangEN = {
     quest_already_accepted: 'Already accepted',
     quest_claim_reward: 'Claim Reward',
     quest_completed: 'Quest completed!',
+    quest_completed_pride: 'Completed feats. You have earned the bragging rights.',
     quest_abandon: 'Abandon',
     quest_abandoned: 'Quest abandoned.',
     chronicle_unknown_guild: 'an unknown guild',
@@ -1222,7 +1223,7 @@ var LangEN = {
     help_practical_title: 'Permanent pages',
     help_lore_label: 'Living world pages',
     help_lore_title: 'Living world pages',
-    help_lore_intro: 'These pages are lore and world mood. They may change over time, but they do not replace the permanent guide above.',
+    help_lore_intro: 'These pages are lore and world mood. Rotation stays paused until at least ten living pages are authored.',
 
     help_section_mana: 'Mana',
     help_mana_text: 'Mana is your energy (0–100%). Every spell costs mana. Full regeneration takes ~5 days. Shown as a percentage — 1.00% = 100 basis points on the blockchain.',
@@ -1255,7 +1256,7 @@ var LangEN = {
     help_narrator_text: 'The Battle Narrator announces all combat events via your screen reader (aria-live). Enable it in Settings. It also plays short audio tones to indicate enemy and player positions. Designed for blind and low-vision players.',
 
     help_section_classes: 'Classes',
-    help_classes_text: 'Stonewarden (Terra) — tank. Embercaster (Ignis) — burst DPS. Moonrunner (Umbra) — evasion. Bloomsage (Aqua) — healer. Each class has unique spells and stat growth.',
+    help_classes_text: 'Stonewarden (Terra) — tank. Embercaster (Ignis) — burst DPS.<br>Moonrunner (Umbra) — evasion. Bloomsage (Aqua) — healer.<br>Each class has unique spells and stat growth.',
 
     help_section_duels: 'Duels & Arena',
     help_duels_text: 'Duels are PvP matches based on prediction. Best of 3 rounds. Each round you seal one of 4 intents: Strike (beats Mend), Guard (beats Strike), Weave (beats Guard), Mend (beats Weave). Seals are revealed simultaneously — the blockchain determines the outcome. Challenge opponents through the Arena. They have 24 hours to accept. Win: +150 XP. Loss: +50 XP.',

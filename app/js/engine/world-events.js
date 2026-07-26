@@ -527,7 +527,7 @@ var WorldEvents = (function() {
         { icon: '✨', titleKey: 'home_magic_spells_title', text: 'Хохотать на заре, не в угаре — золотые бразды мир подарит...' },
         { icon: '🐦', titleKey: 'home_magic_spells_title', text: 'Замри не надысь, в птицу превратись...' },
         { icon: '🌀', titleKey: 'home_magic_spells_title', text: 'Шагни через мысль, не тронь колокольчик, и ветер назовёт тебя родственником.' },
-        { icon: '🔮', titleKey: 'home_magic_spells_title', text: 'Если шар предсказаний молчит, положи рядом ложку. Иногда будущему нужен прибор.' },
+        { icon: '🔮', titleKey: 'home_magic_spells_title', text: 'Если шар предсказаний молчит, положи рядом ложку. Иногда будущему нужен прибор. Один послушник уже пытается вывести из этого закон.' },
         { icon: '🗝️', titleKey: 'home_magic_spells_title', text: 'Ключ без замка, замок без двери — открой осторожно то, чего нет в квартире.' },
         { icon: '🪶', titleKey: 'home_magic_spells_title', text: 'Пером по воздуху, словом по льду — пусть невозможное выйдет в саду.' },
         { icon: '🔥', titleKey: 'home_magic_spells_title', text: 'Не жги огня, попроси свет — и тёплый ответ перепишет запрет.' },
@@ -544,7 +544,6 @@ var WorldEvents = (function() {
         'Писцы добавили пометку: не читать стоя на ковре.',
         'Гильдии советуют относиться к этому почти серьёзно.',
         'Хроника оставила место для возмущённых комментариев.',
-        'Один послушник уже пытается вывести из этого закон.',
         'Базарные оценщики не согласны, но улыбаются.',
         'Охотники проверят версию после безопасного завтрака.',
         'Мастерская просит не повторять опыт без наковальни.',
@@ -734,12 +733,9 @@ var WorldEvents = (function() {
     }
 
     function getCurrentLorePages(blockNum) {
-        var day = _getMoscowDayIndex();
-        return [
-            _dailyFromPool(NATURE_PAGES, day, 0),
-            _dailyFromPool(LEGEND_PAGES, day, 4),
-            _dailyFromPool(SPELL_PAGES, day, 8)
-        ];
+        // Keep living-page rotation paused until the authored pool has at least ten pages.
+        // One stable page is calmer and avoids repeating near-identical lore too often.
+        return [NATURE_PAGES[0]];
     }
 
     /**

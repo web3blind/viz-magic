@@ -79,7 +79,8 @@ var QuestSystem = (function() {
                 current: 0,
                 completed: false,
                 uniqueTarget: !!obj.uniqueTarget,
-                seenTargets: []
+                seenTargets: [],
+                blockedTargets: _getBlockedTargets(questData, playerQuests, j)
             });
         }
 
@@ -121,6 +122,9 @@ var QuestSystem = (function() {
                         }
                         if (!obj.seenTargets) {
                             obj.seenTargets = [];
+                        }
+                        if (_targetWasSeen(obj.blockedTargets, eventData.uniqueKey)) {
+                            continue;
                         }
                         var alreadySeen = false;
                         for (var st = 0; st < obj.seenTargets.length; st++) {
@@ -170,6 +174,44 @@ var QuestSystem = (function() {
         }
 
         return progressEvents;
+    }
+
+    function _targetWasSeen(list, uniqueKey) {
+        if (!list || !uniqueKey) return false;
+        for (var i = 0; i < list.length; i++) {
+            if (list[i] === uniqueKey) return true;
+        }
+        return false;
+    }
+
+    function _getBlockedTargets(questData, playerQuests, objectiveIndex) {
+        if (!questData || !questData.isDaily || !playerQuests || !playerQuests.completed) return [];
+        var blocked = [];
+        for (var i = 0; i < playerQuests.completed.length; i++) {
+            var done = playerQuests.completed[i];
+            if (!done || done.id !== questData.id || !done.objectives) continue;
+            var obj = done.objectives[objectiveIndex];
+            var seen = obj && obj.seenTargets ? obj.seenTargets : [];
+            for (var j = 0; j < seen.length; j++) {
+                if (!_targetWasSeen(blocked, seen[j])) blocked.push(seen[j]);
+            }
+        }
+        return blocked;
+    }
+
+    function _snapshotObjectives(objectives) {
+        var out = [];
+        objectives = objectives || [];
+        for (var i = 0; i < objectives.length; i++) {
+            out.push({
+                type: objectives[i].type,
+                target: objectives[i].target || '',
+                required: objectives[i].required || 0,
+                uniqueTarget: !!objectives[i].uniqueTarget,
+                seenTargets: (objectives[i].seenTargets || []).slice()
+            });
+        }
+        return out;
     }
 
     /**
@@ -239,7 +281,8 @@ var QuestSystem = (function() {
         playerQuests.completed.push({
             id: quest.id,
             titleKey: quest.titleKey || (questTemplate && questTemplate.titleKey) || '',
-            completedBlock: blockNum
+            completedBlock: blockNum,
+            objectives: _snapshotObjectives(quest.objectives)
         });
 
         return { success: true, rewards: rewards };

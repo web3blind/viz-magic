@@ -82,8 +82,8 @@ var SettingsScreen = (function() {
                 // Sound
                 '<section class="settings-section" aria-label="' + t('settings_sound') + '">' +
                     '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">🔊</span> ' + t('settings_sound') + '</h2>' +
-                    _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume) +
-                    _renderSlider('music-volume', t('settings_music'), musicVolume) +
+                    _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume, '🔈') +
+                    _renderSlider('music-volume', t('settings_music'), musicVolume, '🎵') +
                     _renderToggle('narrator-toggle', t('narrator_toggle'), narratorEnabled) +
                     _renderSelect('narrator-voice-gender', t('narrator_voice_gender'), [
                         { value: 'male', label: t('narrator_voice_male') },
@@ -104,7 +104,7 @@ var SettingsScreen = (function() {
                             '<option value="rich">' + t('settings_density_rich') + '</option>' +
                         '</select>' +
                     '</div>' +
-                    _renderToggle('haptics-toggle', t('settings_haptics'), true) +
+                    _renderToggle('haptics-toggle', t('settings_haptics'), true, '📳') +
                 '</section>' +
 
                 // Accessibility
@@ -158,16 +158,18 @@ var SettingsScreen = (function() {
         _bindEvents(el);
     }
 
-    function _renderSlider(id, label, defaultValue) {
+    function _renderSlider(id, label, defaultValue, icon) {
+        var iconHtml = icon ? '<span class="settings-control-icon vmagic-breathe" aria-hidden="true">' + icon + '</span> ' : '';
         return '<div class="settings-field">' +
-            '<label for="' + id + '" class="input-label">' + label + '</label>' +
+            '<label for="' + id + '" class="input-label">' + iconHtml + label + '</label>' +
             '<input type="range" id="' + id + '" min="0" max="100" value="' + defaultValue + '" class="settings-slider" aria-label="' + label + '">' +
         '</div>';
     }
 
-    function _renderToggle(id, label, defaultOn) {
+    function _renderToggle(id, label, defaultOn, icon) {
+        var iconHtml = icon ? '<span class="settings-control-icon vmagic-breathe" aria-hidden="true">' + icon + '</span> ' : '';
         return '<div class="settings-field settings-toggle">' +
-            '<label for="' + id + '" class="settings-toggle-label">' + label + '</label>' +
+            '<label for="' + id + '" class="settings-toggle-label">' + iconHtml + label + '</label>' +
             '<button id="' + id + '" class="settings-toggle-btn' + (defaultOn ? ' active' : '') + '" ' +
                 'role="switch" aria-checked="' + defaultOn + '" aria-label="' + label + '">' +
                 '<span class="toggle-knob"></span>' +

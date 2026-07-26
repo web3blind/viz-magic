@@ -193,14 +193,14 @@ var GuildScreen = (function() {
         }
 
         html += '<button class="btn btn-secondary guild-btn" id="btn-guild-treasury" aria-label="' + t('guild_treasury') + '">';
-        html += '\uD83D\uDCB0 ' + t('guild_treasury') + '</button>';
+        html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">💰</span> ' + t('guild_treasury') + '</button>';
 
         html += '<button class="btn btn-secondary guild-btn" id="btn-guild-settings" aria-label="' + t('guild_settings') + '">';
-        html += '\u2699\uFE0F ' + t('guild_settings') + '</button>';
+        html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">⚙️</span> ' + t('guild_settings') + '</button>';
 
         if (myMember.rank !== GuildSystem.RANKS.FOUNDER) {
             html += '<button class="btn btn-secondary guild-btn guild-leave-btn" id="btn-guild-leave" aria-label="' + t('guild_leave') + '">';
-            html += t('guild_leave') + '</button>';
+            html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">🚶</span> ' + t('guild_leave') + '</button>';
         } else {
             html += '<p class="guild-founder-note">' + t('guild_founder_cannot_leave') + '</p>';
         }
@@ -880,7 +880,7 @@ var GuildScreen = (function() {
         var charter = guild && guild.charter ? guild.charter : {};
         var tithe = charter.tithe_pct ? (charter.tithe_pct / 100) : 0;
         var html = '<div class="modal-content">';
-        html += '<h2 class="modal-title">' + t('guild_treasury') + '</h2>';
+        html += '<h2 class="modal-title"><span class="section-icon vmagic-breathe" aria-hidden="true">💰</span> ' + t('guild_treasury') + '</h2>';
         html += '<p>' + t('guild_tithe_rate') + ': ' + tithe + '%</p>';
         html += '<p>' + t('guild_treasury_account') + ': ' + _esc(guild.founder) + '</p>';
         html += '<p>' + t('guild_total_delegated') + ': ' + _formatShares(guild.totalDelegated) + '</p>';
@@ -903,7 +903,7 @@ var GuildScreen = (function() {
             : t('guild_settings_view_only');
 
         var html = '<div class="modal-content">';
-        html += '<h2 class="modal-title">' + t('guild_settings') + '</h2>';
+        html += '<h2 class="modal-title"><span class="section-icon vmagic-breathe" aria-hidden="true">⚙️</span> ' + t('guild_settings') + '</h2>';
         html += '<p>' + officerNote + '</p>';
         html += '<p>' + t('guild_tithe_rate') + ': ' + tithe + '%</p>';
         html += '<p>' + t('guild_membership_mode') + ': ' + t('guild_membership_' + membership) + '</p>';

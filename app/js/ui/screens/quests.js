@@ -187,12 +187,12 @@ var QuestsScreen = (function() {
             return '<div class="empty-state">' + t('quest_none_completed') + '</div>';
         }
 
-        var html = '<ul class="quest-list completed" role="list">';
+        var html = '<p class="quest-completed-celebration" role="status">🏆 ' + t('quest_completed_pride') + '</p><ul class="quest-list completed" role="list">';
         for (var i = completed.length - 1; i >= Math.max(0, completed.length - 20); i--) {
             var q = completed[i];
             var title = _completedQuestTitle(q, t);
             html += '<li class="quest-card quest-completed-card">' +
-                '<span class="quest-icon" aria-hidden="true">\u2714</span>' +
+                '<span class="quest-icon vmagic-breathe" aria-hidden="true">🏅</span>' +
                 '<span class="quest-name">' + Helpers.escapeHtml(title) + '</span>' +
             '</li>';
         }
@@ -221,7 +221,7 @@ var QuestsScreen = (function() {
     }
 
     function _renderQuestCard(quest, t, showActions) {
-        var html = '<li class="quest-card' + (quest.completed ? ' quest-ready' : '') + '" role="listitem">';
+        var html = '<li class="quest-card quest-active-card' + (quest.completed ? ' quest-ready' : '') + '" role="listitem">';
         html += '<div class="quest-card-header">';
         html += '<span class="quest-type-badge">' + _questTypeLabel(quest, t) + '</span>';
         html += '<h3 class="quest-name">' + t(quest.titleKey) + '</h3>';

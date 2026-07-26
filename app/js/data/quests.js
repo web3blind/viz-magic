@@ -229,7 +229,7 @@ var GameQuests = (function() {
                     type: 'explore',
                     titleKey: 'quest_daily_explore',
                     descriptionKey: 'quest_daily_explore_desc',
-                    objectives: [{ type: 'explore', required: 2 }],
+                    objectives: [{ type: 'explore', required: 2, uniqueTarget: true }],
                     rewards: { xp: 200, awardEnergy: 80 }
                 }
             ]
