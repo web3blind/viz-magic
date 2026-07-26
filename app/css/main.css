@@ -1740,12 +1740,12 @@ body,
     padding-right: 0.25rem;
 }
 
-.forecast-hunt-icon {
+.forecast-card-hunt-summary > .forecast-hunt-icon {
     position: absolute;
     top: var(--space-sm);
-    right: var(--space-sm);
+    left: calc(100% - 2.4rem);
+    right: auto;
     bottom: auto;
-    left: auto;
     margin: 0;
     z-index: 1;
     pointer-events: none;
