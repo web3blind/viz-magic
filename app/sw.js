@@ -1,5 +1,5 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v88';
+var CACHE_NAME = 'viz-magic-v89';
 var APP_SHELL_ASSETS = [
     '/',
     '/index.html',

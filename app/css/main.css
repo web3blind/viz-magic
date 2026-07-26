@@ -1714,8 +1714,7 @@ body,
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding-right: var(--space-sm);
-    padding-bottom: 2.75rem;
+    padding-right: 3.6rem;
 }
 
 .forecast-icon {
@@ -1743,9 +1742,9 @@ body,
 
 .forecast-hunt-icon {
     position: absolute;
+    top: var(--space-sm);
     right: var(--space-sm);
-    bottom: var(--space-sm);
-    top: auto;
+    bottom: auto;
     left: auto;
     margin: 0;
     z-index: 1;
