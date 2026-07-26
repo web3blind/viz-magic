@@ -229,7 +229,7 @@ var HomeScreen = (function() {
         var parts = [
             t('weather_report_air') + ' ' + _formatSignedTemperature(air)
         ];
-        if (seasonId === 'summer') {
+        if (seasonId === 'spring' || seasonId === 'summer' || seasonId === 'autumn') {
             parts.push(t('weather_report_water') + ' +' + (daySeed % 21));
         }
         parts.push(t('weather_report_wind') + ' ' + wind + ' ' + t('weather_report_wind_unit') + ', ' +
