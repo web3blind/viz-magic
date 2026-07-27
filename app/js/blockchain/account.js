@@ -276,6 +276,52 @@ var VizAccount = (function() {
         return '';
     }
 
+    function updateProfileAvatar(avatarDataUrl, callback) {
+        callback = callback || function() {};
+        var safeAvatar = sanitizeAvatarUrl(avatarDataUrl);
+        if (!safeAvatar) {
+            callback(new Error('invalid_avatar'));
+            return;
+        }
+        _updateProfileField('avatar', safeAvatar, callback);
+    }
+
+    function removeProfileAvatar(callback) {
+        callback = callback || function() {};
+        _updateProfileField('avatar', '', callback);
+    }
+
+    function _updateProfileField(field, value, callback) {
+        if (!isLoggedIn()) {
+            callback(new Error('not_logged_in'));
+            return;
+        }
+        getAccount(currentUser, function(err, account) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            var meta = {};
+            try {
+                meta = JSON.parse(account.json_metadata || '{}');
+            } catch(e) {
+                meta = {};
+            }
+            if (!meta.profile || typeof meta.profile !== 'object') meta.profile = {};
+            if (value) meta.profile[field] = value;
+            else delete meta.profile[field];
+
+            viz.broadcast.accountMetadata(
+                users[currentUser].regular_key,
+                currentUser,
+                JSON.stringify(meta),
+                function(updateErr, result) {
+                    callback(updateErr, result);
+                }
+            );
+        });
+    }
+
     /**
      * Update Grimoire (game metadata) on chain
      * @param {Object} grimoireData - game-specific metadata
@@ -369,6 +415,8 @@ var VizAccount = (function() {
         parseGrimoire: parseGrimoire,
         getProfileAvatar: getProfileAvatar,
         sanitizeAvatarUrl: sanitizeAvatarUrl,
+        updateProfileAvatar: updateProfileAvatar,
+        removeProfileAvatar: removeProfileAvatar,
         updateGrimoire: updateGrimoire,
         calculateCurrentEnergy: calculateCurrentEnergy,
         getEffectiveShares: getEffectiveShares,

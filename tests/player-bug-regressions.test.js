@@ -474,14 +474,14 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/event-icon vmagic-breathe/.test(homeJs), 'minor rift banner icon should breathe with other icons');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should appear only from the authored calendar');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260726a/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260726a/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260726c/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260726c/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/home.js\?v=20260724f/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/js\/ui\/screens\/quests.js\?v=20260726a/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260716a/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260726b/.test(indexHtml), 'leaderboard icon motion must be cache-busted');
   assert.ok(/world-events.js\?v=20260726a/.test(indexHtml), 'world events news and festival copy must be cache-busted');
-  assert.ok(/main.css\?v=20260726b/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/main.css\?v=20260726c/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/prefers-reduced-motion: no-preference/.test(mainCss) && /vmagic-rune-pulse/.test(mainCss), 'ambient animation must be lightweight and respect reduced-motion');
   assert.ok(/weather_report_air/.test(homeJs + ruJs + enJs), 'home forecast should render readable air/water/wind weather instead of raw school percentages');
   assert.ok(/weather_hunt_effect_sentence: 'Магическая погода влияет на охоту\.'/.test(ruJs), 'summer card should restore the calm yellow hunt-weather sentence');
@@ -610,7 +610,7 @@ test('narrator voice preferences support gender and timbre', function () {
   const settingsJs = read('app/js/ui/screens/settings.js');
   const narratorJs = read('app/js/ui/components/battle-narrator.js');
   assert.ok(/battle-narrator.js\?v=20260713c/.test(indexHtml), 'battle narrator should be cache-busted');
-  assert.ok(/settings.js\?v=20260726a/.test(indexHtml), 'settings should be cache-busted');
+  assert.ok(/settings.js\?v=20260726c/.test(indexHtml), 'settings should be cache-busted');
   assert.ok(/narrator-voice-gender/.test(settingsJs), 'settings should expose narrator gender select');
   assert.ok(/narrator-voice-timbre/.test(settingsJs), 'settings should expose narrator timbre select');
   assert.ok(/setVoiceOptions/.test(narratorJs), 'narrator should persist selectable voice options');
@@ -942,7 +942,7 @@ test('v82 Denis feedback polish is explicit and cache-busted', function () {
   assert.ok(/home\.js\?v=20260724f/.test(indexHtml), 'Home should be cache-busted for v82');
   assert.ok(/world-events\.js\?v=20260726a/.test(indexHtml), 'world events should be cache-busted for v82');
   assert.ok(/hunt\.js\?v=20260724b/.test(indexHtml), 'Hunt should be cache-busted for Armageddon lock feedback');
-  assert.ok(/settings\.js\?v=20260726a/.test(indexHtml), 'Settings should be cache-busted for sound icons');
+  assert.ok(/settings\.js\?v=20260726c/.test(indexHtml), 'Settings should be cache-busted for sound icons');
   assert.ok(/function _formatWeatherReport/.test(homeJs) && /_formatSignedTemperature/.test(homeJs), 'season card should render readable temperatures instead of elemental percentages');
   assert.ok(!/\+20%,[\s\S]*\+10%/.test(homeJs), 'Home should not hardcode confusing elemental percentage text');
   assert.ok(/Свечи горят ровно, и тени от них рассказывают многое/.test(worldEventsJs), 'air prophecy festival copy should avoid repeated prophecy word');
@@ -974,8 +974,8 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(/var sections = \[[\s\S]*mana[\s\S]*hp[\s\S]*quests[\s\S]*hunt[\s\S]*armageddon/.test(helpJs), 'practical help order should remain fixed in source');
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260726a/.test(indexHtml), 'Help should be cache-busted for guide redesign');
-  assert.ok(/main\.css\?v=20260726b/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v92/.test(swJsV83), 'service worker should use the current v91 cache');
+  assert.ok(/main\.css\?v=20260726c/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
+  assert.ok(/viz-magic-v93/.test(swJsV83), 'service worker should use the current v91 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
 
@@ -1030,12 +1030,12 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
   assert.ok(/Ротацию пока не запускаем/.test(ruJs) && /Rotation stays paused/.test(enJs), 'living page rotation pause should be explained');
   assert.ok(/quest_completed_pride/.test(ruJs + enJs), 'completed quest pride copy should exist');
 
-  assert.ok(/main\.css\?v=20260726b/.test(indexHtml), 'main CSS should be cache-busted for v91 polish');
+  assert.ok(/main\.css\?v=20260726c/.test(indexHtml), 'main CSS should be cache-busted for v91 polish');
   assert.ok(/world-events\.js\?v=20260726a/.test(indexHtml), 'world-events should be cache-busted for v91 polish');
   assert.ok(/quest-system\.js\?v=20260726a/.test(indexHtml) && /quests\.js\?v=20260726a/.test(indexHtml), 'quest engine and UI should be cache-busted');
   assert.ok(/inventory\.js\?v=20260726a/.test(indexHtml) && /marketplace\.js\?v=20260726a/.test(indexHtml), 'item icon screens should be cache-busted');
-  assert.ok(/guild\.js\?v=20260726a/.test(indexHtml) && /settings\.js\?v=20260726a/.test(indexHtml), 'guild/settings screens should be cache-busted');
-  assert.ok(/viz-magic-v92/.test(swJs), 'service worker should use v91 cache');
+  assert.ok(/guild\.js\?v=20260726a/.test(indexHtml) && /settings\.js\?v=20260726c/.test(indexHtml), 'guild/settings screens should be cache-busted');
+  assert.ok(/viz-magic-v93/.test(swJs), 'service worker should use v91 cache');
 });
 
 
@@ -1049,7 +1049,7 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
     console: console,
     localStorage: { getItem: function () { return ''; }, setItem: function () {} },
     VizMagicConfig: { STORAGE_PREFIX: 'test_', GRIMOIRE_KEY: 'vm', ENERGY: { REGEN_SECONDS: 432000 } },
-    viz: { api: { getAccounts: function () {} } }
+    viz: { auth: { wifIsValid: function () { return true; } }, api: { getAccounts: function (accounts, cb) { cb(null, [{ name: accounts[0], regular_authority: { weight_threshold: 1, key_auths: [['REGULAR', 1]] }, json_metadata: JSON.stringify({ profile: { about: 'kept' }, vm: { class: 'fire', name: 'Mage' } }), energy: 10000, last_vote_time: '2026-01-01T00:00:00' }]); } }, broadcast: { accountMetadata: function (key, user, json, cb) { context.lastMetadataWrite = { key: key, user: user, json: json }; cb(null, { ok: true }); } } }
   };
   vm.createContext(context);
   vm.runInContext(accountJs, context, { filename: 'account.js' });
@@ -1059,6 +1059,17 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.equal(context.VizAccount.getProfileAvatar({ json_metadata: JSON.stringify({ profile: { avatar: 'data:text/html;base64,PGgxPg==' } }) }), '', 'non-image data URLs must be rejected');
   assert.equal(context.VizAccount.getProfileAvatar({ json_metadata: JSON.stringify({ profile: { avatar: 'data:image/png;base64,' + 'A'.repeat(40000) } }) }), '', 'oversized data URLs must be rejected');
   assert.equal(context.VizAccount.getProfileAvatar({ json_metadata: '{}' }), '', 'missing avatar should render as empty fallback');
+
+  context.VizAccount.login('mage', 'REGULAR', function () {});
+  context.VizAccount.getAccount = context.VizAccount.getAccount;
+  context.VizAccount.updateProfileAvatar(validTinyPng, function (err) { assert.equal(err, null); });
+  const writtenMeta = JSON.parse(context.lastMetadataWrite.json);
+  assert.equal(writtenMeta.profile.avatar, validTinyPng, 'profile.avatar should be written into public json_metadata');
+  assert.deepEqual(writtenMeta.vm, { class: 'fire', name: 'Mage' }, 'game grimoire metadata must be preserved while writing avatar');
+  context.VizAccount.removeProfileAvatar(function (err) { assert.equal(err, null); });
+  const removedMeta = JSON.parse(context.lastMetadataWrite.json);
+  assert.equal(removedMeta.profile.avatar, undefined, 'remove should delete only profile.avatar');
+  assert.deepEqual(removedMeta.vm, { class: 'fire', name: 'Mage' }, 'game grimoire metadata must survive avatar removal');
 
   assert.ok(/MAX_PROFILE_AVATAR_CHARS = 32768/.test(accountJs), 'avatar data URL size must be bounded');
   assert.ok(/getProfileAvatar: getProfileAvatar/.test(accountJs), 'avatar helper should be exported');
@@ -1073,13 +1084,36 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.ok(/\.account-avatar[\s\S]*width:\s*32px[\s\S]*height:\s*32px/.test(mainCss), 'account avatars should be visually size-limited');
   assert.ok(/\.profile-avatar[\s\S]*width:\s*48px[\s\S]*height:\s*48px/.test(mainCss), 'profile avatar should be larger but bounded');
 
-  assert.ok(/account\.js\?v=20260726b/.test(indexHtml), 'account helper should be cache-busted');
+  assert.ok(/account\.js\?v=20260726c/.test(indexHtml), 'account helper should be cache-busted');
   assert.ok(/daily-leaderboard\.js\?v=20260726b/.test(indexHtml), 'daily leaderboard should be cache-busted');
   assert.ok(/leaderboard\.js\?v=20260726b/.test(indexHtml), 'leaderboard UI should be cache-busted');
   assert.ok(/arena\.js\?v=20260726b/.test(indexHtml), 'arena UI should be cache-busted');
   assert.ok(/duel\.js\?v=20260726b/.test(indexHtml), 'duel UI should be cache-busted');
   assert.ok(/world-boss\.js\?v=20260726b/.test(indexHtml), 'world boss UI should be cache-busted');
   assert.ok(/character\.js\?v=20260726b/.test(indexHtml), 'character UI should be cache-busted');
-  assert.ok(/main\.css\?v=20260726b/.test(indexHtml), 'avatar CSS should be cache-busted');
-  assert.ok(/viz-magic-v92/.test(swJs), 'service worker should use v92 cache');
+  assert.ok(/main\.css\?v=20260726c/.test(indexHtml), 'avatar CSS should be cache-busted');
+  assert.ok(/viz-magic-v93/.test(swJs), 'service worker should use v92 cache');
+});
+
+
+test('safe avatar upload UI re-encodes before JSON_METADATA writes', function () {
+  const settingsJsUpload = read('app/js/ui/screens/settings.js');
+  const accountJsUpload = read('app/js/blockchain/account.js');
+  assert.ok(/id="avatar-upload"/.test(settingsJsUpload), 'settings account section should expose avatar upload input');
+  assert.ok(/accept="image\/png,image\/jpeg,image\/webp"/.test(settingsJsUpload), 'avatar upload should accept only raster image MIME types');
+  assert.ok(/AVATAR_INPUT_MAX_BYTES = 2 \* 1024 \* 1024/.test(settingsJsUpload), 'avatar upload should reject large source files');
+  assert.ok(/AVATAR_OUTPUT_MAX_CHARS = 32768/.test(settingsJsUpload), 'encoded avatar should stay within json_metadata display limit');
+  assert.ok(/readAsArrayBuffer\(file\.slice\(0, 16\)\)/.test(settingsJsUpload), 'upload should inspect magic bytes before image decode');
+  assert.ok(/0x89[\s\S]*0x50[\s\S]*0x4E[\s\S]*0x47/.test(settingsJsUpload), 'upload should verify PNG magic bytes');
+  assert.ok(/0xFF[\s\S]*0xD8[\s\S]*0xFF/.test(settingsJsUpload), 'upload should verify JPEG magic bytes');
+  assert.ok(/0x52[\s\S]*0x49[\s\S]*0x46[\s\S]*0x46[\s\S]*0x57[\s\S]*0x45[\s\S]*0x42[\s\S]*0x50/.test(settingsJsUpload), 'upload should verify WebP RIFF magic bytes');
+  assert.ok(/canvas\.toDataURL\('image\/webp', 0\.82\)/.test(settingsJsUpload), 'upload should re-encode image through canvas before saving');
+  assert.ok(/side > 6000/.test(settingsJsUpload), 'upload should reject absurd decoded dimensions');
+  assert.ok(/VizAccount\.updateProfileAvatar\(dataUrl/.test(settingsJsUpload), 'settings should write prepared data URL through account helper');
+  assert.ok(/VizAccount\.removeProfileAvatar/.test(settingsJsUpload), 'settings should allow avatar removal');
+  assert.ok(/meta\.profile\[field\] = value/.test(accountJsUpload), 'account helper should write only profile field');
+  assert.ok(/delete meta\.profile\[field\]/.test(accountJsUpload), 'account helper should remove only requested profile field');
+  assert.ok(/settings_avatar_hint/.test(ruJs + enJs), 'avatar upload help text should be localized');
+  assert.ok(/settings\.js\?v=20260726c/.test(indexHtml), 'settings screen should be cache-busted for avatar upload');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260726c/.test(indexHtml) && /js\/i18n\/en\.js\?v=20260726c/.test(indexHtml), 'i18n should be cache-busted for avatar strings');
 });

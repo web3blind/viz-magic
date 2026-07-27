@@ -2155,3 +2155,11 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 .loot-name {
     white-space: nowrap;
 }
+
+
+.settings-avatar-field { margin-top: 12px; }
+.settings-avatar-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.settings-avatar-input { max-width: 100%; }
+.settings-avatar-actions { margin-top: 8px; }
+.settings-avatar-preview { margin-right: 0; }
+.settings-error-text { color: var(--color-error); font-weight: 600; }

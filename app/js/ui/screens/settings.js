@@ -53,6 +53,8 @@ var SettingsScreen = (function() {
         if (!el) return;
 
         var user = VizAccount.getCurrentUser();
+        var currentCharacter = user && typeof StateEngine !== 'undefined' && StateEngine.getCharacter ? StateEngine.getCharacter(user) : null;
+        var currentAvatar = currentCharacter && currentCharacter.avatarUrl ? currentCharacter.avatarUrl : '';
         var currentLang = Helpers.getCurrentLang ? Helpers.getCurrentLang() : 'ru';
         var highContrast = _getStoredBool('high_contrast', false);
         var reducedMotion = _getStoredBool('reduced_motion', false);
@@ -131,6 +133,7 @@ var SettingsScreen = (function() {
                     (user ? (
                         '<div class="settings-account-info">' +
                             '<div class="account-row"><span class="account-label">' + t('settings_account_name') + '</span><span class="account-value">' + Helpers.escapeHtml(user) + '</span></div>' +
+                            _renderAvatarUpload(currentAvatar, t) +
                         '</div>'
                     ) : '<p class="settings-not-logged">' + t('settings_not_logged') + '</p>') +
                 '</section>' +
@@ -191,6 +194,21 @@ var SettingsScreen = (function() {
                 'data-icon-motion="' + options[i].value + '" aria-pressed="' + (currentMode === options[i].value) + '">' + options[i].label + '</button>';
         }
         return html + '</div></div>';
+    }
+
+    function _renderAvatarUpload(currentAvatar, t) {
+        var preview = currentAvatar ? '<img class="account-avatar profile-avatar settings-avatar-preview" src="' + Helpers.escapeHtml(currentAvatar) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : '';
+        return '<div class="settings-avatar-field">' +
+            '<label for="avatar-upload" class="input-label"><span class="settings-control-icon vmagic-breathe" aria-hidden="true">🖼️</span> ' + t('settings_avatar') + '</label>' +
+            '<div class="settings-avatar-row">' + preview +
+                '<input id="avatar-upload" class="input-field settings-avatar-input" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="avatar-help avatar-status">' +
+            '</div>' +
+            '<p class="settings-help-text" id="avatar-help">' + t('settings_avatar_hint') + '</p>' +
+            '<div class="settings-avatar-actions">' +
+                '<button type="button" class="btn btn-secondary btn-sm" id="btn-avatar-remove"' + (currentAvatar ? '' : ' disabled') + '>' + t('settings_avatar_remove') + '</button>' +
+            '</div>' +
+            '<p class="settings-help-text" id="avatar-status" role="status" aria-live="polite"></p>' +
+        '</div>';
     }
 
     function _renderSelect(id, label, options, selectedValue) {
@@ -309,6 +327,16 @@ var SettingsScreen = (function() {
             }
         });
 
+        // Avatar upload
+        var avatarInput = el.querySelector('#avatar-upload');
+        if (avatarInput) avatarInput.addEventListener('change', function() {
+            _handleAvatarUpload(this.files && this.files[0], el);
+        });
+        var avatarRemoveBtn = el.querySelector('#btn-avatar-remove');
+        if (avatarRemoveBtn) avatarRemoveBtn.addEventListener('click', function() {
+            _removeAvatar(el);
+        });
+
         // Realm info
         var realmBtn = el.querySelector('#btn-realm-info');
         if (realmBtn) realmBtn.addEventListener('click', function() {
@@ -327,6 +355,114 @@ var SettingsScreen = (function() {
             SoundManager.play('tap');
             Helpers.EventBus.emit('navigate', 'landing');
         });
+    }
+
+    var AVATAR_INPUT_MAX_BYTES = 2 * 1024 * 1024;
+    var AVATAR_OUTPUT_MAX_CHARS = 32768;
+    var AVATAR_TARGET_SIZE = 192;
+
+    function _setAvatarStatus(el, key, isError) {
+        var status = el && el.querySelector ? el.querySelector('#avatar-status') : null;
+        if (status) {
+            status.textContent = Helpers.t(key);
+            status.className = 'settings-help-text' + (isError ? ' settings-error-text' : '');
+        }
+    }
+
+    function _handleAvatarUpload(file, el) {
+        if (!file) return;
+        if (!/^image\/(png|jpeg|webp)$/.test(file.type || '') || file.size > AVATAR_INPUT_MAX_BYTES) {
+            _setAvatarStatus(el, 'settings_avatar_error_type', true);
+            return;
+        }
+        _setAvatarStatus(el, 'settings_avatar_processing', false);
+        _readMagicBytes(file, function(ok) {
+            if (!ok) {
+                _setAvatarStatus(el, 'settings_avatar_error_type', true);
+                return;
+            }
+            _encodeAvatar(file, function(err, dataUrl) {
+                if (err || !dataUrl || dataUrl.length > AVATAR_OUTPUT_MAX_CHARS || !VizAccount.sanitizeAvatarUrl(dataUrl)) {
+                    _setAvatarStatus(el, 'settings_avatar_error_process', true);
+                    return;
+                }
+                _setAvatarStatus(el, 'settings_avatar_saving', false);
+                VizAccount.updateProfileAvatar(dataUrl, function(saveErr) {
+                    if (saveErr) {
+                        _setAvatarStatus(el, 'settings_avatar_error_save', true);
+                        return;
+                    }
+                    _applyCurrentAvatar(dataUrl);
+                    Toast.success(Helpers.t('settings_avatar_saved'));
+                    render();
+                });
+            });
+        });
+    }
+
+    function _readMagicBytes(file, callback) {
+        var reader = new FileReader();
+        reader.onerror = function() { callback(false); };
+        reader.onload = function() {
+            var bytes = new Uint8Array(reader.result || []);
+            var isPng = bytes.length > 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47 && bytes[4] === 0x0D && bytes[5] === 0x0A && bytes[6] === 0x1A && bytes[7] === 0x0A;
+            var isJpeg = bytes.length > 3 && bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+            var isWebp = bytes.length > 12 && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+            callback(isPng || isJpeg || isWebp);
+        };
+        reader.readAsArrayBuffer(file.slice(0, 16));
+    }
+
+    function _encodeAvatar(file, callback) {
+        var url = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function() {
+            try {
+                var size = AVATAR_TARGET_SIZE;
+                var canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                var ctx = canvas.getContext('2d');
+                var side = Math.min(img.naturalWidth || img.width, img.naturalHeight || img.height);
+                if (!side || side <= 0 || side > 6000) throw new Error('bad_dimensions');
+                var sx = Math.floor(((img.naturalWidth || img.width) - side) / 2);
+                var sy = Math.floor(((img.naturalHeight || img.height) - side) / 2);
+                ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+                var dataUrl = canvas.toDataURL('image/webp', 0.82);
+                if (!/^data:image\/webp;base64,/.test(dataUrl) || dataUrl.length > AVATAR_OUTPUT_MAX_CHARS) {
+                    dataUrl = canvas.toDataURL('image/png');
+                }
+                URL.revokeObjectURL(url);
+                callback(null, dataUrl);
+            } catch (e) {
+                URL.revokeObjectURL(url);
+                callback(e);
+            }
+        };
+        img.onerror = function() {
+            URL.revokeObjectURL(url);
+            callback(new Error('decode_failed'));
+        };
+        img.src = url;
+    }
+
+    function _removeAvatar(el) {
+        _setAvatarStatus(el, 'settings_avatar_saving', false);
+        VizAccount.removeProfileAvatar(function(err) {
+            if (err) {
+                _setAvatarStatus(el, 'settings_avatar_error_save', true);
+                return;
+            }
+            _applyCurrentAvatar('');
+            Toast.success(Helpers.t('settings_avatar_removed'));
+            render();
+        });
+    }
+
+    function _applyCurrentAvatar(dataUrl) {
+        var user = VizAccount.getCurrentUser();
+        var ch = user && StateEngine.getCharacter ? StateEngine.getCharacter(user) : null;
+        if (ch) ch.avatarUrl = dataUrl || '';
     }
 
     return { render: render };
