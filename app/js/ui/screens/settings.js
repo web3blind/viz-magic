@@ -204,10 +204,23 @@ var SettingsScreen = (function() {
                 '<input id="avatar-upload" class="input-field settings-avatar-input" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="avatar-help avatar-status">' +
             '</div>' +
             '<p class="settings-help-text" id="avatar-help">' + t('settings_avatar_hint') + '</p>' +
+            _renderAvatarModeChoice(t) +
             '<div class="settings-avatar-actions">' +
                 '<button type="button" class="btn btn-secondary btn-sm" id="btn-avatar-remove"' + (currentAvatar ? '' : ' disabled') + '>' + t('settings_avatar_remove') + '</button>' +
             '</div>' +
             '<p class="settings-help-text" id="avatar-status" role="status" aria-live="polite"></p>' +
+        '</div>';
+    }
+
+    function _renderAvatarModeChoice(t) {
+        var currentMode = _getStoredText('avatar_fit_mode', 'fit');
+        return '<div class="settings-field settings-avatar-mode" role="group" aria-label="' + t('settings_avatar_mode') + '">' +
+            '<span class="input-label">' + t('settings_avatar_mode') + '</span>' +
+            '<div class="settings-toggle-group settings-choice-group">' +
+                '<button type="button" class="btn btn-sm ' + (currentMode === 'fit' ? 'btn-primary' : 'btn-secondary') + ' avatar-mode-option" data-avatar-mode="fit" aria-pressed="' + (currentMode === 'fit') + '">' + t('settings_avatar_mode_fit') + '</button>' +
+                '<button type="button" class="btn btn-sm ' + (currentMode === 'crop' ? 'btn-primary' : 'btn-secondary') + ' avatar-mode-option" data-avatar-mode="crop" aria-pressed="' + (currentMode === 'crop') + '">' + t('settings_avatar_mode_crop') + '</button>' +
+            '</div>' +
+            '<p class="settings-help-text">' + t('settings_avatar_mode_hint') + '</p>' +
         '</div>';
     }
 
@@ -328,6 +341,15 @@ var SettingsScreen = (function() {
         });
 
         // Avatar upload
+        var avatarModeOptions = el.querySelectorAll('.avatar-mode-option');
+        for (var amo = 0; amo < avatarModeOptions.length; amo++) {
+            avatarModeOptions[amo].addEventListener('click', function() {
+                var mode = this.getAttribute('data-avatar-mode') === 'crop' ? 'crop' : 'fit';
+                try { localStorage.setItem(STORAGE_PREFIX + 'avatar_fit_mode', mode); } catch (e) {}
+                SoundManager.play('tap');
+                render();
+            });
+        }
         var avatarInput = el.querySelector('#avatar-upload');
         if (avatarInput) avatarInput.addEventListener('change', function() {
             _handleAvatarUpload(this.files && this.files[0], el);
@@ -381,7 +403,8 @@ var SettingsScreen = (function() {
                 _setAvatarStatus(el, 'settings_avatar_error_type', true);
                 return;
             }
-            _encodeAvatar(file, function(err, dataUrl) {
+            var avatarMode = _getStoredText('avatar_fit_mode', 'fit') === 'crop' ? 'crop' : 'fit';
+            _encodeAvatar(file, avatarMode, function(err, dataUrl) {
                 if (err || !dataUrl || dataUrl.length > AVATAR_OUTPUT_MAX_CHARS || !VizAccount.sanitizeAvatarUrl(dataUrl)) {
                     _setAvatarStatus(el, 'settings_avatar_error_process', true);
                     return;
@@ -413,7 +436,8 @@ var SettingsScreen = (function() {
         reader.readAsArrayBuffer(file.slice(0, 16));
     }
 
-    function _encodeAvatar(file, callback) {
+    function _encodeAvatar(file, mode, callback) {
+        mode = mode === 'crop' ? 'crop' : 'fit';
         var url = URL.createObjectURL(file);
         var img = new Image();
         img.onload = function() {
@@ -423,11 +447,23 @@ var SettingsScreen = (function() {
                 canvas.width = size;
                 canvas.height = size;
                 var ctx = canvas.getContext('2d');
-                var side = Math.min(img.naturalWidth || img.width, img.naturalHeight || img.height);
-                if (!side || side <= 0 || side > 6000) throw new Error('bad_dimensions');
-                var sx = Math.floor(((img.naturalWidth || img.width) - side) / 2);
-                var sy = Math.floor(((img.naturalHeight || img.height) - side) / 2);
-                ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+                var iw = img.naturalWidth || img.width;
+                var ih = img.naturalHeight || img.height;
+                if (!iw || !ih || iw <= 0 || ih <= 0 || iw > 6000 || ih > 6000) throw new Error('bad_dimensions');
+                ctx.clearRect(0, 0, size, size);
+                if (mode === 'crop') {
+                    var side = Math.min(iw, ih);
+                    var sx = Math.floor((iw - side) / 2);
+                    var sy = Math.floor((ih - side) / 2);
+                    ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+                } else {
+                    var scale = Math.min(size / iw, size / ih);
+                    var dw = Math.round(iw * scale);
+                    var dh = Math.round(ih * scale);
+                    var dx = Math.floor((size - dw) / 2);
+                    var dy = Math.floor((size - dh) / 2);
+                    ctx.drawImage(img, 0, 0, iw, ih, dx, dy, dw, dh);
+                }
                 var dataUrl = canvas.toDataURL('image/webp', 0.82);
                 if (!/^data:image\/webp;base64,/.test(dataUrl) || dataUrl.length > AVATAR_OUTPUT_MAX_CHARS) {
                     dataUrl = canvas.toDataURL('image/png');
