@@ -1167,7 +1167,7 @@ var LangEN = {
     settings_account: 'Account',
     settings_account_name: 'Mage name',
     settings_avatar: 'Avatar',
-    settings_avatar_hint: 'PNG, JPEG, or WebP up to 2 MB. The game safely crops and re-encodes it into a small public JSON_METADATA image.',
+    settings_avatar_hint: 'PNG, JPEG, or WebP up to 2 MB. The game safely prepares and re-encodes it into a small public JSON_METADATA image.',
     settings_avatar_remove: 'Remove avatar',
     settings_avatar_save: 'Save avatar',
     settings_avatar_preview_hint: 'After choosing a file, a preview of the prepared avatar appears here. Check it, then press “Save avatar”.',

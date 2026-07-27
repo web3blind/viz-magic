@@ -474,8 +474,8 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/event-icon vmagic-breathe/.test(homeJs), 'minor rift banner icon should breathe with other icons');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should appear only from the authored calendar');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260726e/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260726e/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260726f/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260726f/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/home.js\?v=20260724f/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/js\/ui\/screens\/quests.js\?v=20260726a/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260716a/.test(indexHtml), 'bottom tray nav must be cache-busted');
@@ -581,7 +581,7 @@ test('PWA icon and HP heart use expressive color accents', function () {
 
 
 test('character screen uses current home-scale vitals and growth explainers', function () {
-  assert.ok(/character.js\?v=20260726b/.test(indexHtml), 'character screen should be cache-busted');
+  assert.ok(/character.js\?v=20260726f/.test(indexHtml), 'character screen should be cache-busted');
   assert.ok(/CHARACTER_HP_DISPLAY_MAX = 1000/.test(characterScreenJs), 'character HP should use the same 1000 visual scale as Home');
   assert.ok(/CHARACTER_XP_DISPLAY_MAX = 10000/.test(characterScreenJs), 'character XP visual scale should top at 10000');
   assert.ok(/char-mana-bar[\s\S]*char-hp-bar[\s\S]*char-xp-bar/.test(characterScreenJs), 'character vitals should follow Home order: Mana, HP, XP');
@@ -630,7 +630,7 @@ test('home action tiles reflect Denis priority order', function () {
 
 
 test('character vital explainers are placed immediately after their bars', function () {
-  assert.ok(/character.js\?v=20260726b/.test(indexHtml), 'character screen should be cache-busted for vital layout');
+  assert.ok(/character.js\?v=20260726f/.test(indexHtml), 'character screen should be cache-busted for vital layout');
   assert.ok(/char-mana-bar[\s\S]*char_mana_explainer[\s\S]*char-hp-bar[\s\S]*char_hp_explainer[\s\S]*char-xp-bar[\s\S]*char_xp_explainer/.test(characterScreenJs), 'character vital explanations should follow Mana, HP and XP bars respectively');
   assert.ok(!/character-growth-notes/.test(characterScreenJs), 'vital explanations should not be grouped away from their bars');
 });
@@ -975,7 +975,7 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260726a/.test(indexHtml), 'Help should be cache-busted for guide redesign');
   assert.ok(/main\.css\?v=20260726e/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v95/.test(swJsV83), 'service worker should use the current v91 cache');
+  assert.ok(/viz-magic-v96/.test(swJsV83), 'service worker should use the current v91 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
 
@@ -1035,7 +1035,7 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
   assert.ok(/quest-system\.js\?v=20260726a/.test(indexHtml) && /quests\.js\?v=20260726a/.test(indexHtml), 'quest engine and UI should be cache-busted');
   assert.ok(/inventory\.js\?v=20260726a/.test(indexHtml) && /marketplace\.js\?v=20260726a/.test(indexHtml), 'item icon screens should be cache-busted');
   assert.ok(/guild\.js\?v=20260726a/.test(indexHtml) && /settings\.js\?v=20260726e/.test(indexHtml), 'guild/settings screens should be cache-busted');
-  assert.ok(/viz-magic-v95/.test(swJs), 'service worker should use v91 cache');
+  assert.ok(/viz-magic-v96/.test(swJs), 'service worker should use v91 cache');
 });
 
 
@@ -1090,9 +1090,9 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.ok(/arena\.js\?v=20260726b/.test(indexHtml), 'arena UI should be cache-busted');
   assert.ok(/duel\.js\?v=20260726b/.test(indexHtml), 'duel UI should be cache-busted');
   assert.ok(/world-boss\.js\?v=20260726b/.test(indexHtml), 'world boss UI should be cache-busted');
-  assert.ok(/character\.js\?v=20260726b/.test(indexHtml), 'character UI should be cache-busted');
+  assert.ok(/character\.js\?v=20260726f/.test(indexHtml), 'character UI should be cache-busted');
   assert.ok(/main\.css\?v=20260726e/.test(indexHtml), 'avatar CSS should be cache-busted');
-  assert.ok(/viz-magic-v95/.test(swJs), 'service worker should use v92 cache');
+  assert.ok(/viz-magic-v96/.test(swJs), 'service worker should use v92 cache');
 });
 
 
@@ -1125,5 +1125,18 @@ test('safe avatar upload UI re-encodes before JSON_METADATA writes', function ()
   assert.ok(/delete meta\.profile\[field\]/.test(accountJsUpload), 'account helper should remove only requested profile field');
   assert.ok(/settings_avatar_hint/.test(ruJs + enJs) && /settings_avatar_mode_fit/.test(ruJs + enJs) && /settings_avatar_preview_hint/.test(ruJs + enJs), 'avatar upload help, preview and mode text should be localized');
   assert.ok(/settings\.js\?v=20260726e/.test(indexHtml), 'settings screen should be cache-busted for avatar upload');
-  assert.ok(/js\/i18n\/ru\.js\?v=20260726e/.test(indexHtml) && /js\/i18n\/en\.js\?v=20260726e/.test(indexHtml), 'i18n should be cache-busted for avatar strings');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260726f/.test(indexHtml) && /js\/i18n\/en\.js\?v=20260726f/.test(indexHtml), 'i18n should be cache-busted for avatar strings');
+});
+
+
+test('character profile refreshes avatar from VIZ JSON_METADATA on render', function () {
+  const characterJsAvatar = read('app/js/ui/screens/character.js');
+  const indexHtmlAvatarProfile = read('app/index.html');
+  assert.ok(/VizAccount\.getAccount\(user, function\(err, accountData\)/.test(characterJsAvatar), 'character profile should fetch the live account on render');
+  assert.ok(/_refreshProfileAvatar\(user, ch, accountData\)/.test(characterJsAvatar), 'character profile should refresh avatar from live account metadata');
+  assert.ok(/VizAccount\.getProfileAvatar\(accountData\)/.test(characterJsAvatar), 'character profile should use the same sanitized VIZ profile avatar helper');
+  assert.ok(/header\.querySelector\('\.profile-avatar'\)/.test(characterJsAvatar), 'character profile should replace stale profile avatar DOM');
+  assert.ok(/insertAdjacentHTML\('beforebegin', _renderAvatar\(freshAvatar/.test(characterJsAvatar), 'character profile should insert avatar next to the class icon when metadata arrives');
+  assert.ok(/character\.js\?v=20260726f/.test(indexHtmlAvatarProfile), 'character screen should be cache-busted for live avatar refresh');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260726f/.test(indexHtmlAvatarProfile) && /js\/i18n\/en\.js\?v=20260726f/.test(indexHtmlAvatarProfile), 'i18n should be cache-busted for updated avatar copy');
 });

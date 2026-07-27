@@ -1167,7 +1167,7 @@ var LangRU = {
     settings_account: 'Аккаунт',
     settings_account_name: 'Имя мага',
     settings_avatar: 'Аватар',
-    settings_avatar_hint: 'PNG, JPEG или WebP до 2 МБ. Игра безопасно обрежет и пережмёт изображение до маленькой публичной картинки в JSON_METADATA.',
+    settings_avatar_hint: 'PNG, JPEG или WebP до 2 МБ. Игра безопасно подготовит и пережмёт изображение до маленькой публичной картинки в JSON_METADATA.',
     settings_avatar_remove: 'Удалить аватар',
     settings_avatar_save: 'Сохранить аватар',
     settings_avatar_preview_hint: 'После выбора файла здесь появится предпросмотр готовой аватарки. Проверьте его и нажмите «Сохранить аватар».',

@@ -66,8 +66,25 @@ var CharacterScreen = (function() {
                 if (!err && accountData) {
                     var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
                     ProgressBar.update('char-mana-bar', currentEnergy / 100, 100);
+                    _refreshProfileAvatar(user, ch, accountData);
                 }
             });
+        }
+    }
+
+    function _refreshProfileAvatar(user, ch, accountData) {
+        if (!user || !ch || !VizAccount.getProfileAvatar) return;
+        var freshAvatar = VizAccount.getProfileAvatar(accountData) || '';
+        if ((ch.avatarUrl || '') === freshAvatar) return;
+        ch.avatarUrl = freshAvatar;
+        var header = document.querySelector('#screen-character .char-header');
+        if (!header) return;
+        var oldAvatar = header.querySelector('.profile-avatar');
+        if (oldAvatar && oldAvatar.parentNode) oldAvatar.parentNode.removeChild(oldAvatar);
+        if (!freshAvatar) return;
+        var classIcon = header.querySelector('.char-icon');
+        if (classIcon) {
+            classIcon.insertAdjacentHTML('beforebegin', _renderAvatar(freshAvatar, ch.name || user, 'profile-avatar'));
         }
     }
 
