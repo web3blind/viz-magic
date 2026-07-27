@@ -2123,3 +2123,35 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 .home-lore-card p { margin: 0; color: var(--color-text-muted); font-size: 0.82rem; line-height: 1.4; overflow-wrap: anywhere; }
 .daily-hunt-title { color: #7ee7c8; text-shadow: 0 0 10px rgba(46, 204, 113, 0.45); }
 @media (max-width: 560px) { .home-lore-pages { grid-template-columns: 1fr; } }
+
+
+.account-avatar {
+    width: 32px;
+    height: 32px;
+    max-width: 32px;
+    max-height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    vertical-align: middle;
+    margin-right: 8px;
+    border: 1px solid rgba(255,255,255,0.22);
+    background: var(--color-surface);
+    flex: 0 0 auto;
+}
+.profile-avatar {
+    width: 48px;
+    height: 48px;
+    max-width: 48px;
+    max-height: 48px;
+}
+.leaderboard-cell-player,
+.arena-player-info,
+.lb-name,
+.loot-name {
+    align-items: center;
+}
+.leaderboard-cell-player,
+.lb-name,
+.loot-name {
+    white-space: nowrap;
+}

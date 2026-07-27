@@ -113,6 +113,9 @@ var App = (function() {
                                     : { active: [], completed: [], dailyProphecyDay: 0 };
                             }
                             var ch = state.characters[user];
+                            if (ch && VizAccount.getProfileAvatar) {
+                                ch.avatarUrl = VizAccount.getProfileAvatar(accountData);
+                            }
                             console.log('Character restored: ' + (ch ? ch.name + ' Lv' + ch.level + ' XP:' + ch.xp : 'none'));
                             navigateTo('home');
                         } else {

@@ -337,6 +337,7 @@ var ArenaScreen = (function() {
             html += '<tr class="' + rowClass + '">' +
                 '<td>' + (i + 1) + '</td>' +
                 '<td>' +
+                    _renderAccountAvatar(char.avatarUrl, char.name || entry.account, 'arena-avatar') +
                     '<span aria-hidden="true">' + Helpers.classIcon(char.className) + '</span> ' +
                     Helpers.escapeHtml(char.name || entry.account) +
                     (isMe ? ' (' + t('arena_you') + ')' : '') +
@@ -404,7 +405,7 @@ var ArenaScreen = (function() {
                 var ch = state.characters[account];
                 if (!ch || !ch.name) continue;
                 seen[account] = true;
-                players.push({ account: account, name: ch.name, level: ch.level || 1, className: ch.className });
+                players.push({ account: account, name: ch.name, level: ch.level || 1, className: ch.className, avatarUrl: ch.avatarUrl || '' });
             }
         }
 
@@ -432,6 +433,7 @@ var ArenaScreen = (function() {
             var classIconHtml = p.className ? '<span aria-hidden="true">' + Helpers.classIcon(p.className) + '</span> ' : '';
             html += '<div class="arena-player-card" role="listitem">' +
                 '<span class="arena-player-info">' +
+                    _renderAccountAvatar(p.avatarUrl, p.name, 'arena-avatar') +
                     classIconHtml +
                     Helpers.escapeHtml(p.name) +
                     levelText +
@@ -444,6 +446,11 @@ var ArenaScreen = (function() {
         }
         html += '</div>';
         return html;
+    }
+
+    function _renderAccountAvatar(url, name, extraClass) {
+        if (!url) return '';
+        return '<img class="account-avatar ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
     }
 
     function _renderHistory(container) {

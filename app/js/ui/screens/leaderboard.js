@@ -99,6 +99,7 @@ var LeaderboardScreen = (function() {
                         '<span aria-hidden="true">' + medalIcon + '</span>' +
                     '</td>' +
                     '<td class="leaderboard-cell-player">' +
+                        _renderAccountAvatar(row.avatarUrl, row.name || row.account, 'leaderboard-avatar') +
                         '<span class="leaderboard-name">' + Helpers.escapeHtml(row.name || row.account) + '</span>' +
                         youBadge +
                     '</td>' +
@@ -147,6 +148,7 @@ var LeaderboardScreen = (function() {
             rows.push({
                 account: account,
                 name: ch.name || account,
+                avatarUrl: ch.avatarUrl || '',
                 xp: ch.xp || 0,
                 hunts: 0
             });
@@ -156,6 +158,11 @@ var LeaderboardScreen = (function() {
             return String(a.name || a.account).localeCompare(String(b.name || b.account));
         });
         return rows.slice(0, 100);
+    }
+
+    function _renderAccountAvatar(url, name, extraClass) {
+        if (!url) return '';
+        return '<img class="account-avatar ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
     }
 
     function _formatNumber(n) {

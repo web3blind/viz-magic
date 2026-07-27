@@ -926,6 +926,9 @@ var DuelScreen = (function() {
                 CharacterSystem.updateCoreBonus(character, cappedShares);
             }
 
+            if (VizAccount.getProfileAvatar) {
+                character.avatarUrl = VizAccount.getProfileAvatar(accountData);
+            }
             state.characters[account] = character;
             state.inventories[account] = state.inventories[account] || [];
             state.quests[account] = state.quests[account] || (typeof QuestSystem !== 'undefined' && QuestSystem.createPlayerQuestState

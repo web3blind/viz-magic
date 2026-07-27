@@ -397,6 +397,7 @@ var DailyLeaderboard = (function() {
 
         var character = null;
         if (accountData) {
+            var avatarUrl = VizAccount.getProfileAvatar ? VizAccount.getProfileAvatar(accountData) : '';
             var grimoire = VizAccount.parseGrimoire(accountData);
             if (grimoire && grimoire.class) {
                 character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class);
@@ -413,6 +414,7 @@ var DailyLeaderboard = (function() {
             character = CharacterSystem.createCharacter(account, account, 'embercaster');
         }
 
+        if (avatarUrl) character.avatarUrl = avatarUrl;
         ctx.characters[account] = character;
     }
 
@@ -435,7 +437,7 @@ var DailyLeaderboard = (function() {
         if (!result || !result.victory) return;
 
         CharacterSystem.addXp(character, result.xpGained);
-        _addContribution(ctx.players, blockContrib.players, account, character.name || account, result.xpGained, 1);
+        _addContribution(ctx.players, blockContrib.players, account, character.name || account, result.xpGained, 1, character.avatarUrl || '');
     }
 
     function _handleArmageddon(ctx, account, data, processed, blockContrib) {
@@ -447,20 +449,22 @@ var DailyLeaderboard = (function() {
 
         var xp = GameFormulas.armageddonXp(character.level, creature.minLevel, creature.baseXp || 25);
         CharacterSystem.addXp(character, xp);
-        _addContribution(ctx.players, blockContrib.players, account, character.name || account, xp, 1);
+        _addContribution(ctx.players, blockContrib.players, account, character.name || account, xp, 1, character.avatarUrl || '');
     }
 
-    function _addContribution(players, blockPlayers, account, name, xp, hunts) {
+    function _addContribution(players, blockPlayers, account, name, xp, hunts, avatarUrl) {
         if (!players[account]) {
-            players[account] = { account: account, name: name || account, xp24h: 0, hunts24h: 0, lastSeenBlock: 0 };
+            players[account] = { account: account, name: name || account, avatarUrl: avatarUrl || '', xp24h: 0, hunts24h: 0, lastSeenBlock: 0 };
         }
         players[account].name = name || players[account].name || account;
+        if (avatarUrl) players[account].avatarUrl = avatarUrl;
         players[account].xp24h += xp || 0;
         players[account].hunts24h += hunts || 0;
 
         if (!blockPlayers[account]) {
-            blockPlayers[account] = { xp: 0, hunts: 0, name: name || account };
+            blockPlayers[account] = { xp: 0, hunts: 0, name: name || account, avatarUrl: avatarUrl || '' };
         }
+        if (avatarUrl) blockPlayers[account].avatarUrl = avatarUrl;
         blockPlayers[account].xp += xp || 0;
         blockPlayers[account].hunts += hunts || 0;
         blockPlayers[account].name = name || blockPlayers[account].name || account;
@@ -484,9 +488,10 @@ var DailyLeaderboard = (function() {
             if (!blockContrib.players.hasOwnProperty(account)) continue;
             var entry = blockContrib.players[account];
             if (!players[account]) {
-                players[account] = { account: account, name: (entry && entry.name) || account, xp24h: 0, hunts24h: 0, lastSeenBlock: blockContrib.blockNum || 0 };
+                players[account] = { account: account, name: (entry && entry.name) || account, avatarUrl: (entry && entry.avatarUrl) || '', xp24h: 0, hunts24h: 0, lastSeenBlock: blockContrib.blockNum || 0 };
             }
             players[account].name = (entry && entry.name) || players[account].name || account;
+            if (entry && entry.avatarUrl) players[account].avatarUrl = entry.avatarUrl;
             players[account].xp24h += (entry && entry.xp) || 0;
             players[account].hunts24h += (entry && entry.hunts) || 0;
             players[account].lastSeenBlock = blockContrib.blockNum || players[account].lastSeenBlock || 0;
@@ -524,6 +529,7 @@ var DailyLeaderboard = (function() {
             rows.push({
                 account: account,
                 name: players[account].name || account,
+                avatarUrl: players[account].avatarUrl || '',
                 xp: players[account].xp24h || 0,
                 hunts: players[account].hunts24h || 0
             });

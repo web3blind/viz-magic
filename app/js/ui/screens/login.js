@@ -157,6 +157,9 @@ var LoginScreen = (function() {
                 state.characters[account] = character;
             }
         }
+        if (state.characters[account] && VizAccount.getProfileAvatar) {
+            state.characters[account].avatarUrl = VizAccount.getProfileAvatar(accountData);
+        }
         state.inventories[account] = state.inventories[account] || [];
         state.quests[account] = state.quests[account] || (typeof QuestSystem !== 'undefined' ? QuestSystem.createPlayerQuestState() : {});
     }

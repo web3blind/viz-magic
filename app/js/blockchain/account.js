@@ -253,6 +253,29 @@ var VizAccount = (function() {
         }
     }
 
+    var MAX_PROFILE_AVATAR_CHARS = 32768;
+
+    function getProfileAvatar(account) {
+        if (!account) return '';
+        try {
+            var meta = JSON.parse(account.json_metadata || '{}');
+            var profile = meta.profile || {};
+            var avatar = profile.avatar || profile.profile_image || profile.profile_image_url || profile.image || profile.picture || '';
+            return sanitizeAvatarUrl(avatar);
+        } catch(e) {
+            return '';
+        }
+    }
+
+    function sanitizeAvatarUrl(url) {
+        if (!url || typeof url !== 'string') return '';
+        url = url.trim();
+        if (url.length > MAX_PROFILE_AVATAR_CHARS) return '';
+        if (/^https?:\/\//i.test(url)) return url;
+        if (/^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=\s]+$/i.test(url)) return url.replace(/\s+/g, '');
+        return '';
+    }
+
     /**
      * Update Grimoire (game metadata) on chain
      * @param {Object} grimoireData - game-specific metadata
@@ -344,6 +367,8 @@ var VizAccount = (function() {
         getAccount: getAccount,
         getAccountProtocol: getAccountProtocol,
         parseGrimoire: parseGrimoire,
+        getProfileAvatar: getProfileAvatar,
+        sanitizeAvatarUrl: sanitizeAvatarUrl,
         updateGrimoire: updateGrimoire,
         calculateCurrentEnergy: calculateCurrentEnergy,
         getEffectiveShares: getEffectiveShares,

@@ -214,6 +214,7 @@ var WorldBossScreen = (function() {
                 var isMe = entry.account === VizAccount.getCurrentUser();
                 html += '<li class="boss-loot-entry' + (isMe ? ' boss-loot-me' : '') + '">' +
                     '<span class="loot-rank">#' + (i + 1) + '</span>' +
+                    _renderAccountAvatar(StateEngine.getCharacter && StateEngine.getCharacter(entry.account) && StateEngine.getCharacter(entry.account).avatarUrl, entry.account, 'boss-avatar') +
                     '<span class="loot-name">' + Helpers.escapeHtml(entry.account) + (isMe ? ' \u2B50' : '') + '</span>' +
                     '<span class="loot-damage">' + _formatNum(entry.damage) + ' ' + t('boss_damage_dealt') + '</span>' +
                     '<span class="loot-share">' + entry.sharePercent + '%</span>' +
@@ -251,17 +252,24 @@ var WorldBossScreen = (function() {
             return '<p class="empty-state">' + t('boss_no_attackers') + '</p>';
         }
         var user = VizAccount.getCurrentUser();
+        var state = StateEngine.getState ? StateEngine.getState() : {};
         var html = '<ol class="boss-lb-list">';
         for (var i = 0; i < leaderboard.length; i++) {
             var entry = leaderboard[i];
             var isMe = entry.account === user;
             html += '<li class="boss-lb-entry' + (isMe ? ' boss-lb-me' : '') + '">' +
+                _renderAccountAvatar(state.characters && state.characters[entry.account] && state.characters[entry.account].avatarUrl, entry.account, 'boss-avatar') +
                 '<span class="lb-name">' + Helpers.escapeHtml(entry.account) + '</span>' +
                 '<span class="lb-damage">' + _formatNum(entry.damage) + '</span>' +
             '</li>';
         }
         html += '</ol>';
         return html;
+    }
+
+    function _renderAccountAvatar(url, name, extraClass) {
+        if (!url) return '';
+        return '<img class="account-avatar ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
     }
 
     function _renderCounterLog(log, t) {
