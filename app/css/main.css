@@ -2165,3 +2165,6 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 .settings-error-text { color: var(--color-error); font-weight: 600; }
 
 .settings-avatar-mode { margin-top: 10px; }
+
+.settings-avatar-preview-slot { display: inline-flex; align-items: center; min-width: 48px; min-height: 48px; }
+.settings-avatar-actions { display: flex; gap: 8px; flex-wrap: wrap; }

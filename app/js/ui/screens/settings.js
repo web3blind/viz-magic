@@ -6,6 +6,7 @@ var SettingsScreen = (function() {
     'use strict';
 
     var STORAGE_PREFIX = VizMagicConfig.STORAGE_PREFIX;
+    var pendingAvatarDataUrl = '';
 
     function _getStoredBool(key, fallback) {
         try {
@@ -197,15 +198,19 @@ var SettingsScreen = (function() {
     }
 
     function _renderAvatarUpload(currentAvatar, t) {
-        var preview = currentAvatar ? '<img class="account-avatar profile-avatar settings-avatar-preview" src="' + Helpers.escapeHtml(currentAvatar) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : '';
+        var previewSrc = pendingAvatarDataUrl || currentAvatar || '';
+        var preview = previewSrc ? '<img class="account-avatar profile-avatar settings-avatar-preview" src="' + Helpers.escapeHtml(previewSrc) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : '';
         return '<div class="settings-avatar-field">' +
             '<label for="avatar-upload" class="input-label"><span class="settings-control-icon vmagic-breathe" aria-hidden="true">🖼️</span> ' + t('settings_avatar') + '</label>' +
-            '<div class="settings-avatar-row">' + preview +
-                '<input id="avatar-upload" class="input-field settings-avatar-input" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="avatar-help avatar-status">' +
+            '<div class="settings-avatar-row">' +
+                '<span class="settings-avatar-preview-slot" id="avatar-preview-slot">' + preview + '</span>' +
+                '<input id="avatar-upload" class="input-field settings-avatar-input" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="avatar-help avatar-preview-hint avatar-status">' +
             '</div>' +
             '<p class="settings-help-text" id="avatar-help">' + t('settings_avatar_hint') + '</p>' +
             _renderAvatarModeChoice(t) +
+            '<p class="settings-help-text" id="avatar-preview-hint">' + t('settings_avatar_preview_hint') + '</p>' +
             '<div class="settings-avatar-actions">' +
+                '<button type="button" class="btn btn-primary btn-sm" id="btn-avatar-save"' + (pendingAvatarDataUrl ? '' : ' disabled') + '>' + t('settings_avatar_save') + '</button>' +
                 '<button type="button" class="btn btn-secondary btn-sm" id="btn-avatar-remove"' + (currentAvatar ? '' : ' disabled') + '>' + t('settings_avatar_remove') + '</button>' +
             '</div>' +
             '<p class="settings-help-text" id="avatar-status" role="status" aria-live="polite"></p>' +
@@ -354,6 +359,10 @@ var SettingsScreen = (function() {
         if (avatarInput) avatarInput.addEventListener('change', function() {
             _handleAvatarUpload(this.files && this.files[0], el);
         });
+        var avatarSaveBtn = el.querySelector('#btn-avatar-save');
+        if (avatarSaveBtn) avatarSaveBtn.addEventListener('click', function() {
+            _savePendingAvatar(el);
+        });
         var avatarRemoveBtn = el.querySelector('#btn-avatar-remove');
         if (avatarRemoveBtn) avatarRemoveBtn.addEventListener('click', function() {
             _removeAvatar(el);
@@ -406,19 +415,15 @@ var SettingsScreen = (function() {
             var avatarMode = _getStoredText('avatar_fit_mode', 'fit') === 'crop' ? 'crop' : 'fit';
             _encodeAvatar(file, avatarMode, function(err, dataUrl) {
                 if (err || !dataUrl || dataUrl.length > AVATAR_OUTPUT_MAX_CHARS || !VizAccount.sanitizeAvatarUrl(dataUrl)) {
+                    pendingAvatarDataUrl = '';
                     _setAvatarStatus(el, 'settings_avatar_error_process', true);
                     return;
                 }
-                _setAvatarStatus(el, 'settings_avatar_saving', false);
-                VizAccount.updateProfileAvatar(dataUrl, function(saveErr) {
-                    if (saveErr) {
-                        _setAvatarStatus(el, 'settings_avatar_error_save', true);
-                        return;
-                    }
-                    _applyCurrentAvatar(dataUrl);
-                    Toast.success(Helpers.t('settings_avatar_saved'));
-                    render();
-                });
+                pendingAvatarDataUrl = dataUrl;
+                _setAvatarPreview(el, dataUrl);
+                _setAvatarStatus(el, 'settings_avatar_ready', false);
+                var saveBtn = el.querySelector('#btn-avatar-save');
+                if (saveBtn) saveBtn.disabled = false;
             });
         });
     }
@@ -482,7 +487,33 @@ var SettingsScreen = (function() {
         img.src = url;
     }
 
+    function _setAvatarPreview(el, dataUrl) {
+        var slot = el && el.querySelector ? el.querySelector('#avatar-preview-slot') : null;
+        if (slot) {
+            slot.innerHTML = dataUrl ? '<img class="account-avatar profile-avatar settings-avatar-preview" src="' + Helpers.escapeHtml(dataUrl) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : '';
+        }
+    }
+
+    function _savePendingAvatar(el) {
+        if (!pendingAvatarDataUrl) {
+            _setAvatarStatus(el, 'settings_avatar_error_process', true);
+            return;
+        }
+        _setAvatarStatus(el, 'settings_avatar_saving', false);
+        VizAccount.updateProfileAvatar(pendingAvatarDataUrl, function(saveErr) {
+            if (saveErr) {
+                _setAvatarStatus(el, 'settings_avatar_error_save', true);
+                return;
+            }
+            _applyCurrentAvatar(pendingAvatarDataUrl);
+            pendingAvatarDataUrl = '';
+            Toast.success(Helpers.t('settings_avatar_saved'));
+            render();
+        });
+    }
+
     function _removeAvatar(el) {
+        pendingAvatarDataUrl = '';
         _setAvatarStatus(el, 'settings_avatar_saving', false);
         VizAccount.removeProfileAvatar(function(err) {
             if (err) {
