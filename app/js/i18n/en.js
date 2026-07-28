@@ -1246,6 +1246,8 @@ var LangEN = {
     help_mana_text: 'Mana is your energy (0–100%). Every spell costs mana. Full regeneration takes ~5 days. Shown as a percentage — 1.00% = 100 basis points on the blockchain.',
 
     help_section_world_days: 'World day names',
+    help_section_world_months: 'World month names',
+    help_world_months_text: 'World month names resemble northern and southern constellation names: Bear, Little Bear, Cassiopeia, Orion, Pegasus, Swan, Dragon, Cross, Dog, Centaur, Scorpion, Keel. This is also a magical cycle, not an ordinary calendar...',
     help_world_days_text: 'The Sky block shows one of seven in-world names each day: Sky, Earth, Water, Air, Wind, Fire, Aether. It is a magical world cycle rather than an ordinary calendar, so Home shows only the current world-day name.',
 
     help_section_hp: 'HP & Recovery',

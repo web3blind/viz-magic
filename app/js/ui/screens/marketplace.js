@@ -531,8 +531,8 @@ var MarketplaceScreen = (function() {
             mana_potion: '⚡',
             fire_dust: '✦',
             sparkdust: '✨',
-            shadow_shard: '🌑',
-            thorn_essence: '🌿',
+            shadow_shard: item.rarity === 0 ? '◑' : '🌑',
+            thorn_essence: item.rarity >= 4 ? '🧬' : '🌿',
             ancient_shard: '🌀',
             spirit_tunic: '🧥'
         };

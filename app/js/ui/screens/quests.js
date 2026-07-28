@@ -192,7 +192,7 @@ var QuestsScreen = (function() {
             var q = completed[i];
             var title = _completedQuestTitle(q, t);
             html += '<li class="quest-card quest-completed-card">' +
-                '<span class="quest-icon vmagic-breathe" aria-hidden="true">🏅</span>' +
+                '<span class="quest-icon vmagic-breathe" aria-hidden="true">🏅</span><span aria-hidden="true">&nbsp;</span>' +
                 '<span class="quest-name">' + Helpers.escapeHtml(title) + '</span>' +
             '</li>';
         }

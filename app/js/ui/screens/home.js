@@ -9,6 +9,7 @@ var HomeScreen = (function() {
     var SECONDARY_HOME_SCREENS = ['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'];
     var HOME_HP_DISPLAY_MAX = 1000;
     var HOME_XP_DISPLAY_MAX = 10000;
+    var WORLD_MONTH_NAMES = ['Медведица', 'Медвежонок', 'Кассиопея', 'Орион', 'Пегас', 'Лебедь', 'Дракон', 'Крест', 'Пёс', 'Центавр', 'Скорпион', 'Киль'];
 
     function render() {
         var t = Helpers.t;
@@ -214,6 +215,38 @@ var HomeScreen = (function() {
         return (value > 0 ? '+' : '') + value;
     }
 
+    function _getWorldMonthName() {
+        var daySeed = (typeof WorldEvents !== 'undefined' && WorldEvents.getMoscowDayIndex) ? WorldEvents.getMoscowDayIndex() : 0;
+        var date = new Date(Date.now() + (3 * 60 * 60 * 1000));
+        var idx = date.getUTCMonth ? date.getUTCMonth() : (Math.floor(Math.max(0, daySeed) / 30) % 12);
+        if (idx < 0 || idx >= WORLD_MONTH_NAMES.length) idx = 0;
+        return WORLD_MONTH_NAMES[idx];
+    }
+
+    function _weatherPrecipitationLabel(weather, seasonId, t) {
+        var id = weather && weather.id ? String(weather.id) : '';
+        var labels = [
+            [/tropical|monsoon/, 'тропический ливень'],
+            [/thunder|lightning|storm/, 'ливень'],
+            [/hail/, 'град'],
+            [/blizzard|snow.*storm|heavy_snow/, 'затяжной снегопад'],
+            [/snow.*rain|sleet/, 'снег с дождём'],
+            [/snow|frost|ice|winter/, 'снег'],
+            [/drizzle|mist_rain|fine_rain/, 'моросящий дождь'],
+            [/rain|swamp|mushroom|grass/, 'мелкий дождь'],
+            [/dense_fog|thick_fog/, 'плотный туман'],
+            [/fog|mist/, 'туман'],
+            [/hurricane/, 'ураган'],
+            [/tornado|whirl/, 'смерч'],
+            [/long_rain|endless_rain/, 'продолжительный дождь']
+        ];
+        for (var i = 0; i < labels.length; i++) {
+            if (labels[i][0].test(id)) return labels[i][1];
+        }
+        if (seasonId === 'winter' && weather && weather.creatureAttackMod && weather.creatureAttackMod > 1000) return 'снег';
+        return t('weather_report_no_rain');
+    }
+
     function _formatWeatherReport(season, dominantBonus, secondaryBonus, weather, t) {
         var daySeed = (typeof WorldEvents !== 'undefined' && WorldEvents.getMoscowDayIndex) ? WorldEvents.getMoscowDayIndex() : 0;
         var seasonId = season && season.id ? season.id : '';
@@ -225,15 +258,14 @@ var HomeScreen = (function() {
         if (air > 30) air = 30;
         if (air < -30) air = -30;
         var wind = 3 + ((daySeed + (weather && weather.creatureAttackMod ? weather.creatureAttackMod : 0)) % 10);
-        var rainy = weather && /rain|swamp|fog|snow|hail|thunder|lightning|storm|mushroom|grass/.test(weather.id || '');
+        var precipitation = _weatherPrecipitationLabel(weather, seasonId, t);
         var parts = [
             t('weather_report_air') + ' ' + _formatSignedTemperature(air)
         ];
         if (seasonId === 'spring' || seasonId === 'summer' || seasonId === 'autumn') {
             parts.push(t('weather_report_water') + ' +' + (daySeed % 21));
         }
-        parts.push(t('weather_report_wind') + ' ' + wind + ' ' + t('weather_report_wind_unit') + ', ' +
-            (rainy ? t('weather_report_light_rain') : t('weather_report_no_rain')));
+        parts.push(t('weather_report_wind') + ' ' + wind + ' ' + t('weather_report_wind_unit') + ', ' + precipitation);
         return parts.join('; ') + '.';
     }
 
@@ -281,7 +313,7 @@ var HomeScreen = (function() {
             '<div class="forecast-card forecast-card-season forecast-card-hunt-summary">' +
                 '<div class="forecast-head">' +
                     '<span class="forecast-icon forecast-weather-icon vmagic-breathe" aria-hidden="true">\uD83E\uDDED</span>' +
-                    '<p class="forecast-line">' + t(season.nameKey) + '</p>' +
+                    '<p class="forecast-line">' + t(season.nameKey) + ' · ' + _getWorldMonthName() + '</p>' +
                 '</div>' +
                 '<span class="forecast-icon forecast-hunt-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF9</span>' +
                 '<p class="forecast-kicker forecast-hunt-copy">' + t('weather_hunt_effect_sentence') + '</p>' +

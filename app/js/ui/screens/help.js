@@ -59,6 +59,10 @@ var HelpScreen = (function() {
                     '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🌌</span> ' + t('help_section_world_days') + '</h3>' +
                     '<p>' + t('help_world_days_text') + '</p>' +
                 '</article>' +
+                '<article class="help-lore-page">' +
+                    '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🗓️</span> ' + t('help_section_world_months') + '</h3>' +
+                    '<p>' + t('help_world_months_text') + '</p>' +
+                '</article>' +
             '</div></section>';
     }
 

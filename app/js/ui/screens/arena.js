@@ -386,6 +386,26 @@ var ArenaScreen = (function() {
         }
     }
 
+    function _knownAvatarUrl(account) {
+        var ch = StateEngine.getCharacter && StateEngine.getCharacter(account);
+        if (ch && ch.avatarUrl) return ch.avatarUrl;
+        if (!VizAccount.getAccount || !VizAccount.getProfileAvatar || !account) return '';
+        if (!ArenaScreen._avatarHydrating) ArenaScreen._avatarHydrating = {};
+        if (!ArenaScreen._avatarHydrating[account]) {
+            ArenaScreen._avatarHydrating[account] = true;
+            VizAccount.getAccount(account, function(err, accountData) {
+                delete ArenaScreen._avatarHydrating[account];
+                if (err || !accountData) return;
+                var avatar = VizAccount.getProfileAvatar(accountData);
+                if (!avatar) return;
+                var state = StateEngine.getState ? StateEngine.getState() : null;
+                if (state && state.characters && state.characters[account]) state.characters[account].avatarUrl = avatar;
+                if (App.getCurrentScreen && App.getCurrentScreen() === 'arena') render();
+            });
+        }
+        return '';
+    }
+
     function _renderKnownPlayers(state, user, leaderboard) {
         var t = Helpers.t;
         // Collect all known characters not already in leaderboard
@@ -416,7 +436,7 @@ var ArenaScreen = (function() {
                 var knownAcct = state.social.knownAccounts[ki];
                 if (!knownAcct || knownAcct === user || lbAccounts[knownAcct] || seen[knownAcct]) continue;
                 seen[knownAcct] = true;
-                players.push({ account: knownAcct, name: knownAcct, level: 0, className: '' });
+                players.push({ account: knownAcct, name: knownAcct, level: 0, className: '', avatarUrl: _knownAvatarUrl(knownAcct) });
             }
         }
 

@@ -223,7 +223,7 @@ var InventoryScreen = (function() {
         var item = group.item;
         var rInfo = ItemSystem.getRarityInfo(item.rarity);
         var label = _itemName(item.type);
-        var rarityName = t('rarity_' + rInfo.name) || rInfo.name;
+        var rarityName = _rarityNameForItem(item, rInfo, t);
         var itemIcon = _itemIcon(item);
         var aria = label + '. ' + rarityName + '. ' + t('inv_count') + ': ' + group.count + '.';
         if (!compact && _hasMeaningfulStats(item.stats)) {
@@ -233,13 +233,34 @@ var InventoryScreen = (function() {
         return '<div class="item-card ' + Helpers.rarityClass(item.rarity) + '" role="listitem" tabindex="0" ' +
             'aria-label="' + Helpers.escapeHtml(aria) + '">' +
             '<span class="item-icon vmagic-breathe" aria-hidden="true">' + itemIcon + '</span>' +
-            '<span class="item-rarity" aria-hidden="true">' + rInfo.symbol + '</span>' +
+            '<span class="item-rarity" aria-hidden="true">' + _raritySymbolForItem(item, rInfo) + '</span>' +
             '<span class="item-name">' + Helpers.escapeHtml(label) + ' (' + Helpers.escapeHtml(rarityName) + ')</span>' +
             (group.count > 1 ? '<span class="item-badge">×' + group.count + '</span>' : '') +
             (item.equipped ? '<span class="item-badge">[E]</span>' : '') +
-            (item.volatile_ ? '<span class="item-volatile">\u26A0</span>' : '') +
+            (_showWarningIcon(item) ? '<span class="item-volatile">\u26A0</span>' : '') +
             (!compact && _hasMeaningfulStats(item.stats) ? '<span class="item-name"> · ' + Helpers.escapeHtml(_statsText(item.stats, t)) + '</span>' : '') +
             '</div>';
+    }
+
+    function _rarityNameForItem(item, rInfo, t) {
+        var name = t('rarity_' + rInfo.name) || rInfo.name;
+        var type = item && item.type;
+        if ((type === 'flame_votive_mark' || type === 'spirit_tunic' || type === 'thorn_essence') && rInfo.name === 'common') return 'обычная';
+        if (type === 'thorn_essence' && rInfo.name === 'legendary') return 'легендарная';
+        if (type === 'flame_votive_mark' && rInfo.name === 'uncommon') return 'необычная';
+        if (type === 'chronicle_ink' && rInfo.name === 'common') return 'обычные';
+        return name;
+    }
+
+    function _raritySymbolForItem(item, rInfo) {
+        if (!item) return rInfo.symbol || '';
+        var template = ItemSystem.getItemTemplate(item.type);
+        if ((item.type === 'flame_votive_mark' || (template && template.category === ItemSystem.CATEGORIES.MATERIAL)) && item.rarity <= 1) return '';
+        return rInfo.symbol || '';
+    }
+
+    function _showWarningIcon(item) {
+        return !!(item && (item.volatile_ || item.type === 'flame_votive_mark'));
     }
 
     function _statsText(stats, t) {
@@ -263,8 +284,8 @@ var InventoryScreen = (function() {
             mana_potion: '⚡',
             fire_dust: '✦',
             sparkdust: '✨',
-            shadow_shard: '🌑',
-            thorn_essence: '🌿',
+            shadow_shard: item.rarity === 0 ? '◑' : '🌑',
+            thorn_essence: item.rarity >= 4 ? '🧬' : '🌿',
             ancient_shard: '🌀',
             spirit_tunic: '🧥',
             echo_shards: '🔷',

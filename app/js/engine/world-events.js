@@ -488,7 +488,7 @@ var WorldEvents = (function() {
         'Базар открывает витрины так широко, будто ждёт королевскую мышь.',
         'Хроника ставит свежую закладку и требует красивой истории.',
         'мана в воздухе звенит чаще: это знак плетения, а не бухгалтерская ошибка.',
-        'небо обещает новый странный текст завтра и держит слово.'
+        'завтра мир обещает новый странный текст и не забывает обещание.'
     ];
 
 
@@ -733,9 +733,12 @@ var WorldEvents = (function() {
     }
 
     function getCurrentLorePages(blockNum) {
-        // Keep living-page rotation paused until the authored pool has at least ten pages.
-        // One stable page is calmer and avoids repeating near-identical lore too often.
-        return [NATURE_PAGES[0]];
+        var day = _getMoscowDayIndex();
+        return [
+            _pageWithTail(NATURE_PAGES, day, 0),
+            _pageWithTail(LEGEND_PAGES, day, 1),
+            _pageWithTail(SPELL_PAGES, day, 2)
+        ];
     }
 
     /**

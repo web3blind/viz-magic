@@ -2168,3 +2168,27 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 
 .settings-avatar-preview-slot { display: inline-flex; align-items: center; min-width: 48px; min-height: 48px; }
 .settings-avatar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+
+/* v97 requested polish */
+.nav-tab { flex-direction: column; justify-content: center; gap: 2px; }
+.nav-icon { display: block; line-height: 1.05; margin: 0 0 2px; }
+.nav-label { display: block; line-height: 1.05; white-space: nowrap; }
+.leaderboard-table { table-layout: fixed; min-width: 0; }
+.leaderboard-cell-rank { width: 2.1rem; }
+.leaderboard-cell-level { width: 2.5rem; }
+.leaderboard-cell-xp { width: 3.2rem; }
+.leaderboard-cell-hunts { width: 2.7rem; }
+.leaderboard-cell-player { min-width: 0; }
+.leaderboard-name { overflow-wrap: anywhere; word-break: break-word; }
+.leaderboard-cell-player .account-avatar { margin-right: 4px; }
+@media (max-width: 480px) {
+    .leaderboard-table-wrap { margin-left: 0; margin-right: 0; overflow-x: hidden; }
+    .leaderboard-table { font-size: 0.72rem; width: 100%; }
+    .leaderboard-table thead th, .leaderboard-row td { padding: 0.42rem 0.18rem; }
+    .leaderboard-cell-rank { width: 1.8rem; }
+    .leaderboard-cell-level { width: 2.15rem; }
+    .leaderboard-cell-xp { width: 2.8rem; }
+    .leaderboard-cell-hunts { width: 2.2rem; }
+    .leaderboard-avatar { width: 24px; height: 24px; max-width: 24px; max-height: 24px; }
+}
