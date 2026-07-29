@@ -313,7 +313,7 @@ test('large stale checkpoint catch-up uses archive events instead of replaying e
   assert.ok(/HistorySource\.getEventsRange/.test(appJs), 'archive catch-up should query event ranges');
   assert.ok(/state\.headBlock = endBlock/.test(appJs), 'archive catch-up should advance checkpoint past empty blocks');
   assert.ok(/arena: true/.test(appJs), 'arena should refresh when duel events arrive during catch-up');
-  assert.ok(/js\/ui\/app\.js\?v=20260726b/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
+  assert.ok(/js\/ui\/app\.js\?v=20260729a/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
 });
 
 test('guild joining explains and enforces preparation requirements', function () {
@@ -749,7 +749,7 @@ test('developers screen offers optional non-advantage award', function () {
   assert.ok(/developers.js\?v=20260720g/.test(indexHtml), 'developers screen should be loaded and cache-busted');
   assert.ok(/developers-custom-energy/.test(developersJs) && /developers_custom_reward_label/.test(ruJs + enJs), 'developers screen should allow a custom 0.01-100 reward amount');
   assert.ok(/REWARD_OPTIONS = \[100\]/.test(developersJs), 'developers screen should keep only one fixed 1% quick reward');
-  assert.ok(/app.js\?v=20260726b/.test(indexHtml), 'app controller should be cache-busted for developers route');
+  assert.ok(/app.js\?v=20260729a/.test(indexHtml), 'app controller should be cache-busted for developers route');
   assert.ok(/'developers'/.test(appJs), 'app should register developers as a navigable screen');
   assert.ok(/DevelopersScreen\.render/.test(appJs), 'app should render developers screen');
   assert.ok(/SECONDARY_HOME_SCREENS = \['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'\]/.test(homeJs), 'home secondary actions should include Developers without World Boss');
@@ -975,7 +975,7 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260726g/.test(indexHtml), 'Help should be cache-busted for guide redesign');
   assert.ok(/main\.css\?v=20260726g/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v97/.test(swJsV83), 'service worker should use the current v91 cache');
+  assert.ok(/viz-magic-v98/.test(swJsV83), 'service worker should use the current v91 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
 
@@ -1035,7 +1035,7 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
   assert.ok(/quest-system\.js\?v=20260726a/.test(indexHtml) && /quests\.js\?v=20260726g/.test(indexHtml), 'quest engine and UI should be cache-busted');
   assert.ok(/inventory\.js\?v=20260726g/.test(indexHtml) && /marketplace\.js\?v=20260726g/.test(indexHtml), 'item icon screens should be cache-busted');
   assert.ok(/guild\.js\?v=20260726a/.test(indexHtml) && /settings\.js\?v=20260726e/.test(indexHtml), 'guild/settings screens should be cache-busted');
-  assert.ok(/viz-magic-v97/.test(swJs), 'service worker should use v91 cache');
+  assert.ok(/viz-magic-v98/.test(swJs), 'service worker should use v91 cache');
 });
 
 
@@ -1092,7 +1092,7 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.ok(/world-boss\.js\?v=20260726b/.test(indexHtml), 'world boss UI should be cache-busted');
   assert.ok(/character\.js\?v=20260726f/.test(indexHtml), 'character UI should be cache-busted');
   assert.ok(/main\.css\?v=20260726g/.test(indexHtml), 'avatar CSS should be cache-busted');
-  assert.ok(/viz-magic-v97/.test(swJs), 'service worker should use v92 cache');
+  assert.ok(/viz-magic-v98/.test(swJs), 'service worker should use v92 cache');
 });
 
 
@@ -1172,4 +1172,13 @@ test('Denis v97 world, inventory, nav, arena and guide polish is explicit', func
   assert.ok(/leaderboard-table \{ table-layout: fixed/.test(cssV97) && /leaderboard-cell-hunts \{ width: 2\.2rem/.test(cssV97), 'leaderboard should fit hunt column on mobile');
   assert.ok(/settings_sfx: '🔔 Звуковые эффекты'/.test(ruV97), 'settings SFX label should use a distinct icon');
   assert.ok(/world-events\.js\?v=20260726g/.test(indexV97) && /home\.js\?v=20260726g/.test(indexV97) && /main\.css\?v=20260726g/.test(indexV97), 'v97 files should be cache-busted');
+});
+
+
+test('public landing does not block startup behind chain sync', function () {
+  const appJsV98 = read('app/js/ui/app.js');
+  const indexV98 = read('app/index.html');
+  assert.ok(/if \(VizAccount\.isLoggedIn\(\)\) \{\s*\/\/ Start block polling[\s\S]*_startBlockPolling\(\)/.test(appJsV98), 'block polling should start only for logged-in sessions');
+  assert.ok(/\} else \{\s*_syncStartBlock = 0;\s*_updateSyncStatus\(100\);\s*navigateTo\('landing'\);/.test(appJsV98), 'public landing should hide sync overlay before rendering');
+  assert.ok(/js\/ui\/app\.js\?v=20260729a/.test(indexV98), 'app controller should be cache-busted for startup fix');
 });

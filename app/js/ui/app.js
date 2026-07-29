@@ -65,11 +65,11 @@ var App = (function() {
             StateEngine.init(function(err, state) {
                 if (err) console.log('State engine init error:', err);
 
-                // Start block polling for real-time state sync
-                _startBlockPolling();
-
-                // Determine starting screen
+                // Determine starting screen. Do not start heavy chain catch-up on the public landing/login path:
+                // fresh PWA/shortcut sessions must become usable before any background sync work.
                 if (VizAccount.isLoggedIn()) {
+                    // Start block polling for real-time state sync only after a session exists.
+                    _startBlockPolling();
                     // Restore character from blockchain grimoire
                     var user = VizAccount.getCurrentUser();
                     VizAccount.getAccount(user, function(accErr, accountData) {
@@ -125,6 +125,8 @@ var App = (function() {
                         }
                     });
                 } else {
+                    _syncStartBlock = 0;
+                    _updateSyncStatus(100);
                     navigateTo('landing');
                 }
             });
