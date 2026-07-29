@@ -273,6 +273,16 @@ var App = (function() {
 
         percent = Math.max(0, Math.min(100, Math.ceil(percent || 0)));
 
+        // Chain catch-up must never block an already usable game screen. A saved/PWA
+        // session should open Home first; sync continues in console/background.
+        if (currentScreen && currentScreen !== 'landing') {
+            _syncVisible = false;
+            _lastSyncPercent = percent;
+            statusEl.classList.remove('show');
+            statusEl.textContent = 'Синхронизация с Миром... ' + percent + '%';
+            return;
+        }
+
         if (!forceShow && percent >= 100) {
             _syncVisible = false;
             _lastSyncPercent = percent;
