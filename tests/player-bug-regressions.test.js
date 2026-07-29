@@ -313,7 +313,7 @@ test('large stale checkpoint catch-up uses archive events instead of replaying e
   assert.ok(/HistorySource\.getEventsRange/.test(appJs), 'archive catch-up should query event ranges');
   assert.ok(/state\.headBlock = endBlock/.test(appJs), 'archive catch-up should advance checkpoint past empty blocks');
   assert.ok(/arena: true/.test(appJs), 'arena should refresh when duel events arrive during catch-up');
-  assert.ok(/js\/ui\/app\.js\?v=20260729a/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
+  assert.ok(/js\/ui\/app\.js\?v=20260729b/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
 });
 
 test('guild joining explains and enforces preparation requirements', function () {
@@ -480,7 +480,7 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/js\/ui\/screens\/quests.js\?v=20260726g/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260726g/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260726g/.test(indexHtml), 'leaderboard icon motion must be cache-busted');
-  assert.ok(/world-events.js\?v=20260726g/.test(indexHtml), 'world events news and festival copy must be cache-busted');
+  assert.ok(/world-events.js\?v=20260729b/.test(indexHtml), 'world events news and festival copy must be cache-busted');
   assert.ok(/main.css\?v=20260726g/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/prefers-reduced-motion: no-preference/.test(mainCss) && /vmagic-rune-pulse/.test(mainCss), 'ambient animation must be lightweight and respect reduced-motion');
   assert.ok(/weather_report_air/.test(homeJs + ruJs + enJs), 'home forecast should render readable air/water/wind weather instead of raw school percentages');
@@ -749,7 +749,7 @@ test('developers screen offers optional non-advantage award', function () {
   assert.ok(/developers.js\?v=20260720g/.test(indexHtml), 'developers screen should be loaded and cache-busted');
   assert.ok(/developers-custom-energy/.test(developersJs) && /developers_custom_reward_label/.test(ruJs + enJs), 'developers screen should allow a custom 0.01-100 reward amount');
   assert.ok(/REWARD_OPTIONS = \[100\]/.test(developersJs), 'developers screen should keep only one fixed 1% quick reward');
-  assert.ok(/app.js\?v=20260729a/.test(indexHtml), 'app controller should be cache-busted for developers route');
+  assert.ok(/app.js\?v=20260729b/.test(indexHtml), 'app controller should be cache-busted for developers route');
   assert.ok(/'developers'/.test(appJs), 'app should register developers as a navigable screen');
   assert.ok(/DevelopersScreen\.render/.test(appJs), 'app should render developers screen');
   assert.ok(/SECONDARY_HOME_SCREENS = \['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'\]/.test(homeJs), 'home secondary actions should include Developers without World Boss');
@@ -940,7 +940,7 @@ test('v82 Denis feedback polish is explicit and cache-busted', function () {
   const settingsJsV82 = read('app/js/ui/screens/settings.js');
   assert.ok(/viz-magic-v9[0-9]|v8[2-9]/.test(swJsV82), 'service worker should use at least v82 cache');
   assert.ok(/home\.js\?v=20260726g/.test(indexHtml), 'Home should be cache-busted for v82');
-  assert.ok(/world-events\.js\?v=20260726g/.test(indexHtml), 'world events should be cache-busted for v82');
+  assert.ok(/world-events\.js\?v=20260729b/.test(indexHtml), 'world events should be cache-busted for v82');
   assert.ok(/hunt\.js\?v=20260724b/.test(indexHtml), 'Hunt should be cache-busted for Armageddon lock feedback');
   assert.ok(/settings\.js\?v=20260726e/.test(indexHtml), 'Settings should be cache-busted for sound icons');
   assert.ok(/function _formatWeatherReport/.test(homeJs) && /_formatSignedTemperature/.test(homeJs), 'season card should render readable temperatures instead of elemental percentages');
@@ -975,7 +975,7 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260726g/.test(indexHtml), 'Help should be cache-busted for guide redesign');
   assert.ok(/main\.css\?v=20260726g/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v98/.test(swJsV83), 'service worker should use the current v91 cache');
+  assert.ok(/viz-magic-v99/.test(swJsV83), 'service worker should use the current v91 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
 
@@ -999,7 +999,7 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
   assert.ok(/SPELL_PAGES[\s\S]*Один послушник уже пытается вывести из этого закон/.test(worldEvents), 'poslushnik phrase should remain only in magical spells');
   const tails = worldEvents.slice(worldEvents.indexOf('var LORE_DAILY_TAILS'), worldEvents.indexOf('function getForecastVariantCount'));
   assert.ok(!/один послушник уже пытается вывести из этого закон/i.test(tails), 'poslushnik phrase should be removed from queued lore tails');
-  assert.ok(/return \[\s*_pageWithTail\(NATURE_PAGES/.test(worldEvents) && /_pageWithTail\(LEGEND_PAGES/.test(worldEvents) && /_pageWithTail\(SPELL_PAGES/.test(worldEvents), 'living pages should include nature, legend, and spell blocks');
+  assert.ok(/return \[\s*_dailyFromPool\(NATURE_PAGES/.test(worldEvents) && /_dailyFromPool\(LEGEND_PAGES/.test(worldEvents) && /_dailyFromPool\(SPELL_PAGES/.test(worldEvents), 'living pages should include nature, legend, and spell blocks');
 
   assert.ok(/shadow_shard:\s*item\.rarity === 0 \? '◑' : '🌑'/.test(inventoryJs) && /shadow_shard:\s*item\.rarity === 0 \? '◑' : '🌑'/.test(marketplaceJs), 'shadow shard icons should be rarity-distinct in bag and bazaar');
   assert.ok(/thorn_essence:\s*item\.rarity >= 4 \? '🧬' : '🌿'/.test(inventoryJs) && /thorn_essence:\s*item\.rarity >= 4 \? '🧬' : '🌿'/.test(marketplaceJs), 'thorn essence icons should be rarity-distinct');
@@ -1031,11 +1031,11 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
   assert.ok(/quest_completed_pride/.test(ruJs + enJs), 'completed quest pride copy should exist');
 
   assert.ok(/main\.css\?v=20260726g/.test(indexHtml), 'main CSS should be cache-busted for v91 polish');
-  assert.ok(/world-events\.js\?v=20260726g/.test(indexHtml), 'world-events should be cache-busted for v91 polish');
+  assert.ok(/world-events\.js\?v=20260729b/.test(indexHtml), 'world-events should be cache-busted for v91 polish');
   assert.ok(/quest-system\.js\?v=20260726a/.test(indexHtml) && /quests\.js\?v=20260726g/.test(indexHtml), 'quest engine and UI should be cache-busted');
   assert.ok(/inventory\.js\?v=20260726g/.test(indexHtml) && /marketplace\.js\?v=20260726g/.test(indexHtml), 'item icon screens should be cache-busted');
   assert.ok(/guild\.js\?v=20260726a/.test(indexHtml) && /settings\.js\?v=20260726e/.test(indexHtml), 'guild/settings screens should be cache-busted');
-  assert.ok(/viz-magic-v98/.test(swJs), 'service worker should use v91 cache');
+  assert.ok(/viz-magic-v99/.test(swJs), 'service worker should use v91 cache');
 });
 
 
@@ -1092,7 +1092,7 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.ok(/world-boss\.js\?v=20260726b/.test(indexHtml), 'world boss UI should be cache-busted');
   assert.ok(/character\.js\?v=20260726f/.test(indexHtml), 'character UI should be cache-busted');
   assert.ok(/main\.css\?v=20260726g/.test(indexHtml), 'avatar CSS should be cache-busted');
-  assert.ok(/viz-magic-v98/.test(swJs), 'service worker should use v92 cache');
+  assert.ok(/viz-magic-v99/.test(swJs), 'service worker should use v92 cache');
 });
 
 
@@ -1160,7 +1160,7 @@ test('Denis v97 world, inventory, nav, arena and guide polish is explicit', func
   assert.ok(!/Ротацию пока не запускаем/.test(ruV97), 'living pages intro should not expose internal rotation note');
   assert.ok((worldEventsV97.match(/Небо гасит лишний шум и оставляет только важные шорохи/g) || []).length <= 1, 'wind phrase should not repeat in world-event text pools');
   assert.ok(!/небо обещает новый текст завтра и держит слово/i.test(worldEventsV97), 'today-in-world repeated sky promise should be removed from pools');
-  assert.ok(/return \[\s*_pageWithTail\(NATURE_PAGES/.test(worldEventsV97) && /_pageWithTail\(LEGEND_PAGES/.test(worldEventsV97) && /_pageWithTail\(SPELL_PAGES/.test(worldEventsV97), 'home should render nature, legend and spell living pages');
+  assert.ok(/return \[\s*_dailyFromPool\(NATURE_PAGES/.test(worldEventsV97) && /_dailyFromPool\(LEGEND_PAGES/.test(worldEventsV97) && /_dailyFromPool\(SPELL_PAGES/.test(worldEventsV97), 'home should render nature, legend and spell living pages');
   assert.ok(/function _rarityNameForItem/.test(inventoryJsV97) && /flame_votive_mark/.test(inventoryJsV97) && /необычная/.test(inventoryJsV97), 'inventory should use feminine rarity text for requested items');
   assert.ok(/function _raritySymbolForItem/.test(inventoryJsV97) && /item\.type === 'flame_votive_mark'/.test(inventoryJsV97), 'inventory should suppress white rarity diamonds for requested rows');
   assert.ok(/function _showWarningIcon/.test(inventoryJsV97) && /item\.type === 'flame_votive_mark'/.test(inventoryJsV97), 'altar spark should show warning triangle like ingredient rows');
@@ -1171,14 +1171,33 @@ test('Denis v97 world, inventory, nav, arena and guide polish is explicit', func
   assert.ok(/nav-tab \{ flex-direction: column/.test(cssV97) && /nav-icon \{ display: block/.test(cssV97), 'bottom nav should place icon above one-line label');
   assert.ok(/leaderboard-table \{ table-layout: fixed/.test(cssV97) && /leaderboard-cell-hunts \{ width: 2\.2rem/.test(cssV97), 'leaderboard should fit hunt column on mobile');
   assert.ok(/settings_sfx: '🔔 Звуковые эффекты'/.test(ruV97), 'settings SFX label should use a distinct icon');
-  assert.ok(/world-events\.js\?v=20260726g/.test(indexV97) && /home\.js\?v=20260726g/.test(indexV97) && /main\.css\?v=20260726g/.test(indexV97), 'v97 files should be cache-busted');
+  assert.ok(/world-events\.js\?v=20260729b/.test(indexV97) && /home\.js\?v=20260726g/.test(indexV97) && /main\.css\?v=20260726g/.test(indexV97), 'v97 files should be cache-busted');
 });
 
 
 test('public landing does not block startup behind chain sync', function () {
   const appJsV98 = read('app/js/ui/app.js');
   const indexV98 = read('app/index.html');
-  assert.ok(/if \(VizAccount\.isLoggedIn\(\)\) \{\s*\/\/ Start block polling[\s\S]*_startBlockPolling\(\)/.test(appJsV98), 'block polling should start only for logged-in sessions');
+  assert.ok(/if \(VizAccount\.isLoggedIn\(\)\)/.test(appJsV98) && /setTimeout\(function\(\) \{ _startBlockPolling\(\); \}, 250\);/.test(appJsV98), 'block polling should be deferred until after saved-session Home render');
   assert.ok(/\} else \{\s*_syncStartBlock = 0;\s*_updateSyncStatus\(100\);\s*navigateTo\('landing'\);/.test(appJsV98), 'public landing should hide sync overlay before rendering');
-  assert.ok(/js\/ui\/app\.js\?v=20260729a/.test(indexV98), 'app controller should be cache-busted for startup fix');
+  assert.ok(/js\/ui\/app\.js\?v=20260729b/.test(indexV98), 'app controller should be cache-busted for startup fix');
+});
+
+
+test('saved sessions render Home before account and chain sync finish', function () {
+  const appJsV99 = read('app/js/ui/app.js');
+  const indexV99 = read('app/index.html');
+  assert.ok(/if \(VizAccount\.isLoggedIn\(\)\) \{[\s\S]*navigateTo\('home'\);[\s\S]*setTimeout\(function\(\) \{ _startBlockPolling\(\); \}, 250\);[\s\S]*VizAccount\.getAccount\(user/.test(appJsV99), 'saved sessions should render Home before chain/account hydration');
+  assert.ok(/if \(currentScreen === 'home' \|\| currentScreen === 'character'\) \{\s*_renderScreen\(currentScreen\);\s*\}/.test(appJsV99), 'account hydration should refresh visible profile/home after startup');
+  assert.ok(/js\/ui\/app\.js\?v=20260729b/.test(indexV99), 'app controller should be cache-busted for saved-session launch fix');
+});
+
+
+test('living pages use an existing daily page helper', function () {
+  const worldEventsV99 = read('app/js/engine/world-events.js');
+  const indexV99 = read('app/index.html');
+  assert.ok(/function _dailyFromPool/.test(worldEventsV99), 'daily lore helper should exist');
+  assert.ok(!/_pageWithTail/.test(worldEventsV99), 'living pages should not call missing helper');
+  assert.ok(/_dailyFromPool\(NATURE_PAGES/.test(worldEventsV99) && /_dailyFromPool\(LEGEND_PAGES/.test(worldEventsV99) && /_dailyFromPool\(SPELL_PAGES/.test(worldEventsV99), 'living pages should render all three pools through existing helper');
+  assert.ok(/world-events\.js\?v=20260729b/.test(indexV99), 'world-events should be cache-busted for living-page crash fix');
 });

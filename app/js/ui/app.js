@@ -68,14 +68,18 @@ var App = (function() {
                 // Determine starting screen. Do not start heavy chain catch-up on the public landing/login path:
                 // fresh PWA/shortcut sessions must become usable before any background sync work.
                 if (VizAccount.isLoggedIn()) {
-                    // Start block polling for real-time state sync only after a session exists.
-                    _startBlockPolling();
-                    // Restore character from blockchain grimoire
+                    // Saved sessions must become usable immediately. Render Home first,
+                    // then hydrate account/grimoire and run chain catch-up in the background.
                     var user = VizAccount.getCurrentUser();
+                    _syncStartBlock = 0;
+                    _updateSyncStatus(100);
+                    navigateTo('home');
+                    setTimeout(function() { _startBlockPolling(); }, 250);
+
+                    // Restore character from blockchain grimoire without blocking startup.
                     VizAccount.getAccount(user, function(accErr, accountData) {
                         if (accErr) {
                             console.log('Could not fetch account on startup:', accErr);
-                            navigateTo('home');
                             return;
                         }
                         var grimoire = VizAccount.parseGrimoire(accountData);
@@ -117,11 +121,16 @@ var App = (function() {
                                 ch.avatarUrl = VizAccount.getProfileAvatar(accountData);
                             }
                             console.log('Character restored: ' + (ch ? ch.name + ' Lv' + ch.level + ' XP:' + ch.xp : 'none'));
-                            navigateTo('home');
+                            if (currentScreen === 'home' || currentScreen === 'character') {
+                                _renderScreen(currentScreen);
+                            }
                         } else {
-                            // No grimoire on chain — send to onboarding
-                            console.log('No grimoire found for', user, '— redirecting to onboarding');
-                            navigateTo('onboarding');
+                            // No grimoire on chain — send to onboarding only if local state has no usable character.
+                            console.log('No grimoire found for', user, '— checking local state');
+                            var localState = StateEngine.getState ? StateEngine.getState() : null;
+                            if (!localState || !localState.characters || !localState.characters[user]) {
+                                navigateTo('onboarding');
+                            }
                         }
                     });
                 } else {

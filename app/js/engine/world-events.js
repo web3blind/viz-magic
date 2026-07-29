@@ -735,9 +735,9 @@ var WorldEvents = (function() {
     function getCurrentLorePages(blockNum) {
         var day = _getMoscowDayIndex();
         return [
-            _pageWithTail(NATURE_PAGES, day, 0),
-            _pageWithTail(LEGEND_PAGES, day, 1),
-            _pageWithTail(SPELL_PAGES, day, 2)
+            _dailyFromPool(NATURE_PAGES, day, 0),
+            _dailyFromPool(LEGEND_PAGES, day, 1),
+            _dailyFromPool(SPELL_PAGES, day, 2)
         ];
     }
 
