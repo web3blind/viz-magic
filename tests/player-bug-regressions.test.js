@@ -313,7 +313,7 @@ test('large stale checkpoint catch-up uses archive events instead of replaying e
   assert.ok(/HistorySource\.getEventsRange/.test(appJs), 'archive catch-up should query event ranges');
   assert.ok(/state\.headBlock = endBlock/.test(appJs), 'archive catch-up should advance checkpoint past empty blocks');
   assert.ok(/arena: true/.test(appJs), 'arena should refresh when duel events arrive during catch-up');
-  assert.ok(/js\/ui\/app\.js\?v=20260729c/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
+  assert.ok(/js\/ui\/app\.js\?v=20260729d/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
 });
 
 test('guild joining explains and enforces preparation requirements', function () {
@@ -476,7 +476,7 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
   assert.ok(/i18n\/ru.js\?v=20260726g/.test(indexHtml), 'Russian weather copy must be cache-busted');
   assert.ok(/i18n\/en.js\?v=20260726g/.test(indexHtml), 'English weather copy must be cache-busted');
-  assert.ok(/home.js\?v=20260726g/.test(indexHtml), 'home forecast layout must be cache-busted');
+  assert.ok(/home.js\?v=20260729d/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/js\/ui\/screens\/quests.js\?v=20260726g/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260726g/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260726g/.test(indexHtml), 'leaderboard icon motion must be cache-busted');
@@ -622,7 +622,7 @@ test('narrator voice preferences support gender and timbre', function () {
 
 
 test('home action tiles reflect Denis priority order', function () {
-  assert.ok(/home.js\?v=20260726g/.test(indexHtml), 'home screen should be cache-busted for action order');
+  assert.ok(/home.js\?v=20260729d/.test(indexHtml), 'home screen should be cache-busted for action order');
   assert.ok(/PRIMARY_HOME_SCREENS = \['home', 'inventory', 'guild', 'crafting', 'map', 'hunt', 'quests', 'arena', 'marketplace', 'temple', 'world-boss'\]/.test(homeJs), 'primary row should put Home, Bag, Guild and Workshop first');
   assert.ok(/SECONDARY_HOME_SCREENS = \['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'\]/.test(homeJs), 'secondary row should start Character, Rating, Chronicle and exclude World Boss');
   assert.ok(/home_secondary_actions: 'Дополнительная строка'/.test(ruJs), 'More sections should be renamed to Additional bar in Russian');
@@ -646,7 +646,7 @@ test('weave surge banner explains mana multiplier', function () {
 });
 
 test('minor rift banner explains itself and is actionable', function () {
-  assert.ok(/home.js\?v=20260726g/.test(indexHtml), 'home screen should be cache-busted for rift explanation');
+  assert.ok(/home.js\?v=20260729d/.test(indexHtml), 'home screen should be cache-busted for rift explanation');
   assert.ok(/event_minor_rift_desc/.test(homeJs + ruJs + enJs), 'minor rift should have visible explanatory copy');
   assert.ok(/evt\.type === 'minor_rift' \? 'hunt'/.test(homeJs), 'minor rift banner should navigate to Hunt');
   assert.ok(/event-banner-button/.test(homeJs + mainCss), 'actionable event banners should be styled and bound as buttons');
@@ -749,7 +749,7 @@ test('developers screen offers optional non-advantage award', function () {
   assert.ok(/developers.js\?v=20260720g/.test(indexHtml), 'developers screen should be loaded and cache-busted');
   assert.ok(/developers-custom-energy/.test(developersJs) && /developers_custom_reward_label/.test(ruJs + enJs), 'developers screen should allow a custom 0.01-100 reward amount');
   assert.ok(/REWARD_OPTIONS = \[100\]/.test(developersJs), 'developers screen should keep only one fixed 1% quick reward');
-  assert.ok(/app.js\?v=20260729c/.test(indexHtml), 'app controller should be cache-busted for developers route');
+  assert.ok(/app.js\?v=20260729d/.test(indexHtml), 'app controller should be cache-busted for developers route');
   assert.ok(/'developers'/.test(appJs), 'app should register developers as a navigable screen');
   assert.ok(/DevelopersScreen\.render/.test(appJs), 'app should render developers screen');
   assert.ok(/SECONDARY_HOME_SCREENS = \['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'\]/.test(homeJs), 'home secondary actions should include Developers without World Boss');
@@ -939,7 +939,7 @@ test('v82 Denis feedback polish is explicit and cache-busted', function () {
   const swJsV82 = read('app/sw.js');
   const settingsJsV82 = read('app/js/ui/screens/settings.js');
   assert.ok(/viz-magic-v(?:[1-9][0-9]{2,}|9[0-9]|8[2-9])/.test(swJsV82), 'service worker should use at least v82 cache');
-  assert.ok(/home\.js\?v=20260726g/.test(indexHtml), 'Home should be cache-busted for v82');
+  assert.ok(/home\.js\?v=20260729d/.test(indexHtml), 'Home should be cache-busted for v82');
   assert.ok(/world-events\.js\?v=20260729b/.test(indexHtml), 'world events should be cache-busted for v82');
   assert.ok(/hunt\.js\?v=20260724b/.test(indexHtml), 'Hunt should be cache-busted for Armageddon lock feedback');
   assert.ok(/settings\.js\?v=20260726e/.test(indexHtml), 'Settings should be cache-busted for sound icons');
@@ -975,7 +975,7 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260726g/.test(indexHtml), 'Help should be cache-busted for guide redesign');
   assert.ok(/main\.css\?v=20260726g/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v100/.test(swJsV83), 'service worker should use the current v91 cache');
+  assert.ok(/viz-magic-v101/.test(swJsV83), 'service worker should use the current v91 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
 
@@ -1035,7 +1035,7 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
   assert.ok(/quest-system\.js\?v=20260726a/.test(indexHtml) && /quests\.js\?v=20260726g/.test(indexHtml), 'quest engine and UI should be cache-busted');
   assert.ok(/inventory\.js\?v=20260726g/.test(indexHtml) && /marketplace\.js\?v=20260726g/.test(indexHtml), 'item icon screens should be cache-busted');
   assert.ok(/guild\.js\?v=20260726a/.test(indexHtml) && /settings\.js\?v=20260726e/.test(indexHtml), 'guild/settings screens should be cache-busted');
-  assert.ok(/viz-magic-v100/.test(swJs), 'service worker should use v91 cache');
+  assert.ok(/viz-magic-v101/.test(swJs), 'service worker should use v91 cache');
 });
 
 
@@ -1092,7 +1092,7 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.ok(/world-boss\.js\?v=20260726b/.test(indexHtml), 'world boss UI should be cache-busted');
   assert.ok(/character\.js\?v=20260726f/.test(indexHtml), 'character UI should be cache-busted');
   assert.ok(/main\.css\?v=20260726g/.test(indexHtml), 'avatar CSS should be cache-busted');
-  assert.ok(/viz-magic-v100/.test(swJs), 'service worker should use v92 cache');
+  assert.ok(/viz-magic-v101/.test(swJs), 'service worker should use v92 cache');
 });
 
 
@@ -1171,7 +1171,7 @@ test('Denis v97 world, inventory, nav, arena and guide polish is explicit', func
   assert.ok(/nav-tab \{ flex-direction: column/.test(cssV97) && /nav-icon \{ display: block/.test(cssV97), 'bottom nav should place icon above one-line label');
   assert.ok(/leaderboard-table \{ table-layout: fixed/.test(cssV97) && /leaderboard-cell-hunts \{ width: 2\.2rem/.test(cssV97), 'leaderboard should fit hunt column on mobile');
   assert.ok(/settings_sfx: '🔔 Звуковые эффекты'/.test(ruV97), 'settings SFX label should use a distinct icon');
-  assert.ok(/world-events\.js\?v=20260729b/.test(indexV97) && /home\.js\?v=20260726g/.test(indexV97) && /main\.css\?v=20260726g/.test(indexV97), 'v97 files should be cache-busted');
+  assert.ok(/world-events\.js\?v=20260729b/.test(indexV97) && /home\.js\?v=20260729d/.test(indexV97) && /main\.css\?v=20260726g/.test(indexV97), 'v97 files should be cache-busted');
 });
 
 
@@ -1180,7 +1180,7 @@ test('public landing does not block startup behind chain sync', function () {
   const indexV98 = read('app/index.html');
   assert.ok(/if \(VizAccount\.isLoggedIn\(\)\)/.test(appJsV98) && /setTimeout\(function\(\) \{ _startBlockPolling\(\); \}, 250\);/.test(appJsV98), 'block polling should be deferred until after saved-session Home render');
   assert.ok(/\} else \{\s*_syncStartBlock = 0;\s*_updateSyncStatus\(100\);\s*navigateTo\('landing'\);/.test(appJsV98), 'public landing should hide sync overlay before rendering');
-  assert.ok(/js\/ui\/app\.js\?v=20260729c/.test(indexV98), 'app controller should be cache-busted for startup fix');
+  assert.ok(/js\/ui\/app\.js\?v=20260729d/.test(indexV98), 'app controller should be cache-busted for startup fix');
 });
 
 
@@ -1189,7 +1189,7 @@ test('saved sessions render Home before account and chain sync finish', function
   const indexV99 = read('app/index.html');
   assert.ok(/if \(VizAccount\.isLoggedIn\(\)\) \{[\s\S]*navigateTo\('home'\);[\s\S]*setTimeout\(function\(\) \{ _startBlockPolling\(\); \}, 250\);[\s\S]*VizAccount\.getAccount\(user/.test(appJsV99), 'saved sessions should render Home before chain/account hydration');
   assert.ok(/if \(currentScreen === 'home' \|\| currentScreen === 'character'\) \{\s*_renderScreen\(currentScreen\);\s*\}/.test(appJsV99), 'account hydration should refresh visible profile/home after startup');
-  assert.ok(/js\/ui\/app\.js\?v=20260729c/.test(indexV99), 'app controller should be cache-busted for saved-session launch fix');
+  assert.ok(/js\/ui\/app\.js\?v=20260729d/.test(indexV99), 'app controller should be cache-busted for saved-session launch fix');
 });
 
 
@@ -1207,5 +1207,23 @@ test('background sync never shows the sync chip over an active game screen', fun
   const appJsV100 = read('app/js/ui/app.js');
   const indexV100 = read('app/index.html');
   assert.ok(/if \(currentScreen && currentScreen !== 'landing'\) \{[\s\S]*statusEl\.classList\.remove\('show'\);[\s\S]*return;[\s\S]*\}/.test(appJsV100), 'active game screens should hide the sync status while background recovery runs');
-  assert.ok(/js\/ui\/app\.js\?v=20260729c/.test(indexV100), 'app controller should be cache-busted for non-blocking sync status');
+  assert.ok(/js\/ui\/app\.js\?v=20260729d/.test(indexV100), 'app controller should be cache-busted for non-blocking sync status');
+});
+
+
+test('startup routes from saved session before network and IndexedDB', function () {
+  const appJsV101 = read('app/js/ui/app.js');
+  const indexV101 = read('app/index.html');
+  assert.ok(/VizAccount\.init\(\);[\s\S]*Helpers\.EventBus\.on\('navigate', navigateTo\);[\s\S]*if \(VizAccount\.isLoggedIn\(\)\) \{\s*navigateTo\('home'\);\s*\} else \{\s*_renderScreen\('landing'\);\s*\}[\s\S]*VizConnection\.init/.test(appJsV101), 'saved sessions should route to Home before network/IndexedDB callbacks');
+  assert.ok(!/_showConnectionStatus\(\);\s*VizConnection\.init/.test(appJsV101), 'initial connection setup should not show the sync chip as a loading screen');
+  assert.ok(/js\/ui\/app\.js\?v=20260729d/.test(indexV101), 'app controller should be cache-busted for immediate saved-session routing');
+});
+
+
+test('home startup does not fetch blockchain account before VIZ transport is ready', function () {
+  const homeJsV101 = read('app/js/ui/screens/home.js');
+  const indexV101 = read('app/index.html');
+  assert.ok(/VizConnection\.isConnected && VizConnection\.isConnected\(\)/.test(homeJsV101), 'Home mana refresh should wait for connected VIZ transport');
+  assert.ok(/try \{[\s\S]*VizAccount\.getAccount\(user/.test(homeJsV101), 'Home mana refresh should not let transport errors crash render');
+  assert.ok(/home\.js\?v=20260729d/.test(indexV101), 'Home screen should be cache-busted for safe startup mana refresh');
 });

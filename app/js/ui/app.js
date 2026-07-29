@@ -47,11 +47,16 @@ var App = (function() {
         // Register navigation handler IMMEDIATELY (before async init)
         Helpers.EventBus.on('navigate', navigateTo);
 
-        // Render landing immediately
-        _renderScreen('landing');
+        // Route immediately from local session state. Network and IndexedDB must not
+        // decide whether the user sees a playable screen.
+        if (VizAccount.isLoggedIn()) {
+            navigateTo('home');
+        } else {
+            _renderScreen('landing');
+        }
 
-        // Initialize connection to VIZ node
-        _showConnectionStatus();
+        // Initialize connection to VIZ node in the background. Do not show a blocking
+        // sync/loading chip for mere connection setup.
         VizConnection.init(function(err) {
             if (err) {
                 console.log('Connection failed, working offline');
@@ -65,8 +70,8 @@ var App = (function() {
             StateEngine.init(function(err, state) {
                 if (err) console.log('State engine init error:', err);
 
-                // Determine starting screen. Do not start heavy chain catch-up on the public landing/login path:
-                // fresh PWA/shortcut sessions must become usable before any background sync work.
+                // Hydrate the already-routed startup screen. Do not start heavy chain catch-up on
+                // the public landing/login path: fresh PWA/shortcut sessions must remain usable.
                 if (VizAccount.isLoggedIn()) {
                     // Saved sessions must become usable immediately. Render Home first,
                     // then hydrate account/grimoire and run chain catch-up in the background.

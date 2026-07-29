@@ -136,14 +136,19 @@ var HomeScreen = (function() {
             });
         }
 
-        // Fetch real mana from blockchain
-        if (user) {
-            VizAccount.getAccount(user, function(err, accountData) {
-                if (!err && accountData) {
-                    var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
-                    ProgressBar.update('mana-bar', currentEnergy / 100, 100);
-                }
-            });
+        // Fetch real mana from blockchain only after the VIZ transport is ready.
+        // Startup must render Home from local state even when network initialization lags.
+        if (user && typeof VizConnection !== 'undefined' && VizConnection.isConnected && VizConnection.isConnected()) {
+            try {
+                VizAccount.getAccount(user, function(err, accountData) {
+                    if (!err && accountData) {
+                        var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
+                        ProgressBar.update('mana-bar', currentEnergy / 100, 100);
+                    }
+                });
+            } catch (e) {
+                console.log('Home mana refresh skipped until VIZ transport is ready:', e && e.message ? e.message : e);
+            }
         }
     }
 
