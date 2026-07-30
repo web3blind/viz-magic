@@ -382,15 +382,26 @@ var QuestSystem = (function() {
      * @param {Object} playerQuests
      * @returns {boolean}
      */
+    function getQuestProgressTotal(quest) {
+        if (!quest || !quest.objectives) return 0;
+        var total = 0;
+        for (var i = 0; i < quest.objectives.length; i++) {
+            total += quest.objectives[i].current || 0;
+        }
+        return total;
+    }
+
     function abandonQuest(questId, playerQuests) {
-        if (!playerQuests || !playerQuests.active) return false;
+        if (!playerQuests || !playerQuests.active) return { success: false, error: 'quest_not_found' };
         for (var i = 0; i < playerQuests.active.length; i++) {
             if (playerQuests.active[i].id === questId) {
+                var quest = playerQuests.active[i];
+                var progressTotal = getQuestProgressTotal(quest);
                 playerQuests.active.splice(i, 1);
-                return true;
+                return { success: true, hadProgress: progressTotal > 0, progressTotal: progressTotal };
             }
         }
-        return false;
+        return { success: false, error: 'quest_not_found' };
     }
 
     /**
@@ -414,6 +425,7 @@ var QuestSystem = (function() {
         getActiveQuests: getActiveQuests,
         getAvailableQuests: getAvailableQuests,
         abandonQuest: abandonQuest,
+        getQuestProgressTotal: getQuestProgressTotal,
         createPlayerQuestState: createPlayerQuestState
     };
 })();

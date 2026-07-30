@@ -1181,9 +1181,17 @@ var StateEngine = (function() {
     function _handleQuestAbandon(sender, data, blockNum) {
         if (typeof QuestSystem === 'undefined') return [];
         _ensureQuests(sender);
-        var ok = QuestSystem.abandonQuest(data.quest_id, worldState.quests[sender]);
-        if (!ok) return [];
-        return [{ type: 'quest_abandoned', account: sender, questId: data.quest_id, blockNum: blockNum }];
+        var result = QuestSystem.abandonQuest(data.quest_id, worldState.quests[sender]);
+        if (!result || !result.success) return [];
+        return [{
+            type: 'quest_abandoned',
+            account: sender,
+            questId: data.quest_id,
+            hadProgress: !!result.hadProgress,
+            progressTotal: result.progressTotal || 0,
+            penaltyEnergy: data && data.penalty_energy ? (data.penalty_energy | 0) : 0,
+            blockNum: blockNum
+        }];
     }
 
     function _handleBossAttack(sender, data, blockNum, blockHash) {
@@ -1505,8 +1513,8 @@ var StateEngine = (function() {
         return events[0];
     }
 
-    function processQuestAbandonResult(account, questId, blockNum) {
-        var events = _handleQuestAbandon(account, { quest_id: questId }, blockNum || 0);
+    function processQuestAbandonResult(account, questId, blockNum, penaltyEnergy) {
+        var events = _handleQuestAbandon(account, { quest_id: questId, penalty_energy: penaltyEnergy || 0 }, blockNum || 0);
         if (!events.length) return null;
         return events[0];
     }

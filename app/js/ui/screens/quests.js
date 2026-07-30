@@ -6,6 +6,8 @@ var QuestsScreen = (function() {
     'use strict';
 
     var currentTab = 'active';
+    var QUEST_ABANDON_NO_PROGRESS_PENALTY = 100; // 1.00% Mana
+    var QUEST_PENALTY_ACCOUNT = 'denis-skripnik';
 
     function render() {
         var t = Helpers.t;
@@ -249,8 +251,10 @@ var QuestsScreen = (function() {
                 html += '<button class="btn btn-primary btn-sm quest-complete-btn" data-quest-id="' + quest.id + '">' +
                     t('quest_claim_reward') + '</button>';
             }
-            html += '<button class="btn btn-secondary btn-sm quest-abandon-btn" data-quest-id="' + quest.id + '">' +
-                t('quest_abandon') + '</button>';
+            var abandonPenalty = _getAbandonPenaltyEnergy(quest);
+            var abandonLabel = abandonPenalty > 0 ? t('quest_abandon_with_penalty', { cost: Helpers.bpToPercent(abandonPenalty) }) : t('quest_abandon');
+            html += '<button class="btn btn-secondary btn-sm quest-abandon-btn" data-quest-id="' + quest.id + '" data-penalty-energy="' + abandonPenalty + '">' +
+                abandonLabel + '</button>';
             html += '</div>';
         }
 
@@ -340,9 +344,57 @@ var QuestsScreen = (function() {
         for (var k = 0; k < abandonBtns.length; k++) {
             abandonBtns[k].addEventListener('click', function() {
                 var questId = this.getAttribute('data-quest-id');
-                _broadcastQuestAction('abandon', questId, false, blockNum);
+                var penaltyEnergy = parseInt(this.getAttribute('data-penalty-energy'), 10) || 0;
+                _confirmAbandonQuest(questId, penaltyEnergy, blockNum);
             });
         }
+    }
+
+
+    function _getAbandonPenaltyEnergy(quest) {
+        if (!quest) return 0;
+        var progressTotal = QuestSystem.getQuestProgressTotal ? QuestSystem.getQuestProgressTotal(quest) : _questProgressTotalFallback(quest);
+        return progressTotal > 0 ? 0 : QUEST_ABANDON_NO_PROGRESS_PENALTY;
+    }
+
+    function _questProgressTotalFallback(quest) {
+        var total = 0;
+        var objectives = quest && quest.objectives ? quest.objectives : [];
+        for (var i = 0; i < objectives.length; i++) total += objectives[i].current || 0;
+        return total;
+    }
+
+    function _confirmAbandonQuest(questId, penaltyEnergy, blockNum) {
+        if (!penaltyEnergy) {
+            _broadcastQuestAction('abandon', questId, false, blockNum, 0);
+            return;
+        }
+        var t = Helpers.t;
+        VizAccount.getAccount(VizAccount.getCurrentUser(), function(err, accountData) {
+            if (err || !accountData) {
+                Toast.error(t('error_network'));
+                return;
+            }
+            var currentEnergy = VizAccount.calculateCurrentEnergy ? VizAccount.calculateCurrentEnergy(accountData) : 0;
+            if (currentEnergy < penaltyEnergy) {
+                Toast.error(t('quest_abandon_penalty_not_enough_mana', { cost: Helpers.bpToPercent(penaltyEnergy) }));
+                SoundManager.play('error');
+                return;
+            }
+            Modal.show({
+                title: t('quest_abandon_confirm_title'),
+                text: t('quest_abandon_confirm_text', { cost: Helpers.bpToPercent(penaltyEnergy) }),
+                buttons: [
+                    { text: t('quest_abandon_confirm_button'), className: 'btn-primary', action: function() { _broadcastQuestAction('abandon', questId, false, blockNum, penaltyEnergy); } },
+                    { text: t('cancel'), className: 'btn-secondary', action: function() {} }
+                ]
+            });
+        });
+    }
+
+    function _sendAbandonPenalty(penaltyEnergy, callback) {
+        var memo = 'viz://vm/quest/forfeit — ' + Helpers.t('quest_abandon_penalty_memo');
+        VizBroadcast.award(QUEST_PENALTY_ACCOUNT, penaltyEnergy, 0, memo, [], callback || function() {});
     }
 
     function _broadcastQuestAction(kind, questId, isDaily, dailyBlock) {
@@ -351,6 +403,8 @@ var QuestsScreen = (function() {
         if (kind === 'complete') type = cfg.ACTION_TYPES.QUEST_COMPLETE;
         if (kind === 'abandon') type = cfg.ACTION_TYPES.QUEST_ABANDON;
         var data = { quest_id: questId || '' };
+        var penaltyEnergy = arguments.length > 4 ? (arguments[4] | 0) : 0;
+        if (penaltyEnergy > 0) data.penalty_energy = penaltyEnergy;
         if (isDaily) {
             data.daily = true;
             data.daily_block = dailyBlock || 0;
@@ -384,7 +438,7 @@ var QuestsScreen = (function() {
             } else if (kind === 'complete') {
                 event = StateEngine.processQuestCompleteResult(user, questId, finalBlockNum);
             } else if (kind === 'abandon') {
-                event = StateEngine.processQuestAbandonResult(user, questId, finalBlockNum);
+                event = StateEngine.processQuestAbandonResult(user, questId, finalBlockNum, penaltyEnergy);
             }
 
             if (!event) {
@@ -402,7 +456,18 @@ var QuestsScreen = (function() {
                 SoundManager.play('quest_complete');
                 Toast.success(Helpers.t('quest_completed'));
             } else if (kind === 'abandon') {
-                Toast.info(Helpers.t('quest_abandoned'));
+                if (penaltyEnergy > 0) {
+                    _sendAbandonPenalty(penaltyEnergy, function(penaltyErr) {
+                        if (penaltyErr) {
+                            Toast.error(Helpers.t('quest_abandon_penalty_failed'));
+                            SoundManager.play('error');
+                        } else {
+                            Toast.info(Helpers.t('quest_abandoned_with_penalty', { cost: Helpers.bpToPercent(penaltyEnergy) }));
+                        }
+                    });
+                } else {
+                    Toast.info(Helpers.t('quest_abandoned'));
+                }
             } else {
                 SoundManager.play('quest_accept');
                 Toast.success(Helpers.t('quest_accepted'));

@@ -475,10 +475,10 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/event-icon vmagic-breathe/.test(homeJs), 'minor rift banner icon should breathe with other icons');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should appear only from the authored calendar');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260730b/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260730b/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260730c/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260730c/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/home.js\?v=20260730b/.test(indexHtml), 'home forecast layout must be cache-busted');
-  assert.ok(/js\/ui\/screens\/quests.js\?v=20260726g/.test(indexHtml), 'quest-limit UX must be cache-busted');
+  assert.ok(/js\/ui\/screens\/quests.js\?v=20260730c/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260730b/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260730b/.test(indexHtml), 'leaderboard icon motion must be cache-busted');
   assert.ok(/world-events.js\?v=20260729b/.test(indexHtml), 'world events news and festival copy must be cache-busted');
@@ -598,7 +598,7 @@ test('character screen uses current home-scale vitals and growth explainers', fu
 test('hunt screen exposes explicit camp rest promised by Help', function () {
   assert.ok(/hunt.js\?v=20260730a/.test(indexHtml), 'hunt screen should be cache-busted');
   assert.ok(/broadcast.js\?v=20260713a/.test(indexHtml), 'broadcast helper should be cache-busted for restAction');
-  assert.ok(/state-engine.js\?v=20260716a/.test(indexHtml), 'state-engine should be cache-busted for processRestResult');
+  assert.ok(/state-engine.js\?v=20260730c/.test(indexHtml), 'state-engine should be cache-busted for processRestResult');
   assert.ok(/function restAction\(callback\)/.test(broadcastJs), 'broadcast helper should expose restAction');
   assert.ok(/function processRestResult\(account, blockNum\)/.test(stateEngineJs), 'state engine should expose live rest processing');
   assert.ok(/hunt-rest-section/.test(huntJs) && /btn-rest-camp/.test(huntJs), 'Hunt should show a visible rest-at-camp section and button');
@@ -726,7 +726,7 @@ test('world boss UI can enter active window from schedule even without spawn che
   assert.ok(/_ensureArchiveBackfill/.test(worldBossJs) && /HistorySource\.getEventsRange/.test(worldBossJs) && /boss\.attack/.test(worldBossJs), 'world boss screen should backfill public boss attacks from archive for other browsers');
   assert.ok(/state\.worldBoss = scheduledBoss/.test(worldBossJs) && /bossState\.maxHp !== scheduledBoss\.maxHp/.test(worldBossJs), 'screen should discard wrong local boss HP/checkpoint before archive backfill');
   assert.ok(/DEFAULT_ENCOUNTER_PLAYERS/.test(worldBossEngineJs), 'world boss HP should not depend on local browser character cache');
-  assert.ok(/state-engine.js\?v=20260716a/.test(indexHtml), 'state engine should be cache-busted for boss attack spawn-block parity');
+  assert.ok(/state-engine.js\?v=20260730c/.test(indexHtml), 'state engine should be cache-busted for boss attack spawn-block parity');
   assert.ok(/worldState\.worldBoss\.maxHp !== scheduledBoss\.maxHp/.test(stateEngineJs), 'boss attack replay should reset wrong local boss HP to scheduled public boss');
   assert.ok(/worldState\.characters\[sender\] \|\| null/.test(stateEngineJs) && /character && character\.pot \? character\.pot : 14/.test(stateEngineJs), 'boss attacks from other accounts should still contribute when their local character is absent');
   assert.ok(/_schedulePostAttackRefresh/.test(worldBossJs) && /_backfillKey = ''/.test(worldBossJs), 'boss screen should force archive refresh after each successful attack');
@@ -976,7 +976,7 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260730b/.test(indexHtml), 'Help should be cache-busted for guide redesign');
   assert.ok(/main\.css\?v=20260730b/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v103/.test(swJsV83), 'service worker should use the current v91 cache');
+  assert.ok(/viz-magic-v104/.test(swJsV83), 'service worker should use the current v91 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
 
@@ -1033,10 +1033,10 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
 
   assert.ok(/main\.css\?v=20260730b/.test(indexHtml), 'main CSS should be cache-busted for v91 polish');
   assert.ok(/world-events\.js\?v=20260729b/.test(indexHtml), 'world-events should be cache-busted for v91 polish');
-  assert.ok(/quest-system\.js\?v=20260726a/.test(indexHtml) && /quests\.js\?v=20260726g/.test(indexHtml), 'quest engine and UI should be cache-busted');
+  assert.ok(/quest-system\.js\?v=20260730c/.test(indexHtml) && /quests\.js\?v=20260730c/.test(indexHtml), 'quest engine and UI should be cache-busted');
   assert.ok(/inventory\.js\?v=20260730a/.test(indexHtml) && /marketplace\.js\?v=20260730a/.test(indexHtml), 'item icon screens should be cache-busted');
   assert.ok(/guild\.js\?v=20260726a/.test(indexHtml) && /settings\.js\?v=20260730b/.test(indexHtml), 'guild/settings screens should be cache-busted');
-  assert.ok(/viz-magic-v103/.test(swJs), 'service worker should use v91 cache');
+  assert.ok(/viz-magic-v104/.test(swJs), 'service worker should use v91 cache');
 });
 
 
@@ -1093,7 +1093,7 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.ok(/world-boss\.js\?v=20260726b/.test(indexHtml), 'world boss UI should be cache-busted');
   assert.ok(/character\.js\?v=20260730b/.test(indexHtml), 'character UI should be cache-busted');
   assert.ok(/main\.css\?v=20260730b/.test(indexHtml), 'avatar CSS should be cache-busted');
-  assert.ok(/viz-magic-v103/.test(swJs), 'service worker should use v92 cache');
+  assert.ok(/viz-magic-v104/.test(swJs), 'service worker should use v92 cache');
 });
 
 
@@ -1126,7 +1126,7 @@ test('safe avatar upload UI re-encodes before JSON_METADATA writes', function ()
   assert.ok(/delete meta\.profile\[field\]/.test(accountJsUpload), 'account helper should remove only requested profile field');
   assert.ok(/settings_avatar_hint/.test(ruJs + enJs) && /settings_avatar_mode_fit/.test(ruJs + enJs) && /settings_avatar_preview_hint/.test(ruJs + enJs), 'avatar upload help, preview and mode text should be localized');
   assert.ok(/settings\.js\?v=20260730b/.test(indexHtml), 'settings screen should be cache-busted for avatar upload');
-  assert.ok(/js\/i18n\/ru\.js\?v=20260730b/.test(indexHtml) && /js\/i18n\/en\.js\?v=20260730b/.test(indexHtml), 'i18n should be cache-busted for avatar strings');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260730c/.test(indexHtml) && /js\/i18n\/en\.js\?v=20260730c/.test(indexHtml), 'i18n should be cache-busted for avatar strings');
 });
 
 
@@ -1139,7 +1139,7 @@ test('character profile refreshes avatar from VIZ JSON_METADATA on render', func
   assert.ok(/document\.querySelector\('#screen-character \.profile-title-avatar'\)/.test(characterJsAvatar), 'character profile should replace stale title avatar DOM');
   assert.ok(/titleAvatar\.outerHTML = _renderAvatarMark/.test(characterJsAvatar), 'character profile should refresh the title avatar when metadata arrives');
   assert.ok(/character\.js\?v=20260730b/.test(indexHtmlAvatarProfile), 'character screen should be cache-busted for live avatar refresh');
-  assert.ok(/js\/i18n\/ru\.js\?v=20260730b/.test(indexHtmlAvatarProfile) && /js\/i18n\/en\.js\?v=20260730b/.test(indexHtmlAvatarProfile), 'i18n should be cache-busted for updated avatar copy');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260730c/.test(indexHtmlAvatarProfile) && /js\/i18n\/en\.js\?v=20260730c/.test(indexHtmlAvatarProfile), 'i18n should be cache-busted for updated avatar copy');
 });
 
 
@@ -1276,7 +1276,7 @@ test('bottom navigation keeps icons above single-line labels and cache-busts cha
   assert.ok(/inventory\.js\?v=20260730a/.test(indexHtml), 'inventory cache bust missing');
   assert.ok(/marketplace\.js\?v=20260730a/.test(indexHtml), 'marketplace cache bust missing');
   assert.ok(/nav\.js\?v=20260730b/.test(indexHtml), 'nav cache bust missing');
-  assert.ok(/viz-magic-v103/.test(read('app/sw.js')), 'service worker cache should be v103');
+  assert.ok(/viz-magic-v104/.test(read('app/sw.js')), 'service worker cache should be v103');
 });
 
 
@@ -1308,5 +1308,36 @@ test('v103 weave surge, default avatars, and guide copy polish are explicit', fu
   assert.ok(/main\.css\?v=20260730b/.test(indexHtml), 'v103 CSS should be cache-busted');
   assert.ok(/home\.js\?v=20260730b/.test(indexHtml) && /character\.js\?v=20260730b/.test(indexHtml), 'v103 Home and Character should be cache-busted');
   assert.ok(/settings\.js\?v=20260730b/.test(indexHtml) && /help\.js\?v=20260730b/.test(indexHtml), 'v103 Settings and Help should be cache-busted');
-  assert.ok(/viz-magic-v103/.test(swJs), 'service worker should use v103 cache');
+  assert.ok(/viz-magic-v104/.test(swJs), 'service worker should use v103 cache');
+});
+
+
+test('quest abandon charges only unstarted quests and warns before forfeit', function () {
+  const questSystemPenalty = read('app/js/engine/quest-system.js');
+  const questsScreenPenalty = read('app/js/ui/screens/quests.js');
+  const stateEnginePenalty = read('app/js/engine/state-engine.js');
+  const indexPenalty = read('app/index.html');
+  const swPenalty = read('app/sw.js');
+
+  assert.ok(/QUEST_ABANDON_NO_PROGRESS_PENALTY = 100/.test(questsScreenPenalty), 'unstarted quest abandon penalty should be a small 1.00% Mana forfeit');
+  assert.ok(/QUEST_PENALTY_ACCOUNT = 'denis-skripnik'/.test(questsScreenPenalty), 'forfeit should go to the existing game account instead of a made-up local sink');
+  assert.ok(/function getQuestProgressTotal/.test(questSystemPenalty), 'quest system should expose progress total for abandon decisions');
+  assert.ok(/progressTotal > 0 \? 0 : QUEST_ABANDON_NO_PROGRESS_PENALTY/.test(questsScreenPenalty), 'active quests with progress should not get the no-progress forfeit');
+  assert.ok(/quest_abandon_with_penalty/.test(questsScreenPenalty + ruJs + enJs), 'untouched quest abandon button should disclose the Mana forfeit');
+  assert.ok(/quest_abandon_confirm_title/.test(questsScreenPenalty + ruJs + enJs) && /quest_abandon_confirm_text/.test(questsScreenPenalty + ruJs + enJs), 'unstarted abandon should show an explicit warning modal');
+  assert.ok(/calculateCurrentEnergy\(accountData\)/.test(questsScreenPenalty), 'UI should check current VIZ energy before penalized abandon');
+  assert.ok(/quest_abandon_penalty_not_enough_mana/.test(questsScreenPenalty + ruJs + enJs), 'not enough Mana copy should be localized');
+  assert.ok(/VizBroadcast\.award\(QUEST_PENALTY_ACCOUNT, penaltyEnergy/.test(questsScreenPenalty), 'penalty should be a real VIZ award, not a fake local state subtraction');
+  assert.ok(/viz:\/\/vm\/quest\/forfeit/.test(questsScreenPenalty), 'penalty award memo should be identifiable');
+  assert.ok(/data\.penalty_energy/.test(stateEnginePenalty) && /penaltyEnergy: data && data\.penalty_energy/.test(stateEnginePenalty), 'quest abandon replay event should preserve penaltyEnergy');
+  assert.ok(/hadProgress/.test(stateEnginePenalty) && /progressTotal/.test(stateEnginePenalty), 'quest abandon event should expose whether progress existed');
+  assert.ok(/Отказ от начатого задания просто стирает уже сделанный прогресс/.test(ruJs), 'RU guide should explain started quest abandon semantics');
+  assert.ok(/отказ от задания без единого шага берёт небольшую неустойку/.test(ruJs), 'RU guide should explain no-progress forfeit');
+  assert.ok(/Abandoning a quest after progress only loses that progress/.test(enJs), 'EN guide should explain started quest abandon semantics');
+
+  assert.ok(/quest-system\.js\?v=20260730c/.test(indexPenalty), 'quest system cache bust missing for abandon penalty');
+  assert.ok(/state-engine\.js\?v=20260730c/.test(indexPenalty), 'state engine cache bust missing for abandon penalty');
+  assert.ok(/quests\.js\?v=20260730c/.test(indexPenalty), 'quests screen cache bust missing for abandon penalty');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260730c/.test(indexPenalty) && /js\/i18n\/en\.js\?v=20260730c/.test(indexPenalty), 'i18n cache bust missing for abandon penalty');
+  assert.ok(/viz-magic-v104/.test(swPenalty), 'service worker should use v104 cache');
 });
