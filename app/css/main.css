@@ -2216,3 +2216,39 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     line-height: 1.1;
     text-align: center;
 }
+
+/* v103 avatar and copy polish */
+.default-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    object-fit: initial;
+    font-size: 1.05rem;
+    line-height: 1;
+}
+.profile-title-avatar {
+    width: 42px;
+    height: 42px;
+    max-width: 42px;
+    max-height: 42px;
+    margin-right: 0.35em;
+    vertical-align: middle;
+}
+.tile-avatar-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 3px;
+    min-height: 24px;
+}
+.tile-avatar {
+    width: 24px;
+    height: 24px;
+    max-width: 24px;
+    max-height: 24px;
+    margin-right: 0;
+}
+.home-lore-pages-intro {
+    margin: 0 0 10px;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+}

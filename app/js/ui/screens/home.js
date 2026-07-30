@@ -60,13 +60,13 @@ var HomeScreen = (function() {
                 '<section class="home-actions" aria-label="' + t('home_primary_actions') + '">' +
                     '<h2>' + t('home_primary_actions') + '</h2>' +
                     '<div class="action-grid">' +
-                        _renderActionTiles(PRIMARY_HOME_SCREENS, true) +
+                        _renderActionTiles(PRIMARY_HOME_SCREENS, true, character) +
                     '</div>' +
                 '</section>' +
                 '<section class="home-actions home-actions-secondary" aria-label="' + t('home_secondary_actions') + '">' +
                     '<h2>' + t('home_secondary_actions') + '</h2>' +
                     '<div class="action-grid">' +
-                        _renderActionTiles(SECONDARY_HOME_SCREENS, false) +
+                        _renderActionTiles(SECONDARY_HOME_SCREENS, false, character) +
                     '</div>' +
                 '</section>' +
                 _renderLorePages(blockNum, t) +
@@ -87,9 +87,11 @@ var HomeScreen = (function() {
 
         var eventButtons = el.querySelectorAll('.event-banner-button');
         for (var eb = 0; eb < eventButtons.length; eb++) {
-            eventButtons[eb].addEventListener('click', function() {
+            eventButtons[eb].addEventListener('click', function(e) {
+                if (e && e.preventDefault) e.preventDefault();
                 SoundManager.play('tap');
-                Helpers.EventBus.emit('navigate', this.getAttribute('data-screen'));
+                var screen = this.getAttribute('data-screen') || (this.closest && this.closest('[data-screen]') && this.closest('[data-screen]').getAttribute('data-screen'));
+                if (screen) Helpers.EventBus.emit('navigate', screen);
             });
         }
 
@@ -174,10 +176,10 @@ var HomeScreen = (function() {
             var descKey = evt.nameKey + '_desc';
             var desc = t(descKey);
             if (!desc || desc === descKey) desc = '';
-            var target = evt.type === 'minor_rift' ? 'hunt' : '';
+            var target = (evt.type === 'minor_rift' || evt.type === 'weave_surge') ? 'hunt' : '';
             var tag = target ? 'button' : 'div';
-            var attrs = target ? ' type="button" data-screen="' + target + '"' : '';
-            var effectBadge = evt.type === 'weave_surge' ? '<span class="event-effect-badge">⚡ Мана ×' + (evt.manaRegenMultiplier || 2) + '</span>' : '';
+            var attrs = target ? ' type="button" data-screen="' + target + '" data-event-type="' + evt.type + '"' : '';
+            var effectBadge = evt.type === 'weave_surge' ? '<span class="event-effect-badge">⚡ ' + t('home_weave_hunt_hint') + ' · ' + t('home_mana') + ' ×' + (evt.manaRegenMultiplier || 2) + '</span>' : '';
             html += '<' + tag + ' class="event-banner-item event-banner-' + evt.type + (target ? ' event-banner-button' : '') + '"' + attrs + ' aria-label="' +
                 t(evt.nameKey) + (desc ? '. ' + desc : '') + ' ' + t('event_time_left', {time: timeStr}) + '">' +
                 '<span class="event-icon vmagic-breathe" aria-hidden="true">' + evt.icon + '</span>' +
@@ -346,7 +348,8 @@ var HomeScreen = (function() {
         if (typeof WorldEvents === 'undefined' || !WorldEvents.getCurrentLorePages) return '';
         var pages = WorldEvents.getCurrentLorePages(blockNum) || [];
         if (!pages.length) return '';
-        var html = '<section class="home-lore-pages" aria-label="' + t('home_lore_pages_label') + '">';
+        var html = '<section class="home-lore-pages" aria-label="' + t('home_lore_pages_label') + '">' +
+            '<p class="home-lore-pages-intro">' + t('home_lore_pages_intro') + '</p>';
         for (var i = 0; i < pages.length; i++) {
             var page = pages[i];
             html += '<article class="home-lore-card">' +
@@ -377,10 +380,10 @@ var HomeScreen = (function() {
         '</section>';
     }
 
-    function _renderActionTiles(screens, primary) {
+    function _renderActionTiles(screens, primary, character) {
         var html = '';
         for (var i = 0; i < screens.length; i++) {
-            html += _tile(screens[i], _iconForScreen(screens[i]), _labelForScreen(screens[i], primary));
+            html += _tile(screens[i], _iconForScreen(screens[i]), _labelForScreen(screens[i], primary), character);
         }
         return html;
     }
@@ -419,11 +422,25 @@ var HomeScreen = (function() {
         return icons[screen] || '\u2728';
     }
 
-    function _tile(screen, icon, label) {
+    function _tile(screen, icon, label, character) {
+        var extra = '';
+        if (screen === 'character' && character) {
+            extra = '<span class="tile-avatar-row">' + _renderAvatarMark(character, 'tile-avatar') + '</span>';
+        }
         return '<button class="action-tile" data-screen="' + screen + '" aria-label="' + label + '">' +
             '<span class="tile-icon" aria-hidden="true">' + icon + '</span>' +
             '<span class="tile-label">' + label + '</span>' +
+            extra +
             '</button>';
+    }
+
+    function _renderAvatarMark(character, extraClass) {
+        character = character || {};
+        var name = character.name || '';
+        if (character.avatarUrl) {
+            return '<img class="account-avatar defaultable-avatar ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(character.avatarUrl) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
+        }
+        return '<span class="account-avatar default-avatar ' + (extraClass || '') + '" aria-hidden="true">' + Helpers.classIcon(character.className || 'embercaster') + '</span>';
     }
 
     return { render: render };

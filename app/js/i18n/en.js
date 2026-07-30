@@ -130,6 +130,8 @@ var LangEN = {
     home_install_step_3: 'Confirm the Viz Magic shortcut.',
     home_install_shortcut_installed: 'Viz Magic shortcut installed.',
     home_lore_pages_label: 'Home magical pages',
+    home_weave_hunt_hint: 'to Hunt',
+    home_lore_pages_intro: 'Each day the World opens a few living pages: creature tracks, old legends, and whispered spells. They ask for no action — they simply remind you there is a fairy tale behind the buttons.',
     home_magic_nature_title: 'Magical Nature',
     home_world_legends_title: 'World Legends',
     home_magic_spells_title: 'Magical Spells',
@@ -940,7 +942,7 @@ var LangEN = {
 
     // World Events
     event_weave_surge: 'Weave Surge',
-    event_weave_surge_desc: 'The Weave strengthens recovery: while this event is active, mana regenerates 2× faster.',
+    event_weave_surge_desc: 'The Weave strengthens recovery: while this event is active, mana regenerates 2× faster. Press to go hunting and spend the surge well.',
     event_minor_rift: 'Minor Rift',
     event_minor_rift_desc: 'Rare creatures appear more often in hunts. Press to go hunting while the rift is open.',
     event_time_left: '{time} left.',
@@ -1254,7 +1256,7 @@ var LangEN = {
     help_world_days_text: 'The Sky block shows one of seven in-world names each day: Sky, Earth, Water, Air, Wind, Fire, Aether. It is a magical world cycle rather than an ordinary calendar, so Home shows only the current world-day name.',
 
     help_section_hp: 'HP & Recovery',
-    help_hp_text: 'HP is your health. Max HP grows from your level, class, and Resilience: base 100 + level × 10 + RES × 3, then your class multiplier is applied. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 100 blocks, ~5 min). Full recovery: open the Hunt screen and press “Rest at camp”, or use a Health Scroll (craftable or dropped by creatures).',
+    help_hp_text: 'HP is your health. Max HP grows from your level, class, and Resilience: base 100 + level × 10 + RES × 3, then your class multiplier is applied. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 100 blocks, ~5 min). <br>Full recovery: open the Hunt screen and press “Rest at camp”, or use a Health Scroll (craftable or dropped by creatures).',
 
     help_section_quests: 'Quests & Prophecies',
     help_quests_text: 'Regular quests are accepted in the Quests screen. “Traveler” currently means visiting 3 different regions via the world map — open the map, choose another region, and press “Travel”. The Daily Prophecy must also be accepted first, then completed. If it tells you to bless others, do that in the Chronicle with the “Bless” button on other mages\' entries.',
@@ -1269,7 +1271,7 @@ var LangEN = {
     help_crafting_text: 'Open the Crafting screen, pick a recipe and tap Craft. Materials are consumed. Quality depends on your INT stat and block entropy.',
 
     help_section_marketplace: 'Marketplace',
-    help_marketplace_text: 'Browse → buy listed items. Sell → list your items for Seals of the World. Trade → direct item transfer to another mage.',
+    help_marketplace_text: '<br>Browse → buy listed items. Sell → list your items for Seals of the World. Trade → direct item transfer to another mage.',
 
     help_section_leaderboard: 'Leaderboard',
     help_leaderboard_text: 'The Rankings screen (trophy tab) shows the top 100 mages by XP. Your current rank is shown at the top. The table updates automatically as you hunt.',
@@ -1281,7 +1283,7 @@ var LangEN = {
     help_classes_text: 'Stonewarden (Terra) — tank. Embercaster (Ignis) — burst DPS.<br>Moonrunner (Umbra) — evasion. Bloomsage (Aqua) — healer.<br>Each class has unique spells and stat growth.',
 
     help_section_duels: 'Duels & Arena',
-    help_duels_text: 'Duels are PvP matches based on prediction. Best of 3 rounds. Each round you seal one of 4 intents: Strike (beats Mend), Guard (beats Strike), Weave (beats Guard), Mend (beats Weave). Seals are revealed simultaneously — the blockchain determines the outcome. Challenge opponents through the Arena. They have 24 hours to accept. Win: +150 XP. Loss: +50 XP.',
+    help_duels_text: 'Duels are PvP matches based on prediction. Best of 3 rounds. Each round you seal one of 4 intents: Strike (beats Mend), Guard (beats Strike), Weave (beats Guard), Mend (beats Weave). <br>Seals are revealed simultaneously — the blockchain determines the outcome. Challenge opponents through the Arena. They have 24 hours to accept. Win: +150 XP. Loss: +50 XP. Future balance rule: declining or missing a confirmed challenge should grant a small satisfaction payment to the challenger or to the World — a minor percentage of Mana, HP, or XP.',
 
     help_section_guilds: 'Guilds',
     help_guilds_text: 'Create a guild or join an existing one. Officers can invite members and promote the guild so new players can discover it. The founder cannot leave — transfer leadership first. Patronage (SHARES delegation) empowers guild members via the Magic Core bonus.',

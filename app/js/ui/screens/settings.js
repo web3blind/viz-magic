@@ -85,7 +85,7 @@ var SettingsScreen = (function() {
                 // Sound
                 '<section class="settings-section" aria-label="' + t('settings_sound') + '">' +
                     '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">🔊</span> ' + t('settings_sound') + '</h2>' +
-                    _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume, '🔈') +
+                    _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume) +
                     _renderSlider('music-volume', t('settings_music'), musicVolume, '🎵') +
                     _renderToggle('narrator-toggle', t('narrator_toggle'), narratorEnabled) +
                     _renderSelect('narrator-voice-gender', t('narrator_voice_gender'), [
@@ -134,7 +134,7 @@ var SettingsScreen = (function() {
                     (user ? (
                         '<div class="settings-account-info">' +
                             '<div class="account-row"><span class="account-label">' + t('settings_account_name') + '</span><span class="account-value">' + Helpers.escapeHtml(user) + '</span></div>' +
-                            _renderAvatarUpload(currentAvatar, t) +
+                            _renderAvatarUpload(currentAvatar, currentCharacter, t) +
                         '</div>'
                     ) : '<p class="settings-not-logged">' + t('settings_not_logged') + '</p>') +
                 '</section>' +
@@ -197,9 +197,9 @@ var SettingsScreen = (function() {
         return html + '</div></div>';
     }
 
-    function _renderAvatarUpload(currentAvatar, t) {
+    function _renderAvatarUpload(currentAvatar, currentCharacter, t) {
         var previewSrc = pendingAvatarDataUrl || currentAvatar || '';
-        var preview = previewSrc ? '<img class="account-avatar profile-avatar settings-avatar-preview" src="' + Helpers.escapeHtml(previewSrc) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : '';
+        var preview = previewSrc ? '<img class="account-avatar profile-avatar settings-avatar-preview" src="' + Helpers.escapeHtml(previewSrc) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : _renderDefaultAvatarPreview(currentCharacter);
         return '<div class="settings-avatar-field">' +
             '<label for="avatar-upload" class="input-label"><span class="settings-control-icon vmagic-breathe" aria-hidden="true">🖼️</span> ' + t('settings_avatar') + '</label>' +
             '<div class="settings-avatar-row">' +
@@ -215,6 +215,11 @@ var SettingsScreen = (function() {
             '</div>' +
             '<p class="settings-help-text" id="avatar-status" role="status" aria-live="polite"></p>' +
         '</div>';
+    }
+
+
+    function _renderDefaultAvatarPreview(currentCharacter) {
+        return '<span class="account-avatar profile-avatar settings-avatar-preview default-avatar" aria-hidden="true">' + Helpers.classIcon((currentCharacter && currentCharacter.className) || 'embercaster') + '</span>';
     }
 
     function _renderAvatarModeChoice(t) {
@@ -490,7 +495,7 @@ var SettingsScreen = (function() {
     function _setAvatarPreview(el, dataUrl) {
         var slot = el && el.querySelector ? el.querySelector('#avatar-preview-slot') : null;
         if (slot) {
-            slot.innerHTML = dataUrl ? '<img class="account-avatar profile-avatar settings-avatar-preview" src="' + Helpers.escapeHtml(dataUrl) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : '';
+            slot.innerHTML = dataUrl ? '<img class="account-avatar profile-avatar settings-avatar-preview" src="' + Helpers.escapeHtml(dataUrl) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : _renderDefaultAvatarPreview((function(){ var user = VizAccount.getCurrentUser && VizAccount.getCurrentUser(); return user && StateEngine.getCharacter ? StateEngine.getCharacter(user) : null; })());
         }
     }
 
