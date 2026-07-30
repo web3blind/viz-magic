@@ -268,7 +268,7 @@ test('inventory rows show textual rarity beside item names', function () {
 test('hunt and map UX fixes prevent known loops and confusing copy', function () {
   assert.ok(/ch\.currentZone = 'commons_first_light'/.test(huntJs), 'return-to-commons should locally restore a huntable zone');
   assert.ok(/function _filterCreaturesForLevel/.test(huntJs), 'hunt should filter creatures by player level');
-  assert.ok(/c\.maxLevel[^\n]+>= level/.test(huntJs), 'hunt should reject creatures below current player level');
+  assert.ok(/max <= level \+ 1\) continue/.test(huntJs), 'hunt should reject stale habitats whose max level is too weak for the player');
   assert.ok(/hunt_returned_to_commons/.test(huntJs + ruJs + enJs), 'return-to-commons status copy missing');
   assert.ok(/regionIds\.sort/.test(mapJs), 'map should sort regions by level');
   assert.ok(/Armageddon Stone is consumed on launch/.test(enJs), 'Armageddon copy should not duplicate stone requirement');
@@ -474,14 +474,14 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/event-icon vmagic-breathe/.test(homeJs), 'minor rift banner icon should breathe with other icons');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should appear only from the authored calendar');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260726g/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260726g/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260730a/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260730a/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/home.js\?v=20260729d/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/js\/ui\/screens\/quests.js\?v=20260726g/.test(indexHtml), 'quest-limit UX must be cache-busted');
-  assert.ok(/nav.js\?v=20260726g/.test(indexHtml), 'bottom tray nav must be cache-busted');
+  assert.ok(/nav.js\?v=20260730a/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260726g/.test(indexHtml), 'leaderboard icon motion must be cache-busted');
   assert.ok(/world-events.js\?v=20260729b/.test(indexHtml), 'world events news and festival copy must be cache-busted');
-  assert.ok(/main.css\?v=20260726g/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/main.css\?v=20260730a/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/prefers-reduced-motion: no-preference/.test(mainCss) && /vmagic-rune-pulse/.test(mainCss), 'ambient animation must be lightweight and respect reduced-motion');
   assert.ok(/weather_report_air/.test(homeJs + ruJs + enJs), 'home forecast should render readable air/water/wind weather instead of raw school percentages');
   assert.ok(/weather_hunt_effect_sentence: 'Магическая погода влияет на охоту\.'/.test(ruJs), 'summer card should restore the calm yellow hunt-weather sentence');
@@ -595,7 +595,7 @@ test('character screen uses current home-scale vitals and growth explainers', fu
 
 
 test('hunt screen exposes explicit camp rest promised by Help', function () {
-  assert.ok(/hunt.js\?v=20260724b/.test(indexHtml), 'hunt screen should be cache-busted');
+  assert.ok(/hunt.js\?v=20260730a/.test(indexHtml), 'hunt screen should be cache-busted');
   assert.ok(/broadcast.js\?v=20260713a/.test(indexHtml), 'broadcast helper should be cache-busted for restAction');
   assert.ok(/state-engine.js\?v=20260716a/.test(indexHtml), 'state-engine should be cache-busted for processRestResult');
   assert.ok(/function restAction\(callback\)/.test(broadcastJs), 'broadcast helper should expose restAction');
@@ -664,14 +664,14 @@ test('temple offering gives immediate heard-prayer feedback', function () {
 
 
 test('hunt rest uses home-scale HP values', function () {
-  assert.ok(/hunt.js\?v=20260724b/.test(indexHtml), 'hunt screen should be cache-busted for HP display scale');
+  assert.ok(/hunt.js\?v=20260730a/.test(indexHtml), 'hunt screen should be cache-busted for HP display scale');
   assert.ok(/HUNT_HP_DISPLAY_MAX = 5000/.test(huntJs), 'hunt rest should use the same 5000 HP display scale');
   assert.ok(/hpShown[\s\S]*HUNT_HP_DISPLAY_MAX/.test(huntJs), 'hunt rest description should render scaled HP instead of raw max HP');
 });
 
 
 test('marketplace groups identical sellable items and supports quantity listing', function () {
-  assert.ok(/marketplace.js\?v=20260726g/.test(indexHtml), 'marketplace screen should be cache-busted');
+  assert.ok(/marketplace.js\?v=20260730a/.test(indexHtml), 'marketplace screen should be cache-busted');
   assert.ok(/function _groupSellableItems/.test(marketplaceJs), 'sell tab should group identical items');
   assert.ok(/sell-item-count/.test(marketplaceJs), 'sell tab should display grouped item count');
   assert.ok(/sell-qty-input/.test(marketplaceJs), 'sell tab should expose quantity input');
@@ -682,7 +682,7 @@ test('marketplace groups identical sellable items and supports quantity listing'
 
 
 test('hunt and arena icons are distinct', function () {
-  assert.ok(/nav.js\?v=20260726g/.test(indexHtml), 'nav should be cache-busted for hunt icon');
+  assert.ok(/nav.js\?v=20260730a/.test(indexHtml), 'nav should be cache-busted for hunt icon');
   assert.ok(/hunt:\s*'\\uD83C\\uDFF9'/.test(homeJs), 'home Hunt tile should use bow icon');
   assert.ok(/arena:\s*'\\u2694\\uFE0F'/.test(homeJs), 'home Arena tile should keep crossed swords icon');
   assert.ok(/id: 'hunt'[\s\S]*icon: '\\uD83C\\uDFF9'/.test(navJs), 'bottom Hunt tab should use bow icon');
@@ -690,7 +690,7 @@ test('hunt and arena icons are distinct', function () {
 
 
 test('hunt headings and help use updated thematic icons', function () {
-  assert.ok(/hunt.js\?v=20260724b/.test(indexHtml), 'hunt screen should be cache-busted for heading icons');
+  assert.ok(/hunt.js\?v=20260730a/.test(indexHtml), 'hunt screen should be cache-busted for heading icons');
   assert.ok(/vmagic-breathe[\s\S]*🐾[\s\S]*hunt_choose_creature/.test(huntJs), 'hunt creature heading should have a thematic tracking icon');
   assert.ok(/vmagic-breathe[\s\S]*🪄[\s\S]*hunt_choose_spell/.test(huntJs), 'hunt spell heading should use a magic wand icon');
   assert.ok(/help.js\?v=20260726g/.test(indexHtml), 'help screen should be cache-busted for hunt icon');
@@ -705,12 +705,12 @@ test('crafting enchant tab does not show misleading local back button', function
 
 
 test('marketplace sell items have semantic item icons', function () {
-  assert.ok(/marketplace.js\?v=20260726g/.test(indexHtml), 'marketplace screen should be cache-busted for sell icons');
+  assert.ok(/marketplace.js\?v=20260730a/.test(indexHtml), 'marketplace screen should be cache-busted for sell icons');
   assert.ok(/function _marketItemIcon/.test(marketplaceJs), 'sell rows should compute semantic item icons');
   assert.ok(/chronicle_ink:\s*'🖋️'/.test(marketplaceJs), 'Chronicle Ink should show the pen icon before the name');
-  assert.ok(/shadow_shard:\s*item\.rarity === 0 \? '◑' : '🌑'/.test(marketplaceJs), 'Shadow Shard should have rarity-distinct sell icons');
-  assert.ok(/thorn_essence:\s*item\.rarity >= 4 \? '🧬' : '🌿'/.test(marketplaceJs), 'Thorn Essence should have rarity-distinct sell icons');
-  assert.ok(/ancient_shard:\s*'🌀'/.test(marketplaceJs), 'Ancient Shard should have a sell icon');
+  assert.ok(/shadow_shard:\s*item\.rarity === 0 \? '⬛' : '🌑'/.test(marketplaceJs), 'Shadow Shard should have rarity-distinct sell icons');
+  assert.ok(/thorn_essence:\s*item\.rarity >= 4 \? '🧬' : \(item\.rarity >= 1 \? '🌵' : '🌿'\)/.test(marketplaceJs), 'Thorn Essence should have rarity-distinct sell icons');
+  assert.ok(/ancient_shard:\s*item\.rarity === 0 \? '〰️' : '🌀'/.test(marketplaceJs), 'Ancient Shard should have a sell icon');
   assert.ok(/spirit_tunic:\s*'🧥'/.test(marketplaceJs), 'Spirit Tunic should have a sell icon');
   assert.ok(/_marketItemIcon\(sItem\)[\s\S]*_marketItemAfterIcon\(sItem\)/.test(marketplaceJs), 'sell row should render the item icon before the name and optional after-icon after the name');
   assert.ok(/ink-drop-icon/.test(marketplaceJs + mainCss), 'Chronicle Ink should keep a darker ink-drop after the name');
@@ -941,7 +941,7 @@ test('v82 Denis feedback polish is explicit and cache-busted', function () {
   assert.ok(/viz-magic-v(?:[1-9][0-9]{2,}|9[0-9]|8[2-9])/.test(swJsV82), 'service worker should use at least v82 cache');
   assert.ok(/home\.js\?v=20260729d/.test(indexHtml), 'Home should be cache-busted for v82');
   assert.ok(/world-events\.js\?v=20260729b/.test(indexHtml), 'world events should be cache-busted for v82');
-  assert.ok(/hunt\.js\?v=20260724b/.test(indexHtml), 'Hunt should be cache-busted for Armageddon lock feedback');
+  assert.ok(/hunt\.js\?v=20260730a/.test(indexHtml), 'Hunt should be cache-busted for Armageddon lock feedback');
   assert.ok(/settings\.js\?v=20260726e/.test(indexHtml), 'Settings should be cache-busted for sound icons');
   assert.ok(/function _formatWeatherReport/.test(homeJs) && /_formatSignedTemperature/.test(homeJs), 'season card should render readable temperatures instead of elemental percentages');
   assert.ok(!/\+20%,[\s\S]*\+10%/.test(homeJs), 'Home should not hardcode confusing elemental percentage text');
@@ -974,8 +974,8 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(/var sections = \[[\s\S]*mana[\s\S]*hp[\s\S]*quests[\s\S]*hunt[\s\S]*armageddon/.test(helpJs), 'practical help order should remain fixed in source');
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260726g/.test(indexHtml), 'Help should be cache-busted for guide redesign');
-  assert.ok(/main\.css\?v=20260726g/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v101/.test(swJsV83), 'service worker should use the current v91 cache');
+  assert.ok(/main\.css\?v=20260730a/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
+  assert.ok(/viz-magic-v102/.test(swJsV83), 'service worker should use the current v91 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
 
@@ -1001,9 +1001,9 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
   assert.ok(!/один послушник уже пытается вывести из этого закон/i.test(tails), 'poslushnik phrase should be removed from queued lore tails');
   assert.ok(/return \[\s*_dailyFromPool\(NATURE_PAGES/.test(worldEvents) && /_dailyFromPool\(LEGEND_PAGES/.test(worldEvents) && /_dailyFromPool\(SPELL_PAGES/.test(worldEvents), 'living pages should include nature, legend, and spell blocks');
 
-  assert.ok(/shadow_shard:\s*item\.rarity === 0 \? '◑' : '🌑'/.test(inventoryJs) && /shadow_shard:\s*item\.rarity === 0 \? '◑' : '🌑'/.test(marketplaceJs), 'shadow shard icons should be rarity-distinct in bag and bazaar');
-  assert.ok(/thorn_essence:\s*item\.rarity >= 4 \? '🧬' : '🌿'/.test(inventoryJs) && /thorn_essence:\s*item\.rarity >= 4 \? '🧬' : '🌿'/.test(marketplaceJs), 'thorn essence icons should be rarity-distinct');
-  assert.ok(/ancient_shard:\s*'🌀'/.test(inventoryJs) && /spirit_tunic:\s*'🧥'/.test(inventoryJs), 'bag should use new ancient shard and spirit tunic icons');
+  assert.ok(/shadow_shard:\s*item\.rarity === 0 \? '⬛' : '🌑'/.test(inventoryJs) && /shadow_shard:\s*item\.rarity === 0 \? '⬛' : '🌑'/.test(marketplaceJs), 'shadow shard icons should be rarity-distinct in bag and bazaar');
+  assert.ok(/thorn_essence:\s*item\.rarity >= 4 \? '🧬' : \(item\.rarity >= 1 \? '🌵' : '🌿'\)/.test(inventoryJs) && /thorn_essence:\s*item\.rarity >= 4 \? '🧬' : \(item\.rarity >= 1 \? '🌵' : '🌿'\)/.test(marketplaceJs), 'thorn essence icons should be rarity-distinct');
+  assert.ok(/ancient_shard:\s*item\.rarity === 0 \? '〰️' : '🌀'/.test(inventoryJs) && /spirit_tunic:\s*'🧥'/.test(inventoryJs), 'bag should use new ancient shard and spirit tunic icons');
 
   assert.ok(/btn-guild-treasury[\s\S]*guild-action-icon vmagic-breathe[\s\S]*💰/.test(guildJs), 'guild treasury button icon should breathe');
   assert.ok(/btn-guild-settings[\s\S]*guild-action-icon vmagic-breathe[\s\S]*⚙️/.test(guildJs), 'guild settings button icon should breathe');
@@ -1030,12 +1030,12 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
   assert.ok(!/Ротацию пока не запускаем/.test(ruJs), 'living page rotation implementation note should not be shown to players');
   assert.ok(/quest_completed_pride/.test(ruJs + enJs), 'completed quest pride copy should exist');
 
-  assert.ok(/main\.css\?v=20260726g/.test(indexHtml), 'main CSS should be cache-busted for v91 polish');
+  assert.ok(/main\.css\?v=20260730a/.test(indexHtml), 'main CSS should be cache-busted for v91 polish');
   assert.ok(/world-events\.js\?v=20260729b/.test(indexHtml), 'world-events should be cache-busted for v91 polish');
   assert.ok(/quest-system\.js\?v=20260726a/.test(indexHtml) && /quests\.js\?v=20260726g/.test(indexHtml), 'quest engine and UI should be cache-busted');
-  assert.ok(/inventory\.js\?v=20260726g/.test(indexHtml) && /marketplace\.js\?v=20260726g/.test(indexHtml), 'item icon screens should be cache-busted');
+  assert.ok(/inventory\.js\?v=20260730a/.test(indexHtml) && /marketplace\.js\?v=20260730a/.test(indexHtml), 'item icon screens should be cache-busted');
   assert.ok(/guild\.js\?v=20260726a/.test(indexHtml) && /settings\.js\?v=20260726e/.test(indexHtml), 'guild/settings screens should be cache-busted');
-  assert.ok(/viz-magic-v101/.test(swJs), 'service worker should use v91 cache');
+  assert.ok(/viz-magic-v102/.test(swJs), 'service worker should use v91 cache');
 });
 
 
@@ -1091,8 +1091,8 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.ok(/duel\.js\?v=20260726b/.test(indexHtml), 'duel UI should be cache-busted');
   assert.ok(/world-boss\.js\?v=20260726b/.test(indexHtml), 'world boss UI should be cache-busted');
   assert.ok(/character\.js\?v=20260726f/.test(indexHtml), 'character UI should be cache-busted');
-  assert.ok(/main\.css\?v=20260726g/.test(indexHtml), 'avatar CSS should be cache-busted');
-  assert.ok(/viz-magic-v101/.test(swJs), 'service worker should use v92 cache');
+  assert.ok(/main\.css\?v=20260730a/.test(indexHtml), 'avatar CSS should be cache-busted');
+  assert.ok(/viz-magic-v102/.test(swJs), 'service worker should use v92 cache');
 });
 
 
@@ -1125,7 +1125,7 @@ test('safe avatar upload UI re-encodes before JSON_METADATA writes', function ()
   assert.ok(/delete meta\.profile\[field\]/.test(accountJsUpload), 'account helper should remove only requested profile field');
   assert.ok(/settings_avatar_hint/.test(ruJs + enJs) && /settings_avatar_mode_fit/.test(ruJs + enJs) && /settings_avatar_preview_hint/.test(ruJs + enJs), 'avatar upload help, preview and mode text should be localized');
   assert.ok(/settings\.js\?v=20260726e/.test(indexHtml), 'settings screen should be cache-busted for avatar upload');
-  assert.ok(/js\/i18n\/ru\.js\?v=20260726g/.test(indexHtml) && /js\/i18n\/en\.js\?v=20260726g/.test(indexHtml), 'i18n should be cache-busted for avatar strings');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260730a/.test(indexHtml) && /js\/i18n\/en\.js\?v=20260730a/.test(indexHtml), 'i18n should be cache-busted for avatar strings');
 });
 
 
@@ -1138,7 +1138,7 @@ test('character profile refreshes avatar from VIZ JSON_METADATA on render', func
   assert.ok(/header\.querySelector\('\.profile-avatar'\)/.test(characterJsAvatar), 'character profile should replace stale profile avatar DOM');
   assert.ok(/insertAdjacentHTML\('beforebegin', _renderAvatar\(freshAvatar/.test(characterJsAvatar), 'character profile should insert avatar next to the class icon when metadata arrives');
   assert.ok(/character\.js\?v=20260726f/.test(indexHtmlAvatarProfile), 'character screen should be cache-busted for live avatar refresh');
-  assert.ok(/js\/i18n\/ru\.js\?v=20260726g/.test(indexHtmlAvatarProfile) && /js\/i18n\/en\.js\?v=20260726g/.test(indexHtmlAvatarProfile), 'i18n should be cache-busted for updated avatar copy');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260730a/.test(indexHtmlAvatarProfile) && /js\/i18n\/en\.js\?v=20260730a/.test(indexHtmlAvatarProfile), 'i18n should be cache-busted for updated avatar copy');
 });
 
 
@@ -1164,14 +1164,14 @@ test('Denis v97 world, inventory, nav, arena and guide polish is explicit', func
   assert.ok(/function _rarityNameForItem/.test(inventoryJsV97) && /flame_votive_mark/.test(inventoryJsV97) && /необычная/.test(inventoryJsV97), 'inventory should use feminine rarity text for requested items');
   assert.ok(/function _raritySymbolForItem/.test(inventoryJsV97) && /item\.type === 'flame_votive_mark'/.test(inventoryJsV97), 'inventory should suppress white rarity diamonds for requested rows');
   assert.ok(/function _showWarningIcon/.test(inventoryJsV97) && /item\.type === 'flame_votive_mark'/.test(inventoryJsV97), 'altar spark should show warning triangle like ingredient rows');
-  assert.ok(/shadow_shard: item\.rarity === 0 \? '◑' : '🌑'/.test(inventoryJsV97), 'shadow shard rarities should have distinct icons');
-  assert.ok(/thorn_essence: item\.rarity >= 4 \? '🧬' : '🌿'/.test(inventoryJsV97), 'thorn essence rarities should have distinct icons');
+  assert.ok(/shadow_shard: item\.rarity === 0 \? '⬛' : '🌑'/.test(inventoryJsV97), 'shadow shard rarities should have distinct icons');
+  assert.ok(/thorn_essence: item\.rarity >= 4 \? '🧬' : \(item\.rarity >= 1 \? '🌵' : '🌿'\)/.test(inventoryJsV97), 'thorn essence rarities should have distinct icons');
   assert.ok(/🏅<\/span><span aria-hidden=\"true\">&nbsp;<\/span>/.test(questsJsV97), 'completed quests should include an invisible space after the medal');
   assert.ok(/function _knownAvatarUrl/.test(arenaJsV97) && /VizAccount\.getProfileAvatar\(accountData\)/.test(arenaJsV97), 'arena known mages should hydrate avatars from metadata');
   assert.ok(/nav-tab \{ flex-direction: column/.test(cssV97) && /nav-icon \{ display: block/.test(cssV97), 'bottom nav should place icon above one-line label');
   assert.ok(/leaderboard-table \{ table-layout: fixed/.test(cssV97) && /leaderboard-cell-hunts \{ width: 2\.2rem/.test(cssV97), 'leaderboard should fit hunt column on mobile');
   assert.ok(/settings_sfx: '🔔 Звуковые эффекты'/.test(ruV97), 'settings SFX label should use a distinct icon');
-  assert.ok(/world-events\.js\?v=20260729b/.test(indexV97) && /home\.js\?v=20260729d/.test(indexV97) && /main\.css\?v=20260726g/.test(indexV97), 'v97 files should be cache-busted');
+  assert.ok(/world-events\.js\?v=20260729b/.test(indexV97) && /home\.js\?v=20260729d/.test(indexV97) && /main\.css\?v=20260730a/.test(indexV97), 'v97 files should be cache-busted');
 });
 
 
@@ -1226,4 +1226,54 @@ test('home startup does not fetch blockchain account before VIZ transport is rea
   assert.ok(/VizConnection\.isConnected && VizConnection\.isConnected\(\)/.test(homeJsV101), 'Home mana refresh should wait for connected VIZ transport');
   assert.ok(/try \{[\s\S]*VizAccount\.getAccount\(user/.test(homeJsV101), 'Home mana refresh should not let transport errors crash render');
   assert.ok(/home\.js\?v=20260729d/.test(indexV101), 'Home screen should be cache-busted for safe startup mana refresh');
+});
+
+
+test('hunt habitat hides stale prey and labels dangerous areas instead of pretending mana is win chance', function () {
+  assert.ok(/max <= level \+ 1\) continue/.test(huntJs), 'hunt should hide stale low-level habitats once player outgrows them');
+  assert.ok(/min <= level \+ 3/.test(huntJs), 'hunt should keep nearby habitats around the player level');
+  assert.ok(/function _isDangerCreature/.test(huntJs), 'hunt should classify dangerous creatures');
+  assert.ok(/max >= level \+ 5/.test(huntJs), 'danger should include very high max-level habitats');
+  assert.ok(/hunt_danger_warning/.test(huntJs + ruJs + enJs), 'danger warning copy should be rendered and translated');
+  assert.ok(/Здесь очень сильные магические сущности\. Опасно!/.test(ruJs), 'Russian danger warning should match player request');
+  assert.ok(/hunt_mana_badge/.test(huntJs + ruJs + enJs), 'spell buttons should label percent as mana cost, not win chance');
+});
+
+test('level seven hunt habitat keeps fair threats and removes lv3-8 stale prey', function () {
+  assert.ok(/ember_wisp[\s\S]*minLevel: 1,[\s\S]*maxLevel: 5/.test(read('app/js/data/creatures.js')), 'fixture creature Lv1-5 missing');
+  assert.ok(/hollow_shade[\s\S]*minLevel: 3,[\s\S]*maxLevel: 8/.test(read('app/js/data/creatures.js')), 'fixture creature Lv3-8 missing');
+  assert.ok(/thornvine[\s\S]*minLevel: 5,[\s\S]*maxLevel: 10/.test(read('app/js/data/creatures.js')), 'fixture creature Lv5-10 missing');
+  assert.ok(/echo_guardian[\s\S]*minLevel: 5,[\s\S]*maxLevel: 12/.test(read('app/js/data/creatures.js')), 'fixture creature Lv5-12 missing');
+  assert.ok(/cyber_ghoul[\s\S]*minLevel: 7,[\s\S]*maxLevel: 14/.test(read('app/js/data/creatures.js')), 'fixture creature Lv7-14 missing');
+  const level = 7;
+  function visible(min, max) { return !(max <= level + 1) && min <= level + 3; }
+  assert.strictEqual(visible(3, 8), false, 'Lv3-8 should be stale for level 7');
+  assert.strictEqual(visible(5, 10), true, 'Lv5-10 should remain for level 7');
+  assert.strictEqual(visible(5, 12), true, 'Lv5-12 should remain for level 7');
+  assert.strictEqual(visible(7, 14), true, 'Lv7-14 danger habitat should remain for level 7');
+});
+
+test('inventory and marketplace material rows avoid white diamond artifacts and use distinct icons', function () {
+  assert.ok(/_getCategory\(item\) === ItemSystem\.CATEGORIES\.MATERIAL\) return ''/.test(inventoryJs), 'inventory should suppress rarity diamond symbols for material rows');
+  assert.ok(/\['simple', item\.type, item\.rarity \|\| 0\]\.join\(':/.test(inventoryJs), 'inventory should stack simple materials by type and rarity so duplicate names are explained');
+  assert.ok(/shadow_shard: item\.rarity === 0 \? '⬛' : '🌑'/.test(inventoryJs), 'inventory shadow shard icons should differ by rarity');
+  assert.ok(/ancient_shard: item\.rarity === 0 \? '〰️' : '🌀'/.test(inventoryJs), 'inventory ancient echo shard icons should differ by rarity');
+  assert.ok(/ancient_shard:[\s\S]*category: CATEGORIES\.MATERIAL/.test(itemsJs), 'ancient echo shard should have a material template so rarity diamonds are suppressed');
+  assert.ok(/thorn_essence: item\.rarity >= 4 \? '🧬' : \(item\.rarity >= 1 \? '🌵' : '🌿'\)/.test(inventoryJs), 'inventory thorn essence icons should distinguish rarities');
+  assert.ok(/shadow_shard: item\.rarity === 0 \? '⬛' : '🌑'/.test(marketplaceJs), 'marketplace shadow shard sell icon should differ by rarity');
+  assert.ok(/function _marketRarityName/.test(marketplaceJs), 'marketplace sell rows should explain rarity for duplicate material names');
+  assert.ok(/item\.rarity \|\| 0/.test(marketplaceJs), 'marketplace sell grouping must preserve rarity 0 instead of merging it with uncommon');
+  assert.ok(!/sell-item-rarity[\s\S]{0,80}sRarity\.symbol/.test(marketplaceJs), 'marketplace sell rows should not add bare white rarity diamonds');
+});
+
+test('bottom navigation keeps icons above single-line labels and cache-busts changed assets', function () {
+  assert.ok(/<span class="nav-icon"/.test(navJs) && /<span class="nav-label"/.test(navJs), 'nav should render icon and label spans');
+  assert.ok(/flex-direction: column/.test(mainCss), 'nav tabs should stack icon above label');
+  assert.ok(/\.nav-label[\s\S]*white-space: nowrap/.test(mainCss), 'nav labels should stay on one horizontal line');
+  assert.ok(/main\.css\?v=20260730a/.test(indexHtml), 'main.css cache bust missing');
+  assert.ok(/hunt\.js\?v=20260730a/.test(indexHtml), 'hunt cache bust missing');
+  assert.ok(/inventory\.js\?v=20260730a/.test(indexHtml), 'inventory cache bust missing');
+  assert.ok(/marketplace\.js\?v=20260730a/.test(indexHtml), 'marketplace cache bust missing');
+  assert.ok(/nav\.js\?v=20260730a/.test(indexHtml), 'nav cache bust missing');
+  assert.ok(/viz-magic-v102/.test(read('app/sw.js')), 'service worker cache should be v102');
 });

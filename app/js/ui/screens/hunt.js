@@ -59,9 +59,10 @@ var HuntScreen = (function() {
                 var c = creatures[i];
                 html += '<button class="creature-card" data-id="' + c.id + '" role="radio" aria-checked="false" ' +
                     'tabindex="' + (i === 0 ? '0' : '-1') + '" type="button" ' +
-                    'aria-label="' + c.name + '. Level ' + c.minLevel + ' to ' + c.maxLevel + '">' +
+                    'aria-label="' + c.name + '. Level ' + c.minLevel + ' to ' + c.maxLevel + (_isDangerCreature(c, ch) ? '. ' + t('hunt_danger_warning') : '') + '">' +
                     '<span class="creature-name">' + c.name + '</span>' +
                     '<span class="creature-level">Lv ' + c.minLevel + '-' + c.maxLevel + '</span>' +
+                    (_isDangerCreature(c, ch) ? '<span class="creature-danger" aria-hidden="true">⚠ ' + t('hunt_danger_badge') + '</span><span class="creature-warning-text">' + t('hunt_danger_warning') + '</span>' : '') +
                     '</button>';
             }
 
@@ -80,7 +81,7 @@ var HuntScreen = (function() {
                 (spellTooWeak ? 'disabled aria-disabled="true" ' : '') +
                 'aria-label="' + s.name + '. ' + t('hunt_mana_cost', {cost: Helpers.bpToPercent(s.manaCost)}) + (spellTooWeak ? '. ' + t('hunt_spell_too_weak') : '') + '">' +
                 '<span class="spell-name">' + s.name + '</span>' +
-                '<span class="spell-cost">' + Helpers.manaCost(s.manaCost) + '</span>' +
+                '<span class="spell-cost">' + t('hunt_mana_badge', {cost: Helpers.bpToPercent(s.manaCost)}) + '</span>' +
                 (spellTooWeak ? '<span class="spell-warning">' + t('hunt_spell_too_weak') + '</span>' : '') +
                 '</button>';
         }
@@ -141,14 +142,29 @@ var HuntScreen = (function() {
         if (!character || !creatures || !creatures.length) return creatures || [];
         var level = character.level || 1;
         var out = [];
+        var danger = [];
         for (var i = 0; i < creatures.length; i++) {
             var c = creatures[i];
             if (!c) continue;
-            if ((c.minLevel || 1) <= level && (c.maxLevel || level) >= level) {
+            var min = c.minLevel || 1;
+            var max = c.maxLevel || min;
+            if (max <= level + 1) continue; // stale habitat: too much weaker than the player
+            if (min <= level + 3) {
                 out.push(c);
+            } else if (danger.length === 0) {
+                danger.push(c); // keep one warned high-risk destination available for every level
             }
         }
+        if (!out.length && danger.length) out.push(danger[0]);
         return out;
+    }
+
+    function _isDangerCreature(creature, character) {
+        if (!creature || !character) return false;
+        var level = character.level || 1;
+        var min = creature.minLevel || 1;
+        var max = creature.maxLevel || min;
+        return min >= level || max >= level + 5;
     }
 
     function _bindEvents(el) {

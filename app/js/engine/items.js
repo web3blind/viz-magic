@@ -141,6 +141,11 @@ var ItemSystem = (function() {
             slot: null,
             baseStats: {}
         },
+        ancient_shard: {
+            category: CATEGORIES.MATERIAL,
+            slot: null,
+            baseStats: {}
+        },
         armageddon_stone: {
             category: CATEGORIES.RELIC,
             slot: SLOTS.ACCESSORY,

@@ -220,8 +220,9 @@ var MarketplaceScreen = (function() {
                 var itemIds = group.items.map(function(it) { return it.id; }).join(',');
                 html += '<div class="market-sell-item ' + Helpers.rarityClass(sItem.rarity) + '" role="listitem" data-item="' + sItem.id + '">';
                 html += '<span class="sell-item-name"><span class="market-item-icon vmagic-breathe" aria-hidden="true">' + _marketItemIcon(sItem) + '</span> ' + Helpers.escapeHtml(sName) + _marketItemAfterIcon(sItem) +
+                    ' <span class="sell-item-rarity rarity-color-' + sRarity.name + '">(' + Helpers.escapeHtml(_marketRarityName(sItem, sRarity, t)) + ')</span>' +
                     (group.items.length > 1 ? ' <span class="sell-item-count">×' + group.items.length + '</span>' : '') +
-                    ' <span class="sell-item-rarity rarity-color-' + sRarity.name + '">' + sRarity.symbol + '</span></span>';
+                    '</span>';
                 html += '<div class="sell-item-controls">';
                 html += '<label for="price-' + sItem.id + '" class="sr-only">' + t('market_set_price') + '</label>';
                 html += '<input type="number" id="price-' + sItem.id + '" class="input-field sell-price-input" min="1" placeholder="' + t('market_price_placeholder') + '" aria-label="' + t('market_set_price') + '">';
@@ -531,9 +532,9 @@ var MarketplaceScreen = (function() {
             mana_potion: '⚡',
             fire_dust: '✦',
             sparkdust: '✨',
-            shadow_shard: item.rarity === 0 ? '◑' : '🌑',
-            thorn_essence: item.rarity >= 4 ? '🧬' : '🌿',
-            ancient_shard: '🌀',
+            shadow_shard: item.rarity === 0 ? '⬛' : '🌑',
+            thorn_essence: item.rarity >= 4 ? '🧬' : (item.rarity >= 1 ? '🌵' : '🌿'),
+            ancient_shard: item.rarity === 0 ? '〰️' : '🌀',
             spirit_tunic: '🧥'
         };
         if (byType[item.type]) return byType[item.type];
@@ -551,6 +552,16 @@ var MarketplaceScreen = (function() {
         if (!item) return '';
         if (item.type === 'chronicle_ink') return ' <span class="ink-drop-icon" aria-hidden="true">💧</span>';
         return '';
+    }
+
+    function _marketRarityName(item, rarityInfo, t) {
+        var name = t('rarity_' + rarityInfo.name) || rarityInfo.name;
+        if (!item) return name;
+        if ((item.type === 'flame_votive_mark' || item.type === 'spirit_tunic' || item.type === 'thorn_essence') && rarityInfo.name === 'common') return 'обычная';
+        if (item.type === 'thorn_essence' && rarityInfo.name === 'legendary') return 'легендарная';
+        if (item.type === 'flame_votive_mark' && rarityInfo.name === 'uncommon') return 'необычная';
+        if (item.type === 'chronicle_ink' && rarityInfo.name === 'common') return 'обычные';
+        return name;
     }
 
     function _groupSellableItems(items) {
@@ -575,7 +586,7 @@ var MarketplaceScreen = (function() {
         for (var i = 0; i < statKeys.length; i++) {
             statBits.push(statKeys[i] + ':' + (stats[statKeys[i]] || 0));
         }
-        return [item.type, item.rarity || 1, statBits.join('|')].join('::');
+        return [item.type, item.rarity || 0, statBits.join('|')].join('::');
     }
 
     function _isPendingItem(itemId) {

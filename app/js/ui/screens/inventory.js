@@ -167,7 +167,7 @@ var InventoryScreen = (function() {
         var category = item.category || (template ? template.category : ItemSystem.CATEGORIES.MATERIAL);
 
         if (_isSimpleStackable(item, template, category)) {
-            return 'simple:' + item.type;
+            return ['simple', item.type, item.rarity || 0].join(':');
         }
 
         return [
@@ -254,8 +254,7 @@ var InventoryScreen = (function() {
 
     function _raritySymbolForItem(item, rInfo) {
         if (!item) return rInfo.symbol || '';
-        var template = ItemSystem.getItemTemplate(item.type);
-        if ((item.type === 'flame_votive_mark' || (template && template.category === ItemSystem.CATEGORIES.MATERIAL)) && item.rarity <= 1) return '';
+        if (_getCategory(item) === ItemSystem.CATEGORIES.MATERIAL) return '';
         return rInfo.symbol || '';
     }
 
@@ -284,9 +283,9 @@ var InventoryScreen = (function() {
             mana_potion: '⚡',
             fire_dust: '✦',
             sparkdust: '✨',
-            shadow_shard: item.rarity === 0 ? '◑' : '🌑',
-            thorn_essence: item.rarity >= 4 ? '🧬' : '🌿',
-            ancient_shard: '🌀',
+            shadow_shard: item.rarity === 0 ? '⬛' : '🌑',
+            thorn_essence: item.rarity >= 4 ? '🧬' : (item.rarity >= 1 ? '🌵' : '🌿'),
+            ancient_shard: item.rarity === 0 ? '〰️' : '🌀',
             spirit_tunic: '🧥',
             echo_shards: '🔷',
             veilstone: '🪨',
