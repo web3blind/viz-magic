@@ -116,6 +116,7 @@ var SettingsScreen = (function() {
                     _renderToggle('contrast-toggle', t('settings_high_contrast'), highContrast) +
                     _renderToggle('motion-toggle', t('settings_reduced_motion'), reducedMotion) +
                     '<p class="settings-help-text">' + t('settings_reduced_motion_hint') + '</p>' +
+                    '<div class="settings-accessibility-spacer" aria-hidden="true"></div>' +
                     _renderIconMotionOptions(iconMotion, t) +
                     '<p class="settings-help-text">' + t('settings_icon_motion_hint') + '</p>' +
                 '</section>' +

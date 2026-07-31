@@ -104,17 +104,17 @@ var CharacterScreen = (function() {
 
     function _classGuideName(className, t) {
         var names = {
-            stonewarden: 'Каменный страж (Terra)',
-            embercaster: 'Огнеплёт (Ignis)',
-            moonrunner: 'Лунный Странник (Umbra)',
-            bloomsage: 'Цветомудрец (Aqua)'
+            stonewarden: 'Каменный страж',
+            embercaster: 'Огнеплёт',
+            moonrunner: 'Лунный Странник',
+            bloomsage: 'Цветомудрец'
         };
         if (typeof LangEN !== 'undefined' && Helpers.getCurrentLang && Helpers.getCurrentLang() === 'en') {
             names = {
-                stonewarden: 'Stonewarden (Terra)',
-                embercaster: 'Embercaster (Ignis)',
-                moonrunner: 'Moonrunner (Umbra)',
-                bloomsage: 'Bloomsage (Aqua)'
+                stonewarden: 'Stonewarden',
+                embercaster: 'Embercaster',
+                moonrunner: 'Moonrunner',
+                bloomsage: 'Bloomsage'
             };
         }
         return names[className] || t('class_' + className);
@@ -151,10 +151,9 @@ var CharacterScreen = (function() {
         var t = Helpers.t;
         var spell = GameSpells.getSpell(spellId);
         if (!spell) return;
-        var descKey = 'spell_' + spell.id + '_desc';
-        var desc = t(descKey);
-        if (!desc || desc === descKey) desc = spell.description;
-        var body = '<p>' + Helpers.escapeHtml(desc) + '</p>' +
+        var body = '<div class="modal-content spell-detail-modal">' +
+            '<h2 class="modal-title">' + t('char_spell_details') + '</h2>' +
+            '<div class="modal-body">' +
             '<dl class="spell-detail-list">' +
             '<dt>' + t('char_spell_school') + '</dt><dd>' + Helpers.escapeHtml(spell.school) + '</dd>' +
             '<dt>' + t('char_spell_mana_cost') + '</dt><dd>' + Helpers.bpToPercent(spell.manaCost || 0) + ' Mana</dd>' +
@@ -162,10 +161,8 @@ var CharacterScreen = (function() {
             '<dt>' + t('char_spell_multiplier') + '</dt><dd>×' + ((spell.multiplier || 1000) / 1000).toFixed(2) + '</dd>' +
             '<dt>' + t('char_spell_intent') + '</dt><dd>' + Helpers.escapeHtml(spell.intent || '') + '</dd>' +
             '<dt>' + t('char_spell_effect') + '</dt><dd>' + Helpers.escapeHtml(spell.effect || '') + '</dd>' +
-            '</dl>';
-        Modal.show(t('char_spell_details') + ': ' + spell.name, body, [
-            { label: t('char_spell_close'), primary: true, action: function() {} }
-        ]);
+            '</dl></div></div>';
+        Modal.show(body);
     }
 
     return { render: render };

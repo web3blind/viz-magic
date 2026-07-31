@@ -113,6 +113,25 @@ var GameCreatures = (function() {
                 { itemType: 'optic_cloak', name: 'Optic Cloak', dropRate: 60 }
            ]
         },
+        rift_marauder: {
+          id: 'rift_marauder',
+          name: 'Rift Marauder',
+          school: 'umbra',
+          author: 'denis-skripnik',
+          minLevel: 9,
+          maxLevel: 16,
+          baseHp: 95,
+          basePot: 24,
+          baseRes: 16,
+          baseSwf: 11,
+          baseXp: 135,
+          zone: 'commons_first_light',
+          lootTable: [
+                { itemType: 'veilstone', name: 'Veilstone', dropRate: 180 },
+                { itemType: 'data_core', name: 'Data Core', dropRate: 140 },
+                { itemType: 'nano_patch', name: 'Nano Patch', dropRate: 120 }
+           ]
+        },
         rift_colossus: {
           id: 'rift_colossus',
           name: 'Rift Colossus',

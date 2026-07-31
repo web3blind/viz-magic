@@ -1292,7 +1292,7 @@ var LangEN = {
     help_narrator_text: 'The Battle Narrator announces all combat events via your screen reader (aria-live). Enable it in Settings. It also plays short audio tones to indicate enemy and player positions. Designed for blind and low-vision players.',
 
     help_section_classes: 'Classes',
-    help_classes_text: 'Stonewarden (Terra) — tank. Embercaster (Ignis) — burst DPS.<br>Moonrunner (Umbra) — evasion. Bloomsage (Aqua) — healer.<br>Each class has unique spells and stat growth.',
+    help_classes_text: 'Stonewarden — tank. Embercaster — burst DPS.<br>Moonrunner — evasion. Bloomsage — healer.<br>Each class has unique spells and stat growth.',
 
     help_section_duels: 'Duels & Arena',
     help_duels_text: 'Duels are PvP matches based on prediction. Best of 3 rounds. Each round you seal one of 4 intents: Strike (beats Mend), Guard (beats Strike), Weave (beats Guard), Mend (beats Weave). <br>Seals are revealed simultaneously — the blockchain determines the outcome.<br>Challenge opponents through the Arena. They have 24 hours to accept. Win: +150 XP. Loss: +50 XP. Future balance rule: declining or missing a confirmed challenge means satisfaction to the challenger or to the World, chosen by the declining mage — 1% Mana.',

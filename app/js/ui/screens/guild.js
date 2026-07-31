@@ -182,25 +182,25 @@ var GuildScreen = (function() {
         html += '<div class="guild-actions">';
         if (isOfficer) {
             html += '<button class="btn btn-primary guild-btn" id="btn-guild-recruit" aria-label="' + t('guild_recruit') + '">';
-            html += '\uD83D\uDCE8 ' + t('guild_recruit') + '</button>';
+            html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">📨</span><span class="guild-action-label">' + t('guild_recruit') + '</span>' + '</button>';
 
             html += '<button class="btn btn-secondary guild-btn" id="btn-guild-patronage" aria-label="' + t('guild_patronage') + '">';
-            html += '\uD83E\uDD1D ' + t('guild_patronage') + '</button>';
+            html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">🤝</span><span class="guild-action-label">' + t('guild_patronage') + '</span>' + '</button>';
 
             html += '<button class="btn btn-secondary guild-btn" id="btn-guild-listing" aria-label="' + t('guild_listing') + '">';
-            html += '\uD83D\uDCE3 ' + t('guild_listing') + '</button>';
+            html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">📣</span><span class="guild-action-label">' + t('guild_listing') + '</span>' + '</button>';
             html += '<p class="guild-listing-hint">' + t('guild_listing_hint') + '</p>';
         }
 
         html += '<button class="btn btn-secondary guild-btn" id="btn-guild-treasury" aria-label="' + t('guild_treasury') + '">';
-        html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">💰</span> ' + t('guild_treasury') + '</button>';
+        html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">💰</span><span class="guild-action-label">' + t('guild_treasury') + '</span></button>';
 
         html += '<button class="btn btn-secondary guild-btn" id="btn-guild-settings" aria-label="' + t('guild_settings') + '">';
-        html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">⚙️</span> ' + t('guild_settings') + '</button>';
+        html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">⚙️</span><span class="guild-action-label">' + t('guild_settings') + '</span></button>';
 
         if (myMember.rank !== GuildSystem.RANKS.FOUNDER) {
             html += '<button class="btn btn-secondary guild-btn guild-leave-btn" id="btn-guild-leave" aria-label="' + t('guild_leave') + '">';
-            html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">🚶</span> ' + t('guild_leave') + '</button>';
+            html += '<span class="guild-action-icon vmagic-breathe" aria-hidden="true">🚶</span><span class="guild-action-label">' + t('guild_leave') + '</span></button>';
         } else {
             html += '<p class="guild-founder-note">' + t('guild_founder_cannot_leave') + '</p>';
         }

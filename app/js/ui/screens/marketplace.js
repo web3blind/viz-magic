@@ -535,6 +535,10 @@ var MarketplaceScreen = (function() {
             shadow_shard: item.rarity === 0 ? '⬛' : '🌑',
             thorn_essence: item.rarity >= 4 ? '🧬' : (item.rarity >= 1 ? '🌵' : '🌿'),
             ancient_shard: item.rarity >= 2 ? '🪬' : (item.rarity >= 1 ? '🌀' : '〰️'),
+            veilstone: '🪞',
+            stone_tablet: '🗿',
+            data_core: '💾',
+            nano_patch: '🩹',
             spirit_tunic: '🧥'
         };
         if (byType[item.type]) return byType[item.type];
@@ -550,7 +554,6 @@ var MarketplaceScreen = (function() {
 
     function _marketItemAfterIcon(item) {
         if (!item) return '';
-        if (item.type === 'chronicle_ink') return ' <span class="ink-drop-icon" aria-hidden="true">💧</span>';
         return '';
     }
 

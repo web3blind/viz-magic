@@ -237,7 +237,7 @@ var InventoryScreen = (function() {
             '<span class="item-name">' + Helpers.escapeHtml(label) + ' (' + Helpers.escapeHtml(rarityName) + ')</span>' +
             (group.count > 1 ? '<span class="item-badge">×' + group.count + '</span>' : '') +
             (item.equipped ? '<span class="item-badge">[E]</span>' : '') +
-            (!compact && _hasMeaningfulStats(item.stats) ? '<span class="item-stats"> · ' + Helpers.escapeHtml(_statsText(item.stats, t)) + '</span>' : '') +
+            (!compact && _hasMeaningfulStats(item.stats) ? '<span class="item-stats"> ' + Helpers.escapeHtml(_statsText(item.stats, t)) + '</span>' : '') +
             (_showWarningIcon(item) ? '<span class="item-volatile">\u26A0</span>' : '') +
             '</div>';
     }
@@ -287,12 +287,12 @@ var InventoryScreen = (function() {
             thorn_essence: item.rarity >= 4 ? '🧬' : (item.rarity >= 1 ? '🌵' : '🌿'),
             ancient_shard: item.rarity >= 2 ? '🪬' : (item.rarity >= 1 ? '🌀' : '〰️'),
             altar_spark: '🕯️',
-            data_core: '🧿',
+            data_core: '💾',
             nano_patch: '🩹',
-            stone_tablet: '📿',
+            stone_tablet: '🗿',
             spirit_tunic: '🧥',
             echo_shards: '🔷',
-            veilstone: '🪨',
+            veilstone: '🪞',
             sealwax: '🧾'
         };
         if (byType[item.type]) return byType[item.type];
