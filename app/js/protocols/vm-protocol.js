@@ -127,13 +127,14 @@ var VMProtocol = (function() {
      * @param {string} spellId
      * @returns {Object} action data (without chain link — added by broadcast)
      */
-    function createHuntAction(creatureId, zone, spellId) {
+    function createHuntAction(creatureId, zone, spellId, energy) {
         return {
             t: AT.HUNT,
             d: {
                 creature: creatureId,
                 zone: zone,
-                spell: spellId
+                spell: spellId,
+                energy: energy || 0
             }
         };
     }

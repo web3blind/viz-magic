@@ -100,6 +100,14 @@ var ActionValidator = (function() {
             return { valid: false, error: 'spell_not_learned' };
         }
 
+        var spell = GameSpells.getSpell(data.spell);
+        if (!spell) {
+            return { valid: false, error: 'invalid_spell' };
+        }
+        if (data.energy && data.energy !== spell.manaCost) {
+            return { valid: false, error: 'invalid_hunt_energy' };
+        }
+
         return { valid: true, error: null };
     }
 

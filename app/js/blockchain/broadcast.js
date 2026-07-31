@@ -146,7 +146,8 @@ var VizBroadcast = (function() {
             d: {
                 creature: creatureId,
                 zone: zone,
-                spell: spellId
+                spell: spellId,
+                energy: manaCost
             }
         };
 

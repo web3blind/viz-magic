@@ -329,7 +329,7 @@ var HuntScreen = (function() {
                         blockNum = broadcastResult.action.block_num || 0;
                     }
 
-                    _resolveHuntFromBlock(blockNum, ch, creature, spell, playerEnergy, user, resultEl, t);
+                    _resolveHuntFromBlock(blockNum, ch, creature, spell, spell.manaCost, user, resultEl, t);
                 }
             );
         });

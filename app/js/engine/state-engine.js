@@ -453,11 +453,13 @@ var StateEngine = (function() {
         var spell = GameSpells.getSpell(data.spell);
         if (!creature || !spell) return [];
 
-        // Resolve combat
+        var combatEnergy = spell.manaCost || cfg.ENERGY.MIN_HUNT_COST;
+
+        // Resolve combat using the Mana actually pledged for this shot, not the player's full account energy.
         var result = CombatSystem.resolveHunt(
             character, creature, spell,
             blockHash, blockNum,
-            cfg.ENERGY.MAX // Use max energy for now (actual energy tracked by chain)
+            combatEnergy
         );
 
         // Apply results
@@ -1379,7 +1381,8 @@ var StateEngine = (function() {
         var spell = GameSpells.getSpell(spellId);
         if (!creature || !spell) return null;
 
-        var result = CombatSystem.resolveHunt(character, creature, spell, blockHash, blockNum, playerEnergy);
+        var combatEnergy = playerEnergy || spell.manaCost || cfg.ENERGY.MIN_HUNT_COST;
+        var result = CombatSystem.resolveHunt(character, creature, spell, blockHash, blockNum, combatEnergy);
 
         if (result.victory) {
             var xpResult = CharacterSystem.addXp(character, result.xpGained);
