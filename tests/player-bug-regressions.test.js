@@ -475,8 +475,8 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/event-icon vmagic-breathe/.test(homeJs), 'minor rift banner icon should breathe with other icons');
   assert.ok(/function getCurrentFestival/.test(worldEventsJs), 'magical holidays should appear only from the authored calendar');
   assert.ok(/festival_today_prefix/.test(homeJs + ruJs + enJs), 'forecast holidays should have localized copy');
-  assert.ok(/i18n\/ru.js\?v=20260731a/.test(indexHtml), 'Russian weather copy must be cache-busted');
-  assert.ok(/i18n\/en.js\?v=20260731a/.test(indexHtml), 'English weather copy must be cache-busted');
+  assert.ok(/i18n\/ru.js\?v=20260731d/.test(indexHtml), 'Russian weather copy must be cache-busted');
+  assert.ok(/i18n\/en.js\?v=20260731d/.test(indexHtml), 'English weather copy must be cache-busted');
   assert.ok(/home.js\?v=20260731a/.test(indexHtml), 'home forecast layout must be cache-busted');
   assert.ok(/js\/ui\/screens\/quests.js\?v=20260730c/.test(indexHtml), 'quest-limit UX must be cache-busted');
   assert.ok(/nav.js\?v=20260731d/.test(indexHtml), 'bottom tray nav must be cache-busted');
@@ -1126,7 +1126,7 @@ test('safe avatar upload UI re-encodes before JSON_METADATA writes', function ()
   assert.ok(/delete meta\.profile\[field\]/.test(accountJsUpload), 'account helper should remove only requested profile field');
   assert.ok(/settings_avatar_hint/.test(ruJs + enJs) && /settings_avatar_mode_fit/.test(ruJs + enJs) && /settings_avatar_preview_hint/.test(ruJs + enJs), 'avatar upload help, preview and mode text should be localized');
   assert.ok(/settings\.js\?v=20260731a/.test(indexHtml), 'settings screen should be cache-busted for avatar upload');
-  assert.ok(/js\/i18n\/ru\.js\?v=20260731a/.test(indexHtml) && /js\/i18n\/en\.js\?v=20260731a/.test(indexHtml), 'i18n should be cache-busted for avatar strings');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260731d/.test(indexHtml) && /js\/i18n\/en\.js\?v=20260731d/.test(indexHtml), 'i18n should be cache-busted for avatar strings');
 });
 
 
@@ -1139,7 +1139,7 @@ test('character profile refreshes avatar from VIZ JSON_METADATA on render', func
   assert.ok(/document\.querySelector\('#screen-character \.profile-title-avatar'\)/.test(characterJsAvatar), 'character profile should replace stale title avatar DOM');
   assert.ok(/titleAvatar\.outerHTML = _renderAvatarMark/.test(characterJsAvatar), 'character profile should refresh the title avatar when metadata arrives');
   assert.ok(/character\.js\?v=20260731a/.test(indexHtmlAvatarProfile), 'character screen should be cache-busted for live avatar refresh');
-  assert.ok(/js\/i18n\/ru\.js\?v=20260731a/.test(indexHtmlAvatarProfile) && /js\/i18n\/en\.js\?v=20260731a/.test(indexHtmlAvatarProfile), 'i18n should be cache-busted for updated avatar copy');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260731d/.test(indexHtmlAvatarProfile) && /js\/i18n\/en\.js\?v=20260731d/.test(indexHtmlAvatarProfile), 'i18n should be cache-busted for updated avatar copy');
 });
 
 
@@ -1340,7 +1340,7 @@ test('quest abandon charges only unstarted quests and warns before forfeit', fun
   assert.ok(/quest-system\.js\?v=20260730c/.test(indexPenalty), 'quest system cache bust missing for abandon penalty');
   assert.ok(/state-engine\.js\?v=20260731c/.test(indexPenalty), 'state engine cache bust missing for abandon penalty');
   assert.ok(/quests\.js\?v=20260730c/.test(indexPenalty), 'quests screen cache bust missing for abandon penalty');
-  assert.ok(/js\/i18n\/ru\.js\?v=20260731a/.test(indexPenalty) && /js\/i18n\/en\.js\?v=20260731a/.test(indexPenalty), 'i18n cache bust missing for abandon penalty');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260731d/.test(indexPenalty) && /js\/i18n\/en\.js\?v=20260731d/.test(indexPenalty), 'i18n cache bust missing for abandon penalty');
   assert.ok(/viz-magic-v108/.test(swPenalty), 'service worker should use v104 cache');
 });
 
@@ -1356,12 +1356,16 @@ test('v108 inventory, bottom nav, hunt danger marker, and arena motion polish ar
   const cssV108 = read('app/css/main.css');
   const indexV108 = read('app/index.html');
   const swV108 = read('app/sw.js');
+  const ruV108 = read('app/js/i18n/ru.js');
+  const enV108 = read('app/js/i18n/en.js');
 
   assert.ok(/ancient_shard:\s*item\.rarity >= 2 \? '🪬' : \(item\.rarity >= 1 \? '🌀' : '〰️'\)/.test(inventoryV108), 'Ancient Echo Shard uncommon and rare should not share the same icon');
   assert.ok(/altar_spark:\s*'🕯️'/.test(inventoryV108), 'Altar Spark should not fall back to a white diamond');
   assert.ok(/data_core:\s*'🧿'/.test(inventoryV108), 'Data Core should have a thematic non-diamond icon');
   assert.ok(/nano_patch:\s*'🩹'/.test(inventoryV108), 'Nano Patch should have a thematic non-diamond icon');
   assert.ok(/stone_tablet:\s*'📿'/.test(inventoryV108), 'Stone Tablet should have a thematic non-diamond icon');
+  assert.ok(/item_altar_spark: 'Искра Жертвенницы'/.test(ruV108), 'Altar Spark should be translated as Искра Жертвенницы in Russian');
+  assert.ok(/item_data_core: 'Data Core'/.test(ruV108) && /item_nano_patch: 'Nano Patch'/.test(ruV108) && /item_stone_tablet: 'Stone Tablet'/.test(ruV108), 'Requested technical item names should have explicit i18n keys');
   assert.ok(!/return '✦'/.test(inventoryV108), 'Inventory should not use the white diamond fallback icon');
   assert.ok(/item-stats/.test(inventoryV108) && /item-stats[\s\S]*item-volatile/.test(inventoryV108), 'Oak Wand warning marker should render after name/count/stats at the end of the row');
   assert.ok(/\.item-volatile \{ color: var\(--color-warning\); margin-left: auto; \}/.test(cssV108), 'warning marker should be pushed to the row end');
@@ -1385,6 +1389,7 @@ test('v108 inventory, bottom nav, hunt danger marker, and arena motion polish ar
   assert.ok(/arena\.js\?v=20260731d/.test(indexV108), 'arena cache bust missing for v108');
   assert.ok(/nav\.js\?v=20260731d/.test(indexV108), 'nav cache bust missing for v108');
   assert.ok(/marketplace\.js\?v=20260731d/.test(indexV108), 'marketplace cache bust missing for v108 icon parity');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260731d/.test(indexV108) && /js\/i18n\/en\.js\?v=20260731d/.test(indexV108), 'i18n cache bust missing for v108 item labels');
   assert.ok(/viz-magic-v108/.test(swV108), 'service worker should use v108 cache');
 });
 
@@ -1482,6 +1487,6 @@ test('v105 text quality, season colors, avatar title, and spell modal polish are
   assert.ok(/home\.js\?v=20260731a/.test(indexV105) && /character\.js\?v=20260731a/.test(indexV105), 'Home/Character cache bust missing for v105');
   assert.ok(/settings\.js\?v=20260731a/.test(indexV105) && /leaderboard\.js\?v=20260731a/.test(indexV105), 'Settings/Leaderboard cache bust missing for v105');
   assert.ok(/world-events\.js\?v=20260731a/.test(indexV105), 'world events cache bust missing for v105');
-  assert.ok(/js\/i18n\/ru\.js\?v=20260731a/.test(indexV105) && /js\/i18n\/en\.js\?v=20260731a/.test(indexV105), 'i18n cache bust missing for v105');
+  assert.ok(/js\/i18n\/ru\.js\?v=20260731d/.test(indexV105) && /js\/i18n\/en\.js\?v=20260731d/.test(indexV105), 'i18n cache bust missing for v105');
   assert.ok(/viz-magic-v108/.test(swV105), 'service worker should use v105 cache');
 });
