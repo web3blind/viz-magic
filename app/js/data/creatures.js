@@ -112,6 +112,26 @@ var GameCreatures = (function() {
                 { itemType: 'nano_patch', name: 'Nano Patch', dropRate: 180 },
                 { itemType: 'optic_cloak', name: 'Optic Cloak', dropRate: 60 }
            ]
+        },
+        rift_colossus: {
+          id: 'rift_colossus',
+          name: 'Rift Colossus',
+          school: 'terra',
+          author: 'denis-skripnik',
+          minLevel: 11,
+          maxLevel: 18,
+          deadly: true,
+          baseHp: 420,
+          basePot: 70,
+          baseRes: 34,
+          baseSwf: 8,
+          baseXp: 180,
+          zone: 'commons_first_light',
+          lootTable: [
+                { itemType: 'aether_ore', name: 'Aether Ore', dropRate: 220 },
+                { itemType: 'ancient_shard', name: 'Ancient Echo Shard', dropRate: 180 },
+                { itemType: 'armageddon_stone', name: 'Armageddon Stone', dropRate: 15 }
+           ]
         }        
     };
 

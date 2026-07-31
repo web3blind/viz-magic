@@ -142,29 +142,26 @@ var HuntScreen = (function() {
         if (!character || !creatures || !creatures.length) return creatures || [];
         var level = character.level || 1;
         var out = [];
-        var danger = [];
+        var deadly = [];
         for (var i = 0; i < creatures.length; i++) {
             var c = creatures[i];
             if (!c) continue;
             var min = c.minLevel || 1;
             var max = c.maxLevel || min;
             if (max <= level + 1) continue; // stale habitat: too much weaker than the player
-            if (min <= level + 3) {
+            if (c.deadly === true) {
+                if (min <= level + 4 && deadly.length === 0) deadly.push(c); // one honest high-risk target
+            } else if (min <= level + 3) {
                 out.push(c);
-            } else if (danger.length === 0) {
-                danger.push(c); // keep one warned high-risk destination available for every level
             }
         }
-        if (!out.length && danger.length) out.push(danger[0]);
+        if (deadly.length) out.push(deadly[0]);
         return out;
     }
 
     function _isDangerCreature(creature, character) {
         if (!creature || !character) return false;
-        var level = character.level || 1;
-        var min = creature.minLevel || 1;
-        var max = creature.maxLevel || min;
-        return min >= level || max >= level + 5;
+        return creature.deadly === true;
     }
 
     function _bindEvents(el) {
