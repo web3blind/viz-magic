@@ -522,28 +522,28 @@ var MarketplaceScreen = (function() {
     }
 
     function _marketItemIcon(item) {
-        if (!item) return '✦';
+        if (!item) return '🧩';
         var byType = {
             chronicle_ink: '🖋️',
-            altar_spark: '✨',
+            altar_spark: '🕯️',
             flame_votive_mark: '🔥',
             labor_votive_mark: '🔨',
             health_scroll: '📜',
             mana_potion: '⚡',
-            fire_dust: '✦',
+            fire_dust: '🔥',
             sparkdust: '✨',
             shadow_shard: item.rarity === 0 ? '⬛' : '🌑',
             thorn_essence: item.rarity >= 4 ? '🧬' : (item.rarity >= 1 ? '🌵' : '🌿'),
-            ancient_shard: item.rarity === 0 ? '〰️' : '🌀',
+            ancient_shard: item.rarity >= 2 ? '🪬' : (item.rarity >= 1 ? '🌀' : '〰️'),
             spirit_tunic: '🧥'
         };
         if (byType[item.type]) return byType[item.type];
         var template = ItemSystem.getItemTemplate(item.type);
-        if (template && template.category === 'material') return '✦';
+        if (template && template.category === 'material') return '🧩';
         if (template && template.category === 'scroll') return '📜';
         if (template && template.category === 'focus') return '🪄';
         if (template && template.category === 'ward') return '🛡️';
-        return '✦';
+        return '🧩';
     }
 
 

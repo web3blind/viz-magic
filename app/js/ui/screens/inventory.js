@@ -237,8 +237,8 @@ var InventoryScreen = (function() {
             '<span class="item-name">' + Helpers.escapeHtml(label) + ' (' + Helpers.escapeHtml(rarityName) + ')</span>' +
             (group.count > 1 ? '<span class="item-badge">×' + group.count + '</span>' : '') +
             (item.equipped ? '<span class="item-badge">[E]</span>' : '') +
+            (!compact && _hasMeaningfulStats(item.stats) ? '<span class="item-stats"> · ' + Helpers.escapeHtml(_statsText(item.stats, t)) + '</span>' : '') +
             (_showWarningIcon(item) ? '<span class="item-volatile">\u26A0</span>' : '') +
-            (!compact && _hasMeaningfulStats(item.stats) ? '<span class="item-name"> · ' + Helpers.escapeHtml(_statsText(item.stats, t)) + '</span>' : '') +
             '</div>';
     }
 
@@ -274,31 +274,35 @@ var InventoryScreen = (function() {
 
 
     function _itemIcon(item) {
-        if (!item) return '✦';
+        if (!item) return '🧩';
         var byType = {
             chronicle_ink: '🖋️',
             flame_votive_mark: '🔥',
             labor_votive_mark: '🔨',
             health_scroll: '📜',
             mana_potion: '⚡',
-            fire_dust: '✦',
+            fire_dust: '🔥',
             sparkdust: '✨',
             shadow_shard: item.rarity === 0 ? '⬛' : '🌑',
             thorn_essence: item.rarity >= 4 ? '🧬' : (item.rarity >= 1 ? '🌵' : '🌿'),
-            ancient_shard: item.rarity === 0 ? '〰️' : '🌀',
+            ancient_shard: item.rarity >= 2 ? '🪬' : (item.rarity >= 1 ? '🌀' : '〰️'),
+            altar_spark: '🕯️',
+            data_core: '🧿',
+            nano_patch: '🩹',
+            stone_tablet: '📿',
             spirit_tunic: '🧥',
             echo_shards: '🔷',
             veilstone: '🪨',
-            sealwax: '🕯️'
+            sealwax: '🧾'
         };
         if (byType[item.type]) return byType[item.type];
         var template = ItemSystem.getItemTemplate(item.type);
-        if (template && template.category === ItemSystem.CATEGORIES.MATERIAL) return '✦';
+        if (template && template.category === ItemSystem.CATEGORIES.MATERIAL) return '🧩';
         if (template && template.category === ItemSystem.CATEGORIES.SCROLL) return '📜';
         if (template && template.category === ItemSystem.CATEGORIES.FOCUS) return '🪄';
         if (template && template.category === ItemSystem.CATEGORIES.WARD) return '🛡️';
         if (template && template.category === ItemSystem.CATEGORIES.RELIC) return '💎';
-        return '✦';
+        return '🧩';
     }
 
     function _itemName(type) {

@@ -253,8 +253,9 @@ body {
 .rarity-epic { border-left-color: #9c27b0; }
 .rarity-legendary { border-left-color: #ffc107; }
 .item-name { flex: 1; text-transform: capitalize; }
+.item-stats { color: var(--color-text-secondary); }
 .item-badge { color: var(--color-primary); font-weight: 700; }
-.item-volatile { color: var(--color-warning); }
+.item-volatile { color: var(--color-warning); margin-left: auto; }
 .empty-state { text-align: center; color: var(--color-text-muted); padding: 40px 0; }
 
 /* Chronicle */
@@ -2196,12 +2197,13 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 .creature-danger {
     display: inline-block;
     margin-top: 6px;
-    padding: 2px 7px;
-    border: 1px solid var(--color-warning);
-    border-radius: 999px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
     color: var(--color-warning);
-    font-size: 0.78rem;
+    font-size: 1.05rem;
     font-weight: 700;
+    line-height: 1;
 }
 .creature-warning-text {
     display: block;
@@ -2266,3 +2268,25 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 .spell-detail-list { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 0.75rem; margin: 0.75rem 0; }
 .spell-detail-list dt { color: var(--color-text-muted); }
 .spell-detail-list dd { margin: 0; font-weight: 600; }
+
+
+/* v108: asynchronous soft breathing for repeated inventory/arena icons and stable bottom nav labels */
+@media (prefers-reduced-motion: no-preference) {
+    body[data-icon-motion="sparkle"] .item-card .item-icon,
+    body[data-icon-motion="sparkle"] .arena-screen .screen-title-icon,
+    body[data-icon-motion="sparkle"] .arena-screen .section-icon {
+        animation-name: vmagic-soft-breathe !important;
+        animation-duration: 4.0s !important;
+        transform-origin: center;
+    }
+    body[data-icon-motion="sparkle"] .item-card:nth-child(3n+1) .item-icon,
+    body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(3n+1) { animation-delay: -0.35s !important; }
+    body[data-icon-motion="sparkle"] .item-card:nth-child(3n+2) .item-icon,
+    body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(3n+2) { animation-delay: -1.15s !important; }
+    body[data-icon-motion="sparkle"] .item-card:nth-child(3n) .item-icon,
+    body[data-icon-motion="sparkle"] .arena-screen .screen-title-icon { animation-delay: -2.05s !important; }
+}
+#bottom-nav.show { align-items: stretch; }
+.nav-tab { flex-direction: column; justify-content: center; align-items: center; gap: 2px; }
+.nav-icon { display: block; line-height: 1; margin: 0 0 2px; }
+.nav-label { display: block; white-space: nowrap; line-height: 1.05; text-align: center; }
