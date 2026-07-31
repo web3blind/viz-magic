@@ -179,7 +179,7 @@ var HomeScreen = (function() {
             var target = (evt.type === 'minor_rift' || evt.type === 'weave_surge') ? 'hunt' : '';
             var tag = target ? 'button' : 'div';
             var attrs = target ? ' type="button" data-screen="' + target + '" data-event-type="' + evt.type + '"' : '';
-            var effectBadge = evt.type === 'weave_surge' ? '<span class="event-effect-badge">⚡ ' + t('home_weave_hunt_hint') + ' · ' + t('home_mana') + ' ×' + (evt.manaRegenMultiplier || 2) + '</span>' : '';
+            var effectBadge = evt.type === 'weave_surge' ? '<span class="event-effect-badge">⚡ ' + t('home_weave_hunt_hint') + ' ' + String(t('home_mana')).toLowerCase() + ' ×' + (evt.manaRegenMultiplier || 2) + '</span>' : '';
             html += '<' + tag + ' class="event-banner-item event-banner-' + evt.type + (target ? ' event-banner-button' : '') + '"' + attrs + ' aria-label="' +
                 t(evt.nameKey) + (desc ? '. ' + desc : '') + ' ' + t('event_time_left', {time: timeStr}) + '">' +
                 '<span class="event-icon vmagic-breathe" aria-hidden="true">' + evt.icon + '</span>' +
@@ -228,6 +228,14 @@ var HomeScreen = (function() {
         var idx = date.getUTCMonth ? date.getUTCMonth() : (Math.floor(Math.max(0, daySeed) / 30) % 12);
         if (idx < 0 || idx >= WORLD_MONTH_NAMES.length) idx = 0;
         return WORLD_MONTH_NAMES[idx];
+    }
+
+    function _seasonColorClass(seasonId) {
+        if (seasonId === 'summer') return 'season-color-summer';
+        if (seasonId === 'autumn') return 'season-color-autumn';
+        if (seasonId === 'winter') return 'season-color-winter';
+        if (seasonId === 'spring') return 'season-color-spring';
+        return '';
     }
 
     function _weatherPrecipitationLabel(weather, seasonId, t) {
@@ -320,7 +328,7 @@ var HomeScreen = (function() {
             '<div class="forecast-card forecast-card-season forecast-card-hunt-summary">' +
                 '<div class="forecast-head">' +
                     '<span class="forecast-icon forecast-weather-icon vmagic-breathe" aria-hidden="true">\uD83E\uDDED</span>' +
-                    '<p class="forecast-line">' + t(season.nameKey) + ' · ' + _getWorldMonthName() + '</p>' +
+                    '<p class="forecast-line"><span class="forecast-season-name ' + _seasonColorClass(season.id) + '">' + t(season.nameKey) + '</span> · <span class="forecast-world-month ' + _seasonColorClass(season.id) + '">' + _getWorldMonthName() + '</span></p>' +
                 '</div>' +
                 '<span class="forecast-icon forecast-hunt-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF9</span>' +
                 '<p class="forecast-kicker forecast-hunt-copy">' + t('weather_hunt_effect_sentence') + '</p>' +
@@ -348,8 +356,7 @@ var HomeScreen = (function() {
         if (typeof WorldEvents === 'undefined' || !WorldEvents.getCurrentLorePages) return '';
         var pages = WorldEvents.getCurrentLorePages(blockNum) || [];
         if (!pages.length) return '';
-        var html = '<section class="home-lore-pages" aria-label="' + t('home_lore_pages_label') + '">' +
-            '<p class="home-lore-pages-intro">' + t('home_lore_pages_intro') + '</p>';
+        var html = '<section class="home-lore-pages" aria-label="' + t('home_lore_pages_label') + '">';
         for (var i = 0; i < pages.length; i++) {
             var page = pages[i];
             html += '<article class="home-lore-card">' +
@@ -423,14 +430,13 @@ var HomeScreen = (function() {
     }
 
     function _tile(screen, icon, label, character) {
-        var extra = '';
+        var iconHtml = '<span class="tile-icon" aria-hidden="true">' + icon + '</span>';
         if (screen === 'character' && character) {
-            extra = '<span class="tile-avatar-row">' + _renderAvatarMark(character, 'tile-avatar') + '</span>';
+            iconHtml = _renderAvatarMark(character, 'tile-icon tile-avatar-icon');
         }
         return '<button class="action-tile" data-screen="' + screen + '" aria-label="' + label + '">' +
-            '<span class="tile-icon" aria-hidden="true">' + icon + '</span>' +
+            iconHtml +
             '<span class="tile-label">' + label + '</span>' +
-            extra +
             '</button>';
     }
 

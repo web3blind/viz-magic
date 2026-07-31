@@ -85,7 +85,7 @@ var SettingsScreen = (function() {
                 // Sound
                 '<section class="settings-section" aria-label="' + t('settings_sound') + '">' +
                     '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">🔊</span> ' + t('settings_sound') + '</h2>' +
-                    _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume) +
+                    _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume, '🔔') +
                     _renderSlider('music-volume', t('settings_music'), musicVolume, '🎵') +
                     _renderToggle('narrator-toggle', t('narrator_toggle'), narratorEnabled) +
                     _renderSelect('narrator-voice-gender', t('narrator_voice_gender'), [

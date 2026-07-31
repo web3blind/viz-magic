@@ -32,7 +32,7 @@ var CharacterScreen = (function() {
 
         el.innerHTML =
             '<div class="character-sheet">' +
-                '<h1>' + _renderAvatarMark(ch, ch.name || user, 'screen-title-icon profile-title-avatar vmagic-breathe') + ' ' + t('char_title') + '</h1>' +
+                '<h1 class="character-title-line">' + _renderAvatarMark(ch, ch.name || user, 'screen-title-icon profile-title-avatar vmagic-breathe') + ' <span class="char-icon character-title-class-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(ch.className || 'embercaster') + '</span> ' + _classGuideName(ch.className, t) + '</h1>' +
                 '<div class="char-header">' +
                     '<div><h2>' + Helpers.escapeHtml(ch.name) + '</h2>' +
                     '<p>' + t('class_' + ch.className) + ' \u2022 ' + t('home_level') + ' ' + ch.level + '</p></div>' +
@@ -58,6 +58,8 @@ var CharacterScreen = (function() {
                 '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🪄</span> ' + t('char_spells') + '</h2>' +
                 _renderSpells(ch) +
             '</div>';
+
+        _bindEvents(el);
 
         if (user) {
             VizAccount.getAccount(user, function(err, accountData) {
@@ -100,6 +102,33 @@ var CharacterScreen = (function() {
         return '<div class="stat-row"><span class="stat-label">' + label + '</span><span class="stat-value">' + value + '</span></div>';
     }
 
+    function _classGuideName(className, t) {
+        var names = {
+            stonewarden: 'Каменный страж (Terra)',
+            embercaster: 'Огнеплёт (Ignis)',
+            moonrunner: 'Лунный Странник (Umbra)',
+            bloomsage: 'Цветомудрец (Aqua)'
+        };
+        if (typeof LangEN !== 'undefined' && Helpers.getCurrentLang && Helpers.getCurrentLang() === 'en') {
+            names = {
+                stonewarden: 'Stonewarden (Terra)',
+                embercaster: 'Embercaster (Ignis)',
+                moonrunner: 'Moonrunner (Umbra)',
+                bloomsage: 'Bloomsage (Aqua)'
+            };
+        }
+        return names[className] || t('class_' + className);
+    }
+
+    function _bindEvents(el) {
+        var buttons = el.querySelectorAll('.spell-item-button');
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener('click', function() {
+                _showSpellDetails(this.getAttribute('data-spell-id'));
+            });
+        }
+    }
+
     function _renderSpells(ch) {
         var t = Helpers.t;
         var html = '<div class="spell-list">';
@@ -108,15 +137,35 @@ var CharacterScreen = (function() {
             if (spell) {
                 var descKey = 'spell_' + spell.id + '_desc';
                 var desc = t(descKey);
-                // Fall back to English description if i18n key not found
                 if (!desc || desc === descKey) desc = spell.description;
-                html += '<div class="spell-item ' + Helpers.schoolClass(spell.school) + '">' +
-                    '<strong>' + spell.name + '</strong><br>' +
-                    '<small>' + desc + '</small>' +
-                    '</div>';
+                html += '<button type="button" class="spell-item spell-item-button ' + Helpers.schoolClass(spell.school) + '" data-spell-id="' + spell.id + '" aria-label="' + Helpers.escapeHtml(spell.name + '. ' + desc) + '">' +
+                    '<strong>' + Helpers.escapeHtml(spell.name) + '</strong><br>' +
+                    '<small>' + Helpers.escapeHtml(desc) + '</small>' +
+                    '</button>';
             }
         }
         return html + '</div>';
+    }
+
+    function _showSpellDetails(spellId) {
+        var t = Helpers.t;
+        var spell = GameSpells.getSpell(spellId);
+        if (!spell) return;
+        var descKey = 'spell_' + spell.id + '_desc';
+        var desc = t(descKey);
+        if (!desc || desc === descKey) desc = spell.description;
+        var body = '<p>' + Helpers.escapeHtml(desc) + '</p>' +
+            '<dl class="spell-detail-list">' +
+            '<dt>' + t('char_spell_school') + '</dt><dd>' + Helpers.escapeHtml(spell.school) + '</dd>' +
+            '<dt>' + t('char_spell_mana_cost') + '</dt><dd>' + Helpers.bpToPercent(spell.manaCost || 0) + ' Mana</dd>' +
+            '<dt>' + t('char_spell_level_req') + '</dt><dd>' + (spell.levelReq || 1) + '</dd>' +
+            '<dt>' + t('char_spell_multiplier') + '</dt><dd>×' + ((spell.multiplier || 1000) / 1000).toFixed(2) + '</dd>' +
+            '<dt>' + t('char_spell_intent') + '</dt><dd>' + Helpers.escapeHtml(spell.intent || '') + '</dd>' +
+            '<dt>' + t('char_spell_effect') + '</dt><dd>' + Helpers.escapeHtml(spell.effect || '') + '</dd>' +
+            '</dl>';
+        Modal.show(t('char_spell_details') + ': ' + spell.name, body, [
+            { label: t('char_spell_close'), primary: true, action: function() {} }
+        ]);
     }
 
     return { render: render };

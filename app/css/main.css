@@ -1993,7 +1993,7 @@ body,
     .magical-forecast .forecast-icon { display: inline-block; animation: vmagic-weather-drift 2.8s ease-in-out infinite; }
     .magical-forecast .forecast-hunt-icon { animation: vmagic-soft-breathe 4.2s ease-in-out infinite; }
     .vmagic-soft-icon { display: inline-block; animation: vmagic-soft-breathe 4.0s ease-in-out infinite; }
-    .leaderboard-title-icon { display: inline-block; animation: vmagic-soft-breathe 3.0s ease-in-out infinite !important; }
+    .leaderboard-title-icon { display: inline-block; margin-right: 0.25em; animation: vmagic-soft-breathe 4.0s ease-in-out infinite !important; transform-origin: center; }
     .action-tile .tile-icon { display: inline-block; animation: vmagic-tile-shimmer 4.0s ease-in-out infinite; }
 
     body[data-icon-motion="sync"] .recipe-icon, body[data-icon-motion="sync"] .craft-icon-anim, body[data-icon-motion="sync"] .vmagic-breathe, body[data-icon-motion="sync"] .screen-title-icon, body[data-icon-motion="sync"] .section-icon, body[data-icon-motion="sync"] .prophecy-icon, body[data-icon-motion="sync"] .nav-icon, body[data-icon-motion="sync"] .region-icon, body[data-icon-motion="sync"] .char-icon, body[data-icon-motion="sync"] .guild-action-icon, body[data-icon-motion="sync"] .settings-control-icon, body[data-icon-motion="sync"] .boss-icon-large, body[data-icon-motion="sync"] .boss-alert-icon, body[data-icon-motion="sync"] .magical-forecast .forecast-icon, body[data-icon-motion="sync"] .vmagic-soft-icon, body[data-icon-motion="sync"] .leaderboard-title-icon, body[data-icon-motion="sync"] .action-tile .tile-icon, body[data-icon-motion="sync"] .market-item-icon, body[data-icon-motion="sync"] .chronicle-icon, body[data-icon-motion="sync"] .chronicle-author-prefix, body[data-icon-motion="sync"] .quest-map-objective-icon, body[data-icon-motion="sync"] .item-icon { animation-delay: 0s !important; animation-duration: 2.4s !important; }
@@ -2252,3 +2252,17 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     color: var(--color-text-secondary);
     line-height: 1.4;
 }
+
+
+/* Player-requested season color accents */
+.season-color-summer { color: #4caf50; font-weight: 700; }
+.season-color-autumn { color: #ffd54f; font-weight: 700; }
+.season-color-winter { color: #ffffff; font-weight: 700; text-shadow: 0 0 6px rgba(255,255,255,0.35); }
+.season-color-spring { color: #58c7ff; font-weight: 700; }
+.tile-avatar-icon { display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 0.35rem; }
+.character-title-line { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+.character-title-class-icon { display: inline-block; }
+.spell-item-button { width: 100%; text-align: left; cursor: pointer; }
+.spell-detail-list { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 0.75rem; margin: 0.75rem 0; }
+.spell-detail-list dt { color: var(--color-text-muted); }
+.spell-detail-list dd { margin: 0; font-weight: 600; }
