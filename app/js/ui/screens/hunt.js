@@ -62,7 +62,7 @@ var HuntScreen = (function() {
                     'aria-label="' + c.name + '. Level ' + c.minLevel + ' to ' + c.maxLevel + (_isDangerCreature(c, ch) ? '. ' + t('hunt_danger_warning') : '') + '">' +
                     '<span class="creature-name">' + c.name + '</span>' +
                     '<span class="creature-level">Lv ' + c.minLevel + '-' + c.maxLevel + '</span>' +
-                    (_isDangerCreature(c, ch) ? '<span class="creature-danger" aria-hidden="true">⚠</span><span class="creature-warning-text">' + t('hunt_danger_warning') + '</span>' : '') +
+                    (_isDangerCreature(c, ch) ? '<span class="creature-warning-text">' + t('hunt_danger_warning') + '</span>' : '') +
                     '</button>';
             }
 

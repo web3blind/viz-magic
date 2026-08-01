@@ -18,15 +18,27 @@ var ProgressBar = (function() {
         var ariaValue = (typeof opts.ariaValue !== 'undefined') ? opts.ariaValue : displayValue;
         var ariaMax = (typeof opts.ariaMax !== 'undefined') ? opts.ariaMax : displayMax;
 
+        var tag = opts.href ? 'a' : (opts.button ? 'button' : 'div');
+        var attrs = '';
+        var classes = 'progress-bar';
+        if (opts.href) {
+            classes += ' progress-bar-link';
+            attrs += ' href="' + Helpers.escapeHtml(opts.href) + '" target="_blank" rel="noopener noreferrer"';
+        }
+        if (opts.button) {
+            classes += ' progress-bar-button';
+            attrs += ' type="button"';
+        }
+
         return '<div class="progress-bar-wrapper">' +
             (opts.label ? '<span class="progress-label">' + Helpers.escapeHtml(opts.label) + '</span>' : '') +
-            '<div class="progress-bar" role="progressbar" ' +
+            '<' + tag + ' class="' + classes + '" role="' + (opts.href || opts.button ? 'button' : 'progressbar') + '" ' +
             'aria-valuenow="' + ariaValue + '" aria-valuemin="0" aria-valuemax="' + ariaMax + '" ' +
-            'aria-label="' + Helpers.escapeHtml(opts.label || '') + ' ' + ariaValue + ' of ' + ariaMax + '"' +
-            (opts.id ? ' id="' + opts.id + '"' : '') + '>' +
+            'aria-label="' + Helpers.escapeHtml(opts.ariaLabel || ((opts.label || '') + ' ' + ariaValue + ' of ' + ariaMax)) + '"' +
+            (opts.id ? ' id="' + opts.id + '"' : '') + attrs + '>' +
             '<div class="progress-fill" style="width:' + pct + '%;background:' + color + '"></div>' +
             (text ? '<span class="progress-text">' + text + '</span>' : '') +
-            '</div></div>';
+            '</' + tag + '></div>';
     }
 
     /**

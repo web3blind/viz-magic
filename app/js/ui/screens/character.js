@@ -6,6 +6,7 @@ var CharacterScreen = (function() {
 
     var CHARACTER_HP_DISPLAY_MAX = 1000;
     var CHARACTER_XP_DISPLAY_MAX = 10000;
+    var VIZ_ENERGY_DOC_URL = 'https://viz-blockchain.github.io/viz-cpp-node/introduction/key-concepts#energy-system';
 
     function render() {
         var t = Helpers.t;
@@ -32,17 +33,15 @@ var CharacterScreen = (function() {
 
         el.innerHTML =
             '<div class="character-sheet">' +
-                '<h1 class="character-title-line">' + _renderAvatarMark(ch, ch.name || user, 'screen-title-icon profile-title-avatar vmagic-breathe') + ' <span class="char-icon character-title-class-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(ch.className || 'embercaster') + '</span> ' + _classGuideName(ch.className, t) + '</h1>' +
+                '<h1 class="character-title-line">' + _renderAvatarMark(ch, ch.name || user, 'screen-title-icon profile-title-avatar vmagic-breathe') + ' <span class="character-title-name">' + Helpers.escapeHtml(ch.name || user || '') + '</span></h1>' +
                 '<div class="char-header">' +
-                    '<div><h2>' + Helpers.escapeHtml(ch.name) + '</h2>' +
+                    '<div><h2><span class="char-icon character-title-class-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(ch.className || 'embercaster') + '</span> ' + _classGuideName(ch.className, t) + '</h2>' +
                     '<p>' + t('class_' + ch.className) + ' \u2022 ' + t('home_level') + ' ' + ch.level + '</p></div>' +
                 '</div>' +
-                ProgressBar.create({id:'char-mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
+                ProgressBar.create({id:'char-mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3', href: VIZ_ENERGY_DOC_URL, ariaLabel: t('char_mana_external_aria')}) +
                 '<p class="quest-desc character-vital-note">' + t('char_mana_explainer') + '</p>' +
-                ProgressBar.create({id:'char-hp-bar', label:'❤️ HP', value:ch.hp, max:ch.maxHp, displayValue:hpShown, displayMax:CHARACTER_HP_DISPLAY_MAX, color:'#e53935'}) +
-                '<p class="quest-desc character-vital-note">' + t('char_hp_explainer') + '</p>' +
-                ProgressBar.create({id:'char-xp-bar', label:'⭐ XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:CHARACTER_XP_DISPLAY_MAX, color:'#ffc107'}) +
-                '<p class="quest-desc character-vital-note">' + t('char_xp_explainer') + '</p>' +
+                ProgressBar.create({id:'char-hp-bar', label:'❤️ HP', value:ch.hp, max:ch.maxHp, displayValue:hpShown, displayMax:CHARACTER_HP_DISPLAY_MAX, color:'#e53935', button: true, ariaLabel: t('char_hp_button_aria')}) +
+                ProgressBar.create({id:'char-xp-bar', label:'⭐ XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:CHARACTER_XP_DISPLAY_MAX, color:'#ffc107', button: true, ariaLabel: t('char_xp_button_aria')}) +
                 '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">📊</span> ' + t('char_stats') + '</h2>' +
                 '<div class="stats-list">' +
                     _statRow(t('char_potency'), totalPot) +
@@ -121,6 +120,11 @@ var CharacterScreen = (function() {
     }
 
     function _bindEvents(el) {
+        var hpBar = el.querySelector('#char-hp-bar');
+        if (hpBar) hpBar.addEventListener('click', function() { _showVitalDetails('hp'); });
+        var xpBar = el.querySelector('#char-xp-bar');
+        if (xpBar) xpBar.addEventListener('click', function() { _showVitalDetails('xp'); });
+
         var buttons = el.querySelectorAll('.spell-item-button');
         for (var i = 0; i < buttons.length; i++) {
             buttons[i].addEventListener('click', function() {
@@ -152,7 +156,7 @@ var CharacterScreen = (function() {
         var spell = GameSpells.getSpell(spellId);
         if (!spell) return;
         var body = '<div class="modal-content spell-detail-modal">' +
-            '<h2 class="modal-title">' + t('char_spell_details') + '</h2>' +
+            '<h2 class="modal-title"><span class="spell-detail-title-icon vmagic-breathe" aria-hidden="true">🪄</span> ' + t('char_spell_details') + '</h2>' +
             '<div class="modal-body">' +
             '<dl class="spell-detail-list">' +
             '<dt>' + t('char_spell_school') + '</dt><dd>' + Helpers.escapeHtml(spell.school) + '</dd>' +
@@ -161,7 +165,22 @@ var CharacterScreen = (function() {
             '<dt>' + t('char_spell_multiplier') + '</dt><dd>×' + ((spell.multiplier || 1000) / 1000).toFixed(2) + '</dd>' +
             '<dt>' + t('char_spell_intent') + '</dt><dd>' + Helpers.escapeHtml(spell.intent || '') + '</dd>' +
             '<dt>' + t('char_spell_effect') + '</dt><dd>' + Helpers.escapeHtml(spell.effect || '') + '</dd>' +
-            '</dl></div></div>';
+            '</dl></div>' +
+            '<div class="modal-actions"><button type="button" class="btn btn-primary modal-close">' + t('char_spell_close') + '</button></div>' +
+            '</div>';
+        Modal.show(body);
+    }
+
+
+    function _showVitalDetails(kind) {
+        var t = Helpers.t;
+        var title = kind === 'hp' ? t('char_hp_modal_title') : t('char_xp_modal_title');
+        var bodyKey = kind === 'hp' ? 'char_hp_modal_body' : 'char_xp_modal_body';
+        var body = '<div class="modal-content character-vital-modal">' +
+            '<h2 class="modal-title">' + title + '</h2>' +
+            '<div class="modal-body"><p>' + t(bodyKey) + '</p></div>' +
+            '<div class="modal-actions"><button type="button" class="btn btn-primary modal-close">' + t('char_spell_close') + '</button></div>' +
+            '</div>';
         Modal.show(body);
     }
 

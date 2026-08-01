@@ -383,7 +383,7 @@ var LangEN = {
     narrator_critical: 'Critical hit!',
     narrator_hunt_victory: 'Victory! {creature} defeated. {xp} XP gained.',
     narrator_hunt_defeat: 'Defeat. {creature} was too strong.',
-    narrator_duel_pre: 'Duel with {opponent}. Best of 3 rounds.',
+    narrator_duel_pre: 'Duel with {opponent}. Best version of 3 rounds.',
     narrator_duel_seal: 'Seal phase. Choose your spell. {seconds} seconds.',
     narrator_duel_sealed: 'Sealed. Waiting for opponent.',
     narrator_duel_waiting: 'Waiting for opponent\'s move.',
@@ -392,7 +392,7 @@ var LangEN = {
     narrator_duel_challenge: '{opponent} challenges you to a duel!',
     narrator_duel_won: 'You won the duel!',
     narrator_duel_lost: 'You lost the duel.',
-    duel_narrator_pre: 'Duel with {opponent}. Best of 3 rounds.',
+    duel_narrator_pre: 'Duel with {opponent}. Best version of 3 rounds.',
     duel_narrator_seal: 'Seal phase. Choose your spell. {seconds} seconds.',
     duel_narrator_sealed: 'Sealed. Waiting for opponent.',
     duel_narrator_waiting: 'Waiting for opponent\'s move.',
@@ -1292,10 +1292,10 @@ var LangEN = {
     help_narrator_text: 'The Battle Narrator announces all combat events via your screen reader (aria-live). Enable it in Settings. It also plays short audio tones to indicate enemy and player positions. Designed for blind and low-vision players.',
 
     help_section_classes: 'Classes',
-    help_classes_text: 'Stonewarden — tank. Embercaster — burst DPS.<br>Moonrunner — evasion. Bloomsage — healer.<br>Each class has unique spells and stat growth.',
+    help_classes_text: 'Stonewarden (Terra) — tank. Embercaster (Ignis) — burst DPS.<br>Moonrunner (Umbra) — evasion. Bloomsage (Aqua) — healer.<br>Each class has unique spells and stat growth.',
 
     help_section_duels: 'Duels & Arena',
-    help_duels_text: 'Duels are PvP matches based on prediction. Best of 3 rounds. Each round you seal one of 4 intents: Strike (beats Mend), Guard (beats Strike), Weave (beats Guard), Mend (beats Weave). <br>Seals are revealed simultaneously — the blockchain determines the outcome.<br>Challenge opponents through the Arena. They have 24 hours to accept. Win: +150 XP. Loss: +50 XP. Future balance rule: declining or missing a confirmed challenge means satisfaction to the challenger or to the World, chosen by the declining mage — 1% Mana.',
+    help_duels_text: 'Duels are PvP matches based on prediction. Best version of 3 rounds. Each round you seal one of 4 intents: Strike (beats Mend), Guard (beats Strike), Weave (beats Guard), Mend (beats Weave). <br>Seals are revealed simultaneously — the blockchain determines the outcome.<br>Challenge opponents through the Arena. They have 24 hours to accept. Win: +150 XP. Loss: +50 XP. Future balance rule: declining or missing a confirmed challenge means satisfaction to the challenger or to the World, chosen by the declining mage — 1% Mana.',
 
     help_section_guilds: 'Guilds',
     help_guilds_text: 'Create a guild or join an existing one. Officers can invite members and promote the guild so new players can discover it. The founder cannot leave — transfer leadership first. Patronage (SHARES delegation) empowers guild members via the Magic Core bonus.',
@@ -1321,7 +1321,15 @@ var LangEN = {
     char_spell_effect: 'Effect',
     char_spell_close: 'Close',
     char_xp_explainer: '⭐ XP grows from hunts, Armageddon, quests, world boss fights, and other game actions. When enough XP is accumulated for the next level, leveling happens automatically.',
-    char_mana_explainer: '⚡ Mana is VIZ account energy. It regenerates over time: about 1% per 1.2 hours, roughly 5 days for a full refill. Hunts, Temple offerings, crafting, and other actions spend mana.',
+    char_mana_explainer: '⚡ Mana is VIZ account energy. It regenerates over time: about 1% per 1.2 hours, roughly 5 days for a full refill. Hunts, Temple offerings, crafting, and other actions spend mana. To learn more, click the energy bar: it opens a detailed external article in a new tab.',
     char_hp_explainer: '❤️ HP grows from level, Resilience, and class. This screen displays HP the same way as Home: real game HP is scaled to a clean 1000 display bar only. Internal balance, damage, healing and spending do not change.',
+    char_mana_external_aria: 'Mana. Open the external VIZ energy article in a new tab',
+    char_hp_button_aria: 'HP. Open HP calculation explanation',
+    char_xp_button_aria: 'XP. Open XP calculation explanation',
+    char_hp_modal_title: 'How HP is calculated',
+    char_hp_modal_body: 'HP is the character health pool. Maximum HP is calculated as: 100 + level × 10 + Resilience × 3. Then the class multiplier is applied: Stonewarden gets more HP, Embercaster less, Moonrunner normal HP, Bloomsage slightly more than normal. Home and Character may scale the bar for readability, but combat uses the real HP value.',
+    char_xp_modal_title: 'How XP is calculated',
+    char_xp_modal_body: 'XP is total character experience. The next-level threshold grows gently: for level N the game uses 800 + N × 100, and after level 2 adds (N − 2) × 50. For example, level 2 needs 1000 XP, level 3 needs 1150, level 4 needs 1300. When total XP crosses the next threshold, the level increases automatically.',
+    arena_player_status_known: 'status: known to game' ,
     help_close: 'Got it'
 };

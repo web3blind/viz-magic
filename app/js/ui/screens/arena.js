@@ -338,7 +338,7 @@ var ArenaScreen = (function() {
                 '<td>' + (i + 1) + '</td>' +
                 '<td>' +
                     _renderAccountAvatar(char.avatarUrl, char.name || entry.account, 'arena-avatar') +
-                    '<span aria-hidden="true">' + Helpers.classIcon(char.className) + '</span> ' +
+                    '<span class="arena-class-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(char.className) + '</span> ' +
                     Helpers.escapeHtml(char.name || entry.account) +
                     (isMe ? ' (' + t('arena_you') + ')' : '') +
                 '</td>' +
@@ -425,7 +425,7 @@ var ArenaScreen = (function() {
                 var ch = state.characters[account];
                 if (!ch || !ch.name) continue;
                 seen[account] = true;
-                players.push({ account: account, name: ch.name, level: ch.level || 1, className: ch.className, avatarUrl: ch.avatarUrl || '' });
+                players.push({ account: account, name: ch.name, level: ch.level || 1, className: ch.className, avatarUrl: ch.avatarUrl || '', status: 'known' });
             }
         }
 
@@ -436,7 +436,7 @@ var ArenaScreen = (function() {
                 var knownAcct = state.social.knownAccounts[ki];
                 if (!knownAcct || knownAcct === user || lbAccounts[knownAcct] || seen[knownAcct]) continue;
                 seen[knownAcct] = true;
-                players.push({ account: knownAcct, name: knownAcct, level: 0, className: '', avatarUrl: _knownAvatarUrl(knownAcct) });
+                players.push({ account: knownAcct, name: knownAcct, level: 0, className: '', avatarUrl: _knownAvatarUrl(knownAcct), status: 'known' });
             }
         }
 
@@ -450,12 +450,14 @@ var ArenaScreen = (function() {
         for (var i = 0; i < Math.min(players.length, 50); i++) {
             var p = players[i];
             var levelText = p.level > 0 ? ' <span class="arena-player-level">Lv ' + p.level + '</span>' : '';
-            var classIconHtml = p.className ? '<span aria-hidden="true">' + Helpers.classIcon(p.className) + '</span> ' : '';
+            var classIconHtml = p.className ? '<span class="arena-class-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(p.className) + '</span> ' : '';
             html += '<div class="arena-player-card" role="listitem">' +
                 '<span class="arena-player-info">' +
                     _renderAccountAvatar(p.avatarUrl, p.name, 'arena-avatar') +
                     classIconHtml +
-                    Helpers.escapeHtml(p.name) +
+                    '<span class="arena-player-name">' + Helpers.escapeHtml(p.name) + '</span>' +
+                    '<span class="arena-player-account">@' + Helpers.escapeHtml(p.account) + '</span>' +
+                    '<span class="arena-player-status">' + t('arena_player_status_known') + '</span>' +
                     levelText +
                 '</span>' +
                 '<button class="btn btn-secondary btn-sm arena-challenge-btn" ' +

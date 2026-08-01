@@ -2314,3 +2314,36 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(2n+1) { animation-delay: -0.55s !important; }
     body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(2n) { animation-delay: -1.85s !important; }
 }
+
+
+/* v110: player feedback polish */
+.progress-bar-link,
+.progress-bar-button { display: block; width: 100%; padding: 0; text-align: inherit; cursor: pointer; color: inherit; text-decoration: none; font: inherit; }
+.progress-bar-button { border: 1px solid var(--color-border); }
+.progress-bar-link:focus-visible,
+.progress-bar-button:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+.character-title-line .profile-title-avatar { margin-right: 0.15rem; }
+.character-title-name { font-weight: 800; }
+.char-header h2 { display: flex; align-items: center; gap: 0.35rem; }
+.char-header .character-title-class-icon { font-size: 1.35em; }
+.spell-detail-title-icon { display: inline-block; margin-right: 0.25em; }
+#bottom-nav .nav-tab[data-screen="character"] .nav-icon,
+.action-tile[data-screen="character"] .tile-avatar-icon { width: 1.9rem; height: 1.9rem; font-size: 1.55rem; }
+.settings-avatar-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.settings-avatar-heading .input-label { margin-bottom: 0; }
+.settings-avatar-heading .settings-avatar-preview-slot { margin-left: auto; }
+.event-edit-copy { display: block; margin-top: 4px; font-size: 0.78rem; color: var(--color-text-muted); }
+.arena-class-icon { display: inline-block; margin-right: 0.2em; }
+.arena-player-info { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; min-width: 0; }
+.arena-player-name { font-weight: 700; }
+.arena-player-account,
+.arena-player-status { color: var(--color-text-muted); font-size: 0.82rem; }
+@media (prefers-reduced-motion: no-preference) {
+    body[data-icon-motion="sparkle"] .arena-screen .arena-class-icon,
+    body[data-icon-motion="sparkle"] .spell-detail-title-icon,
+    body[data-icon-motion="sparkle"] .leaderboard-title-icon {
+        animation: vmagic-soft-breathe 4.2s ease-in-out infinite !important;
+        transform-origin: center;
+    }
+    body[data-icon-motion="sparkle"] .spell-detail-title-icon { animation-delay: -0.9s !important; }
+}

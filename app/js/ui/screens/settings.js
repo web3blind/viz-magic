@@ -202,9 +202,11 @@ var SettingsScreen = (function() {
         var previewSrc = pendingAvatarDataUrl || currentAvatar || '';
         var preview = previewSrc ? '<img class="account-avatar profile-avatar settings-avatar-preview" src="' + Helpers.escapeHtml(previewSrc) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : _renderDefaultAvatarPreview(currentCharacter);
         return '<div class="settings-avatar-field">' +
-            '<label for="avatar-upload" class="input-label"><span class="settings-control-icon vmagic-breathe" aria-hidden="true">🖼️</span> ' + t('settings_avatar') + '</label>' +
-            '<div class="settings-avatar-row">' +
+            '<div class="settings-avatar-heading">' +
+                '<label for="avatar-upload" class="input-label">' + t('settings_avatar') + '</label>' +
                 '<span class="settings-avatar-preview-slot" id="avatar-preview-slot">' + preview + '</span>' +
+            '</div>' +
+            '<div class="settings-avatar-row">' +
                 '<input id="avatar-upload" class="input-field settings-avatar-input" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="avatar-help avatar-preview-hint avatar-status">' +
             '</div>' +
             '<p class="settings-help-text" id="avatar-help">' + t('settings_avatar_hint') + '</p>' +
