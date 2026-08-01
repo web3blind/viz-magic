@@ -949,6 +949,7 @@ var LangEN = {
     event_weave_surge_desc: 'The Weave strengthens recovery: while this event is active, mana regenerates 2× faster.',
     event_minor_rift: 'Minor Rift',
     event_minor_rift_desc: 'Rare creatures appear more often in hunts. Press to go hunting while the rift is open.',
+    event_edit_review_title: 'Event text edit preview',
     event_time_left: '{time} left.',
     event_world_boss: 'World Boss',
     event_world_boss_desc: 'The Aether Dragon has awakened!',
@@ -1327,9 +1328,8 @@ var LangEN = {
     char_hp_button_aria: 'HP. Open HP calculation explanation',
     char_xp_button_aria: 'XP. Open XP calculation explanation',
     char_hp_modal_title: 'How HP is calculated',
-    char_hp_modal_body: 'HP is the character health pool. Maximum HP is calculated as: 100 + level × 10 + Resilience × 3. Then the class multiplier is applied: Stonewarden gets more HP, Embercaster less, Moonrunner normal HP, Bloomsage slightly more than normal. Home and Character may scale the bar for readability, but combat uses the real HP value.',
+    char_hp_modal_body: 'HP is the character health pool. Maximum HP is calculated as: 100 + level × 10 + Resilience × 3. Then the class multiplier is applied: Stonewarden ×1.30, Embercaster ×0.90, Moonrunner ×1.00, Bloomsage ×1.10. Home and Character may scale the bar for readability, but combat uses the real HP value.',
     char_xp_modal_title: 'How XP is calculated',
     char_xp_modal_body: 'XP is total character experience. The next-level threshold grows gently: for level N the game uses 800 + N × 100, and after level 2 adds (N − 2) × 50. For example, level 2 needs 1000 XP, level 3 needs 1150, level 4 needs 1300. When total XP crosses the next threshold, the level increases automatically.',
-    arena_player_status_known: 'status: known to game' ,
     help_close: 'Got it'
 };

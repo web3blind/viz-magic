@@ -36,19 +36,21 @@ var CharacterScreen = (function() {
                 '<h1 class="character-title-line">' + _renderAvatarMark(ch, ch.name || user, 'screen-title-icon profile-title-avatar vmagic-breathe') + ' <span class="character-title-name">' + Helpers.escapeHtml(ch.name || user || '') + '</span></h1>' +
                 '<div class="char-header">' +
                     '<div><h2><span class="char-icon character-title-class-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(ch.className || 'embercaster') + '</span> ' + _classGuideName(ch.className, t) + '</h2>' +
-                    '<p>' + t('class_' + ch.className) + ' \u2022 ' + t('home_level') + ' ' + ch.level + '</p></div>' +
+                    '<p>' + t('home_level') + ' ' + ch.level + '</p></div>' +
                 '</div>' +
                 ProgressBar.create({id:'char-mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3', href: VIZ_ENERGY_DOC_URL, ariaLabel: t('char_mana_external_aria')}) +
                 '<p class="quest-desc character-vital-note">' + t('char_mana_explainer') + '</p>' +
                 ProgressBar.create({id:'char-hp-bar', label:'❤️ HP', value:ch.hp, max:ch.maxHp, displayValue:hpShown, displayMax:CHARACTER_HP_DISPLAY_MAX, color:'#e53935', button: true, ariaLabel: t('char_hp_button_aria')}) +
+                '<p class="quest-desc character-vital-note">' + t('char_hp_explainer') + '</p>' +
                 ProgressBar.create({id:'char-xp-bar', label:'⭐ XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:CHARACTER_XP_DISPLAY_MAX, color:'#ffc107', button: true, ariaLabel: t('char_xp_button_aria')}) +
+                '<p class="quest-desc character-vital-note">' + t('char_xp_explainer') + '</p>' +
                 '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">📊</span> ' + t('char_stats') + '</h2>' +
                 '<div class="stats-list">' +
-                    _statRow(t('char_potency'), totalPot) +
-                    _statRow(t('char_resilience'), totalRes) +
-                    _statRow(t('char_swiftness'), totalSwf) +
-                    _statRow(t('char_intellect'), totalInt) +
-                    _statRow(t('char_fortune'), totalFor) +
+                    _statRow(t('char_potency'), ch.pot || 0, corePerStat, 0, totalPot) +
+                    _statRow(t('char_resilience'), ch.res || 0, corePerStat, 0, totalRes) +
+                    _statRow(t('char_swiftness'), ch.swf || 0, corePerStat, 0, totalSwf) +
+                    _statRow(t('char_intellect'), ch.int || 0, corePerStat, 0, totalInt) +
+                    _statRow(t('char_fortune'), ch.for_ || 0, corePerStat, 0, totalFor) +
                 '</div>' +
                 '<p class="quest-desc">' + t('char_stats_growth_hint') + '</p>' +
                 '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">💠</span> ' + t('char_core') + '</h2>' +
@@ -97,8 +99,10 @@ var CharacterScreen = (function() {
         return shown;
     }
 
-    function _statRow(label, value) {
-        return '<div class="stat-row"><span class="stat-label">' + label + '</span><span class="stat-value">' + value + '</span></div>';
+    function _statRow(label, baseValue, corePerStat, equipBonus, totalValue) {
+        return '<div class="stat-row"><span class="stat-label">' + label + '</span>' +
+            '<span class="stat-formula">' + baseValue + ' + ' + corePerStat + ' + ' + equipBonus + ' =</span>' +
+            '<span class="stat-value">' + totalValue + '</span></div>';
     }
 
     function _classGuideName(className, t) {
@@ -174,10 +178,11 @@ var CharacterScreen = (function() {
 
     function _showVitalDetails(kind) {
         var t = Helpers.t;
+        var icon = kind === 'hp' ? '❤️' : '⭐';
         var title = kind === 'hp' ? t('char_hp_modal_title') : t('char_xp_modal_title');
         var bodyKey = kind === 'hp' ? 'char_hp_modal_body' : 'char_xp_modal_body';
         var body = '<div class="modal-content character-vital-modal">' +
-            '<h2 class="modal-title">' + title + '</h2>' +
+            '<h2 class="modal-title"><span class="modal-title-icon" aria-hidden="true">' + icon + '</span> ' + title + '</h2>' +
             '<div class="modal-body"><p>' + t(bodyKey) + '</p></div>' +
             '<div class="modal-actions"><button type="button" class="btn btn-primary modal-close">' + t('char_spell_close') + '</button></div>' +
             '</div>';

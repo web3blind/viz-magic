@@ -451,13 +451,13 @@ var ArenaScreen = (function() {
             var p = players[i];
             var levelText = p.level > 0 ? ' <span class="arena-player-level">Lv ' + p.level + '</span>' : '';
             var classIconHtml = p.className ? '<span class="arena-class-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(p.className) + '</span> ' : '';
+            var playerNameHtml = (p.name && p.name !== p.account) ? '<span class="arena-player-name">' + Helpers.escapeHtml(p.name) + '</span>' : '';
             html += '<div class="arena-player-card" role="listitem">' +
                 '<span class="arena-player-info">' +
                     _renderAccountAvatar(p.avatarUrl, p.name, 'arena-avatar') +
                     classIconHtml +
-                    '<span class="arena-player-name">' + Helpers.escapeHtml(p.name) + '</span>' +
+                    playerNameHtml +
                     '<span class="arena-player-account">@' + Helpers.escapeHtml(p.account) + '</span>' +
-                    '<span class="arena-player-status">' + t('arena_player_status_known') + '</span>' +
                     levelText +
                 '</span>' +
                 '<button class="btn btn-secondary btn-sm arena-challenge-btn" ' +

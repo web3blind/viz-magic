@@ -100,8 +100,7 @@ var LeaderboardScreen = (function() {
                     '</td>' +
                     '<td class="leaderboard-cell-player">' +
                         _renderAccountAvatar(row.avatarUrl, row.name || row.account, 'leaderboard-avatar') +
-                        '<span class="leaderboard-name">' + Helpers.escapeHtml(row.name || row.account) + '</span>' +
-                        youBadge +
+                        _renderPlayerIdentity(row, youBadge) +
                     '</td>' +
                     '<td class="leaderboard-cell-level" aria-label="' + t('leaderboard_window_col') + '">' +
                         '24h' +
@@ -158,6 +157,16 @@ var LeaderboardScreen = (function() {
             return String(a.name || a.account).localeCompare(String(b.name || b.account));
         });
         return rows.slice(0, 100);
+    }
+
+    function _renderPlayerIdentity(row, youBadge) {
+        var account = row.account || '';
+        var name = row.name || '';
+        if (name && name !== account) {
+            return '<span class="leaderboard-name">' + Helpers.escapeHtml(name) + '</span>' +
+                '<span class="leaderboard-account">@' + Helpers.escapeHtml(account) + '</span>' + youBadge;
+        }
+        return '<span class="leaderboard-account">@' + Helpers.escapeHtml(account) + '</span>' + youBadge;
     }
 
     function _renderAccountAvatar(url, name, extraClass) {

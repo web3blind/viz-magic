@@ -255,6 +255,7 @@ var InventoryScreen = (function() {
     function _raritySymbolForItem(item, rInfo) {
         if (!item) return rInfo.symbol || '';
         if (_getCategory(item) === ItemSystem.CATEGORIES.MATERIAL) return '';
+        if (item.type === 'flame_votive_mark' || item.type === 'altar_spark') return '';
         return rInfo.symbol || '';
     }
 

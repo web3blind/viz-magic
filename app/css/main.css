@@ -1987,7 +1987,7 @@ body,
     @keyframes vmagic-rune-pulse { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255,216,88,0)); transform: scale(1) rotate(0deg); } 50% { filter: drop-shadow(0 0 14px rgba(255,216,88,0.75)); transform: scale(1.12) rotate(-3deg); } }
     @keyframes vmagic-boss-breathe { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(124,53,255,0)); } 50% { transform: scale(1.10); filter: drop-shadow(0 0 16px rgba(124,53,255,0.65)); } }
     @keyframes vmagic-weather-drift { 0%, 100% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 0 0 rgba(88,166,255,0)); } 50% { transform: translateY(-5px) rotate(4deg) scale(1.10); filter: drop-shadow(0 0 12px rgba(88,166,255,0.65)); } }
-    @keyframes vmagic-soft-breathe { 0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0 rgba(255,216,88,0)); } 50% { transform: translateY(-1px) scale(1.035); filter: drop-shadow(0 0 7px rgba(255,216,88,0.35)); } }
+    @keyframes vmagic-soft-breathe { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,216,88,0)); } 50% { transform: scale(1.025); filter: drop-shadow(0 0 6px rgba(255,216,88,0.28)); } }
     @keyframes vmagic-tile-shimmer { 0%, 100% { transform: translateY(0) scale(1); filter: saturate(1); } 50% { transform: translateY(-3px) scale(1.08); filter: saturate(1.45) drop-shadow(0 0 10px rgba(88,166,255,0.5)); } }
     .recipe-icon, .craft-icon-anim, .vmagic-breathe, .screen-title-icon, .section-icon, .prophecy-icon, .nav-icon, .region-icon, .char-icon, .guild-action-icon, .settings-control-icon { display: inline-block; animation: vmagic-rune-pulse 2.4s ease-in-out infinite; }
     .screen-title-icon { animation-duration: 2.8s; animation-delay: -0.35s; }
@@ -2347,3 +2347,30 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     }
     body[data-icon-motion="sparkle"] .spell-detail-title-icon { animation-delay: -0.9s !important; }
 }
+
+
+/* v111: softer motion, aligned nav labels, clearer edit preview */
+#bottom-nav .nav-icon { min-height: 1.9rem; display: flex; align-items: center; justify-content: center; }
+#bottom-nav .nav-tab[data-screen="character"] .nav-label { line-height: 1.05; }
+.event-edit-copy { margin-top: 8px; padding: 6px 8px; border: 1px dashed var(--color-border); border-radius: 8px; color: var(--color-text); background: rgba(255,255,255,0.04); font-size: 0.9rem; }
+.stat-formula { color: var(--color-text-muted); font-size: 0.9rem; margin: 0 0.35rem; }
+.character-vital-modal .modal-title-icon { display: inline-block; margin-right: 0.25em; }
+.leaderboard-account { color: var(--color-text-muted); font-size: 0.86rem; margin-left: 0.35rem; }
+@media (prefers-reduced-motion: no-preference) {
+    body[data-icon-motion="sparkle"] .item-card .item-icon,
+    body[data-icon-motion="sparkle"] .arena-screen .vmagic-breathe,
+    body[data-icon-motion="sparkle"] .arena-screen .screen-title-icon,
+    body[data-icon-motion="sparkle"] .arena-screen .section-icon,
+    body[data-icon-motion="sparkle"] .arena-screen .arena-class-icon,
+    body[data-icon-motion="sparkle"] .leaderboard-title-icon {
+        animation-name: vmagic-soft-breathe !important;
+        animation-duration: 5.0s !important;
+        animation-timing-function: ease-in-out !important;
+        animation-iteration-count: infinite !important;
+        transform-origin: center;
+    }
+}
+
+.event-edit-review { margin: 1rem 0; padding: 0.9rem; border: 1px solid var(--color-border); border-radius: 12px; background: rgba(255,255,255,0.035); }
+.event-edit-review-card { margin-top: 0.65rem; padding: 0.75rem; border-radius: 10px; background: rgba(0,0,0,0.12); }
+.event-edit-review-card h3 { margin: 0 0 0.35rem; }
