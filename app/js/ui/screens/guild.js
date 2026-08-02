@@ -885,7 +885,7 @@ var GuildScreen = (function() {
         html += '<p>' + t('guild_treasury_account') + ': ' + _esc(guild.founder) + '</p>';
         html += '<p>' + t('guild_total_delegated') + ': ' + _formatShares(guild.totalDelegated) + '</p>';
         html += '<div class="modal-actions">';
-        html += '<button class="btn btn-secondary" id="modal-cancel">' + t('close') + '</button>';
+        html += '<button class="btn btn-primary" id="modal-cancel">' + t('close') + '</button>';
         html += '</div>';
         html += '</div>';
 
@@ -910,7 +910,7 @@ var GuildScreen = (function() {
         html += '<p>' + t('guild_min_shares') + ': ' + _formatShares(minShares) + '</p>';
         html += '<p>' + t('guild_treasury_account') + ': ' + _esc(guild.founder) + '</p>';
         html += '<div class="modal-actions">';
-        html += '<button class="btn btn-secondary" id="modal-cancel">' + t('close') + '</button>';
+        html += '<button class="btn btn-primary" id="modal-cancel">' + t('close') + '</button>';
         html += '</div>';
         html += '</div>';
 

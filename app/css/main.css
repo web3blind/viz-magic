@@ -2371,6 +2371,30 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     }
 }
 
-.event-edit-review { margin: 1rem 0; padding: 0.9rem; border: 1px solid var(--color-border); border-radius: 12px; background: rgba(255,255,255,0.035); }
-.event-edit-review-card { margin-top: 0.65rem; padding: 0.75rem; border-radius: 10px; background: rgba(0,0,0,0.12); }
-.event-edit-review-card h3 { margin: 0 0 0.35rem; }
+
+
+/* v112: corrected event surface, steady icon breathing, aligned labels and formulas */
+.action-tile { display: grid; grid-template-rows: 2.15rem auto; align-items: center; justify-items: center; }
+.action-tile .tile-icon,
+.action-tile .tile-avatar-icon { grid-row: 1; align-self: center; margin: 0; }
+.action-tile .tile-label { grid-row: 2; align-self: start; line-height: 1.05; min-height: 1.05em; }
+#bottom-nav .nav-tab { display: grid; grid-template-rows: 1.9rem 1.05em; align-items: center; justify-items: center; gap: 2px; }
+#bottom-nav .nav-icon { min-height: 1.9rem; margin: 0; display: flex; align-items: center; justify-content: center; }
+#bottom-nav .nav-label { line-height: 1.05; margin: 0; align-self: start; }
+.stat-row { display: grid; grid-template-columns: minmax(5.5rem, 1fr) minmax(7.5rem, auto) minmax(2.2rem, auto); align-items: baseline; column-gap: 0.5rem; }
+.stat-formula { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+@media (max-width: 420px) { .stat-row { grid-template-columns: 1fr; row-gap: 0.15rem; } .stat-formula { text-align: left; } }
+.leaderboard-account { display: none !important; }
+@media (prefers-reduced-motion: no-preference) {
+    body[data-icon-motion="sparkle"] .item-card .item-icon,
+    body[data-icon-motion="sparkle"] .arena-screen .vmagic-breathe,
+    body[data-icon-motion="sparkle"] .arena-screen .screen-title-icon,
+    body[data-icon-motion="sparkle"] .arena-screen .section-icon,
+    body[data-icon-motion="sparkle"] .arena-screen .arena-class-icon,
+    body[data-icon-motion="sparkle"] .leaderboard-title-icon {
+        animation: vmagic-soft-breathe 5.6s ease-in-out infinite !important;
+        animation-delay: 0s !important;
+        transform-origin: center center !important;
+        will-change: transform, filter;
+    }
+}

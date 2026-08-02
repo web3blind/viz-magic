@@ -247,7 +247,7 @@ var InventoryScreen = (function() {
         var type = item && item.type;
         if ((type === 'flame_votive_mark' || type === 'spirit_tunic' || type === 'thorn_essence') && rInfo.name === 'common') return 'обычная';
         if (type === 'thorn_essence' && rInfo.name === 'legendary') return 'легендарная';
-        if (type === 'flame_votive_mark' && rInfo.name === 'uncommon') return 'необычная';
+        if ((type === 'flame_votive_mark' || type === 'labor_votive_mark') && rInfo.name === 'uncommon') return 'необычная';
         if (type === 'chronicle_ink' && rInfo.name === 'common') return 'обычные';
         return name;
     }
@@ -255,12 +255,12 @@ var InventoryScreen = (function() {
     function _raritySymbolForItem(item, rInfo) {
         if (!item) return rInfo.symbol || '';
         if (_getCategory(item) === ItemSystem.CATEGORIES.MATERIAL) return '';
-        if (item.type === 'flame_votive_mark' || item.type === 'altar_spark') return '';
+        if (item.type === 'flame_votive_mark' || item.type === 'altar_spark' || item.type === 'labor_votive_mark') return '';
         return rInfo.symbol || '';
     }
 
     function _showWarningIcon(item) {
-        return !!(item && (item.volatile_ || item.type === 'flame_votive_mark'));
+        return !!(item && (item.volatile_ || item.type === 'flame_votive_mark' || item.type === 'labor_votive_mark'));
     }
 
     function _statsText(stats, t) {

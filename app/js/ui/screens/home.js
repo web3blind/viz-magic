@@ -51,8 +51,6 @@ var HomeScreen = (function() {
                     'onclick="Helpers.EventBus.emit(\'navigate\', \'help\')">❓</button>' +
                 '</section>' +
 
-                // Event text review
-                _renderEventEditReview(t) +
 
                 // Season indicator
                 _renderSeasonIndicator(state, blockNum, t) +
@@ -198,24 +196,6 @@ var HomeScreen = (function() {
         }
         html += '</div>';
         return html;
-    }
-
-
-    function _renderEventEditReview(t) {
-        var events = [
-            { icon: '🌊', nameKey: 'event_weave_surge', descKey: 'event_weave_surge_desc' },
-            { icon: '🌀', nameKey: 'event_minor_rift', descKey: 'event_minor_rift_desc' }
-        ];
-        var html = '<section class="event-edit-review" aria-label="' + t('event_edit_review_title') + '">' +
-            '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">📝</span> ' + t('event_edit_review_title') + '</h2>';
-        for (var i = 0; i < events.length; i++) {
-            html += '<article class="event-edit-review-card">' +
-                '<h3><span class="event-icon vmagic-breathe" aria-hidden="true">' + events[i].icon + '</span> ' + t(events[i].nameKey) + '</h3>' +
-                '<p>' + t(events[i].descKey) + '</p>' +
-                '<p class="event-edit-copy">' + Helpers.escapeHtml(t(events[i].nameKey) + ': ' + t(events[i].descKey)) + '</p>' +
-            '</article>';
-        }
-        return html + '</section>';
     }
 
 

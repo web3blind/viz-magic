@@ -756,7 +756,7 @@ var WorldEvents = (function() {
 
     function getCurrentWeather(blockNum) {
         var day = _getMoscowDayIndex();
-        var idx = Math.floor(day / SKY_SIGNS.length) % WEATHER.length;
+        var idx = day % WEATHER.length;
         if (idx < 0) idx = 0;
         return _copyWeatherWithDailyVariation(WEATHER[idx], day);
     }

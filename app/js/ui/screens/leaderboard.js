@@ -161,12 +161,8 @@ var LeaderboardScreen = (function() {
 
     function _renderPlayerIdentity(row, youBadge) {
         var account = row.account || '';
-        var name = row.name || '';
-        if (name && name !== account) {
-            return '<span class="leaderboard-name">' + Helpers.escapeHtml(name) + '</span>' +
-                '<span class="leaderboard-account">@' + Helpers.escapeHtml(account) + '</span>' + youBadge;
-        }
-        return '<span class="leaderboard-account">@' + Helpers.escapeHtml(account) + '</span>' + youBadge;
+        var name = row.name || account || '';
+        return '<span class="leaderboard-name">' + Helpers.escapeHtml(name) + '</span>' + youBadge;
     }
 
     function _renderAccountAvatar(url, name, extraClass) {
