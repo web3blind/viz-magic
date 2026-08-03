@@ -322,8 +322,19 @@ var App = (function() {
             }
         });
         if ('serviceWorker' in navigator) {
+            var swReloadKey = VizMagicConfig.STORAGE_PREFIX + 'sw_reload_v115';
+            navigator.serviceWorker.addEventListener('controllerchange', function() {
+                try {
+                    if (sessionStorage.getItem(swReloadKey) === '1') return;
+                    sessionStorage.setItem(swReloadKey, '1');
+                } catch (e) {}
+                window.location.reload();
+            });
             navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function(registration) {
                 console.log('Service Worker Registered');
+                if (registration && registration.waiting && registration.waiting.postMessage) {
+                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                }
                 if (registration && registration.update) {
                     registration.update().catch(function(updateErr) {
                         console.log('SW update check failed:', updateErr);

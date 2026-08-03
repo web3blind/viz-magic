@@ -1,5 +1,5 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v114';
+var CACHE_NAME = 'viz-magic-v115';
 var APP_SHELL_ASSETS = [
     '/',
     '/index.html',
@@ -40,6 +40,14 @@ self.addEventListener('activate', function(event) {
             );
         }).then(function() {
             return self.clients.claim();
+        }).then(function() {
+            return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        }).then(function(clientList) {
+            return Promise.all(clientList.map(function(client) {
+                if (client && client.url && client.navigate) {
+                    return client.navigate(client.url).catch(function() {});
+                }
+            }));
         })
     );
 });
