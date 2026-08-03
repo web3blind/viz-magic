@@ -31,6 +31,7 @@ var HomeScreen = (function() {
         if (xpCurrent < 0) xpCurrent = 0;
         var hpShown = hasCharacter ? _scaleForDisplay(character.hp, character.maxHp, HOME_HP_DISPLAY_MAX) : 0;
         var xpShown = hasCharacter ? _scaleForDisplay(xpCurrent, xpNeeded, HOME_XP_DISPLAY_MAX) : 0;
+        var displayName = _displayCharacterName(character, hasCharacter, user, t);
         var characterLine = hasCharacter ? (Helpers.classIcon(character.className) + ' ' + t('class_' + character.className) + ' \u2022 ' + t('home_level') + ' ' + character.level) : t('loading');
         var vitalBars = hasCharacter ? (
             ProgressBar.create({id:'mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
@@ -47,7 +48,7 @@ var HomeScreen = (function() {
                 _renderBossAlert(state, blockNum, t) +
 
                 '<section class="home-summary home-summary-button" role="button" tabindex="0" aria-label="' + t('home_open_character') + '">' +
-                    '<h1>' + t('home_welcome') + ', ' + Helpers.escapeHtml(character.name) + '</h1>' +
+                    '<h1>' + t('home_welcome') + ', ' + Helpers.escapeHtml(displayName) + '</h1>' +
                     '<p>' + characterLine + '</p>' +
                     vitalBars +
                     '<button class="help-tip-btn" aria-label="' + t('help_tip_mana') + '" ' +
@@ -157,6 +158,14 @@ var HomeScreen = (function() {
                 console.log('Home mana refresh skipped until VIZ transport is ready:', e && e.message ? e.message : e);
             }
         }
+    }
+
+    function _displayCharacterName(character, hasCharacter, user, t) {
+        if (!hasCharacter || !character) return user || t('loading');
+        if (character.className === 'stonewarden' && character.name === 'Стражник') {
+            return t('class_stonewarden');
+        }
+        return character.name || user || t('loading');
     }
 
     function _scaleForDisplay(value, max, displayMax) {
@@ -368,6 +377,9 @@ var HomeScreen = (function() {
                 '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">' + page.icon + '</span> ' + t(page.titleKey) + '</h2>' +
                 '<p>' + page.text + '</p>' +
             '</article>';
+        }
+        if (pages.dailyTail) {
+            html += '<p class="home-lore-daily-tail">' + pages.dailyTail + '</p>';
         }
         html += '</section>';
         return html;
