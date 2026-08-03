@@ -15,7 +15,10 @@ var CharacterScreen = (function() {
 
         var user = VizAccount.getCurrentUser();
         var ch = StateEngine.getCharacter(user);
-        if (!ch) { ch = { name: user || 'Unknown', className: 'embercaster', level: 1, pot: 10, res: 6, swf: 8, int: 7, for_: 5, coreBonus: 0, spells: ['firebolt'], maxHp: 100, hp: 100 }; }
+        if (!ch) {
+            el.innerHTML = '<div class="character-sheet"><h1>' + t('nav_character') + '</h1><div class="empty-state">' + t('loading') + '</div></div>';
+            return;
+        }
         ch.coreBonus = ch.coreBonus || 0;
         ch.spells = ch.spells || [];
 

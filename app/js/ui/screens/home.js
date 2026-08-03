@@ -18,18 +18,25 @@ var HomeScreen = (function() {
 
         var user = VizAccount.getCurrentUser();
         var character = StateEngine.getCharacter(user);
+        var hasCharacter = !!character;
         var state = StateEngine.getState();
         var blockNum = state.headBlock || 0;
 
         if (!character) {
-            character = { name: user || 'Mage', className: 'embercaster', level: 1, hp: 100, maxHp: 100, xp: 0 };
+            character = { name: user || t('loading'), className: '', level: 0, hp: 0, maxHp: 1, xp: 0 };
         }
 
-        var xpNeeded = GameFormulas.xpForLevel(character.level + 1) || 1000;
-        var xpCurrent = character.xp - GameFormulas.totalXpForLevel(character.level);
+        var xpNeeded = hasCharacter ? (GameFormulas.xpForLevel(character.level + 1) || 1000) : 1;
+        var xpCurrent = hasCharacter ? (character.xp - GameFormulas.totalXpForLevel(character.level)) : 0;
         if (xpCurrent < 0) xpCurrent = 0;
-        var hpShown = _scaleForDisplay(character.hp, character.maxHp, HOME_HP_DISPLAY_MAX);
-        var xpShown = _scaleForDisplay(xpCurrent, xpNeeded, HOME_XP_DISPLAY_MAX);
+        var hpShown = hasCharacter ? _scaleForDisplay(character.hp, character.maxHp, HOME_HP_DISPLAY_MAX) : 0;
+        var xpShown = hasCharacter ? _scaleForDisplay(xpCurrent, xpNeeded, HOME_XP_DISPLAY_MAX) : 0;
+        var characterLine = hasCharacter ? (Helpers.classIcon(character.className) + ' ' + t('class_' + character.className) + ' \u2022 ' + t('home_level') + ' ' + character.level) : t('loading');
+        var vitalBars = hasCharacter ? (
+            ProgressBar.create({id:'mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
+            ProgressBar.create({id:'hp-bar', label:'❤️ HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
+            ProgressBar.create({id:'xp-bar', label:'⭐ XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'})
+        ) : ProgressBar.create({id:'mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'});
 
         el.innerHTML =
             '<div class="home-dashboard">' +
@@ -41,11 +48,8 @@ var HomeScreen = (function() {
 
                 '<section class="home-summary home-summary-button" role="button" tabindex="0" aria-label="' + t('home_open_character') + '">' +
                     '<h1>' + t('home_welcome') + ', ' + Helpers.escapeHtml(character.name) + '</h1>' +
-                    '<p>' + Helpers.classIcon(character.className) + ' ' + t('class_' + character.className) +
-                        ' \u2022 ' + t('home_level') + ' ' + character.level + '</p>' +
-                    ProgressBar.create({id:'mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
-                    ProgressBar.create({id:'hp-bar', label:'❤️ HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
-                    ProgressBar.create({id:'xp-bar', label:'⭐ XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'}) +
+                    '<p>' + characterLine + '</p>' +
+                    vitalBars +
                     '<button class="help-tip-btn" aria-label="' + t('help_tip_mana') + '" ' +
                     'title="' + t('help_tip_mana') + '" ' +
                     'onclick="Helpers.EventBus.emit(\'navigate\', \'help\')">❓</button>' +
@@ -56,7 +60,7 @@ var HomeScreen = (function() {
                 _renderSeasonIndicator(state, blockNum, t) +
 
                 // Daily Prophecy
-                _renderDailyProphecy(character, state, blockNum, t) +
+                (hasCharacter ? _renderDailyProphecy(character, state, blockNum, t) : '') +
 
                 '<section class="home-actions" aria-label="' + t('home_primary_actions') + '">' +
                     '<h2>' + t('home_primary_actions') + '</h2>' +
