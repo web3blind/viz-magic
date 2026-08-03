@@ -715,24 +715,27 @@ var WorldEvents = (function() {
         return MAGIC_NEWS.length * NEWS_TWISTS.length;
     }
 
-    function _dailyFromPool(pool, day, offset) {
+    function _dailyFromPool(pool, day, offset, tailText) {
         var idx = (day + offset) % pool.length;
         if (idx < 0) idx = 0;
-        var tailIdx = Math.floor((day + offset) / pool.length) % LORE_DAILY_TAILS.length;
-        if (tailIdx < 0) tailIdx = 0;
         var base = pool[idx];
         var out = {};
         for (var key in base) if (base.hasOwnProperty(key)) out[key] = base[key];
-        out.text = base.text + ' ' + LORE_DAILY_TAILS[tailIdx];
+        out.text = base.text + (tailText ? ' ' + tailText : '');
         return out;
     }
 
     function getCurrentLorePages(blockNum) {
         var day = _getMoscowDayIndex();
+        var tailIdx = day % LORE_DAILY_TAILS.length;
+        if (tailIdx < 0) tailIdx = 0;
+        var tailSlot = day % 3;
+        if (tailSlot < 0) tailSlot = 0;
+        var tailText = LORE_DAILY_TAILS[tailIdx];
         return [
-            _dailyFromPool(NATURE_PAGES, day, 0),
-            _dailyFromPool(LEGEND_PAGES, day, 1),
-            _dailyFromPool(SPELL_PAGES, day, 2)
+            _dailyFromPool(NATURE_PAGES, day, 0, tailSlot === 0 ? tailText : ''),
+            _dailyFromPool(LEGEND_PAGES, day, 1, tailSlot === 1 ? tailText : ''),
+            _dailyFromPool(SPELL_PAGES, day, 2, tailSlot === 2 ? tailText : '')
         ];
     }
 

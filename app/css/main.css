@@ -2332,7 +2332,6 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 .settings-avatar-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .settings-avatar-heading .input-label { margin-bottom: 0; }
 .settings-avatar-heading .settings-avatar-preview-slot { margin-left: auto; }
-.event-edit-copy { display: block; margin-top: 4px; font-size: 0.78rem; color: var(--color-text-muted); }
 .arena-class-icon { display: inline-block; margin-right: 0.2em; }
 .arena-player-info { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; min-width: 0; }
 .arena-player-name { font-weight: 700; }
@@ -2352,7 +2351,6 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 /* v111: softer motion, aligned nav labels, clearer edit preview */
 #bottom-nav .nav-icon { min-height: 1.9rem; display: flex; align-items: center; justify-content: center; }
 #bottom-nav .nav-tab[data-screen="character"] .nav-label { line-height: 1.05; }
-.event-edit-copy { margin-top: 8px; padding: 6px 8px; border: 1px dashed var(--color-border); border-radius: 8px; color: var(--color-text); background: rgba(255,255,255,0.04); font-size: 0.9rem; }
 .stat-formula { color: var(--color-text-muted); font-size: 0.9rem; margin: 0 0.35rem; }
 .character-vital-modal .modal-title-icon { display: inline-block; margin-right: 0.25em; }
 .leaderboard-account { color: var(--color-text-muted); font-size: 0.86rem; margin-left: 0.35rem; }

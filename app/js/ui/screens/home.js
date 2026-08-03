@@ -181,7 +181,6 @@ var HomeScreen = (function() {
             var tag = target ? 'button' : 'div';
             var attrs = target ? ' type="button" data-screen="' + target + '" data-event-type="' + evt.type + '"' : '';
             var effectBadge = evt.type === 'weave_surge' ? '<span class="event-effect-badge">⚡ ' + t('home_weave_hunt_hint') + ' ' + String(t('home_mana')).toLowerCase() + ' ×' + (evt.manaRegenMultiplier || 2) + '</span>' : '';
-            var editCopy = (evt.type === 'weave_surge' || evt.type === 'minor_rift') ? '<span class="event-edit-copy">' + Helpers.escapeHtml(t(evt.nameKey) + ': ' + desc) + '</span>' : '';
             html += '<' + tag + ' class="event-banner-item event-banner-' + evt.type + (target ? ' event-banner-button' : '') + '"' + attrs + ' aria-label="' +
                 t(evt.nameKey) + (desc ? '. ' + desc : '') + ' ' + t('event_time_left', {time: timeStr}) + '">' +
                 '<span class="event-icon vmagic-breathe" aria-hidden="true">' + evt.icon + '</span>' +
@@ -190,7 +189,6 @@ var HomeScreen = (function() {
                     (desc ? '<span class="event-desc">' + desc + '</span>' : '') +
                 '</span>' +
                 effectBadge +
-                editCopy +
                 '<span class="event-timer">' + timeStr + '</span>' +
             '</' + tag + '>';
         }
