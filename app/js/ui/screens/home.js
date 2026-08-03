@@ -65,13 +65,13 @@ var HomeScreen = (function() {
                 '<section class="home-actions" aria-label="' + t('home_primary_actions') + '">' +
                     '<h2>' + t('home_primary_actions') + '</h2>' +
                     '<div class="action-grid">' +
-                        _renderActionTiles(PRIMARY_HOME_SCREENS, true, character) +
+                        _renderActionTiles(PRIMARY_HOME_SCREENS, true, hasCharacter ? character : null) +
                     '</div>' +
                 '</section>' +
                 '<section class="home-actions home-actions-secondary" aria-label="' + t('home_secondary_actions') + '">' +
                     '<h2>' + t('home_secondary_actions') + '</h2>' +
                     '<div class="action-grid">' +
-                        _renderActionTiles(SECONDARY_HOME_SCREENS, false, character) +
+                        _renderActionTiles(SECONDARY_HOME_SCREENS, false, hasCharacter ? character : null) +
                     '</div>' +
                 '</section>' +
                 _renderLorePages(blockNum, t) +
@@ -451,7 +451,7 @@ var HomeScreen = (function() {
         if (character.avatarUrl) {
             return '<img class="account-avatar defaultable-avatar ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(character.avatarUrl) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
         }
-        return '<span class="account-avatar default-avatar ' + (extraClass || '') + '" aria-hidden="true">' + Helpers.classIcon(character.className || 'embercaster') + '</span>';
+        return '<span class="account-avatar default-avatar ' + (extraClass || '') + '" aria-hidden="true">' + (character.className ? Helpers.classIcon(character.className) : '\uD83E\uDDD9') + '</span>';
     }
 
     return { render: render };
