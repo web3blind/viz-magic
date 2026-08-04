@@ -475,6 +475,7 @@ var ChronicleScreen = (function() {
         var ev0 = (entry && entry.events && entry.events.length > 0) ? entry.events[0] : null;
         if (_isHuntDefeatEntry(entry, text)) return '\u2694\uFE0F';
         if (ev0 && ev0.type === 'hunt_victory') return '\u2694\uFE0F';
+        if (ev0 && ev0.type === 'temple_offering') return _templeDeityIcon(ev0.deity);
         return '';
     }
 
@@ -576,7 +577,7 @@ var ChronicleScreen = (function() {
                 return t('chronicle_narrative_guild_join', { name: name, guild: gJoin });
             case 'temple.offering':
                 if (ev0 && ev0.type === 'temple_offering') {
-                    return t('chronicle_narrative_temple', { name: name, deity: t('temple_' + ev0.deity + '_name') });
+                    return _templeNarrative(name, ev0.deity);
                 }
                 return null;
             case 'boss.attack':
@@ -587,6 +588,22 @@ var ChronicleScreen = (function() {
             default:
                 return null;
         }
+    }
+
+    function _templeDeityIcon(deity) {
+        if (deity === 'fire_goddess') return '\uD83D\uDD25';
+        if (deity === 'labor_god') return '\uD83D\uDD28';
+        return '\u26EA';
+    }
+
+    function _templeNarrative(name, deity) {
+        if (deity === 'fire_goddess') {
+            return Helpers.t('chronicle_narrative_temple_fire_goddess', { name: name });
+        }
+        if (deity === 'labor_god') {
+            return Helpers.t('chronicle_narrative_temple_labor_god', { name: name });
+        }
+        return Helpers.t('chronicle_narrative_temple', { name: name, deity: Helpers.t('temple_' + deity + '_name') });
     }
 
     function _getCharName(account) {
@@ -674,7 +691,8 @@ var ChronicleScreen = (function() {
             'duel_completed': '\u2694\uFE0F',
             'duel_forfeit': '\uD83C\uDFF3\uFE0F',
             'boss.attack': '⚡',
-            'guild.accept': '🛡️'
+            'guild.accept': '🛡️',
+            'temple.offering': '⛪'
         };
         return icons[actionType] || '\uD83D\uDCDC';
     }

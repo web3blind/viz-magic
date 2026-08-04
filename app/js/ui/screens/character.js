@@ -110,7 +110,7 @@ var CharacterScreen = (function() {
 
     function _classGuideName(className, t) {
         var names = {
-            stonewarden: 'Каменный страж',
+            stonewarden: 'Каменный Страж',
             embercaster: 'Огнеплёт',
             moonrunner: 'Лунный Странник',
             bloomsage: 'Цветомудрец'

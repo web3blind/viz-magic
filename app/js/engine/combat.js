@@ -121,6 +121,13 @@ var CombatSystem = (function() {
 
         // Determine outcome
         var victory = creatureHpLeft <= 0;
+        var mercyVictory = false;
+        if (!victory && _shouldGrantLowManaMercy(player, creature, creatureLevel, playerEnergy)) {
+            victory = true;
+            mercyVictory = true;
+            creatureHpLeft = 0;
+            if (playerHpLeft <= 0) playerHpLeft = 1;
+        }
         var hpRemaining = Math.max(0, playerHpLeft);
 
         // Calculate XP
@@ -148,8 +155,17 @@ var CombatSystem = (function() {
             creatureLevel: creatureLevel,
             creatureHp: creatureStats.hp,
             playerAttack: playerAttack,
-            creatureAttack: creatureAttack
+            creatureAttack: creatureAttack,
+            mercyVictory: mercyVictory
         };
+    }
+
+    function _shouldGrantLowManaMercy(player, creature, creatureLevel, playerEnergy) {
+        if (!player || !creature) return false;
+        if (creature.deadly === true) return false;
+        if ((playerEnergy || 0) > (cfg.ENERGY.MIN_HUNT_COST || 100)) return false;
+        if (creatureLevel > (player.level || 1) + 3) return false;
+        return true;
     }
 
     /**

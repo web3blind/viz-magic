@@ -224,6 +224,10 @@ var MapScreen = (function() {
             return;
         }
 
+        if (_dailyQuestAlreadyVisitedRegion(user, regionId)) {
+            Toast.info(t('map_region_already_visited_today'));
+        }
+
         // Broadcast move action + award (1 Mana = 100 energy)
         var moveAction = {
             t: VizMagicConfig.ACTION_TYPES.MOVE,
@@ -248,6 +252,27 @@ var MapScreen = (function() {
                 render();
             }
         });
+    }
+
+    function _dailyQuestAlreadyVisitedRegion(user, regionId) {
+        if (!user || !regionId) return false;
+        var state = StateEngine.getState();
+        var quests = state && state.quests && state.quests[user] ? state.quests[user] : null;
+        var active = quests && quests.active ? quests.active : [];
+        for (var i = 0; i < active.length; i++) {
+            var quest = active[i];
+            if (!quest || quest.completed || !quest.isDaily) continue;
+            var objectives = quest.objectives || [];
+            for (var j = 0; j < objectives.length; j++) {
+                var obj = objectives[j];
+                if (!obj || obj.type !== 'explore' || !obj.uniqueTarget) continue;
+                var seen = obj.seenTargets || [];
+                for (var k = 0; k < seen.length; k++) {
+                    if (seen[k] === regionId) return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

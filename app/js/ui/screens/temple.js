@@ -181,10 +181,12 @@ var TempleScreen = (function() {
                     Toast.info(Helpers.t('temple_cooldown_active'));
                 } else {
                     StateEngine.saveCheckpoint(function() {});
-                    _setTempleStatus(Helpers.t('temple_offering_success'), true);
-                    Toast.success(Helpers.t('temple_offering_success'));
                     if (shouldPublish) {
+                        _setTempleStatus(Helpers.t('temple_offering_started'), false);
                         _publishPrayerPost(deity, prayerText, user);
+                    } else {
+                        _setTempleStatus(Helpers.t('temple_offering_success_plain'), true);
+                        Toast.success(Helpers.t('temple_offering_success_plain'));
                     }
                 }
                 render();
@@ -204,8 +206,10 @@ var TempleScreen = (function() {
             .replace('{tag}', deity.socialTag || '#temple');
         VizBroadcast.chroniclePost(text, function(err) {
             if (err) {
+                _setTempleStatus(Helpers.t('temple_social_failed'), false);
                 Toast.info(Helpers.t('temple_social_failed'));
             } else {
+                _setTempleStatus(Helpers.t('temple_social_success'), true);
                 Toast.success(Helpers.t('temple_social_success'));
             }
         });
