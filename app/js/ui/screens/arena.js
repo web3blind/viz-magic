@@ -348,7 +348,7 @@ var ArenaScreen = (function() {
                 '<td>';
 
             if (!isMe) {
-                html += '<button class="btn btn-secondary btn-sm arena-challenge-btn" ' +
+                html += '<button class="btn btn-primary btn-sm arena-challenge-btn" ' +
                     'data-account="' + entry.account + '" ' +
                     'aria-label="' + t('arena_challenge_player', { name: char.name || entry.account }) + '">' +
                     t('duel_challenge') + '</button>';
@@ -460,7 +460,7 @@ var ArenaScreen = (function() {
                     '<span class="arena-player-account">@' + Helpers.escapeHtml(p.account) + '</span>' +
                     levelText +
                 '</span>' +
-                '<button class="btn btn-secondary btn-sm arena-challenge-btn" ' +
+                '<button class="btn btn-primary btn-sm arena-challenge-btn" ' +
                     'data-account="' + p.account + '" ' +
                     'aria-label="' + (t('arena_challenge_player', { name: p.name }) || p.name) + '">' +
                     (t('duel_challenge') || 'Вызвать') + '</button>' +
@@ -471,7 +471,7 @@ var ArenaScreen = (function() {
     }
 
     function _renderAccountAvatar(url, name, extraClass) {
-        if (!url) return '';
+        if (!url) return '<span class="account-avatar default-avatar ' + (extraClass || '') + ' vmagic-breathe" aria-hidden="true">🧙</span>';
         return '<img class="account-avatar ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
     }
 

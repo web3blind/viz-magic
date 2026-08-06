@@ -62,7 +62,7 @@ var GuildScreen = (function() {
 
         // Your rank
         html += '<div class=\"guild-my-rank\" aria-label=\"' + t('guild_your_rank') + '\">';
-        html += '<span class="section-icon vmagic-breathe" aria-hidden="true">' + GuildSystem.RANK_ICONS[myMember.rank] + '</span> ' + t('rank_' + myMember.rank);
+        html += _renderMemberAvatar(user, StateEngine.getCharacter(user), 'guild-rank-avatar') + ' ' + t('rank_' + myMember.rank);
         html += '</div>';
 
         // Active key section (required for delegation / patronage)
@@ -136,9 +136,9 @@ var GuildScreen = (function() {
         html += '<ul class="member-list" role="list">';
         for (var m = 0; m < members.length; m++) {
             var member = members[m];
-            var icon = GuildSystem.RANK_ICONS[member.rank] || '\uD83E\uDDD9';
+            var memberCharacter = state.characters && state.characters[member.account] ? state.characters[member.account] : null;
             html += '<li class="member-item">';
-            html += '<span class="member-icon vmagic-breathe" aria-hidden="true">' + icon + '</span>';
+            html += _renderMemberAvatar(member.account, memberCharacter, 'member-icon');
             html += '<span class="member-name">' + _esc(member.account) + '</span>';
             html += '<span class="member-rank">' + t('rank_' + member.rank) + '</span>';
             if (member.delegatedShares > 0) {
@@ -298,6 +298,17 @@ var GuildScreen = (function() {
         container.innerHTML = html;
         _bindNoGuildEvents(container);
         _bindActiveKeyEvents(container);
+    }
+
+
+
+    function _renderMemberAvatar(account, character, extraClass) {
+        character = character || {};
+        var cls = 'account-avatar default-avatar vmagic-breathe ' + (extraClass || '');
+        if (character.avatarUrl) {
+            return '<img class="account-avatar vmagic-breathe ' + (extraClass || '') + '" src="' + _esc(character.avatarUrl) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
+        }
+        return '<span class="' + cls + '" aria-hidden="true">' + Helpers.classIcon(character.className || 'stonewarden') + '</span>';
     }
 
     function _getPendingInvites(state, user) {
@@ -795,14 +806,14 @@ var GuildScreen = (function() {
      */
     function _showPatronageModal(guild, user, prefillAccount) {
         var html = '<div class="modal-content">';
-        html += '<h2 class="modal-title">' + t('guild_patronage') + '</h2>';
+        html += '<h2 class="modal-title"><span class="section-icon vmagic-breathe" aria-hidden="true">🤝</span> ' + t('guild_patronage') + '</h2>';
         html += '<p>' + t('guild_patronage_desc') + '</p>';
-        html += '<label class="input-label" for="patronage-target">' + t('guild_patronage_target') + '</label>';
+        html += '<label class="input-label" for="patronage-target"><span class="section-icon vmagic-breathe" aria-hidden="true">🧙</span> ' + t('guild_patronage_target') + '</label>';
         html += '<input type="text" class="input-field" id="patronage-target" placeholder="account-name"'
               + (prefillAccount ? ' value="' + _esc(prefillAccount) + '"' : '') + '>';
         html += '<label class="input-label" for="patronage-shares">' + t('guild_patronage_amount') + '</label>';
         html += '<input type="number" class="input-field" id="patronage-shares" min="1" placeholder="1000">';
-        html += '<p class="input-feedback">' + t('guild_patronage_note') + '</p>';
+        html += '<p class="input-feedback"><span class="section-icon vmagic-breathe" aria-hidden="true">🔐</span> ' + t('guild_patronage_note') + '</p>';
         html += '<div class="modal-actions">';
         html += '<button class="btn btn-primary" id="modal-patronage">' + t('guild_patronage_delegate') + '</button>';
         html += '<button class="btn btn-secondary" id="modal-cancel">' + t('cancel') + '</button>';

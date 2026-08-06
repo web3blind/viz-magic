@@ -61,10 +61,13 @@ var LeaderboardScreen = (function() {
         }
 
         var statusHtml = '';
-        if (snapshot.loading) {
+        if (snapshot.loading && !rows.length) {
             statusHtml = '<div class="leaderboard-empty" role="status" aria-live="polite">' +
                 Helpers.escapeHtml(snapshot.statusText || t('leaderboard_loading_status', { percent: snapshot.progressPct || 0 })) +
                 '</div>';
+        } else if (snapshot.loading && rows.length) {
+            statusHtml = '<p class="leaderboard-your-rank leaderboard-loading-inline" aria-live="polite">' +
+                Helpers.escapeHtml(snapshot.statusText || t('leaderboard_loading_status', { percent: snapshot.progressPct || 0 })) + '</p>';
         } else if (snapshot.lastUpdatedAt) {
             statusHtml = '<p class="leaderboard-your-rank" aria-live="polite">' +
                 t('leaderboard_window_label', { blocks: DailyLeaderboard.WINDOW_BLOCKS }) +
@@ -73,7 +76,7 @@ var LeaderboardScreen = (function() {
 
         if (!rows.length) {
             el.innerHTML =
-                '<div class="screen-header"><h2><span class="leaderboard-title-icon" aria-hidden="true">🏆</span> ' + t('leaderboard_title') + '</h2></div>' +
+                '<div class="screen-header"><h2><span class="leaderboard-title-icon vmagic-breathe" aria-hidden="true">🏆</span> ' + t('leaderboard_title') + '</h2></div>' +
                 statusHtml +
                 '<div class="leaderboard-empty" role="status">' +
                     (snapshot.loading ? '' : t('leaderboard_empty')) +
@@ -116,7 +119,7 @@ var LeaderboardScreen = (function() {
 
         el.innerHTML =
             '<div class="screen-header">' +
-                '<h2 id="leaderboard-heading"><span class="leaderboard-title-icon" aria-hidden="true">🏆</span> ' + t('leaderboard_title') + '</h2>' +
+                '<h2 id="leaderboard-heading"><span class="leaderboard-title-icon vmagic-breathe" aria-hidden="true">🏆</span> ' + t('leaderboard_title') + '</h2>' +
             '</div>' +
             rankBanner +
             statusHtml +

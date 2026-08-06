@@ -34,10 +34,10 @@ var HomeScreen = (function() {
         var displayName = _displayCharacterName(character, hasCharacter, user, t);
         var characterLine = hasCharacter ? (Helpers.classIcon(character.className) + ' ' + t('class_' + character.className) + ' \u2022 ' + t('home_level') + ' ' + character.level) : t('loading');
         var vitalBars = hasCharacter ? (
-            ProgressBar.create({id:'mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
-            ProgressBar.create({id:'hp-bar', label:'❤️ HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
-            ProgressBar.create({id:'xp-bar', label:'⭐ XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'})
-        ) : ProgressBar.create({id:'mana-bar', label:'⚡ ' + t('home_mana'), value:0, max:100, color:'#2196f3'});
+            ProgressBar.create({id:'mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">⚡</span> ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
+            ProgressBar.create({id:'hp-bar', label:'HP', labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">❤️</span> HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
+            ProgressBar.create({id:'xp-bar', label:'XP', labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">⭐</span> XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'})
+        ) : ProgressBar.create({id:'mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">⚡</span> ' + t('home_mana'), value:0, max:100, color:'#2196f3'});
 
         el.innerHTML =
             '<div class="home-dashboard">' +
@@ -48,7 +48,7 @@ var HomeScreen = (function() {
                 _renderBossAlert(state, blockNum, t) +
 
                 '<section class="home-summary home-summary-button" role="button" tabindex="0" aria-label="' + t('home_open_character') + '">' +
-                    '<h1>' + t('home_welcome') + ', ' + Helpers.escapeHtml(displayName) + '</h1>' +
+                    '<h1><span class="home-character-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(character.className) + '</span> ' + t('home_welcome') + ', ' + Helpers.escapeHtml(displayName) + '</h1>' +
                     '<p>' + characterLine + '</p>' +
                     vitalBars +
                     '<button class="help-tip-btn" aria-label="' + t('help_tip_mana') + '" ' +
@@ -79,7 +79,7 @@ var HomeScreen = (function() {
                 '<section class="home-install" aria-label="' + t('home_install_shortcut') + '">' +
                     '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">\uD83D\uDCF2</span> ' + t('home_install_shortcut') + '</h2>' +
                     '<p>' + t('home_install_shortcut_text') + '</p>' +
-                    '<button type="button" class="btn btn-secondary" id="btn-install-shortcut">' + t('home_install_shortcut_button') + '</button>' +
+                    '<button type="button" class="btn btn-primary btn-install-shortcut" id="btn-install-shortcut">' + t('home_install_shortcut_button') + '</button>' +
                 '</section>' +
             '</div>';
 

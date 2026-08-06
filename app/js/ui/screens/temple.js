@@ -45,8 +45,7 @@ var TempleScreen = (function() {
                 '<h1 data-screen-focus><span class="screen-title-icon vmagic-breathe" aria-hidden="true">⛪</span> ' + t('temple_title') + '</h1>' +
                 '<p>' + t('temple_intro') + '</p>' +
                 '<p class="temple-balance-note">' + t('temple_balance_note') + '</p>' +
-                '<p id="temple-status-region" class="temple-status-region" role="status" aria-live="polite"></p>' +
-            '</div>' +
+                '</div>' +
             '<div class="temple-deities">';
 
         for (var i = 0; i < DEITIES.length; i++) {
@@ -78,6 +77,7 @@ var TempleScreen = (function() {
         var last = temple[deity.id] || 0;
         var cooldownText = last ? t('temple_last_offering_recorded') : t('temple_no_offering_yet');
         return '<article class="temple-card temple-card-' + deity.id + '">' +
+            '<p id="temple-status-' + deity.id + '" class="temple-status-region temple-status-local" role="status" aria-live="polite"></p>' +
             '<div class="temple-deity-copy">' +
                 '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">' + (deity.icon || '✦') + '</span> ' + t('temple_' + deity.id + '_name') + '</h2>' +
                 '<p class="temple-domain">' + t('temple_' + deity.id + '_domain') + '</p>' +
@@ -111,8 +111,8 @@ var TempleScreen = (function() {
         return html;
     }
 
-    function _setTempleStatus(message, isSuccess) {
-        var el = Helpers.$('temple-status-region');
+    function _setTempleStatus(message, isSuccess, deityId) {
+        var el = Helpers.$(deityId ? ('temple-status-' + deityId) : 'temple-status-region');
         if (!el) return;
         el.className = 'temple-status-region' + (isSuccess ? ' temple-status-success' : '');
         el.textContent = message || '';
@@ -126,7 +126,7 @@ var TempleScreen = (function() {
         }
         if (!deity) return;
         if (!VizAccount.isLoggedIn || !VizAccount.isLoggedIn()) {
-            _setTempleStatus(Helpers.t('not_logged_in'), false);
+            _setTempleStatus(Helpers.t('not_logged_in'), false, deity.id);
             Toast.error(Helpers.t('not_logged_in'));
             return;
         }
@@ -136,7 +136,7 @@ var TempleScreen = (function() {
         var headBlock = state.headBlock || 0;
         var last = state.temple && state.temple[user] ? (state.temple[user][deity.id] || 0) : 0;
         if (last && headBlock && headBlock - last < 28800) {
-            _setTempleStatus(Helpers.t('temple_cooldown_active'), false);
+            _setTempleStatus(Helpers.t('temple_cooldown_active'), false, deity.id);
             Toast.info(Helpers.t('temple_cooldown_active'));
             return;
         }
@@ -146,26 +146,26 @@ var TempleScreen = (function() {
         var shouldPublish = !socialToggle || socialToggle.checked;
 
         busy = true;
-        _setTempleStatus(Helpers.t('temple_offering_started'), false);
+        _setTempleStatus(Helpers.t('temple_offering_started'), false, deity.id);
         Toast.info(Helpers.t('temple_offering_started'));
         VizAccount.getAccount(user, function(energyErr, accountData) {
             if (energyErr || !accountData) {
                 busy = false;
-                _setTempleStatus(Helpers.t('temple_energy_check_failed'), false);
+                _setTempleStatus(Helpers.t('temple_energy_check_failed'), false, deity.id);
                 Toast.error(Helpers.t('temple_energy_check_failed'));
                 return;
             }
             var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
             if (currentEnergy < OFFERING_ENERGY) {
                 busy = false;
-                _setTempleStatus(Helpers.t('temple_not_enough_mana'), false);
+                _setTempleStatus(Helpers.t('temple_not_enough_mana'), false, deity.id);
                 Toast.error(Helpers.t('temple_not_enough_mana'));
                 return;
             }
             VizBroadcast.templeOffering(deity.id, deity.target, OFFERING_ENERGY, prayerText, function(err, result) {
                 busy = false;
                 if (err) {
-                    _setTempleStatus(Helpers.t('temple_offering_failed'), false);
+                    _setTempleStatus(Helpers.t('temple_offering_failed'), false, deity.id);
                     Toast.error(Helpers.t('temple_offering_failed'));
                     return;
                 }
@@ -177,16 +177,18 @@ var TempleScreen = (function() {
                     user, deity.id, deity.target, OFFERING_ENERGY, blockNum, prayerText
                 );
                 if (event && event.type === 'temple_offering_rejected') {
-                    _setTempleStatus(Helpers.t('temple_cooldown_active'), false);
+                    _setTempleStatus(Helpers.t('temple_cooldown_active'), false, deity.id);
                     Toast.info(Helpers.t('temple_cooldown_active'));
                 } else {
                     StateEngine.saveCheckpoint(function() {});
                     if (shouldPublish) {
-                        _setTempleStatus(Helpers.t('temple_offering_started'), false);
+                        _setTempleStatus(Helpers.t('temple_offering_started'), false, deity.id);
                         _publishPrayerPost(deity, prayerText, user);
                     } else {
-                        _setTempleStatus(Helpers.t('temple_offering_success_plain'), true);
+                        render();
+                        _setTempleStatus(Helpers.t('temple_offering_success_plain'), true, deity.id);
                         Toast.success(Helpers.t('temple_offering_success_plain'));
+                        return;
                     }
                 }
                 render();
@@ -206,10 +208,10 @@ var TempleScreen = (function() {
             .replace('{tag}', deity.socialTag || '#temple');
         VizBroadcast.chroniclePost(text, function(err) {
             if (err) {
-                _setTempleStatus(Helpers.t('temple_social_failed'), false);
+                _setTempleStatus(Helpers.t('temple_social_failed'), false, deity.id);
                 Toast.info(Helpers.t('temple_social_failed'));
             } else {
-                _setTempleStatus(Helpers.t('temple_social_success'), true);
+                _setTempleStatus(Helpers.t('temple_social_success'), true, deity.id);
                 Toast.success(Helpers.t('temple_social_success'));
             }
         });

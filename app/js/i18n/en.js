@@ -121,9 +121,9 @@ var LangEN = {
     home_chronicle: 'Chronicle',
     home_primary_actions: 'Main bar',
     home_secondary_actions: 'Additional bar',
-    home_install_shortcut: 'Game shortcut on your phone',
-    home_install_shortcut_text: 'Add Viz Magic to your phone home screen so you do not have to find a saved link after the game window closes. This is a normal PWA shortcut install, no app store needed.',
-    home_install_shortcut_button: 'Install or show instructions',
+    home_install_shortcut: 'Game shortcut',
+    home_install_shortcut_text: 'Add Viz Magic as a game shortcut so you do not have to find a saved link after the window closes. On phones this is the home screen; on desktop it is a PWA install or browser shortcut when supported.',
+    home_install_shortcut_button: 'Install<br>or show instructions',
     home_install_shortcut_manual: 'If the install prompt does not appear, add the shortcut manually:',
     home_install_step_1: 'Open the browser menu or Telegram three-dot menu.',
     home_install_step_2: 'Choose Add to Home screen, Install app, or a similar item.',
@@ -1246,7 +1246,7 @@ var LangEN = {
     temple_prayer_labor_hands: 'God of Labor, strengthen my hands so the hammer does not argue with my fingers and work goes well.',
     temple_prayer_labor_craft: 'Lord of craft, may iron be reasonable today, wood patient, and I not too confident.',
     temple_prayer_labor_patience: 'God of Labor, give me patience for one good step more than laziness has.',
-    temple_social_publish: 'inscribe the prayer into the Chronicle',
+    temple_social_publish: 'Inscribe the prayer into the Chronicle',
     temple_social_note: 'This creates a separate #viz_magic #temple post so the prayer is visible in the social feed.',
     temple_social_post: '{name} prays at the Temple. {deity}, hear this: “{prayer}” #viz_magic #temple {tag}',
     temple_social_success: 'prayer heard and recorded in the Chronicle',
@@ -1281,7 +1281,7 @@ var LangEN = {
     help_hunt_text: 'Choose a creature and a spell, then attack. Victory earns XP and loot. Defeat gives 25% XP. Loot is volatile — bank it in a safe zone to keep it.',
 
     help_section_armageddon: 'Armageddon',
-    help_armageddon_text: 'Spend 100% mana for 100× the XP of a standard 1% hit. Requires an Armageddon Stone artifact. Drop: Thornvine (Lv5+, 0.5% chance). Craft: Echo Shards ×3 + Shadow Shard ×3 + Fire Dust ×5 at level 10 (costs 5% mana). Confirm the checkbox before launching — mana takes ~5 days to recover.',
+    help_armageddon_text: 'Spend 100% mana for 100× the XP of a standard 1% hit. Requires an Armageddon Stone artifact. <br>Drop: Thornvine (Lv5+, 0.5% chance). Craft: Echo Shards ×3 + Shadow Shard ×3 + Fire Dust ×5 at level 10 (costs 5% mana). Confirm the checkbox before launching — mana takes ~5 days to recover.',
 
     help_section_crafting: 'Crafting',
     help_crafting_text: 'Open the Crafting screen, pick a recipe and tap Craft. Materials are consumed. Quality depends on your INT stat and block entropy.',
@@ -1296,6 +1296,8 @@ var LangEN = {
     help_narrator_text: 'The Battle Narrator announces all combat events via your screen reader (aria-live). Enable it in Settings. It also plays short audio tones to indicate enemy and player positions. Designed for blind and low-vision players.',
 
     help_section_classes: 'Classes',
+    help_section_magic_ranks: 'Magical ranks',
+    help_magic_ranks_text: 'As you level up, your magical title grows without changing your school: 1–10 novice mage, 11–20 apprentice, 21–30 adept, 31–40 practitioner, 41–50 master, 51–60 senior master, 61–70 magister, 71–80 high magister, 81–90 archmage, 91–100 great archmage, 101+ great mage.',
     help_classes_text: 'Stonewarden (Terra) — tank. Embercaster (Ignis) — burst DPS.<br>Moonrunner (Umbra) — evasion. Bloomsage (Aqua) — healer.<br>Each class has unique spells and stat growth.',
 
     help_section_duels: 'Duels & Arena',

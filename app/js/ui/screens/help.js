@@ -20,6 +20,7 @@ var HelpScreen = (function() {
             { key: 'leaderboard', icon: '\uD83C\uDFC6' },
             { key: 'narrator',    icon: '\uD83D\uDD0A' },
             { key: 'classes',     icon: '\uD83E\uDDD9' },
+            { key: 'magic_ranks', icon: '🎓' },
             { key: 'duels',       icon: '\uD83D\uDEE1\uFE0F' },
             { key: 'guilds',      icon: '\uD83C\uDFF0' },
             { key: 'boss',        icon: '\uD83D\uDC32' },

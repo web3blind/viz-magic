@@ -123,7 +123,7 @@ var QuestSystem = (function() {
                         if (!obj.seenTargets) {
                             obj.seenTargets = [];
                         }
-                        if (_targetWasSeen(obj.blockedTargets, eventData.uniqueKey)) {
+                        if (_targetWasSeen(obj.blockedTargets, eventData.uniqueKey) && !quest.acceptedBlock) {
                             continue;
                         }
                         var alreadySeen = false;

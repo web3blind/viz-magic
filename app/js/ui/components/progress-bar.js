@@ -31,7 +31,7 @@ var ProgressBar = (function() {
         }
 
         return '<div class="progress-bar-wrapper">' +
-            (opts.label ? '<span class="progress-label">' + Helpers.escapeHtml(opts.label) + '</span>' : '') +
+            (opts.label ? '<span class="progress-label">' + (opts.labelHtml || Helpers.escapeHtml(opts.label)) + '</span>' : '') +
             '<' + tag + ' class="' + classes + '" role="' + (opts.href || opts.button ? 'button' : 'progressbar') + '" ' +
             'aria-valuenow="' + ariaValue + '" aria-valuemin="0" aria-valuemax="' + ariaMax + '" ' +
             'aria-label="' + Helpers.escapeHtml(opts.ariaLabel || ((opts.label || '') + ' ' + ariaValue + ' of ' + ariaMax)) + '"' +

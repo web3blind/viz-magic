@@ -2423,3 +2423,82 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     body[data-icon-motion="sync"] .magical-forecast .forecast-card-hunt-summary > .forecast-hunt-icon,
     .magical-forecast .forecast-card-hunt-summary > .forecast-hunt-icon { animation: vmagic-soft-breathe 2.8s ease-in-out infinite !important; }
 }
+
+
+/* v119: one global soft breathing contract for decorative game icons. */
+@media (prefers-reduced-motion: no-preference) {
+    .vmagic-breathe,
+    .screen-title-icon,
+    .section-icon,
+    .event-icon,
+    .item-icon,
+    .market-item-icon,
+    .arena-class-icon,
+    .leaderboard-title-icon,
+    .guild-action-icon,
+    .member-icon,
+    .vital-label-icon,
+    .home-character-icon,
+    .account-avatar.vmagic-breathe,
+    .default-avatar.vmagic-breathe {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        animation-name: vmagic-soft-breathe !important;
+        animation-duration: 5.6s !important;
+        animation-timing-function: ease-in-out !important;
+        animation-iteration-count: infinite !important;
+        transform-origin: center;
+    }
+    body[data-icon-motion="off"] .vmagic-breathe,
+    body[data-icon-motion="off"] .screen-title-icon,
+    body[data-icon-motion="off"] .section-icon,
+    body[data-icon-motion="off"] .item-icon,
+    body[data-icon-motion="off"] .market-item-icon,
+    body[data-icon-motion="off"] .arena-class-icon,
+    body[data-icon-motion="off"] .leaderboard-title-icon,
+    body[data-icon-motion="off"] .guild-action-icon,
+    body[data-icon-motion="off"] .member-icon,
+    body[data-icon-motion="off"] .vital-label-icon,
+    body[data-icon-motion="off"] .home-character-icon,
+    body[data-icon-motion="off"] .account-avatar.vmagic-breathe,
+    body[data-icon-motion="off"] .default-avatar.vmagic-breathe {
+        animation: none !important;
+    }
+}
+.home-character-icon { margin-right: 0.25rem; }
+.vital-label-icon + .vital-label-icon { margin-left: 0.08rem; }
+.forecast-head, .forecast-line, .forecast-kicker, .magical-forecast .season-bonus { text-align: center; justify-content: center; width: 100%; }
+.forecast-card-hunt-summary .forecast-kicker, .forecast-card-hunt-summary .season-bonus { padding-left: 0; padding-right: 0; }
+.btn-install-shortcut { background: #ffd54f !important; color: #000 !important; border-color: #ffd54f !important; font-weight: 800; line-height: 1.15; }
+.tile-avatar-icon { width: 2.35rem !important; height: 2.35rem !important; font-size: 2.1rem !important; }
+.guild-rank-avatar, .member-icon, .arena-avatar { width: 1.65rem; height: 1.65rem; min-width: 1.65rem; margin-right: 0.35rem; }
+.arena-challenge-btn, .developers-link, .narrator-test-btn { background: #ffd54f !important; color: #000 !important; border-color: #ffd54f !important; font-weight: 800; }
+.sell-item-name { font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.character-title-level { font-size: 0.82em; white-space: nowrap; color: var(--color-text-muted); }
+.title-dot { color: #fff; padding: 0 0.18rem; }
+.character-vital-modal .modal-title-icon, .spell-detail-title-icon { animation-name: vmagic-soft-breathe !important; animation-duration: 5.6s !important; }
+.stat-row { grid-template-columns: minmax(5.5rem, 1fr) minmax(7.5rem, auto) minmax(2.2rem, 1fr); }
+@media (max-width: 420px) {
+    .stat-row { grid-template-columns: minmax(5.2rem, 1fr) minmax(6.2rem, auto) minmax(2rem, 1fr); font-size: 0.86rem; column-gap: 0.32rem; }
+    .stat-formula { text-align: center; white-space: nowrap; }
+}
+
+/* v119: keep character class, dot and level on one readable line. */
+.char-header h2 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    font-size: clamp(1rem, 4.8vw, 1.35rem);
+}
+.char-header h2 .character-title-class-icon,
+.char-header h2 .title-dot,
+.char-header h2 .character-title-level {
+    flex: 0 0 auto;
+}
+.char-header h2 .character-title-level {
+    font-size: 0.76em;
+}

@@ -98,7 +98,7 @@ var SettingsScreen = (function() {
                         { value: 'soft', label: t('narrator_timbre_soft') }
                     ], narratorVoice.timbre || 'rough') +
                     '<p class="settings-help-text">' + t('narrator_voice_hint') + '</p>' +
-                    '<button type="button" class="btn btn-secondary btn-sm" id="btn-test-narrator">' + t('narrator_test') + '</button>' +
+                    '<button type="button" class="btn btn-primary btn-sm narrator-test-btn" id="btn-test-narrator">' + t('narrator_test') + '</button>' +
                     '<div class="settings-field">' +
                         '<label for="sound-density" class="input-label">' + t('settings_sound_density') + '</label>' +
                         '<select id="sound-density" class="input-field">' +
