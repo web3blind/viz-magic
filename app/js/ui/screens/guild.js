@@ -138,7 +138,11 @@ var GuildScreen = (function() {
             var member = members[m];
             var memberCharacter = state.characters && state.characters[member.account] ? state.characters[member.account] : null;
             html += '<li class="member-item">';
-            html += _renderMemberAvatar(member.account, memberCharacter, 'member-icon');
+            if (member.rank === GuildSystem.RANKS.FOUNDER || member.rank === GuildSystem.RANKS.ARCHON) {
+                html += '<span class="member-icon vmagic-breathe" aria-hidden="true">' + (GuildSystem.RANK_ICONS[member.rank] || '\uD83D\uDC51') + '</span>';
+            } else {
+                html += _renderMemberAvatar(member.account, memberCharacter, 'member-icon');
+            }
             html += '<span class="member-name">' + _esc(member.account) + '</span>';
             html += '<span class="member-rank">' + t('rank_' + member.rank) + '</span>';
             if (member.delegatedShares > 0) {

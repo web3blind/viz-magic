@@ -146,8 +146,8 @@ var SettingsScreen = (function() {
                     '<div class="settings-about">' +
                         '<p><strong>Viz Magic</strong> v' + VizMagicConfig.APP_VERSION + '</p>' +
                         '<p>' + t('settings_about_desc') + '</p>' +
-                        '<button class="btn btn-secondary btn-sm" id="btn-realm-info">' + t('settings_realm_magic') + '</button>' +
-                        '<a href="https://info.viz.world/" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">' + t('settings_realm_archives') + '</a>' +
+                        '<button class="btn btn-primary btn-sm" id="btn-realm-info">' + t('settings_realm_magic') + '</button>' +
+                        '<a href="https://info.viz.world/" target="_blank" rel="noopener" class="btn btn-primary btn-sm">' + t('settings_realm_archives') + '</a>' +
                     '</div>' +
                 '</section>' +
 
@@ -200,7 +200,7 @@ var SettingsScreen = (function() {
 
     function _renderAvatarUpload(currentAvatar, currentCharacter, t) {
         var previewSrc = pendingAvatarDataUrl || currentAvatar || '';
-        var preview = previewSrc ? '<img class="account-avatar profile-avatar settings-avatar-preview" src="' + Helpers.escapeHtml(previewSrc) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : _renderDefaultAvatarPreview(currentCharacter);
+        var preview = previewSrc ? '<img class="account-avatar profile-avatar settings-avatar-preview vmagic-breathe" src="' + Helpers.escapeHtml(previewSrc) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : _renderDefaultAvatarPreview(currentCharacter);
         return '<div class="settings-avatar-field">' +
             '<div class="settings-avatar-heading">' +
                 '<label for="avatar-upload" class="input-label">' + t('settings_avatar') + '</label>' +
@@ -222,7 +222,7 @@ var SettingsScreen = (function() {
 
 
     function _renderDefaultAvatarPreview(currentCharacter) {
-        return '<span class="account-avatar profile-avatar settings-avatar-preview default-avatar" aria-hidden="true">' + Helpers.classIcon((currentCharacter && currentCharacter.className) || 'embercaster') + '</span>';
+        return '<span class="account-avatar profile-avatar settings-avatar-preview default-avatar vmagic-breathe" aria-hidden="true">' + Helpers.classIcon((currentCharacter && currentCharacter.className) || 'embercaster') + '</span>';
     }
 
     function _renderAvatarModeChoice(t) {
@@ -380,8 +380,11 @@ var SettingsScreen = (function() {
         var realmBtn = el.querySelector('#btn-realm-info');
         if (realmBtn) realmBtn.addEventListener('click', function() {
             Modal.show(
-                Helpers.t('settings_realm_magic'),
-                '<p>' + Helpers.t('settings_realm_magic_desc') + '</p>'
+                '<div class="modal-content">' +
+                    '<h2 class="modal-title"><span class="section-icon vmagic-breathe" aria-hidden="true">🔮</span> ' + Helpers.escapeHtml(Helpers.t('settings_realm_magic')) + '</h2>' +
+                    '<div class="modal-body"><p>' + Helpers.escapeHtml(Helpers.t('settings_realm_magic_desc')) + '</p></div>' +
+                    '<div class="modal-actions"><button type="button" class="btn btn-primary modal-close">' + Helpers.t('close') + '</button></div>' +
+                '</div>'
             );
         });
 
@@ -498,7 +501,7 @@ var SettingsScreen = (function() {
     function _setAvatarPreview(el, dataUrl) {
         var slot = el && el.querySelector ? el.querySelector('#avatar-preview-slot') : null;
         if (slot) {
-            slot.innerHTML = dataUrl ? '<img class="account-avatar profile-avatar settings-avatar-preview" src="' + Helpers.escapeHtml(dataUrl) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : _renderDefaultAvatarPreview((function(){ var user = VizAccount.getCurrentUser && VizAccount.getCurrentUser(); return user && StateEngine.getCharacter ? StateEngine.getCharacter(user) : null; })());
+            slot.innerHTML = dataUrl ? '<img class="account-avatar profile-avatar settings-avatar-preview vmagic-breathe" src="' + Helpers.escapeHtml(dataUrl) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' : _renderDefaultAvatarPreview((function(){ var user = VizAccount.getCurrentUser && VizAccount.getCurrentUser(); return user && StateEngine.getCharacter ? StateEngine.getCharacter(user) : null; })());
         }
     }
 

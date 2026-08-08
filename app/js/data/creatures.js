@@ -132,6 +132,25 @@ var GameCreatures = (function() {
                 { itemType: 'nano_patch', name: 'Nano Patch', dropRate: 120 }
            ]
         },
+        mirage_stalker: {
+          id: 'mirage_stalker',
+          name: 'Mirage Stalker',
+          school: 'umbra',
+          author: 'denis-skripnik',
+          minLevel: 11,
+          maxLevel: 20,
+          baseHp: 120,
+          basePot: 30,
+          baseRes: 18,
+          baseSwf: 14,
+          baseXp: 150,
+          zone: 'commons_first_light',
+          lootTable: [
+                { itemType: 'veilstone', name: 'Veilstone', dropRate: 200 },
+                { itemType: 'aether_ore', name: 'Aether Ore', dropRate: 170 },
+                { itemType: 'spirit_tunic', name: 'Spirit Tunic', dropRate: 90 }
+           ]
+        },
         rift_colossus: {
           id: 'rift_colossus',
           name: 'Rift Colossus',

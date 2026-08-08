@@ -178,7 +178,7 @@ var WorldBossScreen = (function() {
 
             // Leaderboard
             '<div class="boss-leaderboard">' +
-                '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🧙</span> ' + t('boss_leaderboard') + '</h3>' +
+                '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🧑‍🚀</span> ' + t('boss_leaderboard') + '</h3>' +
                 _renderLeaderboard(status.leaderboard, t) +
             '</div>' +
 
@@ -268,8 +268,8 @@ var WorldBossScreen = (function() {
     }
 
     function _renderAccountAvatar(url, name, extraClass) {
-        if (!url) return '';
-        return '<img class="account-avatar ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
+        if (!url) return '<span class="account-avatar default-avatar ' + (extraClass || '') + ' vmagic-breathe" aria-hidden="true">🧙</span>';
+        return '<img class="account-avatar vmagic-breathe ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
     }
 
     function _renderCounterLog(log, t) {
@@ -278,8 +278,8 @@ var WorldBossScreen = (function() {
         }
         var html = '<ul class="boss-counter-list">';
         for (var i = log.length - 1; i >= 0; i--) {
-            html += '<li class="counter-entry">' +
-                '\uD83D\uDC32 \u2192 ' + Helpers.escapeHtml(log[i].target) +
+            html += '<li class="counter-entry boss-counter-entry">' +
+                '<span class="vmagic-breathe" aria-hidden="true">\uD83D\uDC32</span> \u2192 ' + Helpers.escapeHtml(log[i].target) +
                 ' (-' + log[i].damage + ' HP)' +
             '</li>';
         }

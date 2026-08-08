@@ -131,7 +131,6 @@ var QuestsScreen = (function() {
 
         var html = '<div class="daily-prophecy-card">' +
             '<div class="prophecy-header">' +
-                '<span class="prophecy-icon" aria-hidden="true">\uD83D\uDD2E</span>' +
                 '<h2>' + t('home_daily_prophecy') + '</h2>' +
             '</div>' +
             '<h3 class="' + titleClass + '"><span class="section-icon vmagic-breathe" aria-hidden="true">' + titleIcon + '</span> ' + t(prophecy.titleKey) + '</h3>' +
@@ -151,9 +150,9 @@ var QuestsScreen = (function() {
         // Rewards
         if (prophecy.rewards) {
             html += '<div class="quest-rewards">' +
-                '<span class="reward-xp">\u2B50 ' + (prophecy.rewards.xp || 0) + ' XP</span>';
+                '<span class="reward-xp vmagic-breathe"><span aria-hidden="true">\u2B50</span> ' + (prophecy.rewards.xp || 0) + ' XP</span>';
             if (prophecy.rewards.awardEnergy) {
-                html += ' <span class="reward-energy">\u26A1 ' + Helpers.bpToPercent(prophecy.rewards.awardEnergy) + ' ' + t('home_mana') + '</span>';
+                html += ' <span class="reward-energy vmagic-breathe"><span aria-hidden="true">\u26A1</span> ' + Helpers.bpToPercent(prophecy.rewards.awardEnergy) + ' ' + t('home_mana') + '</span>';
             }
             html += '</div>';
         }
@@ -189,7 +188,7 @@ var QuestsScreen = (function() {
             return '<div class="empty-state">' + t('quest_none_completed') + '</div>';
         }
 
-        var html = '<p class="quest-completed-celebration" role="status">🏆 ' + t('quest_completed_pride') + '</p><ul class="quest-list completed" role="list">';
+        var html = '<p class="quest-completed-celebration" role="status"><span class="vmagic-breathe" aria-hidden="true">🏆</span> ' + t('quest_completed_pride') + '</p><ul class="quest-list completed" role="list">';
         for (var i = completed.length - 1; i >= Math.max(0, completed.length - 20); i--) {
             var q = completed[i];
             var title = _completedQuestTitle(q, t);
@@ -275,9 +274,9 @@ var QuestsScreen = (function() {
         // Rewards preview
         if (quest.rewards) {
             html += '<div class="quest-rewards">';
-            html += '<span class="reward-xp">\u2B50 ' + quest.rewards.xp + ' XP</span>';
+            html += '<span class="reward-xp vmagic-breathe"><span aria-hidden="true">\u2B50</span> ' + quest.rewards.xp + ' XP</span>';
             if (quest.rewards.awardEnergy) {
-                html += ' <span class="reward-energy">\u26A1 ' + Helpers.bpToPercent(quest.rewards.awardEnergy) + ' ' + Helpers.t('home_mana') + '</span>';
+                html += ' <span class="reward-energy vmagic-breathe"><span aria-hidden="true">\u26A1</span> ' + Helpers.bpToPercent(quest.rewards.awardEnergy) + ' ' + Helpers.t('home_mana') + '</span>';
             }
             html += '</div>';
         }
@@ -286,7 +285,7 @@ var QuestsScreen = (function() {
         if (quest.giverNpc) {
             var npcInfo = (typeof NPCFramework !== 'undefined') ? NPCFramework.getNPCInfo(quest.giverNpc) : null;
             if (npcInfo) {
-                html += '<div class="quest-giver">' + npcInfo.icon + ' ' + t(npcInfo.nameKey) + '</div>';
+                html += '<div class="quest-giver"><span class="vmagic-breathe" aria-hidden="true">' + npcInfo.icon + '</span> ' + t(npcInfo.nameKey) + '</div>';
             }
         }
 

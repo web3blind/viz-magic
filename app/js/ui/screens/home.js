@@ -32,7 +32,7 @@ var HomeScreen = (function() {
         var hpShown = hasCharacter ? _scaleForDisplay(character.hp, character.maxHp, HOME_HP_DISPLAY_MAX) : 0;
         var xpShown = hasCharacter ? _scaleForDisplay(xpCurrent, xpNeeded, HOME_XP_DISPLAY_MAX) : 0;
         var displayName = _displayCharacterName(character, hasCharacter, user, t);
-        var characterLine = hasCharacter ? (Helpers.classIcon(character.className) + ' ' + t('class_' + character.className) + ' \u2022 ' + t('home_level') + ' ' + character.level) : t('loading');
+        var characterLine = hasCharacter ? ('<span class="home-character-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(character.className) + '</span> ' + t('class_' + character.className) + ' \u2022 ' + t('home_level') + ' ' + character.level) : t('loading');
         var vitalBars = hasCharacter ? (
             ProgressBar.create({id:'mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">⚡</span> ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
             ProgressBar.create({id:'hp-bar', label:'HP', labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">❤️</span> HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
@@ -48,7 +48,7 @@ var HomeScreen = (function() {
                 _renderBossAlert(state, blockNum, t) +
 
                 '<section class="home-summary home-summary-button" role="button" tabindex="0" aria-label="' + t('home_open_character') + '">' +
-                    '<h1><span class="home-character-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(character.className) + '</span> ' + t('home_welcome') + ', ' + Helpers.escapeHtml(displayName) + '</h1>' +
+                    '<h1>' + t('home_welcome') + ', ' + Helpers.escapeHtml(displayName) + '</h1>' +
                     '<p>' + characterLine + '</p>' +
                     vitalBars +
                     '<button class="help-tip-btn" aria-label="' + t('help_tip_mana') + '" ' +

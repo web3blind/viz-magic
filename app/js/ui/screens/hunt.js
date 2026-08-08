@@ -147,7 +147,7 @@ var HuntScreen = (function() {
             if (!c) continue;
             var min = c.minLevel || 1;
             var max = c.maxLevel || min;
-            if (max <= level + 1) continue; // stale habitat: too much weaker than the player
+            if (max <= level + 2) continue; // stale habitat: too much weaker than the player (tier 5-10 leaves at level 8)
             if (c.deadly === true) {
                 if (min <= level + 4 && deadly.length === 0) deadly.push(c); // one honest high-risk target
             } else if (min <= level + 3) {
@@ -410,6 +410,10 @@ var HuntScreen = (function() {
             SoundManager.play('victory');
             SoundManager.vibrate('triple');
 
+            if (xpResult && xpResult.levelsGained > 0 && typeof Toast !== 'undefined') {
+                Toast.success(t('char_level_up') + ' — ' + t('home_level') + ' ' + ch.level, 7000, { key: 'level_up' });
+            }
+
             var resultHtml = '<div class="combat-result victory">' +
                 '<h2 style="color:var(--color-error)">&#9888;&#65039; ' + t('hunt_armageddon_victory') + '</h2>' +
                 '<p>' + creature.name + '</p>' +
@@ -515,6 +519,9 @@ var HuntScreen = (function() {
             SoundManager.vibrate(result.victory ? 'medium' : 'triple');
             A11y.announceCombatResult(result, creature.name);
 
+            if (result.levelsGained > 0 && typeof Toast !== 'undefined') {
+                Toast.success(t('char_level_up') + ' — ' + t('home_level') + ' ' + ch.level, 7000, { key: 'level_up' });
+            }
             resultEl.innerHTML = _renderCombatResult(t, result, creature);
             _bindResultActions();
         };

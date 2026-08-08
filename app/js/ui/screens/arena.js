@@ -445,7 +445,7 @@ var ArenaScreen = (function() {
         // Sort by level descending
         players.sort(function(a, b) { return b.level - a.level; });
 
-        var html = '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🧙</span> ' + (t('arena_known_players') || 'Известные маги') + '</h3>';
+        var html = '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🧑‍🚀</span> ' + (t('arena_known_players') || 'Известные маги') + '</h3>';
         html += '<div class="arena-players-list" role="list">';
         for (var i = 0; i < Math.min(players.length, 50); i++) {
             var p = players[i];
@@ -472,7 +472,7 @@ var ArenaScreen = (function() {
 
     function _renderAccountAvatar(url, name, extraClass) {
         if (!url) return '<span class="account-avatar default-avatar ' + (extraClass || '') + ' vmagic-breathe" aria-hidden="true">🧙</span>';
-        return '<img class="account-avatar ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
+        return '<img class="account-avatar vmagic-breathe ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
     }
 
     function _renderHistory(container) {

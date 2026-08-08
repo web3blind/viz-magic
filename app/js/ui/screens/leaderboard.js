@@ -8,6 +8,8 @@ var LeaderboardScreen = (function() {
     'use strict';
 
     var _unsubscribe = null;
+    var _degraded = false;
+    var _degradeTimer = null;
 
     function render() {
         var el = Helpers.$('screen-leaderboard');
@@ -18,6 +20,8 @@ var LeaderboardScreen = (function() {
             _unsubscribe = null;
         }
 
+        _degraded = false;
+        if (_degradeTimer) { clearTimeout(_degradeTimer); _degradeTimer = null; }
         _renderFromSnapshot(DailyLeaderboard.getSnapshot());
         _unsubscribe = DailyLeaderboard.subscribe(function(snapshot) {
             if (App.getCurrentScreen && App.getCurrentScreen() !== 'leaderboard') return;
@@ -25,6 +29,23 @@ var LeaderboardScreen = (function() {
         });
 
         DailyLeaderboard.ensureLoaded(function() {});
+
+        // If the 24h scan cannot finish quickly, stop blocking the UI: show the
+        // local fallback table with a short "continues in background" note.
+        _degradeTimer = setTimeout(function() {
+            if (App.getCurrentScreen && App.getCurrentScreen() !== 'leaderboard') return;
+            var snap = (typeof DailyLeaderboard !== 'undefined' && DailyLeaderboard.getSnapshot) ? DailyLeaderboard.getSnapshot() : {};
+            if (snap.loading && !snap.ready) {
+                _degraded = true;
+                _renderFromSnapshot({
+                    loading: false,
+                    ready: false,
+                    rows: snap.rows || [],
+                    progressPct: snap.progressPct || 0,
+                    statusText: Helpers.t('leaderboard_loading_continues')
+                });
+            }
+        }, 8000);
     }
 
     function _renderFromSnapshot(snapshot) {
@@ -61,7 +82,10 @@ var LeaderboardScreen = (function() {
         }
 
         var statusHtml = '';
-        if (snapshot.loading && !rows.length) {
+        if (_degraded) {
+            statusHtml = '<p class="leaderboard-your-rank leaderboard-loading-inline" role="status" aria-live="polite">' +
+                Helpers.escapeHtml(snapshot.statusText || t('leaderboard_loading_continues')) + '</p>';
+        } else if (snapshot.loading && !rows.length) {
             statusHtml = '<div class="leaderboard-empty" role="status" aria-live="polite">' +
                 Helpers.escapeHtml(snapshot.statusText || t('leaderboard_loading_status', { percent: snapshot.progressPct || 0 })) +
                 '</div>';
@@ -169,8 +193,8 @@ var LeaderboardScreen = (function() {
     }
 
     function _renderAccountAvatar(url, name, extraClass) {
-        if (!url) return '';
-        return '<img class="account-avatar ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
+        if (!url) return '<span class="account-avatar default-avatar ' + (extraClass || '') + ' vmagic-breathe" aria-hidden="true">🧙</span>';
+        return '<img class="account-avatar vmagic-breathe ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
     }
 
     function _formatNumber(n) {
