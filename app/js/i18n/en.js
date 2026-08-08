@@ -1106,7 +1106,7 @@ var LangEN = {
     quest_blessings_title: 'Generous Spirit',
     quest_blessings_desc: 'Bless 5 other mages through the Chronicle.',
     quest_blessings_hint: 'Open the Chronicle and press “Bless” on other mages\' entries.',
-    quest_generic_hint: 'Hint: the full explanation is in the Guide.',
+    quest_generic_hint: 'Hint: the full explanation is in the <a class="quest-help-link" href="#" data-help-key="quests">Guide</a>.',
     quest_hunt_session_title: 'Seasoned Hunter',
     quest_hunt_session_desc: 'Kill 10 creatures in one session.',
     quest_enchant_item_title: 'Rune Magic',
@@ -1267,8 +1267,8 @@ var LangEN = {
     help_section_mana: 'Mana',
     help_mana_text: 'Mana is your energy (0–100%). Every spell costs mana. Full regeneration takes ~5 days. Shown as a percentage — 1.00% = 100 basis points on the blockchain.',
 
-    help_section_world_days: 'World day names',
-    help_section_world_months: 'World month names',
+    help_section_world_days: 'World Day names',
+    help_section_world_months: 'World Month names',
     help_world_months_text: 'World month names resemble northern and southern constellation names: Bear, Little Bear, Cassiopeia, Orion, Pegasus, Swan, Dragon, Cross, Dog, Centaur, Scorpion, Keel. This is also a magical cycle, not an ordinary calendar...',
     help_world_days_text: 'The Sky block shows one of seven in-world names each day: Sky, Earth, Water, Air, Wind, Fire, Aether. It is a magical world cycle rather than an ordinary calendar, so Home shows only the current world-day name.',
 
@@ -1298,7 +1298,7 @@ var LangEN = {
 
     help_section_classes: 'Classes',
     help_section_magic_ranks: 'Magical ranks',
-    help_magic_ranks_text: 'As you level up, your magical title grows without changing your school: 1–10 novice mage, 11–20 apprentice, 21–30 adept, 31–40 practitioner, 41–50 master, 51–60 senior master, 61–70 magister, 71–80 high magister, 81–90 archmage, 91–100 great archmage, 101+ great mage.',
+    help_magic_ranks_text: 'As you level up, you grow in magical science and master new magical schools: 1-10 Pyromancer, 11-20 Hydromancer, 21-30 Geomancer, 31-40 Aeromancer, 41-50 Metalist, 51-60 Illusionist, 61-70 Seer, 71-80 Necromancer, 81-90 Demonologist, 91-100 Alchemist, 101+ Great Mage.',
     help_classes_text: 'Stonewarden (Terra) — tank. Embercaster (Ignis) — burst DPS.<br>Moonrunner (Umbra) — evasion. Bloomsage (Aqua) — healer.<br>Each class has unique spells and stat growth.',
 
     help_section_duels: 'Duels & Arena',

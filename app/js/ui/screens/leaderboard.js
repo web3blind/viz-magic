@@ -20,8 +20,9 @@ var LeaderboardScreen = (function() {
             _unsubscribe = null;
         }
 
-        _degraded = false;
-        if (_degradeTimer) { clearTimeout(_degradeTimer); _degradeTimer = null; }
+        if (!_degraded) {
+            if (_degradeTimer) { clearTimeout(_degradeTimer); _degradeTimer = null; }
+        }
         _renderFromSnapshot(DailyLeaderboard.getSnapshot());
         _unsubscribe = DailyLeaderboard.subscribe(function(snapshot) {
             if (App.getCurrentScreen && App.getCurrentScreen() !== 'leaderboard') return;
@@ -45,7 +46,7 @@ var LeaderboardScreen = (function() {
                     statusText: Helpers.t('leaderboard_loading_continues')
                 });
             }
-        }, 8000);
+        }, 5000);
     }
 
     function _renderFromSnapshot(snapshot) {

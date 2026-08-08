@@ -9,8 +9,9 @@ var MapScreen = (function() {
     var t = Helpers.t;
     var pendingTravel = null;
     var PENDING_TRAVEL_TTL_MS = 5 * 60 * 1000;
-    var TRAVEL_COST_LOW = 10;   // 0.1%
-    var TRAVEL_COST_HIGH = 100; // 1%
+    var TRAVEL_COST_LOW = 10;    // 0.1%
+    var TRAVEL_COST_HIGH = 100;  // 1%
+    var TRAVEL_COST_BURST = 300; // 3%
 
     /** Region emoji icons */
     var REGION_ICONS = {
@@ -55,6 +56,9 @@ var MapScreen = (function() {
             var br = regions[b] || {};
             if ((ar.minLevel || 0) !== (br.minLevel || 0)) {
                 return (ar.minLevel || 0) - (br.minLevel || 0);
+            }
+            if ((ar.maxLevel || 0) !== (br.maxLevel || 0)) {
+                return (ar.maxLevel || 0) - (br.maxLevel || 0);
             }
             return String(ar.name || a).localeCompare(String(br.name || b));
         });
@@ -174,6 +178,11 @@ var MapScreen = (function() {
                 html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_HIGH + '" ';
                 html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_HIGH) + '">';
                 html += '\uD83D\uDEB6 ' + Helpers.manaCost(TRAVEL_COST_HIGH);
+                html += '</button>';
+                html += '<button class="btn btn-secondary btn-sm region-travel-btn" ';
+                html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_BURST + '" ';
+                html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_BURST) + '">';
+                html += '\uD83D\uDEB6 ' + Helpers.manaCost(TRAVEL_COST_BURST);
                 html += '</button>';
                 html += '</div>';
             }

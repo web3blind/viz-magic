@@ -131,9 +131,10 @@ var QuestsScreen = (function() {
 
         var html = '<div class="daily-prophecy-card">' +
             '<div class="prophecy-header">' +
+                '<span class="prophecy-icon vmagic-breathe" aria-hidden="true">\uD83D\uDD2E</span>' +
                 '<h2>' + t('home_daily_prophecy') + '</h2>' +
             '</div>' +
-            '<h3 class="' + titleClass + '"><span class="section-icon vmagic-breathe" aria-hidden="true">' + titleIcon + '</span> ' + t(prophecy.titleKey) + '</h3>' +
+            '<h3 class="' + titleClass + '">' + t(prophecy.titleKey) + '</h3>' +
             '<p class="prophecy-desc">' + t(prophecy.descriptionKey) + '</p>' +
             '<p class="quest-desc">Сначала выбери ежедневное пророчество, затем выполни его отдельную цель ниже. Благословения нужны только если сегодняшняя цель — благословить других магов.</p>';
 
@@ -150,9 +151,9 @@ var QuestsScreen = (function() {
         // Rewards
         if (prophecy.rewards) {
             html += '<div class="quest-rewards">' +
-                '<span class="reward-xp vmagic-breathe"><span aria-hidden="true">\u2B50</span> ' + (prophecy.rewards.xp || 0) + ' XP</span>';
+                '<span class="reward-xp"><span class="vmagic-breathe" aria-hidden="true">\u2B50</span> ' + (prophecy.rewards.xp || 0) + ' XP</span>';
             if (prophecy.rewards.awardEnergy) {
-                html += ' <span class="reward-energy vmagic-breathe"><span aria-hidden="true">\u26A1</span> ' + Helpers.bpToPercent(prophecy.rewards.awardEnergy) + ' ' + t('home_mana') + '</span>';
+                html += ' <span class="reward-energy"><span class="vmagic-breathe" aria-hidden="true">\u26A1</span> ' + Helpers.bpToPercent(prophecy.rewards.awardEnergy) + ' ' + t('home_mana') + '</span>';
             }
             html += '</div>';
         }
@@ -274,9 +275,9 @@ var QuestsScreen = (function() {
         // Rewards preview
         if (quest.rewards) {
             html += '<div class="quest-rewards">';
-            html += '<span class="reward-xp vmagic-breathe"><span aria-hidden="true">\u2B50</span> ' + quest.rewards.xp + ' XP</span>';
+            html += '<span class="reward-xp"><span class="vmagic-breathe" aria-hidden="true">\u2B50</span> ' + quest.rewards.xp + ' XP</span>';
             if (quest.rewards.awardEnergy) {
-                html += ' <span class="reward-energy vmagic-breathe"><span aria-hidden="true">\u26A1</span> ' + Helpers.bpToPercent(quest.rewards.awardEnergy) + ' ' + Helpers.t('home_mana') + '</span>';
+                html += ' <span class="reward-energy"><span class="vmagic-breathe" aria-hidden="true">\u26A1</span> ' + Helpers.bpToPercent(quest.rewards.awardEnergy) + ' ' + Helpers.t('home_mana') + '</span>';
             }
             html += '</div>';
         }
@@ -303,6 +304,20 @@ var QuestsScreen = (function() {
     }
 
     function _bindQuestActions(container, character, playerQuests, blockNum) {
+        // Guide links open the right help chapter
+        var helpLinks = container.querySelectorAll('.quest-help-link');
+        for (var hl = 0; hl < helpLinks.length; hl++) {
+            helpLinks[hl].addEventListener('click', function(e) {
+                if (e && e.preventDefault) e.preventDefault();
+                SoundManager.play('tap');
+                var key = this.getAttribute('data-help-key') || 'quests';
+                Helpers.EventBus.emit('navigate', 'help');
+                setTimeout(function() {
+                    var el = document.getElementById('help-section-' + key);
+                    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+                }, 250);
+            });
+        }
         // Accept buttons
         var acceptBtns = container.querySelectorAll('.quest-accept-btn');
         for (var i = 0; i < acceptBtns.length; i++) {
@@ -477,19 +492,40 @@ var QuestsScreen = (function() {
 
     function _describeObjective(obj, t) {
         if (!obj) return '';
-        if (obj.type === 'explore') return '<span class="quest-map-objective-icon vmagic-breathe" aria-hidden="true">🗺️</span> ' + t('quest_obj_explore_detail', { count: obj.required });
-        if (obj.type === 'social' && obj.target === 'blessing') return t('quest_obj_bless_detail', { count: obj.required });
-        if (obj.type === 'social' && obj.target === 'guild_join') return t('quest_obj_guild_join_detail', { count: obj.required });
-        if (obj.type === 'territory' && obj.target === 'siege') return t('quest_obj_territory_detail', { count: obj.required });
-        if (obj.type === 'craft' && obj.target === 'enchant') return t('quest_obj_enchant_detail', { count: obj.required });
-        return t('quest_obj_' + obj.type) + ': ' + obj.required;
+        var icon = _objectiveIcon(obj);
+        var iconHtml = icon ? '<span class="quest-map-objective-icon vmagic-breathe" aria-hidden="true">' + icon + '</span> ' : '';
+        if (obj.type === 'explore') return iconHtml + t('quest_obj_explore_detail', { count: obj.required });
+        if (obj.type === 'social' && obj.target === 'blessing') return iconHtml + t('quest_obj_bless_detail', { count: obj.required });
+        if (obj.type === 'social' && obj.target === 'guild_join') return iconHtml + t('quest_obj_guild_join_detail', { count: obj.required });
+        if (obj.type === 'territory' && obj.target === 'siege') return iconHtml + t('quest_obj_territory_detail', { count: obj.required });
+        if (obj.type === 'craft' && obj.target === 'enchant') return iconHtml + t('quest_obj_enchant_detail', { count: obj.required });
+        return iconHtml + t('quest_obj_' + obj.type) + ': ' + obj.required;
+    }
+
+    function _objectiveIcon(obj) {
+        if (!obj) return '';
+        if (obj.type === 'hunt') return '\uD83C\uDFF9';
+        if (obj.type === 'craft') return '\uD83D\uDD28';
+        if (obj.type === 'duel') return '\u2694\uFE0F';
+        if (obj.type === 'explore') return '\uD83D\uDDFA\uFE0F';
+        if (obj.type === 'social') return '\uD83E\uDD1D';
+        if (obj.type === 'territory') return '\uD83C\uDFF0';
+        return '';
     }
 
     function _questHint(quest, t) {
         if (!quest) return '';
         if (quest.id === 'q_visit_regions') return t('quest_visit_regions_hint');
         if (quest.id === 'q_blessings') return t('quest_blessings_hint');
-        return t('quest_generic_hint');
+        var hint = t('quest_generic_hint');
+        if (hint && hint.indexOf('data-help-key') !== -1) {
+            var key = 'quests';
+            if (quest.type === 'hunt') key = 'hunt';
+            else if (quest.type === 'craft') key = 'crafting';
+            else if (quest.type === 'duel') key = 'duels';
+            hint = hint.replace(/data-help-key="[^"]*"/, 'data-help-key="' + key + '"');
+        }
+        return hint;
     }
 
     return { render: render };

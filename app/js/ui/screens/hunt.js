@@ -155,6 +155,11 @@ var HuntScreen = (function() {
             }
         }
         if (deadly.length) out.push(deadly[0]);
+        out.sort(function(x, y) {
+            var xm = (x.maxLevel || 0), ym = (y.maxLevel || 0);
+            if (xm !== ym) return xm - ym;
+            return (x.minLevel || 0) - (y.minLevel || 0);
+        });
         return out;
     }
 

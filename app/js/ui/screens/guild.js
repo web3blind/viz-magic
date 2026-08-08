@@ -646,7 +646,7 @@ var GuildScreen = (function() {
      */
     function _showCreateGuildModal() {
         var html = '<div class="modal-content">';
-        html += '<h2 class="modal-title">' + t('guild_create') + '</h2>';
+        html += '<h2 class="modal-title"><span class="section-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF0</span> ' + t('guild_create') + '</h2>';
         html += '<label class="input-label" for="guild-id">' + t('guild_id_label') + '</label>';
         html += '<input type="text" class="input-field" id="guild-id" maxlength="16" placeholder="my-guild">';
         html += '<label class="input-label" for="guild-name">' + t('guild_name_label') + '</label>';

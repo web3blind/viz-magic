@@ -562,7 +562,7 @@ var MarketplaceScreen = (function() {
         if (!item) return name;
         if ((item.type === 'flame_votive_mark' || item.type === 'spirit_tunic' || item.type === 'thorn_essence') && rarityInfo.name === 'common') return 'обычная';
         if (item.type === 'thorn_essence' && rarityInfo.name === 'legendary') return 'легендарная';
-        if (item.type === 'flame_votive_mark' && rarityInfo.name === 'uncommon') return 'необычная';
+        if ((item.type === 'flame_votive_mark' || item.type === 'labor_votive_mark') && rarityInfo.name === 'uncommon') return 'необычная';
         if (item.type === 'chronicle_ink' && rarityInfo.name === 'common') return 'обычные';
         return name;
     }

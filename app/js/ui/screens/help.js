@@ -42,7 +42,7 @@ var HelpScreen = (function() {
         for (var i = 0; i < sections.length; i++) {
             var s = sections[i];
             html += '<section class="help-section help-page" aria-label="' + t('help_section_' + s.key) + '">' +
-                '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">' + s.icon + '</span> ' + t('help_section_' + s.key) + '</h3>' +
+                '<h3 id="help-section-' + s.key + '"><span class="section-icon vmagic-breathe" aria-hidden="true">' + s.icon + '</span> ' + t('help_section_' + s.key) + '</h3>' +
                 '<p>' + t('help_' + s.key + '_text') + '</p>' +
                 '</section>';
         }

@@ -547,7 +547,7 @@ body {
 }
 .arena-player-info { display: flex; align-items: center; gap: 6px; }
 .arena-player-level { color: var(--color-text-muted); font-size: 0.85rem; }
-.region-travel-options { display: flex; gap: 6px; margin-top: 8px; }
+.region-travel-options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 
 .arena-history-entry {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -2451,10 +2451,13 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     .tile-avatar-icon,
     .modal-title-icon,
     .spell-detail-title-icon,
+    .duel-mage-icon,
+    .spell-card-icon,
+    .seal-icon,
+    .reveal-icon,
     .active-key-icon,
     .quest-rewards .reward-xp,
     .quest-rewards .reward-energy,
-    .boss-counter-entry,
     .account-avatar,
     .default-avatar,
     .account-avatar.vmagic-breathe,
