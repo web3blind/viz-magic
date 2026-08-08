@@ -719,7 +719,7 @@ test('marketplace sell items have semantic item icons', function () {
 
 
 test('world boss UI can enter active window from schedule even without spawn checkpoint', function () {
-  assert.ok(/world-boss.js\?v=20260726b/.test(indexHtml), 'world boss screen should be cache-busted for active-window fallback');
+  assert.ok(/world-boss.js\?v=20260806a/.test(indexHtml), 'world boss screen should be cache-busted for active-window fallback');
   assert.ok(/js\/engine\/world-boss\.js\?v=20260716a/.test(indexHtml), 'world boss engine should be cache-busted for reward distribution');
   assert.ok(/WorldEvents\.checkWorldBossWindow\(blockNum\)/.test(worldBossJs), 'world boss screen should check the deterministic active window directly');
   assert.ok(/WorldBoss\.spawnBoss\(bossEvent\.spawnBlock \|\| blockNum/.test(worldBossJs), 'screen should render active boss from scheduled spawn block when state has no boss');
@@ -1090,7 +1090,7 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.ok(/leaderboard\.js\?v=20260806a/.test(indexHtml), 'leaderboard UI should be cache-busted');
   assert.ok(/arena\.js\?v=20260806a/.test(indexHtml), 'arena UI should be cache-busted');
   assert.ok(/duel\.js\?v=20260726b/.test(indexHtml), 'duel UI should be cache-busted');
-  assert.ok(/world-boss\.js\?v=20260726b/.test(indexHtml), 'world boss UI should be cache-busted');
+  assert.ok(/world-boss\.js\?v=20260806a/.test(indexHtml), 'world boss UI should be cache-busted');
   assert.ok(/character\.js\?v=20260806a/.test(indexHtml), 'character UI should be cache-busted');
   assert.ok(/main\.css\?v=20260806a/.test(indexHtml), 'avatar CSS should be cache-busted');
   assert.ok(/viz-magic-v120/.test(swJs), 'service worker should use v92 cache');

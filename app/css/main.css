@@ -1994,7 +1994,7 @@ body,
     @keyframes vmagic-weather-drift { 0%, 100% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 0 0 rgba(88,166,255,0)); } 50% { transform: translateY(-5px) rotate(4deg) scale(1.10); filter: drop-shadow(0 0 12px rgba(88,166,255,0.65)); } }
     @keyframes vmagic-soft-breathe { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,216,88,0)); } 50% { transform: scale(1.075); filter: drop-shadow(0 0 10px rgba(255,216,88,0.45)); } }
     @keyframes vmagic-tile-shimmer { 0%, 100% { transform: translateY(0) scale(1); filter: saturate(1); } 50% { transform: translateY(-3px) scale(1.08); filter: saturate(1.45) drop-shadow(0 0 10px rgba(88,166,255,0.5)); } }
-    .recipe-icon, .craft-icon-anim, .vmagic-breathe, .screen-title-icon, .section-icon, .prophecy-icon, .nav-icon, .region-icon, .char-icon, .guild-action-icon, .settings-control-icon, .item-icon, .market-item-icon, .chronicle-icon, .chronicle-author-prefix, .quest-map-objective-icon, .quest-icon, .tile-icon, .tile-avatar-icon, .modal-title-icon, .spell-detail-title-icon, .member-icon, .vital-label-icon, .home-character-icon, .event-icon, .arena-class-icon, .boss-icon-large, .boss-alert-icon, .boss-avatar, .arena-avatar, .leaderboard-avatar, .settings-avatar-preview, .account-avatar, .default-avatar { display: inline-flex; align-items: center; justify-content: center; animation: vmagic-soft-breathe 5.6s ease-in-out infinite; transform-origin: center; }
+    .recipe-icon, .vmagic-breathe, .screen-title-icon, .section-icon, .prophecy-icon, .nav-icon, .region-icon, .char-icon, .guild-action-icon, .settings-control-icon, .item-icon, .market-item-icon, .chronicle-icon, .chronicle-author-prefix, .quest-map-objective-icon, .quest-icon, .tile-icon, .tile-avatar-icon, .modal-title-icon, .spell-detail-title-icon, .member-icon, .vital-label-icon, .home-character-icon, .event-icon, .arena-class-icon, .boss-avatar, .arena-avatar, .leaderboard-avatar, .settings-avatar-preview, .account-avatar, .default-avatar { display: inline-flex; align-items: center; justify-content: center; animation: vmagic-soft-breathe 5.6s ease-in-out infinite; transform-origin: center; }
     .magical-forecast .forecast-icon { display: inline-block; animation: vmagic-weather-drift 2.8s ease-in-out infinite; }
     .magical-forecast .forecast-hunt-icon { animation: vmagic-soft-breathe 2.8s ease-in-out infinite; }
     .vmagic-soft-icon { display: inline-block; animation: vmagic-soft-breathe 4.0s ease-in-out infinite; }
@@ -2451,8 +2451,6 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     .tile-avatar-icon,
     .modal-title-icon,
     .spell-detail-title-icon,
-    .boss-icon-large,
-    .boss-alert-icon,
     .active-key-icon,
     .quest-rewards .reward-xp,
     .quest-rewards .reward-energy,
@@ -2559,3 +2557,10 @@ title-icon, .spell-detail-title-icon { animation-name: vmagic-soft-breathe !impo
 .char-header h2 .character-title-level {
     font-size: 0.76em;
 }
+
+/* v120.1: special animations kept intentionally different from the shared breathing:
+   crafting spin, boss breathe, weather drift keep their own rhythm. */
+.craft-icon-anim { animation: craftSpin 1.5s ease-in-out infinite !important; }
+.boss-icon-large, .boss-alert-icon { animation: vmagic-boss-breathe 3.0s ease-in-out infinite !important; transform-origin: center; }
+html body[data-icon-motion] .magical-forecast .forecast-card .forecast-icon:not(.forecast-hunt-icon) { animation: vmagic-weather-drift 2.8s ease-in-out infinite !important; }
+html body[data-icon-motion] .magical-forecast .forecast-card-hunt-summary .forecast-hunt-icon { animation: vmagic-soft-breathe 2.8s ease-in-out infinite !important; }
