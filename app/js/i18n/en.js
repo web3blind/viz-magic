@@ -1298,7 +1298,7 @@ var LangEN = {
 
     help_section_classes: 'Classes',
     help_section_magic_ranks: 'Magical ranks',
-    help_magic_ranks_text: 'As you level up, you grow in magical science: 1-10 Seeker, 11-20 Adept, 21-30 Spellcaster, 31-40 Sorcerer, 41-50 Wizard, 51-60 Magister, 61-70 Arcanist, 71-80 Seer, 81-90 Archmage, 91-100 Archimagister, 101+ Great Mage.',
+    help_magic_ranks_text: 'As you level up, you grow in magical science: 1-10 Seeker, 11-20 Adept, 21-30 Sage, 31-40 Spellcaster, 41-50 Sorcerer, 51-60 Wizard, 61-70 Magister, 71-80 Arcanist, 81-90 Seer, 91-100 Grandmaster, 101+ Mage Beyond Categories.',
     help_classes_text: 'Stonewarden (Terra) — tank. Embercaster (Ignis) — burst DPS.<br>Moonrunner (Umbra) — evasion. Bloomsage (Aqua) — healer.<br>Each class has unique spells and stat growth.',
 
     help_section_duels: 'Duels & Arena',
