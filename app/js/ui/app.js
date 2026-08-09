@@ -322,7 +322,7 @@ var App = (function() {
             }
         });
         if ('serviceWorker' in navigator) {
-            var swReloadKey = VizMagicConfig.STORAGE_PREFIX + 'sw_reload_v121';
+            var swReloadKey = VizMagicConfig.STORAGE_PREFIX + 'sw_reload_v122';
             navigator.serviceWorker.addEventListener('controllerchange', function() {
                 try {
                     if (sessionStorage.getItem(swReloadKey) === '1') return;
