@@ -134,7 +134,7 @@ var QuestsScreen = (function() {
                 '<span class="prophecy-icon vmagic-breathe" aria-hidden="true">\uD83D\uDD2E</span>' +
                 '<h2>' + t('home_daily_prophecy') + '</h2>' +
             '</div>' +
-            '<h3 class="' + titleClass + '">' + t(prophecy.titleKey) + '</h3>' +
+            '<h3 class="' + titleClass + '"><span class="section-icon vmagic-breathe" aria-hidden="true">' + titleIcon + '</span> ' + t(prophecy.titleKey) + '</h3>' +
             '<p class="prophecy-desc">' + t(prophecy.descriptionKey) + '</p>' +
             '<p class="quest-desc">Сначала выбери ежедневное пророчество, затем выполни его отдельную цель ниже. Благословения нужны только если сегодняшняя цель — благословить других магов.</p>';
 
@@ -143,7 +143,7 @@ var QuestsScreen = (function() {
         for (var i = 0; i < prophecy.objectives.length; i++) {
             var obj = prophecy.objectives[i];
             html += '<div class="quest-objective">' +
-                _describeObjective(obj, t) +
+                _describeObjective(obj, t, false) +
             '</div>';
         }
         html += '</div>';
@@ -490,10 +490,13 @@ var QuestsScreen = (function() {
         });
     }
 
-    function _describeObjective(obj, t) {
+    function _describeObjective(obj, t, showIcon) {
         if (!obj) return '';
-        var icon = _objectiveIcon(obj);
-        var iconHtml = icon ? '<span class="quest-map-objective-icon vmagic-breathe" aria-hidden="true">' + icon + '</span> ' : '';
+        var iconHtml = '';
+        if (showIcon !== false) {
+            var icon = _objectiveIcon(obj);
+            iconHtml = icon ? '<span class="quest-map-objective-icon vmagic-breathe" aria-hidden="true">' + icon + '</span> ' : '';
+        }
         if (obj.type === 'explore') return iconHtml + t('quest_obj_explore_detail', { count: obj.required });
         if (obj.type === 'social' && obj.target === 'blessing') return iconHtml + t('quest_obj_bless_detail', { count: obj.required });
         if (obj.type === 'social' && obj.target === 'guild_join') return iconHtml + t('quest_obj_guild_join_detail', { count: obj.required });
@@ -523,6 +526,8 @@ var QuestsScreen = (function() {
             if (quest.type === 'hunt') key = 'hunt';
             else if (quest.type === 'craft') key = 'crafting';
             else if (quest.type === 'duel') key = 'duels';
+            else if (quest.type === 'social' && quest.target === 'guild_join') key = 'guilds';
+            else if ((quest.id || '').indexOf('guild') !== -1) key = 'guilds';
             hint = hint.replace(/data-help-key="[^"]*"/, 'data-help-key="' + key + '"');
         }
         return hint;

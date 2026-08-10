@@ -1106,7 +1106,7 @@ var LangEN = {
     quest_blessings_title: 'Generous Spirit',
     quest_blessings_desc: 'Bless 5 other mages through the Chronicle.',
     quest_blessings_hint: 'Open the Chronicle and press “Bless” on other mages\' entries.',
-    quest_generic_hint: 'Hint: the full explanation is in the <a class="quest-help-link" href="#" data-help-key="quests">Guide</a>.',
+    quest_generic_hint: 'Hint: the full explanation is in the <a class="quest-help-link" href="#" data-help-key="quests">Magical Guide</a>.',
     quest_hunt_session_title: 'Seasoned Hunter',
     quest_hunt_session_desc: 'Kill 10 creatures in one session.',
     quest_enchant_item_title: 'Rune Magic',

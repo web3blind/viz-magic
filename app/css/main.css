@@ -547,7 +547,8 @@ body {
 }
 .arena-player-info { display: flex; align-items: center; gap: 6px; }
 .arena-player-level { color: var(--color-text-muted); font-size: 0.85rem; }
-.region-travel-options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.region-travel-options { display: flex; flex-wrap: nowrap; gap: 5px; margin-top: 8px; }
+.region-travel-options .region-travel-btn { flex: 1 1 0; min-width: 0; padding: 7px 6px; font-size: 0.85rem; white-space: nowrap; justify-content: center; }
 
 .arena-history-entry {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -1992,7 +1993,7 @@ body,
     @keyframes vmagic-rune-pulse { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255,216,88,0)); transform: scale(1) rotate(0deg); } 50% { filter: drop-shadow(0 0 14px rgba(255,216,88,0.75)); transform: scale(1.12) rotate(-3deg); } }
     @keyframes vmagic-boss-breathe { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(124,53,255,0)); } 50% { transform: scale(1.10); filter: drop-shadow(0 0 16px rgba(124,53,255,0.65)); } }
     @keyframes vmagic-weather-drift { 0%, 100% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 0 0 rgba(88,166,255,0)); } 50% { transform: translateY(-5px) rotate(4deg) scale(1.10); filter: drop-shadow(0 0 12px rgba(88,166,255,0.65)); } }
-    @keyframes vmagic-soft-breathe { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,216,88,0)); } 50% { transform: scale(1.075); filter: drop-shadow(0 0 10px rgba(255,216,88,0.45)); } }
+    @keyframes vmagic-soft-breathe { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,216,88,0)); } 50% { transform: scale(1.10); filter: drop-shadow(0 0 14px rgba(255,216,88,0.65)); } }
     @keyframes vmagic-tile-shimmer { 0%, 100% { transform: translateY(0) scale(1); filter: saturate(1); } 50% { transform: translateY(-3px) scale(1.08); filter: saturate(1.45) drop-shadow(0 0 10px rgba(88,166,255,0.5)); } }
     .recipe-icon, .vmagic-breathe, .screen-title-icon, .section-icon, .prophecy-icon, .nav-icon, .region-icon, .char-icon, .guild-action-icon, .settings-control-icon, .item-icon, .market-item-icon, .chronicle-icon, .chronicle-author-prefix, .quest-map-objective-icon, .quest-icon, .tile-icon, .tile-avatar-icon, .modal-title-icon, .spell-detail-title-icon, .member-icon, .vital-label-icon, .home-character-icon, .event-icon, .arena-class-icon, .boss-avatar, .arena-avatar, .leaderboard-avatar, .settings-avatar-preview, .account-avatar, .default-avatar { display: inline-flex; align-items: center; justify-content: center; animation: vmagic-soft-breathe 5.6s ease-in-out infinite; transform-origin: center; }
     .magical-forecast .forecast-icon { display: inline-block; animation: vmagic-weather-drift 2.8s ease-in-out infinite; }
@@ -2035,6 +2036,7 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 
 .armageddon-explosion-icon {
     display: inline-flex;
+    margin-right: 0.45em;
     align-items: center;
     justify-content: center;
     width: 1.45em;
@@ -2408,7 +2410,6 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     body[data-icon-motion="sparkle"] .arena-screen .arena-class-icon,
     body[data-icon-motion="sparkle"] .leaderboard-title-icon {
         animation: vmagic-soft-breathe 5.6s ease-in-out infinite !important;
-        animation-delay: 0s !important;
         transform-origin: center center !important;
         will-change: transform, filter;
     }
@@ -2502,7 +2503,10 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 }
 .home-character-icon { margin-right: 0.25rem; }
 .vital-label-icon + .vital-label-icon { margin-left: 0.08rem; }
-.btn-install-shortcut { background: var(--color-primary) !important; color: #000 !important; border-color: var(--color-primary) !important; font-weight: 800; line-height: 1.15; }
+.btn-install-shortcut {
+    display: flex;
+    width: 100%;
+    justify-content: center; background: var(--color-primary) !important; color: #000 !important; border-color: var(--color-primary) !important; font-weight: 800; line-height: 1.15; }
 .tile-avatar-icon { width: 2.6rem !important; height: 2.6rem !important; font-size: 2.35rem !important; }
 .guild-rank-avatar, .member-icon, .arena-avatar, .boss-avatar, .leaderboard-avatar { width: 1.65rem; height: 1.65rem; min-width: 1.65rem; margin-right: 0.35rem; }
 .arena-challenge-btn, .developers-link, .narrator-test-btn, #btn-realm-info, a[href="https://info.viz.world/"] { background: var(--color-primary) !important; color: #000 !important; border-color: var(--color-primary) !important; font-weight: 800; }
@@ -2567,3 +2571,4 @@ title-icon, .spell-detail-title-icon { animation-name: vmagic-soft-breathe !impo
 .boss-icon-large, .boss-alert-icon { animation: vmagic-boss-breathe 3.0s ease-in-out infinite !important; transform-origin: center; }
 html body[data-icon-motion] .magical-forecast .forecast-card .forecast-icon:not(.forecast-hunt-icon) { animation: vmagic-weather-drift 2.8s ease-in-out infinite !important; }
 html body[data-icon-motion] .magical-forecast .forecast-card-hunt-summary .forecast-hunt-icon { animation: vmagic-soft-breathe 2.8s ease-in-out infinite !important; }
+.dev-custom-reward-btn { display: flex; width: 100%; justify-content: center; margin-top: 8px; }

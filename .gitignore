@@ -7,3 +7,4 @@ docs/superpowers/specs/*
 node_modules/
 package.json
 package-lock.json
+media_review/

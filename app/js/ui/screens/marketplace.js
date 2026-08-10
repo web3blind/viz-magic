@@ -536,8 +536,8 @@ var MarketplaceScreen = (function() {
             thorn_essence: item.rarity >= 4 ? '🧬' : (item.rarity >= 1 ? '🌵' : '🌿'),
             ancient_shard: item.rarity >= 2 ? '🪬' : (item.rarity >= 1 ? '🌀' : '〰️'),
             veilstone: '🪞',
-            stone_tablet: '🗿',
-            data_core: '💾',
+            stone_tablet: item.rarity >= 2 ? '📜' : '🗿',
+            data_core: item.rarity >= 1 ? '🖥️' : '💾',
             nano_patch: '🩹',
             spirit_tunic: '🧥'
         };

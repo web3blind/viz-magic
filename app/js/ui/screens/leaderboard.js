@@ -36,7 +36,7 @@ var LeaderboardScreen = (function() {
         _degradeTimer = setTimeout(function() {
             if (App.getCurrentScreen && App.getCurrentScreen() !== 'leaderboard') return;
             var snap = (typeof DailyLeaderboard !== 'undefined' && DailyLeaderboard.getSnapshot) ? DailyLeaderboard.getSnapshot() : {};
-            if (snap.loading && !snap.ready) {
+            if (snap.loading || !snap.ready || !(snap.rows && snap.rows.length)) {
                 _degraded = true;
                 _renderFromSnapshot({
                     loading: false,
@@ -46,7 +46,7 @@ var LeaderboardScreen = (function() {
                     statusText: Helpers.t('leaderboard_loading_continues')
                 });
             }
-        }, 5000);
+        }, 3000);
     }
 
     function _renderFromSnapshot(snapshot) {

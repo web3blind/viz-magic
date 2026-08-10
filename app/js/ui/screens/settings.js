@@ -214,7 +214,7 @@ var SettingsScreen = (function() {
             '<p class="settings-help-text" id="avatar-preview-hint">' + t('settings_avatar_preview_hint') + '</p>' +
             '<div class="settings-avatar-actions">' +
                 '<button type="button" class="btn btn-primary btn-sm" id="btn-avatar-save"' + (pendingAvatarDataUrl ? '' : ' disabled') + '>' + t('settings_avatar_save') + '</button>' +
-                '<button type="button" class="btn btn-secondary btn-sm" id="btn-avatar-remove"' + (currentAvatar ? '' : ' disabled') + '>' + t('settings_avatar_remove') + '</button>' +
+                '<button type="button" class="btn btn-primary btn-sm" id="btn-avatar-remove"' + (currentAvatar ? '' : ' disabled') + '>' + t('settings_avatar_remove') + '</button>' +
             '</div>' +
             '<p class="settings-help-text" id="avatar-status" role="status" aria-live="polite"></p>' +
         '</div>';
