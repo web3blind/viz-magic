@@ -4,6 +4,78 @@ Updated: 2026-06-21 07:50 UTC
 
 This file is the canonical handoff plan for the next Hermes session. It intentionally replaces the old `plan.md` contents.
 
+## Current task — Magical Guide redesign
+
+## Current task — Home sky/season polish and icon motion controls
+
+Scope:
+- Home forecast: move the hunt bow icon in the Summer/season card to the top-right corner opposite the compass.
+- Home sky block: rotate authored in-world names daily across seven names: Sky, Earth, Water, Air, Wind, Fire, Aether. Do not call them weekdays in the Home block; explain the daily world-name cycle in the Magical Guide.
+- Home lore cards under game buttons: make their background, left yellow stripe, font sizing, and text colors match the upper forecast-style text blocks; set card border colors top-to-bottom as green, moon-white, red.
+- Remove the repeated lore tail about pupils writing the phrase backwards so it cannot repeat across Magic Nature and World Legends.
+- Settings/accessibility: add three user options for icon breathing: Мир спит, Мир дышит, Мир мерцает. Keep reduced-motion as the broader global animation reducer.
+- Armageddon: add a second strict yellow danger marker with schematic explosion inside the Armageddon button.
+
+Validation:
+- Update focused regression tests for sky-name rotation, lore-card styling, icon-motion settings, Armageddon warning marker, cache-busting, and no repeated pupil tail.
+- Run node syntax checks and focused regression/accessibility tests.
+- Browser-smoke the Home, Settings, Help, and Hunt/Armageddon relevant render states when possible.
+
+Definition of Done:
+- Local tests pass, changed static assets are cache-busted, commit is pushed to main, and production is redeployed unless Денис explicitly says “не деплой”.
+
+Started: 2026-07-22.
+
+Outcome: replace the plain Help screen with a stable **Magical Guide / Магический справочник** presented as a magic book. Do not add a separate “Magical Pages” tab.
+
+Scope:
+
+- Rename the Help nav/title/copy to Magical Guide / Магический справочник.
+- Keep practical help sections in a fixed order; no daily page shuffling for gameplay help.
+- Add an optional lore-pages area inside the same guide/book, where lore pages may rotate or vary without affecting the practical help order.
+- Style the screen as a readable magical book: cover/binding impression, page cards, accessible headings and labels.
+- Make icon breathing feel less synchronized while respecting reduced-motion preferences.
+- Cache-bust changed frontend assets.
+
+Non-goals:
+
+- No new bottom-nav tab or new screen named “Magical Pages”.
+- No gameplay state changes and no blockchain/live transaction changes.
+- No production deploy unless explicitly requested after local verification.
+
+Verification:
+
+- Add/update structural regression tests for fixed help order, no separate magical-pages route, lore inside guide, cache-bust, and desynchronized animation CSS.
+- Run `node tests/player-bug-regressions.test.js` and `node --check` for changed JS.
+- Run affected accessibility/static tests where relevant.
+
+Stop when:
+
+- Browser/live production deployment, private keys, or external mutation would be required.
+
+
+## Current task — Hunt habitat balance and item UI polish
+
+Started: 2026-07-30.
+
+Scope:
+- Hunt: make visible creature habitat depend on player level so stale low-level prey disappears; for a level 7 player, Lv3-8 is removed while Lv5-10, Lv5-12, and Lv7-14 remain.
+- Hunt: add an explicit dangerous-habitat warning for very risky creatures, with copy close to: “Здесь очень сильные магические сущности. Опасно!”
+- Hunt: clarify that 1%/3% spell buttons show mana cost, not win probability.
+- Inventory: remove white rarity diamonds from requested material rows, give Ancient Echo Shard and Shadow Shard distinct icons by rarity, and avoid ambiguous Thorn Essence duplicate rows by showing rarity in the row meaning.
+- Bazaar sell tab: mirror the distinct Shadow Shard icon and clear rarity labeling.
+- Dream Archive Test / bottom navigation: keep icons above labels and labels in one horizontal text line.
+
+Verification:
+- Add focused regression coverage for level-7 hunt habitat, danger warning copy, mana-cost wording, item icon/separator rules, marketplace sell grouping labels, and bottom nav icon-over-label layout.
+- Run node syntax checks for changed JS, focused player/a11y/history tests, browser matrix 360/414/768/1280, git diff check.
+- Deploy and live-verify production unless blocked by deploy helper; direct HTTPS/browser checks are required before claiming production.
+
+Definition of Done:
+- For Lv7, Hunt render does not expose Hollow Shade Lv3-8; it exposes Thornvine Lv5-10, Echo Guardian Lv5-12, Cyber Ghoul Lv7-14; Cyber Ghoul has the danger warning.
+- Inventory and Bazaar no longer show the reported white diamond artifacts in requested material rows.
+- Dream/nav buttons are icon-over-label across viewport matrix.
+
 ## Current baseline
 
 Repo: `/home/assistent/ai-projects/viz-magic`
@@ -446,3 +518,131 @@ Mark items here as the next session completes them:
 - [x] Mobile accessibility / TalkBack QA — core screen smoke covers names/raw keys/blank controls; high-impact blockers fixed
 - [x] World Boss / Territory / Siege smoke — local replay fixture covers boss attack, siege lifecycle, and territory claim without live-chain mutation
 - [x] Economy / item consistency audit — catalog/loot/recipe/material coverage regression remains passing in `tests/player-bug-regressions.test.js`
+
+## Current task — Weave Surge, default avatars, guide/copy polish
+
+Started: 2026-07-30.
+
+Scope:
+- Home event banner: Weave Surge click routes to Hunt like a hunting-related active event.
+- Character page: page title icon and character avatar are unified; no empty avatar slot when no custom avatar exists.
+- Default avatar: render a local class-icon avatar when public metadata avatar is absent; custom uploaded avatar still wins.
+- Home Character action: show the current/default avatar on an extra row in the Character button.
+- Leaderboard title icon must visibly breathe.
+- Settings Sound block: remove speaker icon before Sound Effects slider label.
+- Magical Guide: requested explanatory sentences start on new lines for HP, Bazaar, Duels/Arena.
+- Duel no-show idea: add player-facing design copy about a small satisfaction penalty for decline/no-show; do not silently add a punitive chain mechanic without broader economic review.
+- Living Pages: add a short fairy-tale description.
+
+Acceptance:
+- Browser smoke on Home→Weave Surge click navigates to Hunt.
+- Character renders one avatar/header mark by default, using class icon when no custom image exists; no broken img for missing avatar.
+- Home Character tile contains an extra avatar row.
+- Settings SFX label has no speaker icon.
+- Help copy contains <br> before the requested sentences.
+- Home living pages contain an intro/fairy-tale description.
+- Regression tests cover the above and cache-bust changed assets.
+
+
+## Current task — Quest abandon no-progress penalty
+
+Started: 2026-07-30.
+
+Scope:
+- If a player abandons an accepted quest after making progress, no extra Mana penalty is charged; the player loses only the progress already made in that quest.
+- If a player accepts a quest and abandons it before any objective progress, the UI warns about a small forfeit: 1.00% Mana.
+- The no-progress forfeit is a real VIZ award to the existing game/developer account, not a fake local character-state subtraction.
+- Quest abandon replay event records `penaltyEnergy` for transparent history/state consumers.
+- Guide copy explains the rule in RU/EN.
+
+Acceptance:
+- Active quest card for untouched quests shows the 1.00% Mana forfeit on the abandon button.
+- Active quest card with any objective progress uses ordinary Abandon text and no penalty.
+- Abandon click for untouched quests checks current VIZ energy before broadcast and shows a confirm modal.
+- Successful untouched abandon broadcasts `quest.abandon` and then `VizBroadcast.award(...)` with 100 bp and a forfeit memo.
+- Regression tests cover untouched/progress distinction, state event `penaltyEnergy`, i18n copy, and cache-busting.
+
+## Current task — Text quality and avatar/spell UI polish
+
+Started: 2026-07-31.
+
+Scope:
+- Remove over-explaining Weave Surge hint text and change badge wording to “на охоте мана ×2”.
+- Color season name and world month by current season: summer green, autumn yellow, winter white, spring blue.
+- De-duplicate named lore/news phrases across live and queued text arrays.
+- Remove Home living-pages intro and move short “buttons live a fairy tale” sentence into the Magical Guide lore intro.
+- Replace Character Home tile icon with the avatar itself; no separate mage icon in that tile.
+- Character screen title: avatar first, class symbol immediately after it, class-guide name instead of generic “Персонаж”.
+- Character spell rows open a modal with readable spell mechanics.
+- Make Leaderboard title icon breathe softly, not pulse/jitter.
+- Restore SFX bell icon in Settings.
+- Add requested Help line breaks and exact duel satisfaction design rule.
+
+Acceptance:
+- Static search finds no removed Weave Surge sentence or deleted Home living-pages intro.
+- Search finds the repeated phrases only where intentionally kept; “Компас повернулся...” appears only in the faceless-birds page.
+- Browser smoke verifies Home character tile has avatar in icon position, Character title has avatar + class symbol + class-guide name, spell modal opens, Settings SFX label has bell, Help line breaks/rule render, and season/month spans have season color classes.
+
+
+## Current task — Hunt danger label truth + weave title one-line (2026-07-31)
+
+Outcome:
+- Weave Surge block title stays on one line.
+- Current Lv5-10, Lv5-12, and Lv7-14 hunt targets are not labelled dangerous.
+- Hunt exposes one extra clearly deadly target near Lv7 progression and only that target gets danger copy.
+- The deadly target is verified against the real combat formula for low-mana shots, not just by label.
+
+Verification:
+- Static regression: fair targets have no danger flag/copy, deadly target has it.
+- Combat simulation: Lv7 Stonewarden 1% and 3% attacks lose against the deadly target across sampled block hashes.
+- Browser smoke: Hunt shows Lv5-10/Lv5-12/Lv7-14 without danger text and one deadly card with the warning.
+- Standard syntax/tests, diff check, deploy markers and live browser after push.
+
+Boundaries:
+- Do not rebalance the existing fair creatures downward just to justify old warnings.
+- Do not weaken avatar/security/quest changes from v104/v105.
+
+
+## Current task — Hunt mana spend root-cause audit (2026-07-31)
+
+Outcome:
+- Hunt combat power uses the spell mana actually spent (1%/3%), not the player's current/full account energy.
+- VM hunt actions record `energy` so replay and live UI resolve the same combat.
+- Low-mana 3% shots are not penalized with fewer combat rounds than 1% shots.
+- Danger labels are re-evaluated against corrected combat math.
+
+Verification:
+- Regression asserts huntAction writes energy, processHuntResult receives spell.manaCost, replay falls back to action energy/spell cost, and maxRounds does not make 3% worse than 1%.
+- Browser/formula simulation compares fair and deadly targets after the fix.
+
+
+## Current task — v108 inventory/nav/hunt/arena polish (2026-07-31)
+
+Scope from Denis:
+- Inventory all tab: item icons must not breathe in sync when “world sparkles” is enabled.
+- Inventory all tab: Ancient Echo Shard uncommon/rare must not share the same icon.
+- Inventory all tab: Oak Wand common warning icon moves to the end of the row.
+- Inventory all tab: remove white diamond/fallback glyphs for altar_spark, data_core, nano_patch, stone_tablet; use thematic unique icons.
+- Bottom navigation used by Dream Archive Test: icon above one-line label.
+- Hunt Lv11-18 danger marker: keep only warning triangle, remove yellow oval and the word “Опасно”.
+- Arena: icons should breathe smoothly, not jerk.
+
+Verification:
+- Static regressions for icons, warning order, nav layout, danger marker, and arena soft motion.
+- Browser matrix checks inventory item rows, hunt danger marker, bottom nav layout, arena animations, and no page errors.
+
+
+## Current task — v109 player polish batch (2026-07-31)
+
+Scope from Denis:
+- Remove phrase "Старшие маги просят не смеяться слишком громко" from all lower text blocks/queued tails except Magic Nature if present. Audit exact phrase and stems.
+- Future content generation quality: maximum filter, 5-8 strong blocks.
+- Inventory: remove middle dot before stats on Oak Wand; remove white diamond artifacts for Altar Spark and material fallbacks.
+- Guild/Dream Archive Test: bottom action buttons should have icon over one-line label.
+- Hunt: add missing intermediate 9-16 tier; move Lv 11-18 to row end; change danger warning copy to "Сильные..."; keep only triangle marker.
+- Arena/leaderboard: use soft breathe, not rune jitter.
+- Marketplace sell: remove Chronicle Ink trailing drop; make Veilstone/Stone Tablet/Data Core/Nano Patch icons distinct.
+- Character: remove element names in parentheses; spell details title with wand, no Stone Wall/name/description, no extra close action button.
+- Settings/help: add invisible spacer in accessibility block; line-break quest abandon and duel design-rule notes.
+
+Verification: node --check changed files, player/accessibility/history regressions, git diff --check, browser matrix and live prod smoke.

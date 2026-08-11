@@ -531,11 +531,11 @@ test('music volume, narrator speech, and PWA icons are durable', function () {
   assert.ok(/_setStoredNumber\('music_volume', this\.value \/ 100\)/.test(settingsJs), 'music slider should persist changes');
   assert.ok(/SpeechSynthesisUtterance/.test(narratorJs), 'battle narrator should speak audibly through Web Speech when available');
   assert.ok(/textContent = ''[\s\S]*textContent = message/.test(narratorJs), 'battle narrator should force live-region text replacement');
-  assert.ok(/manifest\.json\?v=20260720g/.test(indexHtml), 'manifest should be cache-busted for updated icon');
-  assert.ok(/favicon\.ico\?v=20260720g/.test(indexHtml), 'favicon should be explicit for browser shortcut fallback');
-  assert.ok(/viz-magic-v78-192\.png\?v=20260720g/.test(indexHtml), 'launcher icon link should be cache-busted');
-  assert.ok(/assets\/icons\/viz-magic-v78-512\.png/.test(read('app/sw.js')), 'service worker should cache PWA launcher icons');
-  assert.ok(/viz-magic-v78-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
+  assert.ok(/manifest\.json\?v=20260813a/.test(indexHtml), 'manifest should be cache-busted for updated icon');
+  assert.ok(/favicon\.ico\?v=20260813a/.test(indexHtml), 'favicon should be explicit for browser shortcut fallback');
+  assert.ok(/viz-magic-v79-192\.png\?v=20260813a/.test(indexHtml), 'launcher icon link should be cache-busted');
+  assert.ok(/assets\/icons\/viz-magic-v79-512\.png/.test(read('app/sw.js')), 'service worker should cache PWA launcher icons');
+  assert.ok(/viz-magic-v79-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
 });
 
 
@@ -575,8 +575,8 @@ test('reported mobile UX issues have explicit fixes', function () {
 
 
 test('PWA icon and HP heart use expressive color accents', function () {
-  assert.ok(/viz-magic-v78-192\.png\?v=20260720g/.test(indexHtml), 'PWA icon link should be cache-busted after expressive icon update');
-  assert.ok(/viz-magic-v78/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
+  assert.ok(/viz-magic-v79-192\.png\?v=20260813a/.test(indexHtml), 'PWA icon link should be cache-busted after expressive icon update');
+  assert.ok(/viz-magic-v79/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
   assert.ok(/labelHtml:'<span class=\"vital-label-icon vmagic-breathe\"[^']*❤️/.test(homeJs), 'HP label should use a red heart emoji variant');
 });
 
@@ -826,18 +826,18 @@ test('Denis feedback UI polish batch uses calendar days and calmer icons', funct
 });
 
 
-test('v78 PWA icon removes the yellow outline around the plus', function () {
-  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v78-192.png')), 'v78 192px no-outline icon should exist');
-  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v78-512.png')), 'v78 512px no-outline icon should exist');
-  assert.ok(/viz-magic-v78-192\.png\?v=20260720g/.test(indexHtml), 'index should point at the v78 launcher icon');
-  assert.ok(/"start_url":\s*"\/\?pwa=viz-magic-v78"/.test(read('app/manifest.json')), 'manifest start_url should force OS launcher refresh');
-  assert.ok(/"id":\s*"https:\/\/vizmagic\.web3blind\.xyz\/\?pwa=viz-magic-v78"/.test(read('app/manifest.json')), 'manifest id should change so Android can refresh launcher identity');
-  assert.ok(/APP_SHELL_ASSETS[\s\S]*viz-magic-v78-512\.png/.test(read('app/sw.js')), 'fast install shell should still include current launcher icons');
+test('v79 PWA icon removes the yellow outline around the plus', function () {
+  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v79-192.png')), 'v79 192px centered icon should exist');
+  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v79-512.png')), 'v79 512px centered icon should exist');
+  assert.ok(/viz-magic-v79-192\.png\?v=20260813a/.test(indexHtml), 'index should point at the v79 launcher icon');
+  assert.ok(/"start_url":\s*"\/\?pwa=viz-magic-v79"/.test(read('app/manifest.json')), 'manifest start_url should force OS launcher refresh');
+  assert.ok(/"id":\s*"https:\/\/vizmagic\.web3blind\.xyz\/\?pwa=viz-magic-v79"/.test(read('app/manifest.json')), 'manifest id should change so Android can refresh launcher identity');
+  assert.ok(/APP_SHELL_ASSETS[\s\S]*viz-magic-v79-512\.png/.test(read('app/sw.js')), 'fast install shell should still include current launcher icons');
 });
 
 test('Denis feedback item and motion icons are semantic', function () {
-  assert.ok(/viz-magic-v78-192\.png\?v=20260720g/.test(indexHtml), 'launcher icon should use the v78 no-yellow-outline launcher icon');
-  assert.ok(/assets\/icons\/viz-magic-v78-512\.png/.test(read('app/sw.js')), 'service worker should cache v78 icon');
+  assert.ok(/viz-magic-v79-192\.png\?v=20260813a/.test(indexHtml), 'launcher icon should use the v79 centered launcher icon');
+  assert.ok(/assets\/icons\/viz-magic-v79-512\.png/.test(read('app/sw.js')), 'service worker should cache v79 icon');
   assert.ok(/ember_staff:\s*'🪵'/.test(craftingJs) && /fire_rune:\s*'\\uD83D\\uDD25'/.test(craftingJs), 'ash staff and fire rune recipes should not share the same flame icon');
   assert.ok(/market_sell_title/.test(marketplaceJs) && /💵/.test(marketplaceJs), 'sell tab should use a brighter money icon');
   assert.ok(/market-item-icon vmagic-breathe/.test(marketplaceJs), 'bazaar sell item icons should breathe');
