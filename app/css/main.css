@@ -8,7 +8,7 @@ button { color: inherit; font: inherit; }
     --color-surface: #161b22;
     --color-surface-2: #21262d;
     --color-text: #e6edf3;
-    --color-text-muted: #9da5ae;
+    --color-text-muted: #aab4bd;
     --color-primary: #d4a843;
     --color-primary-glow: rgba(212, 168, 67, 0.3);
     --color-accent: #58a6ff;
@@ -2596,3 +2596,14 @@ html body[data-icon-motion] .magical-forecast .forecast-card-hunt-summary .forec
     .screen { padding: 24px; padding-bottom: 100px; }
 }
 
+/* ===== v126 polish: contrast, alignment, grouping ===== */
+.home-dashboard > section + section { margin-top: 26px; }
+.home-dashboard h2 { border-bottom: 1px solid var(--color-border); padding-bottom: 8px; margin-bottom: 14px; }
+.empty-state { padding: 32px 0; font-size: 0.95rem; }
+
+@media (min-width: 880px) {
+    .screen p, .screen li { font-size: 0.97rem; }
+    .empty-state { font-size: 1.02rem; }
+    .quest-tabs { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .nav-tab-label { font-size: 0.95rem; }
+}
