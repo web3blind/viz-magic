@@ -1232,7 +1232,7 @@ test('home startup does not fetch blockchain account before VIZ transport is rea
 
 test('hunt habitat hides stale prey and labels dangerous areas instead of pretending mana is win chance', function () {
   assert.ok(/max <= level \+ 2\) continue/.test(huntJs), 'hunt should hide stale low-level habitats once player outgrows them (tier 5-10 leaves at level 8)');
-  assert.ok(/min <= level \+ 3/.test(huntJs), 'hunt should keep nearby habitats around the player level');
+  assert.ok(/min <= level \+ 2/.test(huntJs), 'hunt should keep nearby habitats around the player level and hide too-high ones');
   assert.ok(/function _isDangerCreature/.test(huntJs), 'hunt should classify dangerous creatures');
   assert.ok(/return creature\.deadly === true/.test(huntJs), 'danger warnings should be tied to explicit deadly targets, not broad level ranges');
   assert.ok(!/creature-warning-text/.test(huntJs), 'danger warning copy should not render on hunt cards');
@@ -1248,12 +1248,12 @@ test('level seven hunt habitat keeps fair threats and removes lv3-8 stale prey',
   assert.ok(/cyber_ghoul[\s\S]*minLevel: 7,[\s\S]*maxLevel: 14/.test(read('app/js/data/creatures.js')), 'fixture creature Lv7-14 missing');
   assert.ok(/rift_colossus[\s\S]*minLevel: 11,[\s\S]*maxLevel: 18,[\s\S]*deadly: true/.test(read('app/js/data/creatures.js')), 'deadly Lv11-18 target should exist for honest danger copy');
   const level = 7;
-  function visible(min, max, deadly) { return !(max <= level + 1) && (deadly ? min <= level + 4 : min <= level + 3); }
+  function visible(min, max) { return !(max <= level + 1) && min <= level + 2; }
   assert.strictEqual(visible(3, 8, false), false, 'Lv3-8 should be stale for level 7');
-  assert.strictEqual(visible(5, 10, false), true, 'Lv5-10 should remain for level 7');
-  assert.strictEqual(visible(5, 12, false), true, 'Lv5-12 should remain for level 7');
-  assert.strictEqual(visible(7, 14, false), true, 'Lv7-14 fair habitat should remain for level 7');
-  assert.strictEqual(visible(11, 18, true), true, 'Lv11-18 deadly habitat should be the one warned target for level 7');
+  assert.strictEqual(visible(5, 10), true, 'Lv5-10 should remain for level 7');
+  assert.strictEqual(visible(5, 12), true, 'Lv5-12 should remain for level 7');
+  assert.strictEqual(visible(7, 14), true, 'Lv7-14 fair habitat should remain for level 7');
+  assert.strictEqual(visible(11, 18), false, 'Lv11-18 deadly habitat should hide for level 7: every creature is far above the player');
 });
 
 test('inventory and marketplace material rows avoid white diamond artifacts and use distinct icons', function () {
@@ -1371,7 +1371,7 @@ test('v110 player feedback keeps requested icons, copy, vital explainers, and ev
 
   assert.ok(/altar_spark:\s*'🕯️'/.test(inventory), 'Altar Spark should use candle icon');
   assert.ok(/if \(_getCategory\(item\) === ItemSystem\.CATEGORIES\.MATERIAL\) return ''/.test(inventory), 'material rows should not render rarity diamond before Altar Spark name');
-  assert.ok(!/creature-danger/.test(hunt), 'Rift Colossus row should no longer render the yellow warning triangle span');
+  assert.ok(/creature-danger-hint/.test(hunt), 'high-risk creature rows should render the yellow one-line danger hint');
   assert.ok(!/creature-warning-text/.test(hunt), 'Rift Colossus should not render a textual danger warning after v118');
 
   assert.ok(/progress-bar-link/.test(progress) && /progress-bar-button/.test(progress), 'ProgressBar should support external links and internal buttons');
@@ -1483,7 +1483,7 @@ test('v108 inventory, bottom nav, hunt danger marker, and arena motion polish ar
   assert.ok(/body\[data-icon-motion="sparkle"\] \.arena-screen \.screen-title-icon/.test(cssV108), 'Arena screen icon should use controlled soft motion');
   assert.ok(/animation-name: vmagic-soft-breathe !important/.test(cssV108), 'Arena/inventory polish should use soft breathing, not jerky rune pulse');
 
-  assert.ok(!/creature-danger/.test(huntV108), 'Hunt danger marker triangle should be removed in v110');
+  assert.ok(!/creature-warning-text/.test(huntV108), 'Hunt danger marker triangle should be removed in v110');
   assert.ok(!/creature-warning-text/.test(huntV108), 'Hunt should remove textual danger warning after v118');
 
   assert.ok(/<span class="nav-icon"/.test(navV108) && /<span class="nav-label">/.test(navV108), 'Bottom nav should expose separate icon and label spans');
@@ -1544,7 +1544,7 @@ test('v106 hunt danger copy is truthful and Weave title is single-line', functio
   assert.ok(!/echo_guardian[\s\S]{0,260}deadly: true/.test(creaturesV106), 'Lv5-12 should not be marked deadly');
   assert.ok(!/cyber_ghoul[\s\S]{0,260}deadly: true/.test(creaturesV106), 'Lv7-14 should not be marked deadly');
   assert.ok(/rift_colossus[\s\S]*deadly: true[\s\S]*baseHp: 420[\s\S]*basePot: 70/.test(creaturesV106), 'Rift Colossus should be explicitly and mechanically deadly');
-  assert.ok(/c\.deadly === true[\s\S]*min <= level \+ 4/.test(huntV106), 'hunt should expose only one nearby deadly target');
+  assert.ok(/c\.deadly === true[\s\S]*min <= level \+ 2/.test(huntV106), 'hunt should expose only one nearby deadly target');
   assert.ok(/function _isDangerCreature/.test(huntV106), 'danger helper may remain but card warning should not render');
   assert.ok(/main\.css\?v=20260813a/.test(indexV106), 'v106 CSS cache bust missing');
   assert.ok(/creatures\.js\?v=20260813a/.test(indexV106), 'v106 creatures cache bust missing');

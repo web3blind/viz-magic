@@ -62,6 +62,7 @@ var HuntScreen = (function() {
                     'aria-label="' + c.name + '. Level ' + c.minLevel + ' to ' + c.maxLevel + '">' +
                     '<span class="creature-name">' + c.name + '</span>' +
                     '<span class="creature-level">Lv ' + c.minLevel + '-' + c.maxLevel + '</span>' +
+                    (c.minLevel > level ? '<span class="creature-danger-hint">' + t('hunt_danger_hint') + '</span>' : '') +
                     '</button>';
             }
 
@@ -149,8 +150,8 @@ var HuntScreen = (function() {
             var max = c.maxLevel || min;
             if (max <= level + 2) continue; // stale habitat: too much weaker than the player (tier 5-10 leaves at level 8)
             if (c.deadly === true) {
-                if (min <= level + 4 && deadly.length === 0) deadly.push(c); // one honest high-risk target
-            } else if (min <= level + 3) {
+                if (min <= level + 2 && deadly.length === 0) deadly.push(c); // one honest high-risk target
+            } else if (min <= level + 2) {
                 out.push(c);
             }
         }

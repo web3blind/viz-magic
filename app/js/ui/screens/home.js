@@ -76,6 +76,11 @@ var HomeScreen = (function() {
                     '</div>' +
                 '</section>' +
                 _renderLorePages(blockNum, t) +
+                '<section class="home-share" aria-label="' + t('home_share_title') + '">' +
+                    '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">\uD83D\uDD17</span> ' + t('home_share_title') + '</h2>' +
+                    '<p>' + t('home_share_desc') + '</p>' +
+                    '<button type="button" class="btn btn-primary btn-share-game" id="btn-share-game">' + t('home_share_button') + '</button>' +
+                '</section>' +
                 '<section class="home-install" aria-label="' + t('home_install_shortcut') + '">' +
                     '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">\uD83D\uDCF2</span> ' + t('home_install_shortcut') + '</h2>' +
                     '<p>' + t('home_install_shortcut_text') + '</p>' +
@@ -130,6 +135,28 @@ var HomeScreen = (function() {
                     e.preventDefault();
                     SoundManager.play('tap');
                     Helpers.EventBus.emit('navigate', 'character');
+                }
+            });
+        }
+
+        var shareBtn = Helpers.$('btn-share-game');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', function() {
+                SoundManager.play('tap');
+                var url = (window.location.origin || 'https://vizmagic.web3blind.xyz') + '/';
+                if (navigator.share) {
+                    navigator.share({ title: 'Viz Magic', url: url }).catch(function() {});
+                } else {
+                    var ta = document.createElement('textarea');
+                    ta.value = url;
+                    ta.setAttribute('readonly', '');
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); } catch (e) {}
+                    document.body.removeChild(ta);
+                    Toast.success(t('home_share_copied'));
                 }
             });
         }
