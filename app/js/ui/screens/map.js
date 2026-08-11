@@ -12,6 +12,7 @@ var MapScreen = (function() {
     var TRAVEL_COST_LOW = 10;    // 0.1%
     var TRAVEL_COST_HIGH = 100;  // 1%
     var TRAVEL_COST_BURST = 300; // 3%
+    var TRAVEL_TREASURY = 'denis-skripnik'; // travel fee receiver (game account), same award pattern as hunt->author
     var TRAVEL_FIND_TYPES = ['shadow_shard', 'thorn_essence', 'ancient_shard', 'altar_spark', 'data_core'];
 
     /** Region emoji icons */
@@ -239,34 +240,59 @@ var MapScreen = (function() {
             Toast.info(t('map_region_already_visited_today'));
         }
 
-        // Broadcast move action + award (1 Mana = 100 energy)
-        var moveAction = {
-            t: VizMagicConfig.ACTION_TYPES.MOVE,
-            d: { zone: regionId }
-        };
-        var previousZone = character ? character.currentZone : '';
+        // Travel costs energy (same award pattern as hunt pays the creature's author).
+        VizAccount.getAccount(user, function(err, accountData) {
+            var playerEnergy = 10000;
+            if (!err && accountData) {
+                playerEnergy = VizAccount.calculateCurrentEnergy(accountData);
+            }
+            if (playerEnergy < cost) {
+                Toast.error(t('map_not_enough_energy'));
+                return;
+            }
 
-        VizBroadcast.gameAction(moveAction, function(err) {
-            if (err) {
-                Toast.error(t('error_network'));
-            } else {
+            // Broadcast move action
+            var moveAction = {
+                t: VizMagicConfig.ACTION_TYPES.MOVE,
+                d: { zone: regionId }
+            };
+            var previousZone = character ? character.currentZone : '';
+
+            VizBroadcast.gameAction(moveAction, function(err2) {
+                if (err2) {
+                    Toast.error(t('error_network'));
+                    return;
+                }
+
                 var stateAfterMove = StateEngine.getState();
                 var optimisticBlock = (stateAfterMove.headBlock || 0) + 1;
                 StateEngine.processMoveResult(user, regionId, optimisticBlock);
                 stateAfterMove.headBlock = Math.max(stateAfterMove.headBlock || 0, optimisticBlock);
                 pendingTravel = { account: user, from: previousZone, to: regionId, at: Date.now() };
                 Toast.success(t('map_traveled') + ' ' + region.name);
-                _grantTravelFind(user, cost, optimisticBlock);
                 SoundManager.play('transition');
                 try {
                     CheckpointSystem.saveCheckpoint('global', stateAfterMove.headBlock || optimisticBlock, stateAfterMove, function() {});
                 } catch (e) {}
+
+                // Pay travel fee: energy goes to the game account (like hunt->author award).
+                if (cost > 0) {
+                    VizBroadcast.award(TRAVEL_TREASURY, cost, 0, 'viz://vm/travel/ ' + regionId, [], function(awardErr) {
+                        if (awardErr) {
+                            Toast.info(t('map_travel_fee_failed'));
+                        }
+                    });
+                }
+
+                // Higher energy investment -> chance of a travelling find.
+                _grantTravelFind(user, cost, optimisticBlock);
+
                 render();
-            }
+            });
         });
     }
 
-    function _rollTravelFind(cost) {
+        function _rollTravelFind(cost) {
         var t = Helpers.t;
         if (cost >= 300) {
             if (Math.random() >= 0.7) return null;
