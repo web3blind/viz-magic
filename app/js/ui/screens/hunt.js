@@ -25,6 +25,7 @@ var HuntScreen = (function() {
             ch.hp = GameFormulas.calculateMaxHp(ch.className, ch.level, CharacterSystem.getTotalStat(ch, 'res'));
             ch.maxHp = ch.hp;
         }
+        var level = ch ? (ch.level || 1) : 1;
         var zone = (ch && ch.currentZone) || 'commons_first_light';
         var creatures = _filterCreaturesForLevel(GameCreatures.getCreaturesForZone(zone), ch);
         var spells = ch ? GameSpells.getAvailableSpells(ch.className, ch.level) : [];
