@@ -830,7 +830,7 @@ test('v79 PWA icon removes the yellow outline around the plus', function () {
   assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v78-192.png')), 'v79 192px centered icon should exist');
   assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v78-512.png')), 'v79 512px centered icon should exist');
   assert.ok(/viz-magic-v78-192\.png\?v=20260815a/.test(indexHtml), 'index should point at the v79 launcher icon');
-  assert.ok(/"start_url":\s*"\/\?pwa=viz-magic-v78"/.test(read('app/manifest.json')), 'manifest start_url should force OS launcher refresh');
+  assert.ok(/"start_url":\s*"\/\?pwa=viz-magic-v129"/.test(read('app/manifest.json')), 'manifest start_url should force OS launcher refresh');
   assert.ok(/"id":\s*"https:\/\/vizmagic\.web3blind\.xyz\/\?pwa=viz-magic-v129"/.test(read('app/manifest.json')), 'manifest id should change so Android can refresh launcher identity');
   assert.ok(/APP_SHELL_ASSETS[\s\S]*viz-magic-v78-512\.png/.test(read('app/sw.js')), 'fast install shell should still include current launcher icons');
 });
