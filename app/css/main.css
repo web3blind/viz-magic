@@ -2572,3 +2572,27 @@ title-icon, .spell-detail-title-icon { animation-name: vmagic-soft-breathe !impo
 html body[data-icon-motion] .magical-forecast .forecast-card .forecast-icon:not(.forecast-hunt-icon) { animation: vmagic-weather-drift 2.8s ease-in-out infinite !important; }
 html body[data-icon-motion] .magical-forecast .forecast-card-hunt-summary .forecast-hunt-icon { animation: vmagic-soft-breathe 2.8s ease-in-out infinite !important; }
 .dev-custom-reward-btn { display: flex; width: 100%; justify-content: center; margin-top: 8px; }
+
+/* ===== Desktop layout pass (v124.1): kill the narrow strip in empty space ===== */
+@media (min-width: 880px) {
+    .landing, .onboarding-step, .home-dashboard, .home-prophecy, .home-lore-pages, .home-install,
+    .character-sheet, .hunt-screen, .inventory-screen, .chronicle-screen, .duel-screen,
+    .arena-screen, .guild-hall, .map-screen, .marketplace-screen, .crafting-screen,
+    .quests-screen, .settings-screen, .help-screen, .temple-screen, .leaderboard-screen,
+    .developers-screen, .boss-screen { max-width: 760px; margin-left: auto; margin-right: auto; }
+
+    .home-lore-pages { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+    .quest-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .market-listings { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .landing-cards { grid-template-columns: repeat(3, 1fr); }
+
+    #bottom-nav { padding: 6px 0 calc(6px + env(safe-area-inset-bottom)); }
+    .nav-tab { font-size: 0.92rem; gap: 4px; padding: 8px 4px; }
+    .nav-tab-icon { font-size: 1.5rem; }
+    .nav-tab-label { color: var(--color-text); }
+
+    h1 { font-size: 1.9rem; }
+    h2 { font-size: 1.4rem; }
+    .screen { padding: 24px; padding-bottom: 100px; }
+}
+
