@@ -550,6 +550,7 @@ body {
 .arena-player-info { display: flex; align-items: center; gap: 6px; }
 .arena-player-level { color: var(--color-text-muted); font-size: 0.85rem; }
 .region-travel-options { display: flex; flex-wrap: nowrap; gap: 5px; margin-top: 8px; }
+.region-travel-hint { font-size: 0.85rem; color: var(--color-text-muted); margin-top: 6px; }
 .region-travel-options .region-travel-btn { flex: 1 1 0; min-width: 0; padding: 7px 6px; font-size: 0.85rem; white-space: nowrap; justify-content: center; }
 
 .arena-history-entry {

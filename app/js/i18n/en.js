@@ -553,8 +553,10 @@ var LangEN = {
     // Territory / Map
     map_title: 'World Map',
     map_current: 'You are here',
-    map_region_already_visited_today: 'you have already visited this region today',
-    map_regions: 'Regions',
+    map_region_already_visited_today: 'You have already visited this region today.',
+    map_find_item: 'On the way you found: {item}!',
+    map_find_double: 'Lucky journey! Double find: {item} ×2!',
+    map_travel_hint: 'Bigger energy investment — higher chance of a travelling find (crafting materials).',    map_regions: 'Regions',
     map_level: 'Lv.',
     map_pvp: 'PvP',
     map_you_are_here: 'You are here',

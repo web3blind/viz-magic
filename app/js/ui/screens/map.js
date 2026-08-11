@@ -12,6 +12,7 @@ var MapScreen = (function() {
     var TRAVEL_COST_LOW = 10;    // 0.1%
     var TRAVEL_COST_HIGH = 100;  // 1%
     var TRAVEL_COST_BURST = 300; // 3%
+    var TRAVEL_FIND_TYPES = ['shadow_shard', 'thorn_essence', 'ancient_shard', 'altar_spark', 'data_core'];
 
     /** Region emoji icons */
     var REGION_ICONS = {
@@ -185,6 +186,7 @@ var MapScreen = (function() {
                 html += '\uD83D\uDEB6 ' + Helpers.manaCost(TRAVEL_COST_BURST);
                 html += '</button>';
                 html += '</div>';
+                html += '<p class="region-travel-hint">' + t('map_travel_hint') + '</p>';
             }
 
             html += '</section>';
@@ -254,6 +256,7 @@ var MapScreen = (function() {
                 stateAfterMove.headBlock = Math.max(stateAfterMove.headBlock || 0, optimisticBlock);
                 pendingTravel = { account: user, from: previousZone, to: regionId, at: Date.now() };
                 Toast.success(t('map_traveled') + ' ' + region.name);
+                _grantTravelFind(user, cost, optimisticBlock);
                 SoundManager.play('transition');
                 try {
                     CheckpointSystem.saveCheckpoint('global', stateAfterMove.headBlock || optimisticBlock, stateAfterMove, function() {});
@@ -261,6 +264,43 @@ var MapScreen = (function() {
                 render();
             }
         });
+    }
+
+    function _rollTravelFind(cost) {
+        var t = Helpers.t;
+        if (cost >= 300) {
+            if (Math.random() >= 0.7) return null;
+            var doubled = Math.random() < 0.3;
+            var type = TRAVEL_FIND_TYPES[Math.floor(Math.random() * TRAVEL_FIND_TYPES.length)];
+            var name = Helpers.t('item_' + type) || type;
+            if (doubled) return { type: type, rarity: 2, msg: t('map_find_double', { item: name }) };
+            return { type: type, rarity: 1, msg: t('map_find_item', { item: name }) };
+        }
+        if (cost >= 100) {
+            if (Math.random() >= 0.35) return null;
+            var type2 = TRAVEL_FIND_TYPES[Math.floor(Math.random() * TRAVEL_FIND_TYPES.length)];
+            return { type: type2, rarity: 1, msg: t('map_find_item', { item: Helpers.t('item_' + type2) || type2 }) };
+        }
+        return null;
+    }
+
+    function _grantTravelFind(user, cost, blockNum) {
+        var t = Helpers.t;
+        var find = _rollTravelFind(cost);
+        if (!find || !user) return;
+        var state = StateEngine.getState();
+        var inv = state.inventories && state.inventories[user];
+        if (!inv) {
+            inv = [];
+            if (!state.inventories) state.inventories = {};
+            state.inventories[user] = inv;
+        }
+        var item = ItemSystem.createItem(find.type, user, find.rarity, blockNum || 0, '', true);
+        inv.push(item);
+        try {
+            CheckpointSystem.saveCheckpoint('global', state.headBlock || blockNum || 0, state, function() {});
+        } catch (e) {}
+        Toast.success(find.msg);
     }
 
     function _dailyQuestAlreadyVisitedRegion(user, regionId) {

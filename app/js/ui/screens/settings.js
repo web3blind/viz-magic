@@ -61,7 +61,6 @@ var SettingsScreen = (function() {
         var reducedMotion = _getStoredBool('reduced_motion', false);
         var iconMotion = _getStoredText('icon_motion', 'sparkle');
         var sfxVolume = Math.round(_getStoredNumber('sfx_volume', 0.5) * 100);
-        var musicVolume = Math.round(_getStoredNumber('music_volume', 0.5) * 100);
         var narratorEnabled = (typeof BattleNarrator !== 'undefined' && BattleNarrator.isEnabled) ? BattleNarrator.isEnabled() : _getStoredBool('battle_narrator', false);
         var narratorVoice = (typeof BattleNarrator !== 'undefined' && BattleNarrator.getVoiceOptions) ? BattleNarrator.getVoiceOptions() : {
             gender: _getStoredText('narrator_voice_gender', 'male'),
@@ -86,7 +85,6 @@ var SettingsScreen = (function() {
                 '<section class="settings-section" aria-label="' + t('settings_sound') + '">' +
                     '<h2><span class="section-icon settings-section-icon vmagic-breathe" aria-hidden="true">🔊</span> ' + t('settings_sound') + '</h2>' +
                     _renderSlider('sfx-volume', t('settings_sfx'), sfxVolume, '🔔') +
-                    _renderSlider('music-volume', t('settings_music'), musicVolume, '🎵') +
                     _renderToggle('narrator-toggle', t('narrator_toggle'), narratorEnabled) +
                     _renderSelect('narrator-voice-gender', t('narrator_voice_gender'), [
                         { value: 'male', label: t('narrator_voice_male') },
@@ -268,11 +266,6 @@ var SettingsScreen = (function() {
         var sfxSlider = el.querySelector('#sfx-volume');
         if (sfxSlider) sfxSlider.addEventListener('input', function() {
             SoundManager.setVolume(this.value / 100);
-        });
-
-        var musicSlider = el.querySelector('#music-volume');
-        if (musicSlider) musicSlider.addEventListener('input', function() {
-            _setStoredNumber('music_volume', this.value / 100);
         });
 
         // Icon motion buttons
