@@ -976,7 +976,7 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260814a/.test(indexHtml), 'Help should be cache-busted for guide redesign');
   assert.ok(/main\.css\?v=20260814a/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v127/.test(swJsV83), 'service worker should use the current v91 cache');
+  assert.ok(/viz-magic-v128/.test(swJsV83), 'service worker should use the current v91 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
 
@@ -1036,7 +1036,7 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
   assert.ok(/quest-system\.js\?v=20260814a/.test(indexHtml) && /quests\.js\?v=20260814a/.test(indexHtml), 'quest engine and UI should be cache-busted');
   assert.ok(/inventory\.js\?v=20260814a/.test(indexHtml) && /marketplace\.js\?v=20260814a/.test(indexHtml), 'item icon screens should be cache-busted');
   assert.ok(/guild\.js\?v=20260814a/.test(indexHtml) && /settings\.js\?v=20260814a/.test(indexHtml), 'guild/settings screens should be cache-busted');
-  assert.ok(/viz-magic-v127/.test(swJs), 'service worker should use v91 cache');
+  assert.ok(/viz-magic-v128/.test(swJs), 'service worker should use v91 cache');
 });
 
 
@@ -1093,7 +1093,7 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.ok(/world-boss\.js\?v=20260814a/.test(indexHtml), 'world boss UI should be cache-busted');
   assert.ok(/character\.js\?v=20260814a/.test(indexHtml), 'character UI should be cache-busted');
   assert.ok(/main\.css\?v=20260814a/.test(indexHtml), 'avatar CSS should be cache-busted');
-  assert.ok(/viz-magic-v127/.test(swJs), 'service worker should use v92 cache');
+  assert.ok(/viz-magic-v128/.test(swJs), 'service worker should use v92 cache');
 });
 
 
@@ -1278,7 +1278,7 @@ test('bottom navigation keeps icons above single-line labels and cache-busts cha
   assert.ok(/inventory\.js\?v=20260814a/.test(indexHtml), 'inventory cache bust missing');
   assert.ok(/marketplace\.js\?v=20260814a/.test(indexHtml), 'marketplace cache bust missing');
   assert.ok(/nav\.js\?v=20260814a/.test(indexHtml), 'nav cache bust missing');
-  assert.ok(/viz-magic-v127/.test(read('app/sw.js')), 'service worker cache should be v103');
+  assert.ok(/viz-magic-v128/.test(read('app/sw.js')), 'service worker cache should be v103');
 });
 
 
@@ -1310,7 +1310,7 @@ test('v103 weave surge, default avatars, and guide copy polish are explicit', fu
   assert.ok(/main\.css\?v=20260814a/.test(indexHtml), 'v103 CSS should be cache-busted');
   assert.ok(/home\.js\?v=20260814a/.test(indexHtml) && /character\.js\?v=20260814a/.test(indexHtml), 'v103 Home and Character should be cache-busted');
   assert.ok(/settings\.js\?v=20260814a/.test(indexHtml) && /help\.js\?v=20260814a/.test(indexHtml), 'v103 Settings and Help should be cache-busted');
-  assert.ok(/viz-magic-v127/.test(swJs), 'service worker should use v103 cache');
+  assert.ok(/viz-magic-v128/.test(swJs), 'service worker should use v103 cache');
 });
 
 
@@ -1341,7 +1341,7 @@ test('quest abandon charges only unstarted quests and warns before forfeit', fun
   assert.ok(/state-engine\.js\?v=20260814a/.test(indexPenalty), 'state engine cache bust missing for abandon penalty');
   assert.ok(/quests\.js\?v=20260814a/.test(indexPenalty), 'quests screen cache bust missing for abandon penalty');
   assert.ok(/js\/i18n\/ru\.js\?v=20260814a/.test(indexPenalty) && /js\/i18n\/en\.js\?v=20260814a/.test(indexPenalty), 'i18n cache bust missing for abandon penalty');
-  assert.ok(/viz-magic-v127/.test(swPenalty), 'service worker should use v104 cache');
+  assert.ok(/viz-magic-v128/.test(swPenalty), 'service worker should use v104 cache');
 });
 
 
@@ -1399,7 +1399,7 @@ test('v110 player feedback keeps requested icons, copy, vital explainers, and ev
   ['main.css','ru.js','en.js','world-events.js','progress-bar.js','nav.js','home.js','character.js','hunt.js','inventory.js','arena.js','settings.js','leaderboard.js'].forEach(function(asset) {
     assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=20260814a').test(index), asset + ' should be cache-busted for v110');
   });
-  assert.ok(/viz-magic-v127/.test(sw), 'service worker should use v110 cache');
+  assert.ok(/viz-magic-v128/.test(sw), 'service worker should use v110 cache');
 });
 
 test('v109 player polish batch removes stale text, fixes motion/copy/icons, and fills hunt tier gap', function () {
@@ -1453,7 +1453,7 @@ test('v109 player polish batch removes stale text, fixes motion/copy/icons, and 
   ['main.css','ru.js','en.js','world-events.js','creatures.js','character.js','hunt.js','inventory.js','arena.js','guild.js','marketplace.js','leaderboard.js','settings.js'].forEach(function(asset) {
     assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=20260814a').test(indexV109), asset + ' should be cache-busted for v109');
   });
-  assert.ok(/viz-magic-v127/.test(swV109), 'service worker should use v109 cache');
+  assert.ok(/viz-magic-v128/.test(swV109), 'service worker should use v109 cache');
 });
 
 test('v108 inventory, bottom nav, hunt danger marker, and arena motion polish are explicit', function () {
@@ -1497,7 +1497,7 @@ test('v108 inventory, bottom nav, hunt danger marker, and arena motion polish ar
   assert.ok(/nav\.js\?v=20260814a/.test(indexV108), 'nav cache bust missing for v108');
   assert.ok(/marketplace\.js\?v=20260814a/.test(indexV108), 'marketplace cache bust missing for v108 icon parity');
   assert.ok(/js\/i18n\/ru\.js\?v=20260814a/.test(indexV108) && /js\/i18n\/en\.js\?v=20260814a/.test(indexV108), 'i18n cache bust missing for v108 item labels');
-  assert.ok(/viz-magic-v127/.test(swV108), 'service worker should use v108 cache');
+  assert.ok(/viz-magic-v128/.test(swV108), 'service worker should use v108 cache');
 });
 
 test('v107 hunt combat uses spell mana cost, not full account energy', function () {
@@ -1526,7 +1526,7 @@ test('v107 hunt combat uses spell mana cost, not full account energy', function 
   assert.ok(/combat\.js\?v=20260814a/.test(indexV107), 'combat cache bust missing for v118 hunt mercy fix');
   assert.ok(/state-engine\.js\?v=20260814a/.test(indexV107), 'state engine cache bust missing for v107 hunt energy fix');
   assert.ok(/hunt\.js\?v=20260814a/.test(indexV107), 'hunt screen cache bust missing for v107 hunt energy fix');
-  assert.ok(/viz-magic-v127/.test(swV107), 'service worker should use v107 cache');
+  assert.ok(/viz-magic-v128/.test(swV107), 'service worker should use v107 cache');
 });
 
 test('v106 hunt danger copy is truthful and Weave title is single-line', function () {
@@ -1549,7 +1549,7 @@ test('v106 hunt danger copy is truthful and Weave title is single-line', functio
   assert.ok(/main\.css\?v=20260814a/.test(indexV106), 'v106 CSS cache bust missing');
   assert.ok(/creatures\.js\?v=20260814a/.test(indexV106), 'v106 creatures cache bust missing');
   assert.ok(/hunt\.js\?v=20260814a/.test(indexV106), 'v106 hunt cache bust missing');
-  assert.ok(/viz-magic-v127/.test(swV106), 'service worker should use v106 cache');
+  assert.ok(/viz-magic-v128/.test(swV106), 'service worker should use v106 cache');
 });
 
 test('v105 text quality, season colors, avatar title, and spell modal polish are explicit', function () {
@@ -1595,7 +1595,7 @@ test('v105 text quality, season colors, avatar title, and spell modal polish are
   assert.ok(/settings\.js\?v=20260814a/.test(indexV105) && /leaderboard\.js\?v=20260814a/.test(indexV105), 'Settings/Leaderboard cache bust missing for v105');
   assert.ok(/world-events\.js\?v=20260814a/.test(indexV105), 'world events cache bust missing for v105');
   assert.ok(/js\/i18n\/ru\.js\?v=20260814a/.test(indexV105) && /js\/i18n\/en\.js\?v=20260814a/.test(indexV105), 'i18n cache bust missing for v105');
-  assert.ok(/viz-magic-v127/.test(swV105), 'service worker should use v105 cache');
+  assert.ok(/viz-magic-v128/.test(swV105), 'service worker should use v105 cache');
 });
 
 
@@ -1647,7 +1647,7 @@ test('v112 player feedback fixes event surface weather inventory and ranking pol
   ['main.css','ru.js','en.js','world-events.js','progress-bar.js','nav.js','home.js','character.js','hunt.js','inventory.js','arena.js','settings.js','leaderboard.js','marketplace.js','guild.js','creatures.js'].forEach(function(asset) {
     assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=20260814a').test(index), asset + ' should be cache-busted for v112');
   });
-  assert.ok(/viz-magic-v127/.test(sw), 'service worker should use v112 cache');
+  assert.ok(/viz-magic-v128/.test(sw), 'service worker should use v112 cache');
 });
 
 
@@ -1656,7 +1656,7 @@ test('v114 loading state does not invent an embercaster level-one character', fu
   assert.ok(/hasCharacter = !!character/.test(homeJs) && /characterLine = hasCharacter/.test(homeJs), 'Home should render neutral loading copy until the real character exists');
   assert.ok(/if \(!ch\)/.test(characterScreenJs) && /t\('loading'\)/.test(characterScreenJs), 'Character screen should show loading instead of a fake level-one class');
   assert.ok(/home.js\?v=20260814a/.test(indexHtml) && /character.js\?v=20260814a/.test(indexHtml), 'loading fallback fix should be cache-busted');
-  assert.ok(/viz-magic-v127/.test(swJs), 'service worker should publish v114');
+  assert.ok(/viz-magic-v128/.test(swJs), 'service worker should publish v114');
 });
 
 
@@ -1664,7 +1664,7 @@ test('v115 service worker forces stale PWA windows onto the fresh cache-busted a
   assert.ok(/app.js\?v=20260814a/.test(indexHtml), 'main app controller should be cache-busted with UI fixes');
   assert.ok(/sw_reload_v123/.test(appJs) && /controllerchange/.test(appJs) && /window\.location\.reload/.test(appJs), 'app should reload once when a fresh service worker takes control');
   assert.ok(/clients\.matchAll/.test(swJs) && /client\.navigate\(client\.url\)/.test(swJs), 'service worker activation should navigate open PWA windows to fresh assets');
-  assert.ok(/viz-magic-v127/.test(swJs), 'service worker should publish v115');
+  assert.ok(/viz-magic-v128/.test(swJs), 'service worker should publish v115');
 });
 
 
