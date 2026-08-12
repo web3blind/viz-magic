@@ -744,7 +744,11 @@ var StateEngine = (function() {
         });
 
         if (typeof QuestSystem !== 'undefined' && worldState.quests && worldState.quests[award.initiator]) {
-            QuestSystem.updateQuestProgress(worldState.quests[award.initiator], 'social', { target: 'blessing', uniqueKey: award.receiver, count: 1 });
+            // v133: unique-key is per-day (receiver@blockDay) so the same mage
+            // can be blessed once per day toward the "Generous Spirit" quest,
+            // instead of being blocked forever after a single blessing.
+            var blessDay = Math.floor((blockNum || 0) / 28800);
+            QuestSystem.updateQuestProgress(worldState.quests[award.initiator], 'social', { target: 'blessing', uniqueKey: award.receiver + '@' + blessDay, count: 1 });
         }
     }
 

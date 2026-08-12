@@ -260,6 +260,7 @@ var LangEN = {
     chronicle_bless: 'Bless',
     chronicle_bless_cost: '{name} · Bless · {cost}',
     chronicle_blessed: 'Blessing sent!',
+    chronicle_bless_already_today: 'You already blessed this mage today — blessing the same mage again will not count toward the quest today (it will count from tomorrow).',
     chronicle_write: 'Write in Chronicle',
     chronicle_placeholder: 'Write your words into the World...',
     chronicle_send: 'Inscribe',

@@ -260,6 +260,7 @@ var LangRU = {
     chronicle_bless: 'Благословить',
     chronicle_bless_cost: '{name} · Благословить · {cost}',
     chronicle_blessed: 'Благословение отправлено!',
+    chronicle_bless_already_today: 'Сегодня ты уже благословлял этого мага — повторное благословение того же мага в задание не засчитается (засчитается с завтрашнего дня).',
     chronicle_write: 'Написать в Хронику',
     chronicle_placeholder: 'Впиши слова в Мир...',
     chronicle_send: 'Вписать',

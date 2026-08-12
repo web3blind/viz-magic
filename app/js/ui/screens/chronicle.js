@@ -410,7 +410,9 @@ var ChronicleScreen = (function() {
         var state = StateEngine.getState();
         var user = VizAccount.getCurrentUser();
         if (!state || !user || !account || !state.quests || !state.quests[user] || typeof QuestSystem === 'undefined') return;
-        QuestSystem.updateQuestProgress(state.quests[user], 'social', { target: 'blessing', uniqueKey: account, count: 1 });
+        // v133: per-day unique key — same mage counts once per day, not once ever.
+        var blessDay = Math.floor((state.headBlock || 0) / 28800);
+        QuestSystem.updateQuestProgress(state.quests[user], 'social', { target: 'blessing', uniqueKey: account + '@' + blessDay, count: 1 });
         try {
             CheckpointSystem.saveCheckpoint('global', state.headBlock || 0, state, function() {});
         } catch (e) {}
@@ -498,6 +500,12 @@ var ChronicleScreen = (function() {
         var user = VizAccount.getCurrentUser();
         if (!user || user === account) return;
 
+        // v133: warn when re-blessing the same mage today — it won't count again
+        // toward the "Generous Spirit" quest (per-day unique key).
+        if (_isBlessedToday(account)) {
+            Toast.info(Helpers.t('chronicle_bless_already_today'));
+        }
+
         SoundManager.play('bless_send');
         SoundManager.vibrate('light');
 
@@ -512,6 +520,33 @@ var ChronicleScreen = (function() {
                 _loadFeed();
             }
         });
+    }
+
+    /**
+     * v133: is this mage already blessed today (same block-day) in any active
+     * blessing quest? Per-day unique keys mean a repeat today won't advance
+     * the "Generous Spirit" quest progress.
+     */
+    function _isBlessedToday(account) {
+        var state = StateEngine.getState();
+        var user = VizAccount.getCurrentUser();
+        if (!state || !user || !state.quests || !state.quests[user]) return false;
+        var blessDay = Math.floor((state.headBlock || 0) / 28800);
+        var todayKey = account + '@' + blessDay;
+        var active = state.quests[user].active || [];
+        for (var i = 0; i < active.length; i++) {
+            var q = active[i];
+            var objs = q && q.objectives ? q.objectives : [];
+            for (var j = 0; j < objs.length; j++) {
+                var o = objs[j];
+                if (!o || o.type !== 'social' || o.target !== 'blessing' || !o.uniqueTarget) continue;
+                var seen = o.seenTargets || [];
+                for (var k = 0; k < seen.length; k++) {
+                    if (seen[k] === todayKey) return true;
+                }
+            }
+        }
+        return false;
     }
 
     function _hasRequiredTag(text) {
