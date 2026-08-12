@@ -275,38 +275,60 @@ var DailyLeaderboard = (function() {
     }
 
     function _scanBatch(ctx, startBlock, endBlock, callback) {
-        var current = startBlock;
+        var blocks = [];
+        var i;
+        for (i = startBlock; i <= endBlock; i++) blocks.push(i);
 
-        function next() {
-            if (current > endBlock) {
+        var index = 0;
+        var CONCURRENT = 8;
+        var active = 0;
+        var doneCount = 0;
+        var failed = false;
+
+        function finishIfDone() {
+            if (failed) return;
+            if (doneCount >= blocks.length) {
                 callback(null);
-                return;
             }
+        }
 
-            viz.api.getBlock(current, function(err, block) {
-                if (err || !block) {
-                    ctx.processedBlocks++;
-                    _updateProgress(ctx, current);
-                    current++;
-                    next();
+        function worker() {
+            if (failed) return;
+            if (index >= blocks.length) return;
+            var blockNum = blocks[index++];
+            active++;
+            viz.api.getBlock(blockNum, function(err, block) {
+                active--;
+                if (failed) {
+                    finishIfDone();
                     return;
                 }
-
-                var processed = BlockProcessor.processBlock(block, current);
+                if (err || !block) {
+                    ctx.processedBlocks++;
+                    _updateProgress(ctx, blockNum);
+                    doneCount++;
+                    finishIfDone();
+                    worker();
+                    return;
+                }
+                var processed = BlockProcessor.processBlock(block, blockNum);
                 _processProcessedBlock(ctx, processed, function(processErr) {
                     if (processErr) {
+                        failed = true;
                         callback(processErr);
                         return;
                     }
                     ctx.processedBlocks++;
-                    _updateProgress(ctx, current);
-                    current++;
-                    next();
+                    _updateProgress(ctx, blockNum);
+                    doneCount++;
+                    finishIfDone();
+                    worker();
                 });
             });
         }
 
-        next();
+        var startWorkers = Math.min(CONCURRENT, blocks.length);
+        for (i = 0; i < startWorkers; i++) worker();
     }
 
     function _processProcessedBlock(ctx, processed, callback) {

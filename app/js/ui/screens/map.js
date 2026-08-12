@@ -68,6 +68,8 @@ var MapScreen = (function() {
         var html = '';
         html += '<div class="map-screen" role="region" aria-label="' + t('map_title') + '">';
         html += '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🗺️</span> ' + t('map_title') + '</h1>';
+        // v133: travel explanation once under the page title, not repeated in every region block
+        html += '<p class="map-travel-hint-page">' + t('map_travel_hint') + '</p>';
 
         // Current location
         if (character) {
@@ -187,7 +189,6 @@ var MapScreen = (function() {
                 html += '\uD83D\uDEB6 ' + Helpers.manaCost(TRAVEL_COST_BURST);
                 html += '</button>';
                 html += '</div>';
-                html += '<p class="region-travel-hint">' + t('map_travel_hint') + '</p>';
             }
 
             html += '</section>';

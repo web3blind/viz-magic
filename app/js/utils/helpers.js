@@ -255,6 +255,26 @@ var Helpers = (function() {
         return school ? 'school-' + school : '';
     }
 
+    /**
+     * Magical rank key for a level (matches help_magic_ranks_text ladder).
+     * Returns an i18n key, or '' for unknown levels.
+     */
+    function magicRank(level) {
+        var l = level | 0;
+        if (l <= 0) return '';
+        if (l <= 10) return 'magic_rank_seeker';
+        if (l <= 20) return 'magic_rank_adept';
+        if (l <= 30) return 'magic_rank_knower';
+        if (l <= 40) return 'magic_rank_spellcaster';
+        if (l <= 50) return 'magic_rank_sorcerer';
+        if (l <= 60) return 'magic_rank_wizard';
+        if (l <= 70) return 'magic_rank_magister';
+        if (l <= 80) return 'magic_rank_arcanist';
+        if (l <= 90) return 'magic_rank_seer';
+        if (l <= 100) return 'magic_rank_grandmaster';
+        return 'magic_rank_beyond';
+    }
+
     return {
         EventBus: EventBus,
         $: $,
@@ -273,6 +293,7 @@ var Helpers = (function() {
         manaCost: manaCost,
         rarityClass: rarityClass,
         classIcon: classIcon,
+        magicRank: magicRank,
         schoolColor: schoolColor,
         schoolClass: schoolClass
     };

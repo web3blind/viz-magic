@@ -514,7 +514,7 @@ var WorldEvents = (function() {
         { icon: '🛡️', titleKey: 'home_world_legends_title', text: 'Щит первого послушника был так честен, что отражал не удары, а намерения. Поэтому его быстро спрятали.' },
         { icon: '🧠', titleKey: 'home_world_legends_title', text: 'Однажды мудрец доказал, что дверь не существует. Дверь обиделась и ушла вместе со стеной.' },
         { icon: '🔍', titleKey: 'home_world_legends_title', text: 'Лупа первого мага показывала не лицо, а следующий неудачный совет.' },
-        { icon: '🏰', titleKey: 'home_world_legends_title', text: 'Башня на краю карты растёт вниз, потому что наверху слишком много уверенных героев.' },
+        { icon: '🏰', titleKey: 'home_world_legends_title', text: 'Башня на краю карты растёт вниз, потому что наверху слишком много уверенных героев. Гильдии советуют относиться к этому почти серьёзно.' },
         { icon: '🧵', titleKey: 'home_world_legends_title', text: 'Нить судьбы однажды запуталась в кошке, и с тех пор судьба иногда мурчит.' },
         { icon: '🕳️', titleKey: 'home_world_legends_title', text: 'Пустая тень получила имя раньше хозяина и до сих пор этим пользуется.' },
         { icon: '⚖️', titleKey: 'home_world_legends_title', text: 'Судья ветров вынес приговор сквозняку, но сквозняк вышел через другую дверь.' },
@@ -729,8 +729,9 @@ var WorldEvents = (function() {
         var day = _getMoscowDayIndex();
         var pages = [
             _dailyFromPool(NATURE_PAGES, day, 0),
-            _dailyFromPool(LEGEND_PAGES, day, 1),
-            _dailyFromPool(SPELL_PAGES, day, 2)
+            _dailyFromPool(LEGEND_PAGES, day, 1)
+            // v133: the "Магические заклинания" lore block is removed from Home
+            // (Денис: пустой блок без значка — не должно быть).
         ];
         var tailIdx = day % LORE_DAILY_TAILS.length;
         if (tailIdx < 0) tailIdx = 0;

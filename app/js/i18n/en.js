@@ -1285,10 +1285,10 @@ var LangEN = {
     help_world_days_text: 'The Sky block shows one of seven in-world names each day: Sky, Earth, Water, Air, Wind, Fire, Aether. It is a magical world cycle rather than an ordinary calendar, so Home shows only the current world-day name.',
 
     help_section_hp: 'HP & Recovery',
-    help_hp_text: 'HP is your health. Max HP grows from your level, class, and Resilience: base 100 + level × 10 + RES × 3, then your class multiplier is applied. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 100 blocks, ~5 min). <br>Full recovery: open the Hunt screen and press “Rest at camp”, or use a Health Scroll (craftable or dropped by creatures).',
+    help_hp_text: 'HP is your health. Max HP grows from your level, class, and Resilience: base 100 + level × 10 + RES × 3, then your class multiplier is applied. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 100 blocks, ~5 min). <br>Full recovery: open the Hunt screen and press <button type="button" class="help-nav-link" data-help-nav="hunt">Rest at camp</button>, or use a Health Scroll (craftable or dropped by creatures).',
 
     help_section_quests: 'Quests & Prophecies',
-    help_quests_text: 'Regular quests are accepted in the Quests screen. “Traveler” currently means visiting 3 different regions via the world map — open the map, choose another region, and press “Travel”.<br>The Daily Prophecy must also be accepted first, then completed. If it tells you to bless others, do that in the Chronicle with the “Bless” button on other mages\' entries. Abandoning a quest after progress only loses that progress; abandoning a quest before the first step pays a small forfeit to the World — 1.00% Mana.',
+    help_quests_text: 'Regular quests are accepted in the <button type="button" class="help-nav-link" data-help-nav="quests">Quests</button> screen. “Traveler” currently means visiting 3 different regions via the <button type="button" class="help-nav-link" data-help-nav="map">World Map</button> — open the map, choose another region, and press “Travel”.<br>The <button type="button" class="help-nav-link" data-help-nav="quests">Daily Prophecy</button> must also be accepted first, then completed. If it tells you to bless others, do that in the <button type="button" class="help-nav-link" data-help-nav="chronicle">Chronicle</button> with the “Bless” button on other mages\' entries. Abandoning a quest after progress only loses that progress; abandoning a quest before the first step pays a small forfeit to the World — 1.00% Mana.',
 
     help_section_hunt: 'Hunting',
     help_hunt_text: 'Choose a creature and a spell, then attack. Victory earns XP and loot. Defeat gives 25% XP. Loot is volatile — bank it in a safe zone to keep it.',
@@ -1311,6 +1311,17 @@ var LangEN = {
     help_section_classes: 'Classes',
     help_section_magic_ranks: 'Magical ranks',
     help_magic_ranks_text: 'As you level up, you grow in magical science: 1-10 Seeker, 11-20 Adept, 21-30 Sage, 31-40 Spellcaster, 41-50 Sorcerer, 51-60 Wizard, 61-70 Magister, 71-80 Arcanist, 81-90 Seer, 91-100 Grandmaster, 101+ Mage Beyond Categories.',
+    magic_rank_seeker: 'Seeker',
+    magic_rank_adept: 'Adept',
+    magic_rank_knower: 'Sage',
+    magic_rank_spellcaster: 'Spellcaster',
+    magic_rank_sorcerer: 'Sorcerer',
+    magic_rank_wizard: 'Wizard',
+    magic_rank_magister: 'Magister',
+    magic_rank_arcanist: 'Arcanist',
+    magic_rank_seer: 'Seer',
+    magic_rank_grandmaster: 'Grandmaster',
+    magic_rank_beyond: 'Mage Beyond Categories',
     help_classes_text: 'Stonewarden (Terra) — tank. Embercaster (Ignis) — burst DPS.<br>Moonrunner (Umbra) — evasion. Bloomsage (Aqua) — healer.<br>Each class has unique spells and stat growth.',
 
     help_section_duels: 'Duels & Arena',

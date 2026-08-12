@@ -49,6 +49,20 @@ var HelpScreen = (function() {
 
         html += '</section>' + _renderLorePages(t) + '</article></div>';
         el.innerHTML = html;
+        _bindNavLinks(el);
+    }
+
+    function _bindNavLinks(el) {
+        var links = el.querySelectorAll('.help-nav-link');
+        for (var i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function() {
+                var target = this.getAttribute('data-help-nav');
+                if (target) {
+                    if (typeof SoundManager !== 'undefined') SoundManager.play('tap');
+                    Helpers.EventBus.emit('navigate', target);
+                }
+            });
+        }
     }
 
     function _renderLorePages(t) {

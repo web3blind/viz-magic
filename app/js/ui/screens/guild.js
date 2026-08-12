@@ -666,7 +666,7 @@ var GuildScreen = (function() {
         html += '</select>';
         html += '<div class="modal-actions">';
         html += '<button class="btn btn-primary" id="modal-create-guild">' + t('confirm') + '</button>';
-        html += '<button class="btn btn-secondary" id="modal-cancel">' + t('cancel') + '</button>';
+        html += '<button class="btn btn-warm" id="modal-cancel">' + t('cancel') + '</button>';
         html += '</div>';
         html += '</div>';
 
@@ -721,7 +721,7 @@ var GuildScreen = (function() {
         html += '<input type="text" class="input-field" id="recruit-target" placeholder="account-name">';
         html += '<div class="modal-actions">';
         html += '<button class="btn btn-primary" id="modal-recruit">' + t('guild_invite_send') + '</button>';
-        html += '<button class="btn btn-secondary" id="modal-cancel">' + t('cancel') + '</button>';
+        html += '<button class="btn btn-warm" id="modal-cancel">' + t('cancel') + '</button>';
         html += '</div>';
         html += '</div>';
 
@@ -820,7 +820,7 @@ var GuildScreen = (function() {
         html += '<p class="input-feedback"><span class="section-icon vmagic-breathe" aria-hidden="true">🔐</span> ' + t('guild_patronage_note') + '</p>';
         html += '<div class="modal-actions">';
         html += '<button class="btn btn-primary" id="modal-patronage">' + t('guild_patronage_delegate') + '</button>';
-        html += '<button class="btn btn-secondary" id="modal-cancel">' + t('cancel') + '</button>';
+        html += '<button class="btn btn-warm" id="modal-cancel">' + t('cancel') + '</button>';
         html += '</div>';
         html += '</div>';
 
@@ -865,7 +865,7 @@ var GuildScreen = (function() {
         html += '</select>';
         html += '<div class="modal-actions">';
         html += '<button class="btn btn-primary" id="modal-promote">' + t('confirm') + '</button>';
-        html += '<button class="btn btn-secondary" id="modal-cancel">' + t('cancel') + '</button>';
+        html += '<button class="btn btn-warm" id="modal-cancel">' + t('cancel') + '</button>';
         html += '</div>';
         html += '</div>';
 

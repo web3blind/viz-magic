@@ -189,13 +189,29 @@ var QuestsScreen = (function() {
             return '<div class="empty-state">' + t('quest_none_completed') + '</div>';
         }
 
-        var html = '<p class="quest-completed-celebration" role="status"><span class="vmagic-breathe" aria-hidden="true">🏆</span> ' + t('quest_completed_pride') + '</p><ul class="quest-list completed" role="list">';
-        for (var i = completed.length - 1; i >= Math.max(0, completed.length - 20); i--) {
+        // v133: group identical completed daily quests into one row with a count
+        // (Денис: "ежедневные путешествия x15, ежедневная охота x3 — не надо гору одинаковых блоков").
+        var groups = [];
+        var byKey = {};
+        for (var i = 0; i < completed.length; i++) {
             var q = completed[i];
             var title = _completedQuestTitle(q, t);
+            var key = title;
+            if (!byKey[key]) {
+                byKey[key] = { title: title, count: 0 };
+                groups.push(byKey[key]);
+            }
+            byKey[key].count++;
+        }
+
+        var html = '<p class="quest-completed-celebration" role="status"><span class="vmagic-breathe" aria-hidden="true">🏆</span> ' + t('quest_completed_pride') + '</p><ul class="quest-list completed" role="list">';
+        // Keep most recent first, like the original list order.
+        for (var g = groups.length - 1; g >= Math.max(0, groups.length - 20); g--) {
+            var grp = groups[g];
             html += '<li class="quest-card quest-completed-card">' +
                 '<span class="quest-icon vmagic-breathe" aria-hidden="true">🏅</span><span aria-hidden="true">&nbsp;</span>' +
-                '<span class="quest-name">' + Helpers.escapeHtml(title) + '</span>' +
+                '<span class="quest-name">' + Helpers.escapeHtml(grp.title) + '</span>' +
+                (grp.count > 1 ? '<span class="quest-completed-count" aria-label="' + grp.count + '">' + grp.count + '</span>' : '') +
             '</li>';
         }
         html += '</ul>';

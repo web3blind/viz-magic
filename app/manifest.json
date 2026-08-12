@@ -15,25 +15,25 @@
     "lang": "ru",
     "icons": [
         {
-            "src": "/assets/icons/viz-magic-v78-192.png",
+            "src": "/assets/icons/viz-magic-v133-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/assets/icons/viz-magic-v78-192.png",
+            "src": "/assets/icons/viz-magic-v133-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "maskable"
         },
         {
-            "src": "/assets/icons/viz-magic-v78-512.png",
+            "src": "/assets/icons/viz-magic-v133-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/assets/icons/viz-magic-v78-512.png",
+            "src": "/assets/icons/viz-magic-v133-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"

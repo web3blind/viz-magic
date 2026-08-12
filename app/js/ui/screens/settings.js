@@ -229,7 +229,7 @@ var SettingsScreen = (function() {
             '<span class="input-label">' + t('settings_avatar_mode') + '</span>' +
             '<div class="settings-toggle-group settings-choice-group">' +
                 '<button type="button" class="btn btn-sm ' + (currentMode === 'fit' ? 'btn-primary' : 'btn-secondary') + ' avatar-mode-option" data-avatar-mode="fit" aria-pressed="' + (currentMode === 'fit') + '">' + t('settings_avatar_mode_fit') + '</button>' +
-                '<button type="button" class="btn btn-sm ' + (currentMode === 'crop' ? 'btn-primary' : 'btn-secondary') + ' avatar-mode-option" data-avatar-mode="crop" aria-pressed="' + (currentMode === 'crop') + '">' + t('settings_avatar_mode_crop') + '</button>' +
+                '<button type="button" class="btn btn-sm btn-warm avatar-mode-option" data-avatar-mode="crop" aria-pressed="' + (currentMode === 'crop') + '">' + t('settings_avatar_mode_crop') + '</button>' +
             '</div>' +
             '<p class="settings-help-text">' + t('settings_avatar_mode_hint') + '</p>' +
         '</div>';

@@ -1996,9 +1996,9 @@ body,
     @keyframes vmagic-rune-pulse { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255,216,88,0)); transform: scale(1) rotate(0deg); } 50% { filter: drop-shadow(0 0 14px rgba(255,216,88,0.75)); transform: scale(1.12) rotate(-3deg); } }
     @keyframes vmagic-boss-breathe { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(124,53,255,0)); } 50% { transform: scale(1.10); filter: drop-shadow(0 0 16px rgba(124,53,255,0.65)); } }
     @keyframes vmagic-weather-drift { 0%, 100% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 0 0 rgba(88,166,255,0)); } 50% { transform: translateY(-5px) rotate(4deg) scale(1.10); filter: drop-shadow(0 0 12px rgba(88,166,255,0.65)); } }
-    @keyframes vmagic-soft-breathe { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,216,88,0)); } 50% { transform: scale(1.10); filter: drop-shadow(0 0 14px rgba(255,216,88,0.65)); } }
+    @keyframes vmagic-soft-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.14); } }
     @keyframes vmagic-tile-shimmer { 0%, 100% { transform: translateY(0) scale(1); filter: saturate(1); } 50% { transform: translateY(-3px) scale(1.08); filter: saturate(1.45) drop-shadow(0 0 10px rgba(88,166,255,0.5)); } }
-    .recipe-icon, .vmagic-breathe, .screen-title-icon, .section-icon, .prophecy-icon, .nav-icon, .region-icon, .char-icon, .guild-action-icon, .settings-control-icon, .item-icon, .market-item-icon, .chronicle-icon, .chronicle-author-prefix, .quest-map-objective-icon, .quest-icon, .tile-icon, .tile-avatar-icon, .modal-title-icon, .spell-detail-title-icon, .member-icon, .vital-label-icon, .home-character-icon, .event-icon, .arena-class-icon, .boss-avatar, .arena-avatar, .leaderboard-avatar, .settings-avatar-preview, .account-avatar, .default-avatar { display: inline-flex; align-items: center; justify-content: center; animation: vmagic-soft-breathe 5.6s ease-in-out infinite; transform-origin: center; }
+    .recipe-icon, .vmagic-breathe, .screen-title-icon, .section-icon, .prophecy-icon, .nav-icon, .region-icon, .char-icon, .guild-action-icon, .settings-control-icon, .item-icon, .market-item-icon, .chronicle-icon, .chronicle-author-prefix, .quest-map-objective-icon, .quest-icon, .tile-icon, .tile-avatar-icon, .modal-title-icon, .spell-detail-title-icon, .member-icon, .vital-label-icon, .home-character-icon, .event-icon, .arena-class-icon, .boss-avatar, .arena-avatar, .leaderboard-avatar, .settings-avatar-preview, .account-avatar, .default-avatar { display: inline-flex; align-items: center; justify-content: center; animation: vmagic-soft-breathe 5.6s cubic-bezier(0.4, 0, 0.2, 1) infinite; transform-origin: center; filter: drop-shadow(0 0 7px rgba(255, 216, 88, 0.5)); }
     .magical-forecast .forecast-icon { display: inline-block; animation: vmagic-weather-drift 2.8s ease-in-out infinite; }
     .magical-forecast .forecast-hunt-icon { animation: vmagic-soft-breathe 2.8s ease-in-out infinite; }
     .vmagic-soft-icon { display: inline-block; animation: vmagic-soft-breathe 4.0s ease-in-out infinite; }
@@ -2007,13 +2007,13 @@ body,
     body[data-icon-motion="sync"] .recipe-icon, body[data-icon-motion="sync"] .craft-icon-anim, body[data-icon-motion="sync"] .vmagic-breathe, body[data-icon-motion="sync"] .screen-title-icon, body[data-icon-motion="sync"] .section-icon, body[data-icon-motion="sync"] .prophecy-icon, body[data-icon-motion="sync"] .nav-icon, body[data-icon-motion="sync"] .region-icon, body[data-icon-motion="sync"] .char-icon, body[data-icon-motion="sync"] .guild-action-icon, body[data-icon-motion="sync"] .settings-control-icon, body[data-icon-motion="sync"] .boss-icon-large, body[data-icon-motion="sync"] .boss-alert-icon, body[data-icon-motion="sync"] .magical-forecast .forecast-icon, body[data-icon-motion="sync"] .vmagic-soft-icon, body[data-icon-motion="sync"] .leaderboard-title-icon, body[data-icon-motion="sync"] .action-tile .tile-icon, body[data-icon-motion="sync"] .market-item-icon, body[data-icon-motion="sync"] .chronicle-icon, body[data-icon-motion="sync"] .chronicle-author-prefix, body[data-icon-motion="sync"] .quest-map-objective-icon, body[data-icon-motion="sync"] .item-icon { animation-delay: 0s !important; animation-duration: 5.6s !important; }
 
     body[data-icon-motion="sparkle"] .recipe-icon, body[data-icon-motion="sparkle"] .craft-icon-anim, body[data-icon-motion="sparkle"] .vmagic-breathe, body[data-icon-motion="sparkle"] .screen-title-icon, body[data-icon-motion="sparkle"] .section-icon, body[data-icon-motion="sparkle"] .prophecy-icon, body[data-icon-motion="sparkle"] .nav-icon, body[data-icon-motion="sparkle"] .region-icon, body[data-icon-motion="sparkle"] .char-icon, body[data-icon-motion="sparkle"] .guild-action-icon, body[data-icon-motion="sparkle"] .settings-control-icon, body[data-icon-motion="sparkle"] .boss-icon-large, body[data-icon-motion="sparkle"] .boss-alert-icon, body[data-icon-motion="sparkle"] .magical-forecast .forecast-icon, body[data-icon-motion="sparkle"] .vmagic-soft-icon, body[data-icon-motion="sparkle"] .leaderboard-title-icon, body[data-icon-motion="sparkle"] .action-tile .tile-icon, body[data-icon-motion="sparkle"] .market-item-icon, body[data-icon-motion="sparkle"] .chronicle-icon, body[data-icon-motion="sparkle"] .chronicle-author-prefix, body[data-icon-motion="sparkle"] .quest-map-objective-icon, body[data-icon-motion="sparkle"] .item-icon { animation-duration: 5.6s; }
-    body[data-icon-motion="sparkle"] .vmagic-breathe, body[data-icon-motion="sparkle"] .section-icon, body[data-icon-motion="sparkle"] .recipe-icon, body[data-icon-motion="sparkle"] .guild-action-icon, body[data-icon-motion="sparkle"] .settings-control-icon { animation-delay: -0.45s; }
-    body[data-icon-motion="sparkle"] .screen-title-icon, body[data-icon-motion="sparkle"] .prophecy-icon, body[data-icon-motion="sparkle"] .nav-icon, body[data-icon-motion="sparkle"] .region-icon { animation-delay: -0.75s !important; }
-    body[data-icon-motion="sparkle"] .boss-icon-large, body[data-icon-motion="sparkle"] .boss-alert-icon, body[data-icon-motion="sparkle"] .char-icon, body[data-icon-motion="sparkle"] .market-item-icon { animation-delay: -1.05s !important; }
-    body[data-icon-motion="sparkle"] .magical-forecast .forecast-icon, body[data-icon-motion="sparkle"] .vmagic-soft-icon, body[data-icon-motion="sparkle"] .leaderboard-title-icon, body[data-icon-motion="sparkle"] .chronicle-icon, body[data-icon-motion="sparkle"] .chronicle-author-prefix, body[data-icon-motion="sparkle"] .quest-map-objective-icon, body[data-icon-motion="sparkle"] .item-icon { animation-delay: -1.65s !important; }
-    body[data-icon-motion="sparkle"] .action-tile:nth-child(3n+1) .tile-icon, body[data-icon-motion="sparkle"] .forecast-card:nth-child(3n+1) .forecast-icon, body[data-icon-motion="sparkle"] .home-lore-card:nth-child(3n+1) .section-icon, body[data-icon-motion="sparkle"] .help-page:nth-child(3n+1) .section-icon, body[data-icon-motion="sparkle"] .help-lore-page:nth-child(3n+1) .section-icon, body[data-icon-motion="sparkle"] .recipe-card:nth-child(3n+1) .recipe-icon, body[data-icon-motion="sparkle"] .market-sell-item:nth-child(3n+1) .market-item-icon, body[data-icon-motion="sparkle"] .chronicle-entry:nth-child(3n+1) .chronicle-icon { animation-delay: -0.45s !important; animation-duration: 5.6s !important; }
-    body[data-icon-motion="sparkle"] .action-tile:nth-child(3n+2) .tile-icon, body[data-icon-motion="sparkle"] .forecast-card:nth-child(3n+2) .forecast-icon, body[data-icon-motion="sparkle"] .home-lore-card:nth-child(3n+2) .section-icon, body[data-icon-motion="sparkle"] .help-page:nth-child(3n+2) .section-icon, body[data-icon-motion="sparkle"] .help-lore-page:nth-child(3n+2) .section-icon, body[data-icon-motion="sparkle"] .recipe-card:nth-child(3n+2) .recipe-icon, body[data-icon-motion="sparkle"] .market-sell-item:nth-child(3n+2) .market-item-icon, body[data-icon-motion="sparkle"] .chronicle-entry:nth-child(3n+2) .chronicle-icon { animation-delay: -1.05s !important; animation-duration: 5.6s !important; }
-    body[data-icon-motion="sparkle"] .action-tile:nth-child(3n) .tile-icon, body[data-icon-motion="sparkle"] .forecast-card:nth-child(3n) .forecast-icon, body[data-icon-motion="sparkle"] .home-lore-card:nth-child(3n) .section-icon, body[data-icon-motion="sparkle"] .help-page:nth-child(3n) .section-icon, body[data-icon-motion="sparkle"] .help-lore-page:nth-child(3n) .section-icon, body[data-icon-motion="sparkle"] .recipe-card:nth-child(3n) .recipe-icon, body[data-icon-motion="sparkle"] .market-sell-item:nth-child(3n) .market-item-icon, body[data-icon-motion="sparkle"] .chronicle-entry:nth-child(3n) .chronicle-icon { animation-delay: -1.65s !important; animation-duration: 5.6s !important; }
+    body[data-icon-motion="sparkle"] .vmagic-breathe, body[data-icon-motion="sparkle"] .section-icon, body[data-icon-motion="sparkle"] .recipe-icon, body[data-icon-motion="sparkle"] .guild-action-icon, body[data-icon-motion="sparkle"] .settings-control-icon { animation-delay: -0.9s; }
+    body[data-icon-motion="sparkle"] .screen-title-icon, body[data-icon-motion="sparkle"] .prophecy-icon, body[data-icon-motion="sparkle"] .nav-icon, body[data-icon-motion="sparkle"] .region-icon { animation-delay: -1.8s !important; }
+    body[data-icon-motion="sparkle"] .boss-icon-large, body[data-icon-motion="sparkle"] .boss-alert-icon, body[data-icon-motion="sparkle"] .char-icon, body[data-icon-motion="sparkle"] .market-item-icon { animation-delay: -2.7s !important; }
+    body[data-icon-motion="sparkle"] .magical-forecast .forecast-icon, body[data-icon-motion="sparkle"] .vmagic-soft-icon, body[data-icon-motion="sparkle"] .leaderboard-title-icon, body[data-icon-motion="sparkle"] .chronicle-icon, body[data-icon-motion="sparkle"] .chronicle-author-prefix, body[data-icon-motion="sparkle"] .quest-map-objective-icon, body[data-icon-motion="sparkle"] .item-icon { animation-delay: -3.6s !important; }
+    body[data-icon-motion="sparkle"] .action-tile:nth-child(3n+1) .tile-icon, body[data-icon-motion="sparkle"] .forecast-card:nth-child(3n+1) .forecast-icon, body[data-icon-motion="sparkle"] .home-lore-card:nth-child(3n+1) .section-icon, body[data-icon-motion="sparkle"] .help-page:nth-child(3n+1) .section-icon, body[data-icon-motion="sparkle"] .help-lore-page:nth-child(3n+1) .section-icon, body[data-icon-motion="sparkle"] .recipe-card:nth-child(3n+1) .recipe-icon, body[data-icon-motion="sparkle"] .market-sell-item:nth-child(3n+1) .market-item-icon, body[data-icon-motion="sparkle"] .chronicle-entry:nth-child(3n+1) .chronicle-icon { animation-delay: -0.9s !important; animation-duration: 5.6s !important; }
+    body[data-icon-motion="sparkle"] .action-tile:nth-child(3n+2) .tile-icon, body[data-icon-motion="sparkle"] .forecast-card:nth-child(3n+2) .forecast-icon, body[data-icon-motion="sparkle"] .home-lore-card:nth-child(3n+2) .section-icon, body[data-icon-motion="sparkle"] .help-page:nth-child(3n+2) .section-icon, body[data-icon-motion="sparkle"] .help-lore-page:nth-child(3n+2) .section-icon, body[data-icon-motion="sparkle"] .recipe-card:nth-child(3n+2) .recipe-icon, body[data-icon-motion="sparkle"] .market-sell-item:nth-child(3n+2) .market-item-icon, body[data-icon-motion="sparkle"] .chronicle-entry:nth-child(3n+2) .chronicle-icon { animation-delay: -2.7s !important; animation-duration: 5.6s !important; }
+    body[data-icon-motion="sparkle"] .action-tile:nth-child(3n) .tile-icon, body[data-icon-motion="sparkle"] .forecast-card:nth-child(3n) .forecast-icon, body[data-icon-motion="sparkle"] .home-lore-card:nth-child(3n) .section-icon, body[data-icon-motion="sparkle"] .help-page:nth-child(3n) .section-icon, body[data-icon-motion="sparkle"] .help-lore-page:nth-child(3n) .section-icon, body[data-icon-motion="sparkle"] .recipe-card:nth-child(3n) .recipe-icon, body[data-icon-motion="sparkle"] .market-sell-item:nth-child(3n) .market-item-icon, body[data-icon-motion="sparkle"] .chronicle-entry:nth-child(3n) .chronicle-icon { animation-delay: -4.5s !important; animation-duration: 5.6s !important; }
 }
 
 body[data-icon-motion="off"] .recipe-icon,
@@ -2039,12 +2039,12 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 
 .armageddon-explosion-icon {
     display: inline-flex;
-    margin-right: 0.45em;
+    margin-right: 0.5em;
     align-items: center;
     justify-content: center;
     width: 1.45em;
     height: 1.45em;
-    margin: 0 0.15em;
+    margin: 0 0.15em 0 0;
     border: 2px solid #0b0b0b;
     border-radius: 4px;
     background: #ffd858;
@@ -2238,10 +2238,10 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     line-height: 1;
 }
 .profile-title-avatar {
-    width: 42px;
-    height: 42px;
-    max-width: 42px;
-    max-height: 42px;
+    width: 46px;
+    height: 46px;
+    max-width: 46px;
+    max-height: 46px;
     margin-right: 0.35em;
     vertical-align: middle;
 }
@@ -2285,15 +2285,17 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     body[data-icon-motion="sparkle"] .arena-screen .screen-title-icon,
     body[data-icon-motion="sparkle"] .arena-screen .section-icon {
         animation-name: vmagic-soft-breathe !important;
-        animation-duration: 4.0s !important;
+        animation-duration: 5.6s !important;
+        animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
         transform-origin: center;
+        filter: drop-shadow(0 0 7px rgba(255, 216, 88, 0.5));
     }
     body[data-icon-motion="sparkle"] .item-card:nth-child(3n+1) .item-icon,
-    body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(3n+1) { animation-delay: -0.35s !important; }
+    body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(3n+1) { animation-delay: -0.9s !important; }
     body[data-icon-motion="sparkle"] .item-card:nth-child(3n+2) .item-icon,
-    body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(3n+2) { animation-delay: -1.15s !important; }
+    body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(3n+2) { animation-delay: -2.7s !important; }
     body[data-icon-motion="sparkle"] .item-card:nth-child(3n) .item-icon,
-    body[data-icon-motion="sparkle"] .arena-screen .screen-title-icon { animation-delay: -2.05s !important; }
+    body[data-icon-motion="sparkle"] .arena-screen .screen-title-icon { animation-delay: -4.5s !important; }
 }
 #bottom-nav.show { align-items: stretch; }
 .nav-tab { flex-direction: column; justify-content: center; align-items: center; gap: 2px; }
@@ -2312,19 +2314,40 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     body[data-icon-motion="sparkle"] .arena-screen .section-icon,
     body[data-icon-motion="sparkle"] .leaderboard-title-icon {
         animation-name: vmagic-soft-breathe !important;
-        animation-duration: 4.2s !important;
-        animation-timing-function: ease-in-out !important;
+        animation-duration: 5.6s !important;
+        animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
         animation-iteration-count: infinite !important;
         transform-origin: center;
+        filter: drop-shadow(0 0 7px rgba(255, 216, 88, 0.5));
     }
     body[data-icon-motion="sparkle"] .arena-screen .screen-title-icon,
-    body[data-icon-motion="sparkle"] .leaderboard-title-icon { animation-delay: -1.2s !important; }
-    body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(2n+1) { animation-delay: -0.55s !important; }
-    body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(2n) { animation-delay: -1.85s !important; }
+    body[data-icon-motion="sparkle"] .leaderboard-title-icon { animation-delay: -1.8s !important; }
+    body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(2n+1) { animation-delay: -0.9s !important; }
+    body[data-icon-motion="sparkle"] .arena-screen .section-icon:nth-of-type(2n) { animation-delay: -3.6s !important; }
 }
 
 
 /* v110: player feedback polish */
+.quest-completed-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.6em; height: 1.6em; padding: 0 0.45em; margin-left: 0.5em;
+    border-radius: 999px; background: var(--color-primary); color: #111;
+    font-weight: 800; font-size: 0.85rem; line-height: 1;
+}
+.quest-card.quest-completed-card { display: flex; align-items: center; }
+
+/* v133: active jump links inside the Magical Guide — take the player straight
+   to the screen they want to act on (hunt rest, quests, map, chronicle, ...). */
+.help-nav-link {
+    display: inline-block; margin: 0 0.1em; padding: 0.08em 0.5em;
+    border: 1px solid var(--color-border); border-radius: 999px;
+    background: rgba(212, 168, 67, 0.14); color: var(--color-primary);
+    font-weight: 700; cursor: pointer; line-height: 1.4;
+}
+.help-nav-link:hover, .help-nav-link:focus-visible {
+    background: rgba(212, 168, 67, 0.28); outline: 2px solid var(--color-accent); outline-offset: 1px;
+}
+
 .progress-bar-link,
 .progress-bar-button { display: block; width: 100%; padding: 0; text-align: inherit; cursor: pointer; color: inherit; text-decoration: none; font: inherit; }
 .progress-bar-button { border: 1px solid var(--color-border); }
@@ -2412,9 +2435,9 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     body[data-icon-motion="sparkle"] .arena-screen .section-icon,
     body[data-icon-motion="sparkle"] .arena-screen .arena-class-icon,
     body[data-icon-motion="sparkle"] .leaderboard-title-icon {
-        animation: vmagic-soft-breathe 5.6s ease-in-out infinite !important;
+        animation: vmagic-soft-breathe 5.6s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
         transform-origin: center center !important;
-        will-change: transform, filter;
+        filter: drop-shadow(0 0 7px rgba(255, 216, 88, 0.5));
     }
 }
 
@@ -2460,8 +2483,6 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     .seal-icon,
     .reveal-icon,
     .active-key-icon,
-    .quest-rewards .reward-xp,
-    .quest-rewards .reward-energy,
     .account-avatar,
     .default-avatar,
     .account-avatar.vmagic-breathe,
@@ -2471,9 +2492,23 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
         justify-content: center;
         animation-name: vmagic-soft-breathe !important;
         animation-duration: 5.6s !important;
-        animation-timing-function: ease-in-out !important;
+        animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
         animation-iteration-count: infinite !important;
         transform-origin: center;
+        filter: drop-shadow(0 0 7px rgba(255, 216, 88, 0.5));
+    }
+    /* v133: reward numbers (XP / mana amounts) must NOT breathe — only the
+       icon inside the reward chip animates. If the parent is kept still, the
+       value stays readable for low-vision players. */
+    .quest-rewards .reward-xp,
+    .quest-rewards .reward-energy {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.18rem;
+        margin-right: 0.4rem;
+        animation: none !important;
+        filter: none !important;
+        transform: none !important;
     }
     body[data-icon-motion="off"] .vmagic-breathe,
     body[data-icon-motion="off"] .screen-title-icon,
@@ -2504,15 +2539,28 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
         animation: none !important;
     }
 }
-.home-character-icon { margin-right: 0.25rem; }
+.home-character-icon { margin-right: 0.25rem; font-size: 1.5rem; }
 .vital-label-icon + .vital-label-icon { margin-left: 0.08rem; }
 .btn-install-shortcut {
     display: flex;
     width: 100%;
     justify-content: center; background: var(--color-primary) !important; color: #000 !important; border-color: var(--color-primary) !important; font-weight: 800; line-height: 1.15; }
+/* v133: warm yellow secondary action (Денис: «Отмена» и «Обрезать по центру» не должны быть серыми) */
+.btn-warm {
+    background: var(--color-primary) !important;
+    color: #000 !important;
+    border-color: var(--color-primary) !important;
+    font-weight: 700;
+}
 .tile-avatar-icon { width: 2.6rem !important; height: 2.6rem !important; font-size: 2.35rem !important; }
 .guild-rank-avatar, .member-icon, .arena-avatar, .boss-avatar, .leaderboard-avatar { width: 1.65rem; height: 1.65rem; min-width: 1.65rem; margin-right: 0.35rem; }
 .arena-challenge-btn, .developers-link, .narrator-test-btn, #btn-realm-info, a[href="https://info.viz.world/"] { background: var(--color-primary) !important; color: #000 !important; border-color: var(--color-primary) !important; font-weight: 800; }
+/* v133: user names a touch larger (Денис: имена мелковаты на арене/лидерборде/в гильдии) */
+.arena-player-name,
+.lb-name,
+.member-name,
+.leaderboard-name,
+.chronicle-author-name { font-size: 1.02em; }
 .sell-item-name { font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .quest-rewards .reward-xp, .quest-rewards .reward-energy { display: inline-flex; align-items: center; gap: 0.18rem; margin-right: 0.4rem; }
 .character-title-level { font-size: 0.82em; white-space: nowrap; color: var(--color-text-muted); }
