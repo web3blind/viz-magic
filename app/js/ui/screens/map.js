@@ -241,9 +241,9 @@ var MapScreen = (function() {
         var html = '<div class="lore-map-card">';
         html += '<div class="lore-map-title"><span class="region-icon vmagic-breathe" aria-hidden="true">' + icon + '</span> ' + region.name + '</div>';
         html += '<div class="lore-map-level">' + t('map_level') + ' ' + region.minLevel + '-' + region.maxLevel + '</div>';
-        // v137: show the generated painted-map image for this region
+        // v137: show the generated painted-map image for this region.
+        // The lore text stays in the travel block (with energy buttons) — not repeated here.
         html += '<img class="lore-map-image" src="assets/maps/map-' + regionId + '.jpg" alt="' + t('map_lore_image_alt', { name: region.name }) + '" loading="lazy">';
-        html += '<p class="lore-map-text">' + loreText + '</p>';
         html += '<div class="modal-actions"><button type="button" class="btn btn-primary" id="lore-close">' + t('close') + '</button></div>';
         html += '</div>';
         ModalComponent.show(html);

@@ -6,9 +6,6 @@
     "start_url": "/?pwa=viz-magic",
     "scope": "/",
     "display": "standalone",
-    "display_override": [
-        "standalone"
-    ],
     "theme_color": "#7c35ff",
     "background_color": "#0d1117",
     "lang": "ru",

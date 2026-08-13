@@ -24,6 +24,23 @@ button { color: inherit; font: inherit; }
     --touch-target: 48px;
 }
 
+/*
+ * v138: on desktop Linux/Windows the system may lack a color emoji font,
+ * so emoji icons render as monochrome boxes. Ship Noto Color Emoji so all
+ * icons/regions/items stay colorful everywhere. font-display: swap keeps
+ * the first paint fast; the font is cached by the service worker.
+ */
+@font-face {
+    font-family: 'Noto Color Emoji';
+    src: url('assets/fonts/noto-color-emoji.woff2') format('woff2');
+    font-display: swap;
+}
+.emoji, .region-icon, .char-icon, .class-icon, .item-icon, .nav-icon,
+.home-character-icon, .duel-mage-icon, .arena-class-icon, .quest-icon,
+[class*="-icon"], [class*="icon-"] {
+    font-family: 'Noto Color Emoji', 'Segoe UI Emoji', 'Apple Color Emoji', 'Twemoji Mozilla', sans-serif;
+}
+
 html { font-size: 16px; -webkit-text-size-adjust: 100%; }
 body {
     font-family: var(--font-body);
