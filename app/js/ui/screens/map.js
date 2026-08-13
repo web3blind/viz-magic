@@ -125,7 +125,9 @@ var MapScreen = (function() {
             html += '<div class="region-header">';
             html += '<span class="region-icon vmagic-breathe" aria-hidden="true">' + icon + '</span>';
             html += '<div class="region-info">';
-            html += '<h2 class="region-name">' + region.name + '</h2>';
+            // v134: region names become active links that open a lore "map" modal
+            html += '<button type="button" class="region-name region-lore-link" data-lore-region="' + regionId + '" ';
+            html += 'aria-label="' + t('map_view_lore') + ' ' + region.name + '">' + region.name + '</button>';
             html += '<span class="region-level">' + t('map_level') + ' ' + region.minLevel + '-' + region.maxLevel + '</span>';
             if (region.school) {
                 html += ' <span class="region-school">' + t('school_' + region.school) + '</span>';
@@ -141,6 +143,9 @@ var MapScreen = (function() {
 
             // Description
             html += '<p class="region-desc">' + region.description + '</p>';
+
+            // v134: lore snippet under each block header — a flavor "card" describing the region as a painted map
+            html += '<p class="region-lore">' + t('map_lore_' + regionId) + '</p>';
 
             // Territory control overlay
             if (controllerGuildObj) {
@@ -168,10 +173,11 @@ var MapScreen = (function() {
                 html += '</div>';
             }
 
-            // Travel button
+            // Travel button — v134: buttons show in every region block, including
+            // the current one (Denis: "I have a huge home, I travel around it with a map").
             if (pendingTravel && pendingTravel.account === user && regionId === pendingTravel.to) {
                 html += '<div class="region-benefits" role="status">⏳ ' + t('map_pending_travel_short') + '</div>';
-            } else if (!isCurrent && character && !(pendingTravel && pendingTravel.account === user)) {
+            } else if (character && !(pendingTravel && pendingTravel.account === user)) {
                 html += '<div class="region-travel-options">';
                 html += '<button class="btn btn-secondary btn-sm region-travel-btn" ';
                 html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_LOW + '" ';
@@ -213,6 +219,34 @@ var MapScreen = (function() {
                 _travelTo(regionId, user, cost);
             });
         }
+        // v134: region names are active links that open a lore "map" card
+        var loreLinks = container.querySelectorAll('.region-lore-link');
+        for (var l = 0; l < loreLinks.length; l++) {
+            loreLinks[l].addEventListener('click', function() {
+                var regionId = this.getAttribute('data-lore-region');
+                _openLore(regionId);
+            });
+        }
+    }
+
+    /**
+     * v134: show the painted-map style description of a region in a modal,
+     * sized to the in-game tab, with a Close button.
+     */
+    function _openLore(regionId) {
+        var region = GameRegions.getRegion(regionId);
+        if (!region) return;
+        var icon = REGION_ICONS[regionId] || '\uD83C\uDF0D';
+        var loreText = t('map_lore_' + regionId);
+        var html = '<div class="lore-map-card">';
+        html += '<div class="lore-map-title"><span class="region-icon vmagic-breathe" aria-hidden="true">' + icon + '</span> ' + region.name + '</div>';
+        html += '<div class="lore-map-level">' + t('map_level') + ' ' + region.minLevel + '-' + region.maxLevel + '</div>';
+        html += '<p class="lore-map-text">' + loreText + '</p>';
+        html += '<div class="modal-actions"><button type="button" class="btn btn-primary" id="lore-close">' + t('close') + '</button></div>';
+        html += '</div>';
+        ModalComponent.show(html);
+        var closeBtn = Helpers.$('lore-close');
+        if (closeBtn) closeBtn.addEventListener('click', function() { ModalComponent.hide(); });
     }
 
     /**
