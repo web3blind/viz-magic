@@ -25,7 +25,13 @@ var MapScreen = (function() {
         the_veil:            '\uD83C\uDF19',    // 🌙
         forklands:           '\u2694\uFE0F',    // ⚔️
         covenant_bazaar:     '\uD83C\uDFEA',   // 🏪
-        duel_spires:         '\uD83C\uDFF0'    // 🏰
+        duel_spires:         '\uD83C\uDFF0',   // 🏰
+        starfall_vault:      '\uD83C\uDF1C',   // 🌜
+        emberheart:          '\uD83D\uDD25',   // 🔥
+        prismatic_depths:    '\uD83D\uDD07',   // 🔷
+        timeless_maze:       '\u23F1\uFE0F',   // ⏱️
+        grandmaster_peak:    '\u26F0\uFE0F',   // ⛰️
+        void_sanctum:        '\uD83C\uDF0C'    // 🌌
     };
 
     /** School colors for territory display */
@@ -243,7 +249,9 @@ var MapScreen = (function() {
         html += '<div class="lore-map-level">' + t('map_level') + ' ' + region.minLevel + '-' + region.maxLevel + '</div>';
         // v137: show the generated painted-map image for this region.
         // The lore text stays in the travel block (with energy buttons) — not repeated here.
-        html += '<img class="lore-map-image" src="assets/maps/map-' + regionId + '.jpg" alt="' + t('map_lore_image_alt', { name: region.name }) + '" loading="lazy">';
+        // v139: until a map image exists for a new region, fall back to showing the lore text.
+        html += '<img class="lore-map-image" src="assets/maps/map-' + regionId + '.jpg" alt="' + t('map_lore_image_alt', { name: region.name }) + '" loading="lazy" onerror="this.style.display=\'none\';var nx=document.getElementById(\'lore-fallback\');if(nx)nx.style.display=\'block\';">';
+        html += '<p class="lore-map-text" id="lore-fallback" style="display:none">' + loreText + '</p>';
         html += '<div class="modal-actions"><button type="button" class="btn btn-primary" id="lore-close">' + t('close') + '</button></div>';
         html += '</div>';
         ModalComponent.show(html);

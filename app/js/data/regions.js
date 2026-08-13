@@ -103,6 +103,72 @@ var GameRegions = (function() {
             minLevel: 5,
             maxLevel: 50,
             description: 'Ranked duels and tournaments. Glory awaits the skilled.'
+        },
+        starfall_vault: {
+            id: 'starfall_vault',
+            name: 'The Starfall Vault',
+            type: 'elemental',
+            school: 'ventus',
+            schoolBonus: 300,
+            pvpEnabled: false,
+            minLevel: 51,
+            maxLevel: 60,
+            description: 'A great crater where fallen stars sleep. Ventus magic hums in the meteor-light.'
+        },
+        emberheart: {
+            id: 'emberheart',
+            name: 'The Emberheart',
+            type: 'elemental',
+            school: 'ignis',
+            schoolBonus: 300,
+            pvpEnabled: false,
+            minLevel: 61,
+            maxLevel: 70,
+            description: 'The molten heart of the world, alive with inner fire. Ignis magic blazes.'
+        },
+        prismatic_depths: {
+            id: 'prismatic_depths',
+            name: 'The Prismatic Depths',
+            type: 'elemental',
+            school: 'aqua',
+            schoolBonus: 300,
+            pvpEnabled: false,
+            minLevel: 71,
+            maxLevel: 80,
+            description: 'Caverns of living colour where water sings. Aqua magic refracts.'
+        },
+        timeless_maze: {
+            id: 'timeless_maze',
+            name: 'The Timeless Maze',
+            type: 'elemental',
+            school: 'umbra',
+            schoolBonus: 300,
+            pvpEnabled: false,
+            minLevel: 81,
+            maxLevel: 90,
+            description: 'A labyrinth where hours loop and shadows recall. Umbra magic bends time.'
+        },
+        grandmaster_peak: {
+            id: 'grandmaster_peak',
+            name: 'The Grandmaster Peak',
+            type: 'contested',
+            school: 'terra',
+            schoolBonus: 200,
+            pvpEnabled: true,
+            minLevel: 91,
+            maxLevel: 100,
+            description: 'The highest summit, open to all who seek glory. Terra magic is everywhere.'
+        },
+        void_sanctum: {
+            id: 'void_sanctum',
+            name: 'The Void Sanctum',
+            type: 'safe',
+            school: null,
+            schoolBonus: 0,
+            pvpEnabled: false,
+            minLevel: 101,
+            maxLevel: 101,
+            description: 'A hidden refuge beyond the ranks, for the Mage Beyond Categories.'
         }
     };
 
