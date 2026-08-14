@@ -39,6 +39,23 @@ var WorldBossScreen = (function() {
 
         _bindActions(el, bossState, user, blockNum);
         _ensureArchiveBackfill(bossState, blockNum);
+        _ensureHeadRefreshTimer(status.active);
+    }
+
+    // Keep the boss countdown live by periodically pulling a fresh chain head.
+    var _headRefreshTimer = null;
+    function _ensureHeadRefreshTimer(active) {
+        if (active) {
+            if (_headRefreshTimer) return;
+            _headRefreshTimer = setInterval(function() {
+                _refreshLiveHead();
+            }, 30000); // every 30s
+            return;
+        }
+        if (_headRefreshTimer) {
+            clearInterval(_headRefreshTimer);
+            _headRefreshTimer = null;
+        }
     }
 
 
@@ -354,6 +371,35 @@ var WorldBossScreen = (function() {
         if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
         if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
         return '' + n;
+    }
+
+    // Refresh the boss screen using a fresh chain head, so the countdown does
+    // not freeze at 0 when the local polled head block lags (v140).
+    var _refreshHeadTimer = null;
+    var _refreshHeadBusy = false;
+    function _refreshLiveHead() {
+        if (_refreshHeadBusy) return;
+        if (typeof viz === 'undefined' || !viz.api || !viz.api.getDynamicGlobalProperties) return;
+        _refreshHeadBusy = true;
+        viz.api.getDynamicGlobalProperties(function(err, dgp) {
+            _refreshHeadBusy = false;
+            if (err || !dgp || !dgp.head_block_number) return;
+            var freshHead = dgp.head_block_number;
+            var state = StateEngine.getState();
+            if (!state) return;
+            var localHead = state.headBlock || 0;
+            // Only re-render when the fresh head is ahead; keeps DOM stable.
+            if (freshHead > localHead) {
+                state.headBlock = freshHead;
+                render();
+            }
+        });
+    }
+
+    // After each successful attack, nudge the countdown refresh so the timer
+    // and contribution update from the newest block instead of a stale one.
+    function _schedulePostAttackRefresh() {
+        _refreshLiveHead();
     }
 
     // Auto-refresh boss screen when boss events arrive from blockchain
