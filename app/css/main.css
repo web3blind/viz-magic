@@ -32,7 +32,7 @@ button { color: inherit; font: inherit; }
  */
 @font-face {
     font-family: 'Noto Color Emoji';
-    src: url('assets/fonts/noto-color-emoji.woff2') format('woff2');
+    src: url('../assets/fonts/noto-color-emoji.ttf') format('truetype');
     font-display: swap;
 }
 .emoji, .region-icon, .char-icon, .class-icon, .item-icon, .nav-icon,
@@ -737,6 +737,46 @@ body {
     margin-bottom: 8px; line-height: 1.45; padding-left: 12px;
     border-left: 3px solid var(--color-accent); opacity: 0.92;
 }
+
+/* v141: visible-but-subtle secret map transitions and desktop map zoom. */
+.secret-map-portal {
+    margin: 10px 0;
+    padding: 8px 10px;
+    border-width: 1px;
+    border-style: dashed;
+    border-color: var(--portal-color, var(--color-accent));
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+    color: var(--color-text);
+    font-size: 0.95rem;
+}
+.secret-map-portal .portal-mark {
+    color: var(--portal-color, var(--color-accent));
+    filter: drop-shadow(0 0 6px var(--portal-color, var(--color-accent)));
+}
+.lore-map-zoom-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 10px;
+}
+.lore-map-viewport {
+    max-height: 70vh;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: #05070b;
+}
+.lore-map-image {
+    cursor: zoom-in;
+    transform-origin: top left;
+    transition: transform var(--transition);
+}
+.lore-map-viewport.zoomed .lore-map-image {
+    transform: scale(1.65);
+    cursor: zoom-out;
+}
+
 .lore-map-card { padding: 4px 2px; }
 .lore-map-title {
     display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 800;

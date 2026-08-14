@@ -16,6 +16,31 @@ var MapScreen = (function() {
     var TRAVEL_FIND_TYPES = ['shadow_shard', 'thorn_essence', 'ancient_shard', 'altar_spark', 'data_core'];
 
     /** Region emoji icons */
+    var SECRET_ROUTE = [
+        'commons_first_light', 'ember_wastes', 'deep_currents', 'iron_root', 'shattered_sky',
+        'the_veil', 'forklands', 'covenant_bazaar', 'duel_spires', 'starfall_vault',
+        'emberheart', 'prismatic_depths', 'timeless_maze', 'grandmaster_peak', 'void_sanctum'
+    ];
+
+    var PORTAL_COLORS = {
+        commons_first_light: '#f7d56b',
+        ember_wastes: '#ff7043',
+        deep_currents: '#42a5f5',
+        iron_root: '#8d6e63',
+        shattered_sky: '#81d4fa',
+        the_veil: '#b39ddb',
+        forklands: '#ef5350',
+        covenant_bazaar: '#ffd54f',
+        duel_spires: '#90caf9',
+        starfall_vault: '#80deea',
+        emberheart: '#ff8a65',
+        prismatic_depths: '#7e57c2',
+        timeless_maze: '#b0bec5',
+        grandmaster_peak: '#66bb6a',
+        void_sanctum: '#ce93d8',
+        future_unknown: '#f48fb1'
+    };
+
     var REGION_ICONS = {
         commons_first_light: '\uD83C\uDF1F',  // 🌟
         ember_wastes:        '\uD83D\uDD25',   // 🔥
@@ -152,6 +177,7 @@ var MapScreen = (function() {
 
             // v134: lore snippet under each block header — a flavor "card" describing the region as a painted map
             html += '<p class="region-lore">' + t('map_lore_' + regionId) + '</p>';
+            html += _renderSecretPortal(regionId);
 
             // Territory control overlay
             if (controllerGuildObj) {
@@ -235,6 +261,28 @@ var MapScreen = (function() {
         }
     }
 
+
+    function _getNextSecretRegion(regionId) {
+        for (var i = 0; i < SECRET_ROUTE.length; i++) {
+            if (SECRET_ROUTE[i] === regionId) {
+                if (i + 1 < SECRET_ROUTE.length) return SECRET_ROUTE[i + 1];
+                return 'future_unknown';
+            }
+        }
+        return 'future_unknown';
+    }
+
+    function _renderSecretPortal(regionId) {
+        var nextId = _getNextSecretRegion(regionId);
+        var nextRegion = GameRegions.getRegion(nextId);
+        var nextName = nextRegion ? nextRegion.name : t('map_secret_next_unknown');
+        var color = PORTAL_COLORS[nextId] || PORTAL_COLORS.future_unknown;
+        return '<div class="secret-map-portal" style="--portal-color:' + color + '">' +
+            '<span class="portal-mark vmagic-breathe" aria-hidden="true">◇</span> ' +
+            '<span>' + t('map_secret_portal', { name: nextName }) + '</span>' +
+            '</div>';
+    }
+
     /**
      * v134: show the painted-map style description of a region in a modal,
      * sized to the in-game tab, with a Close button.
@@ -250,13 +298,29 @@ var MapScreen = (function() {
         // v137: show the generated painted-map image for this region.
         // The lore text stays in the travel block (with energy buttons) — not repeated here.
         // v139: until a map image exists for a new region, fall back to showing the lore text.
-        html += '<img class="lore-map-image" src="assets/maps/map-' + regionId + '.jpg" alt="' + t('map_lore_image_alt', { name: region.name }) + '" loading="lazy" onerror="this.style.display=\'none\';var nx=document.getElementById(\'lore-fallback\');if(nx)nx.style.display=\'block\';">';
+        html += '<div class="lore-map-zoom-controls" aria-label="' + t('map_zoom_controls') + '">';
+        html += '<button type="button" class="btn btn-secondary btn-sm" id="lore-zoom-toggle">' + t('map_zoom_toggle') + '</button>';
+        html += '<span class="lore-map-zoom-hint">' + t('map_zoom_hint') + '</span>';
+        html += '</div>';
+        html += '<div class="lore-map-viewport" id="lore-map-viewport">';
+        html += '<img class="lore-map-image" id="lore-map-image" src="assets/maps/map-' + regionId + '.jpg" alt="' + t('map_lore_image_alt', { name: region.name }) + '" loading="lazy" onerror="this.style.display=\'none\';var nx=document.getElementById(\'lore-fallback\');if(nx)nx.style.display=\'block\';">';
+        html += '</div>';
         html += '<p class="lore-map-text" id="lore-fallback" style="display:none">' + loreText + '</p>';
         html += '<div class="modal-actions"><button type="button" class="btn btn-primary" id="lore-close">' + t('close') + '</button></div>';
         html += '</div>';
         ModalComponent.show(html);
         var closeBtn = Helpers.$('lore-close');
         if (closeBtn) closeBtn.addEventListener('click', function() { ModalComponent.hide(); });
+        var zoomToggle = Helpers.$('lore-zoom-toggle');
+        var zoomViewport = Helpers.$('lore-map-viewport');
+        var zoomImage = Helpers.$('lore-map-image');
+        function toggleZoom() {
+            if (!zoomViewport) return;
+            zoomViewport.classList.toggle('zoomed');
+            if (zoomToggle) zoomToggle.textContent = zoomViewport.classList.contains('zoomed') ? t('map_zoom_reset') : t('map_zoom_toggle');
+        }
+        if (zoomToggle) zoomToggle.addEventListener('click', toggleZoom);
+        if (zoomImage) zoomImage.addEventListener('dblclick', toggleZoom);
     }
 
     /**
