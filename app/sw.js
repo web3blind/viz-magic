@@ -1,5 +1,5 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v147';
+var CACHE_NAME = 'viz-magic-v149';
 var APP_SHELL_ASSETS = [
     '/',
     '/index.html',
@@ -73,6 +73,21 @@ self.addEventListener('fetch', function(event) {
     }
 
     var url = new URL(event.request.url);
+    var isMapImage = url.pathname.indexOf('/assets/maps/') === 0 && /\.jpg$/.test(url.pathname);
+
+    if (isMapImage) {
+        event.respondWith(
+            fetch(event.request, { cache: 'reload' }).then(function(response) {
+                if (response && response.status === 200 && response.type === 'basic') {
+                    var clone = response.clone();
+                    caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, clone); });
+                }
+                return response;
+            }).catch(function() { return caches.match(event.request); })
+        );
+        return;
+    }
+
     var isRuntimeAsset = /\.(js|css|json)$/.test(url.pathname) || url.pathname === '/manifest.json';
 
     if (isRuntimeAsset) {
