@@ -8,7 +8,7 @@ var MapScreen = (function() {
 
     var t = Helpers.t;
     var pendingTravel = null;
-    var MAP_ASSET_VERSION = '20260826j';
+    var MAP_ASSET_VERSION = '20260826k';
     var PENDING_TRAVEL_TTL_MS = 5 * 60 * 1000;
     var TRAVEL_COST_LOW = 10;    // 0.1%
     var TRAVEL_COST_HIGH = 100;  // 1%
