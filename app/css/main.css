@@ -743,12 +743,35 @@ body {
     margin-bottom: 6px; color: var(--color-text);
 }
 .lore-map-level { font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px; }
-.lore-map-image {
-    display: block; width: 100%; height: auto;
+.lore-map-viewport {
+    width: 100%;
+    max-height: min(62vh, 760px);
+    overflow: auto;
     border-radius: var(--radius-sm);
     border: 2px solid rgba(255,255,255,0.12);
     box-shadow: 0 4px 16px rgba(0,0,0,0.35);
     margin-bottom: 12px;
+    background: #05070b;
+}
+.lore-map-image {
+    display: block; width: 100%; height: auto;
+    border-radius: calc(var(--radius-sm) - 2px);
+}
+.lore-map-viewport.zoomed .lore-map-image {
+    width: min(150vw, 1400px);
+    max-width: none;
+}
+.lore-map-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.lore-map-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
 }
 .lore-map-text {
     font-size: 1rem; line-height: 1.55; color: var(--color-text);
@@ -2705,4 +2728,8 @@ html body[data-icon-motion] .magical-forecast .forecast-card-hunt-summary .forec
     .empty-state { font-size: 1.02rem; }
     .quest-tabs { grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .nav-tab-label { font-size: 0.95rem; }
+}
+
+@media (max-width: 420px) {
+    .lore-map-actions .btn { padding-left: 10px; padding-right: 10px; font-size: 0.92rem; }
 }

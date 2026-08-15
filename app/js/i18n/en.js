@@ -560,6 +560,8 @@ var LangEN = {
     map_travel_hint: 'Travel spends energy: bigger investment — higher chance of a travelling find (crafting materials).',
     map_regions: 'Regions',
     map_view_lore: 'Open map',
+    map_zoom_toggle: 'Zoom map',
+    map_zoom_reset: 'Shrink map',
     map_lore_image_alt: 'Painted map of the {name} region',
     map_lore_commons_first_light: 'The Meadow of First Light, where young mages wake. A warm hearth glows in the wooden tavern, a wreath of dried herbs over the door. On the field, ember wisps dance with beginners; by the stream stand old stones of power carved with runes. Training racks, a shelf of first scrolls, a well trailing steam. The dotted path runs past a small chapel and climbs toward the hills, where at dawn the lights of future spells begin to glow.',
     map_lore_covenant_bazaar: 'The Covenant Bazaar — neutral rows under striped awnings. Stalls overflow with goods: gems in baskets, spell scrolls, potion flasks, chronicle ink and lucky charms. Ropes of paper lanterns hang over the rows, traders call to buyers, and at the center a stone fountain holds the scales and seals of escort: here all swear not to fight while the trading lasts. The dotted road winds between stalls, past guards in neutral cloaks and carts of strange wares.',

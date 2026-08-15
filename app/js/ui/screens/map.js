@@ -8,6 +8,7 @@ var MapScreen = (function() {
 
     var t = Helpers.t;
     var pendingTravel = null;
+    var MAP_ASSET_VERSION = '20260826f';
     var PENDING_TRAVEL_TTL_MS = 5 * 60 * 1000;
     var TRAVEL_COST_LOW = 10;    // 0.1%
     var TRAVEL_COST_HIGH = 100;  // 1%
@@ -247,14 +248,24 @@ var MapScreen = (function() {
         var html = '<div class="lore-map-card">';
         html += '<div class="lore-map-title"><span class="region-icon vmagic-breathe" aria-hidden="true">' + icon + '</span> ' + region.name + '</div>';
         html += '<div class="lore-map-level">' + t('map_level') + ' ' + region.minLevel + '-' + region.maxLevel + '</div>';
-        // v137: show the generated painted-map image for this region.
-        // The lore text stays in the travel block (with energy buttons) — not repeated here.
-        // v139: until a map image exists for a new region, fall back to showing the lore text.
-        html += '<img class="lore-map-image" src="assets/maps/map-' + regionId + '.jpg" alt="' + t('map_lore_image_alt', { name: region.name }) + '" loading="lazy" onerror="this.style.display=\'none\';var nx=document.getElementById(\'lore-fallback\');if(nx)nx.style.display=\'block\';">';
+        // v144: show the current painted-map image with a cache-busting version.
+        // Portal guidance is visual inside the artwork; no extra hint text is shown here.
+        html += '<div class="lore-map-viewport" id="lore-map-viewport">';
+        html += '<img class="lore-map-image" id="lore-map-image" src="assets/maps/map-' + regionId + '.jpg?v=' + MAP_ASSET_VERSION + '" alt="' + t('map_lore_image_alt', { name: region.name }) + '" loading="lazy" onerror="this.style.display=\'none\';var nx=document.getElementById(\'lore-fallback\');if(nx)nx.style.display=\'block\';">';
+        html += '</div>';
         html += '<p class="lore-map-text" id="lore-fallback" style="display:none">' + loreText + '</p>';
-        html += '<div class="modal-actions"><button type="button" class="btn btn-primary" id="lore-close">' + t('close') + '</button></div>';
+        html += '<div class="modal-actions lore-map-actions"><button type="button" class="btn btn-secondary" id="lore-zoom-toggle">' + t('map_zoom_toggle') + '</button><button type="button" class="btn btn-primary" id="lore-close">' + t('close') + '</button></div>';
         html += '</div>';
         ModalComponent.show(html);
+        var viewport = Helpers.$('lore-map-viewport');
+        var zoomBtn = Helpers.$('lore-zoom-toggle');
+        if (zoomBtn && viewport) {
+            zoomBtn.addEventListener('click', function() {
+                var zoomed = viewport.className.indexOf(' zoomed') === -1;
+                viewport.className = zoomed ? viewport.className + ' zoomed' : viewport.className.replace(' zoomed', '');
+                zoomBtn.textContent = zoomed ? t('map_zoom_reset') : t('map_zoom_toggle');
+            });
+        }
         var closeBtn = Helpers.$('lore-close');
         if (closeBtn) closeBtn.addEventListener('click', function() { ModalComponent.hide(); });
     }
