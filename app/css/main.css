@@ -762,16 +762,17 @@ body {
     max-width: none;
 }
 .lore-map-actions {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+    width: min(100%, 28rem);
+    margin: 0 auto;
 }
 .lore-map-actions .btn {
-    flex: 1 1 0;
     min-width: 0;
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
 }
 .lore-map-text {
     font-size: 1rem; line-height: 1.55; color: var(--color-text);
