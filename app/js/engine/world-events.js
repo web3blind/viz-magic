@@ -790,18 +790,6 @@ var WorldEvents = (function() {
         return out;
     }
 
-
-    /**
-     * Shared UI event clock. Player-visible world events must not depend on a
-     * stale per-device checkpoint; otherwise phone and desktop can show different
-     * active events. Use wall-clock 3-second ticks for banners/hunt modifiers,
-     * while block-trigger helpers below remain available for replay notices.
-     */
-    function _getSharedEventBlock(nowMs) {
-        var ms = typeof nowMs === 'number' ? nowMs : Date.now();
-        return Math.floor(ms / 3000);
-    }
-
     /**
      * Check if Weave Surge is active.
      * @param {number} blockNum
@@ -867,14 +855,13 @@ var WorldEvents = (function() {
      * @param {number} blockNum
      * @returns {Array} list of active event objects
      */
-    function getActiveEvents(blockNum, nowMs) {
+    function getActiveEvents(blockNum) {
         var events = [];
-        var sharedBlock = _getSharedEventBlock(nowMs);
-        var surge = checkWeaveSurge(sharedBlock);
+        var surge = checkWeaveSurge(blockNum);
         if (surge) events.push(surge);
-        var rift = checkMinorRift(sharedBlock);
+        var rift = checkMinorRift(blockNum);
         if (rift) events.push(rift);
-        var boss = checkWorldBossWindow(sharedBlock);
+        var boss = checkWorldBossWindow(blockNum);
         if (boss) events.push(boss);
         return events;
     }

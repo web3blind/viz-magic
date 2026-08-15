@@ -1,5 +1,5 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v141';
+var CACHE_NAME = 'viz-magic-v140';
 var APP_SHELL_ASSETS = [
     '/',
     '/index.html',
@@ -7,7 +7,6 @@ var APP_SHELL_ASSETS = [
     '/favicon.ico',
     '/assets/icons/viz-magic-v133-192.png',
     '/assets/icons/viz-magic-v133-512.png',
-    '/assets/fonts/noto-color-emoji.ttf',
     '/css/main.css',
     '/css/themes.css',
     '/css/accessibility.css'
