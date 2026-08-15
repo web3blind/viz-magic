@@ -1739,7 +1739,7 @@ body,
 .magical-forecast {
     align-items: flex-start;
     flex-direction: column;
-    gap: var(--space-xs);
+    gap: var(--space-xs, 6px);
 }
 
 .forecast-head {
@@ -1767,14 +1767,14 @@ body,
 .magical-forecast {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-sm);
+    gap: var(--space-sm, 10px);
     align-items: stretch;
 }
 
 .forecast-card {
     position: relative;
     min-width: 0;
-    padding: var(--space-sm);
+    padding: var(--space-sm, 10px);
     border: 1px solid var(--color-border);
     border-left: 3px solid var(--color-primary);
     border-radius: var(--radius-sm);
@@ -1813,7 +1813,7 @@ body,
 
 .forecast-card-hunt-summary > .forecast-hunt-icon {
     position: absolute;
-    top: var(--space-sm);
+    top: var(--space-sm, 10px);
     left: calc(100% - 2.4rem);
     right: auto;
     bottom: auto;
