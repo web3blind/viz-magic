@@ -319,7 +319,7 @@ test('large stale checkpoint catch-up uses archive events instead of replaying e
   assert.ok(/HistorySource\.getEventsRange/.test(appJs), 'archive catch-up should query event ranges');
   assert.ok(/state\.headBlock = endBlock/.test(appJs), 'archive catch-up should advance checkpoint past empty blocks');
   assert.ok(/arena: true/.test(appJs), 'arena should refresh when duel events arrive during catch-up');
-  assert.ok(/js\/ui\/app\.js\?v=20260826k/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
+  assert.ok(/js\/ui\/app\.js\?v=20260826m/.test(indexHtml), 'main app controller must be cache-busted when catch-up code changes');
 });
 
 test('guild joining explains and enforces preparation requirements', function () {
@@ -487,7 +487,7 @@ test('magical weather is labelled and affects hunts', function () {
   assert.ok(/nav.js\?v=20260826k/.test(indexHtml), 'bottom tray nav must be cache-busted');
   assert.ok(/leaderboard.js\?v=20260826k/.test(indexHtml), 'leaderboard icon motion must be cache-busted');
   assert.ok(/world-events.js\?v=20260826k/.test(indexHtml), 'world events news and festival copy must be cache-busted');
-  assert.ok(/main.css\?v=20260826k/.test(indexHtml), 'forecast grid CSS must be cache-busted');
+  assert.ok(/main.css\?v=20260826m/.test(indexHtml), 'forecast grid CSS must be cache-busted');
   assert.ok(/prefers-reduced-motion: no-preference/.test(mainCss) && /vmagic-rune-pulse/.test(mainCss), 'ambient animation must be lightweight and respect reduced-motion');
   assert.ok(/weather_report_air/.test(homeJs + ruJs + enJs), 'home forecast should render readable air/water/wind weather instead of raw school percentages');
   assert.ok(/weather_hunt_effect_sentence: 'Магическая погода влияет на охоту\.'/.test(ruJs), 'summer card should restore the calm yellow hunt-weather sentence');
@@ -535,11 +535,11 @@ test('music volume, narrator speech, and PWA icons are durable', function () {
   assert.ok(!/music_volume/.test(settingsJs), 'music setting should be removed (no music in the game)');
   assert.ok(/SpeechSynthesisUtterance/.test(narratorJs), 'battle narrator should speak audibly through Web Speech when available');
   assert.ok(/textContent = ''[\s\S]*textContent = message/.test(narratorJs), 'battle narrator should force live-region text replacement');
-  assert.ok(/manifest\.json\?v=20260826k/.test(indexHtml), 'manifest should be cache-busted for updated icon');
-  assert.ok(/favicon\.ico\?v=20260826k/.test(indexHtml), 'favicon should be explicit for browser shortcut fallback');
-  assert.ok(/viz-magic-v133-192\.png\?v=20260826k/.test(indexHtml), 'launcher icon link should be cache-busted');
-  assert.ok(/assets\/icons\/viz-magic-v133-512\.png/.test(read('app/sw.js')), 'service worker should cache PWA launcher icons');
-  assert.ok(/viz-magic-v133-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
+  assert.ok(/manifest\.json\?v=20260826m/.test(indexHtml), 'manifest should be cache-busted for updated icon');
+  assert.ok(/favicon\.ico\?v=20260826m/.test(indexHtml), 'favicon should be explicit for browser shortcut fallback');
+  assert.ok(/viz-magic-v151-192\.png\?v=20260826m/.test(indexHtml), 'launcher icon link should be cache-busted');
+  assert.ok(/assets\/icons\/viz-magic-v151-512\.png/.test(read('app/sw.js')), 'service worker should cache PWA launcher icons');
+  assert.ok(/viz-magic-v151-512\.png/.test(read('app/manifest.json')), 'manifest should reference new icon URLs to bypass OS icon cache');
 });
 
 
@@ -579,9 +579,18 @@ test('reported mobile UX issues have explicit fixes', function () {
 
 
 test('PWA icon and HP heart use expressive color accents', function () {
-  assert.ok(/viz-magic-v133-192\.png\?v=20260826k/.test(indexHtml), 'PWA icon link should be cache-busted after expressive icon update');
-  assert.ok(/viz-magic-v133/.test(read('app/manifest.json')), 'manifest start URL should change so launchers can refresh icons');
+  assert.ok(/viz-magic-v151-192\.png\?v=20260826m/.test(indexHtml), 'PWA icon link should be cache-busted after reinstall fix');
+  assert.ok(/viz-magic-v151/.test(read('app/manifest.json')), 'manifest identity/start URL should change so deleted launchers can be installed again');
   assert.ok(/labelHtml:'<span class=\"vital-label-icon vmagic-breathe\"[^']*❤️/.test(homeJs), 'HP label should use a red heart emoji variant');
+});
+
+test('desktop standalone map zoom uses fullscreen overlay and robust emoji fallback', function () {
+  assert.ok(/MAP_ASSET_VERSION = '20260826m'/.test(mapScreenJs), 'map images should be cache-busted after fullscreen zoom change');
+  assert.ok(/lore-map-fullscreen/.test(mapScreenJs + mainCss), 'map zoom should switch to a fullscreen overlay state');
+  assert.ok(/_closeLoreFullscreen/.test(mapScreenJs), 'fullscreen map should close from map/overlay click before closing modal');
+  assert.ok(/modal.classList.add\('lore-map-fullscreen'\)/.test(mapScreenJs), 'fullscreen state should be applied to the modal container');
+  assert.ok(/\.modal\.lore-map-fullscreen[\s\S]*position:\s*fixed[\s\S]*inset:\s*0/.test(mainCss), 'fullscreen map modal should cover the full browser viewport');
+  assert.ok(/font-family:\s*'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji'/.test(mainCss), 'emoji fallback should prefer system color emoji before optional Noto');
 });
 
 
@@ -747,7 +756,7 @@ test('map regions are lore links with travel buttons everywhere', function () {
   assert.ok(/map_lore_commons_first_light/.test(enJs) && /map_lore_duel_spires/.test(enJs), 'en should carry lore descriptions for all nine regions');
   assert.ok(/map_view_lore/.test(ruJs + enJs), 'lore link should have an accessible label');
   assert.ok(/lore-map-image/.test(mapJs) && /assets\/maps\/map-' \+ regionId \+ '\.jpg/.test(mapJs), 'lore modal should show the generated painted-map image for the region');
-  assert.ok(/MAP_ASSET_VERSION = '20260826k'/.test(mapJs), 'map image URLs should use the current cache-bust version, not an older JPG query');
+  assert.ok(/MAP_ASSET_VERSION = '20260826m'/.test(mapJs), 'map image URLs should use the current cache-bust version, not an older JPG query');
   assert.ok(/lore-fallback/.test(mapJs) && /lore-map-text/.test(mapJs), 'when a map image is missing the modal falls back to the lore text instead of a broken image');
   assert.ok(/map_lore_image_alt/.test(ruJs + enJs), 'map image should have an accessible alt label');
   assert.ok(!/display_override/.test(read('app/manifest.json')), 'manifest display_override should be removed (standalone there breaks PWA install in some Chrome)');
@@ -778,7 +787,7 @@ test('developers screen offers optional non-advantage award', function () {
   assert.ok(/developers.js\?v=20260826k/.test(indexHtml), 'developers screen should be loaded and cache-busted');
   assert.ok(/developers-custom-energy/.test(developersJs) && /developers_custom_reward_label/.test(ruJs + enJs), 'developers screen should allow a custom 0.01-100 reward amount');
   assert.ok(/REWARD_OPTIONS = \[100\]/.test(developersJs), 'developers screen should keep only one fixed 1% quick reward');
-  assert.ok(/app.js\?v=20260826k/.test(indexHtml), 'app controller should be cache-busted for developers route');
+  assert.ok(/app.js\?v=20260826m/.test(indexHtml), 'app controller should be cache-busted for developers route');
   assert.ok(/'developers'/.test(appJs), 'app should register developers as a navigable screen');
   assert.ok(/DevelopersScreen\.render/.test(appJs), 'app should render developers screen');
   assert.ok(/SECONDARY_HOME_SCREENS = \['character', 'leaderboard', 'chronicle', 'settings', 'help', 'developers'\]/.test(homeJs), 'home secondary actions should include Developers without World Boss');
@@ -855,17 +864,17 @@ test('Denis feedback UI polish batch uses calendar days and calmer icons', funct
 
 
 test('v79 PWA icon removes the yellow outline around the plus', function () {
-  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v133-192.png')), 'v79 192px centered icon should exist');
-  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v133-512.png')), 'v79 512px centered icon should exist');
-  assert.ok(/viz-magic-v133-192\.png\?v=20260826k/.test(indexHtml), 'index should point at the v79 launcher icon');
-  assert.ok(/"start_url":\s*"\/\?pwa=viz-magic"/.test(read('app/manifest.json')), 'manifest start_url should force OS launcher refresh');
-  assert.ok(/"id":\s*"https:\/\/vizmagic\.web3blind\.xyz\/\?pwa=viz-magic"/.test(read('app/manifest.json')), 'manifest id should change so Android can refresh launcher identity');
-  assert.ok(/APP_SHELL_ASSETS[\s\S]*viz-magic-v133-512\.png/.test(read('app/sw.js')), 'fast install shell should still include current launcher icons');
+  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v151-192.png')), 'v79 192px centered icon should exist');
+  assert.ok(fs.existsSync(path.join(root, 'app/assets/icons/viz-magic-v151-512.png')), 'v79 512px centered icon should exist');
+  assert.ok(/viz-magic-v151-192\.png\?v=20260826m/.test(indexHtml), 'index should point at the v79 launcher icon');
+  assert.ok(/"start_url":\s*"\/\?pwa=viz-magic-v151"/.test(read('app/manifest.json')), 'manifest start_url should force OS launcher refresh');
+  assert.ok(/"id":\s*"https:\/\/vizmagic\.web3blind\.xyz\/\?pwa=viz-magic-v151"/.test(read('app/manifest.json')), 'manifest id should change so Android can refresh launcher identity');
+  assert.ok(/APP_SHELL_ASSETS[\s\S]*viz-magic-v151-512\.png/.test(read('app/sw.js')), 'fast install shell should still include current launcher icons');
 });
 
 test('Denis feedback item and motion icons are semantic', function () {
-  assert.ok(/viz-magic-v133-192\.png\?v=20260826k/.test(indexHtml), 'launcher icon should use the v79 centered launcher icon');
-  assert.ok(/assets\/icons\/viz-magic-v133-512\.png/.test(read('app/sw.js')), 'service worker should cache v79 icon');
+  assert.ok(/viz-magic-v151-192\.png\?v=20260826m/.test(indexHtml), 'launcher icon should use the v79 centered launcher icon');
+  assert.ok(/assets\/icons\/viz-magic-v151-512\.png/.test(read('app/sw.js')), 'service worker should cache v79 icon');
   assert.ok(/ember_staff:\s*'🪵'/.test(craftingJs) && /fire_rune:\s*'\\uD83D\\uDD25'/.test(craftingJs), 'ash staff and fire rune recipes should not share the same flame icon');
   assert.ok(/market_sell_title/.test(marketplaceJs) && /💵/.test(marketplaceJs), 'sell tab should use a brighter money icon');
   assert.ok(/market-item-icon vmagic-breathe/.test(marketplaceJs), 'bazaar sell item icons should breathe');
@@ -1003,8 +1012,8 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(/var sections = \[[\s\S]*mana[\s\S]*hp[\s\S]*quests[\s\S]*hunt[\s\S]*armageddon/.test(helpJs), 'practical help order should remain fixed in source');
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260826k/.test(indexHtml), 'Help should be cache-busted for guide redesign');
-  assert.ok(/main\.css\?v=20260826k/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v150/.test(swJsV83), 'service worker should use the current v91 cache');
+  assert.ok(/main\.css\?v=20260826m/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
+  assert.ok(/viz-magic-v151/.test(swJsV83), 'service worker should use the current v91 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
 
@@ -1059,12 +1068,12 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
   assert.ok(!/Ротацию пока не запускаем/.test(ruJs), 'living page rotation implementation note should not be shown to players');
   assert.ok(/quest_completed_pride/.test(ruJs + enJs), 'completed quest pride copy should exist');
 
-  assert.ok(/main\.css\?v=20260826k/.test(indexHtml), 'main CSS should be cache-busted for v91 polish');
+  assert.ok(/main\.css\?v=20260826m/.test(indexHtml), 'main CSS should be cache-busted for v91 polish');
   assert.ok(/world-events\.js\?v=20260826k/.test(indexHtml), 'world-events should be cache-busted for v91 polish');
   assert.ok(/quest-system\.js\?v=20260826k/.test(indexHtml) && /quests\.js\?v=20260826k/.test(indexHtml), 'quest engine and UI should be cache-busted');
   assert.ok(/inventory\.js\?v=20260826k/.test(indexHtml) && /marketplace\.js\?v=20260826k/.test(indexHtml), 'item icon screens should be cache-busted');
   assert.ok(/guild\.js\?v=20260826k/.test(indexHtml) && /settings\.js\?v=20260826k/.test(indexHtml), 'guild/settings screens should be cache-busted');
-  assert.ok(/viz-magic-v150/.test(swJs), 'service worker should use v91 cache');
+  assert.ok(/viz-magic-v151/.test(swJs), 'service worker should use v91 cache');
 });
 
 
@@ -1120,8 +1129,8 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.ok(/duel\.js\?v=20260726b/.test(indexHtml), 'duel UI should be cache-busted');
   assert.ok(/world-boss\.js\?v=20260826k/.test(indexHtml), 'world boss UI should be cache-busted');
   assert.ok(/character\.js\?v=20260826k/.test(indexHtml), 'character UI should be cache-busted');
-  assert.ok(/main\.css\?v=20260826k/.test(indexHtml), 'avatar CSS should be cache-busted');
-  assert.ok(/viz-magic-v150/.test(swJs), 'service worker should use v92 cache');
+  assert.ok(/main\.css\?v=20260826m/.test(indexHtml), 'avatar CSS should be cache-busted');
+  assert.ok(/viz-magic-v151/.test(swJs), 'service worker should use v92 cache');
 });
 
 
@@ -1200,7 +1209,7 @@ test('Denis v97 world, inventory, nav, arena and guide polish is explicit', func
   assert.ok(/nav-tab \{ flex-direction: column/.test(cssV97) && /nav-icon \{ display: block/.test(cssV97), 'bottom nav should place icon above one-line label');
   assert.ok(/leaderboard-table \{ table-layout: fixed/.test(cssV97) && /leaderboard-cell-hunts \{ width: 2\.2rem/.test(cssV97), 'leaderboard should fit hunt column on mobile');
   assert.ok(/settings_sfx: 'Звуковые эффекты'/.test(ruV97), 'settings SFX label should not include a duplicated speaker icon');
-  assert.ok(/world-events\.js\?v=20260826k/.test(indexV97) && /home\.js\?v=20260826k/.test(indexV97) && /main\.css\?v=20260826k/.test(indexV97), 'v97 files should be cache-busted');
+  assert.ok(/world-events\.js\?v=20260826k/.test(indexV97) && /home\.js\?v=20260826k/.test(indexV97) && /main\.css\?v=20260826m/.test(indexV97), 'v97 files should be cache-busted');
 });
 
 
@@ -1209,7 +1218,7 @@ test('public landing does not block startup behind chain sync', function () {
   const indexV98 = read('app/index.html');
   assert.ok(/if \(VizAccount\.isLoggedIn\(\)\)/.test(appJsV98) && /setTimeout\(function\(\) \{ _startBlockPolling\(\); \}, 250\);/.test(appJsV98), 'block polling should be deferred until after saved-session Home render');
   assert.ok(/\} else \{\s*_syncStartBlock = 0;\s*_updateSyncStatus\(100\);\s*navigateTo\('landing'\);/.test(appJsV98), 'public landing should hide sync overlay before rendering');
-  assert.ok(/js\/ui\/app\.js\?v=20260826k/.test(indexV98), 'app controller should be cache-busted for startup fix');
+  assert.ok(/js\/ui\/app\.js\?v=20260826m/.test(indexV98), 'app controller should be cache-busted for startup fix');
 });
 
 
@@ -1218,7 +1227,7 @@ test('saved sessions render Home before account and chain sync finish', function
   const indexV99 = read('app/index.html');
   assert.ok(/if \(VizAccount\.isLoggedIn\(\)\) \{[\s\S]*navigateTo\('home'\);[\s\S]*setTimeout\(function\(\) \{ _startBlockPolling\(\); \}, 250\);[\s\S]*VizAccount\.getAccount\(user/.test(appJsV99), 'saved sessions should render Home before chain/account hydration');
   assert.ok(/if \(currentScreen === 'home' \|\| currentScreen === 'character'\) \{\s*_renderScreen\(currentScreen\);\s*\}/.test(appJsV99), 'account hydration should refresh visible profile/home after startup');
-  assert.ok(/js\/ui\/app\.js\?v=20260826k/.test(indexV99), 'app controller should be cache-busted for saved-session launch fix');
+  assert.ok(/js\/ui\/app\.js\?v=20260826m/.test(indexV99), 'app controller should be cache-busted for saved-session launch fix');
 });
 
 
@@ -1236,7 +1245,7 @@ test('background sync never shows the sync chip over an active game screen', fun
   const appJsV100 = read('app/js/ui/app.js');
   const indexV100 = read('app/index.html');
   assert.ok(/if \(currentScreen && currentScreen !== 'landing'\) \{[\s\S]*statusEl\.classList\.remove\('show'\);[\s\S]*return;[\s\S]*\}/.test(appJsV100), 'active game screens should hide the sync status while background recovery runs');
-  assert.ok(/js\/ui\/app\.js\?v=20260826k/.test(indexV100), 'app controller should be cache-busted for non-blocking sync status');
+  assert.ok(/js\/ui\/app\.js\?v=20260826m/.test(indexV100), 'app controller should be cache-busted for non-blocking sync status');
 });
 
 
@@ -1245,7 +1254,7 @@ test('startup routes from saved session before network and IndexedDB', function 
   const indexV101 = read('app/index.html');
   assert.ok(/VizAccount\.init\(\);[\s\S]*Helpers\.EventBus\.on\('navigate', navigateTo\);[\s\S]*if \(VizAccount\.isLoggedIn\(\)\) \{\s*navigateTo\('home'\);\s*\} else \{\s*_renderScreen\('landing'\);\s*\}[\s\S]*VizConnection\.init/.test(appJsV101), 'saved sessions should route to Home before network/IndexedDB callbacks');
   assert.ok(!/_showConnectionStatus\(\);\s*VizConnection\.init/.test(appJsV101), 'initial connection setup should not show the sync chip as a loading screen');
-  assert.ok(/js\/ui\/app\.js\?v=20260826k/.test(indexV101), 'app controller should be cache-busted for immediate saved-session routing');
+  assert.ok(/js\/ui\/app\.js\?v=20260826m/.test(indexV101), 'app controller should be cache-busted for immediate saved-session routing');
 });
 
 
@@ -1301,12 +1310,12 @@ test('bottom navigation keeps icons above single-line labels and cache-busts cha
   assert.ok(/<span class="nav-icon"/.test(navJs) && /<span class="nav-label"/.test(navJs), 'nav should render icon and label spans');
   assert.ok(/flex-direction: column/.test(mainCss), 'nav tabs should stack icon above label');
   assert.ok(/\.nav-label[\s\S]*white-space: nowrap/.test(mainCss), 'nav labels should stay on one horizontal line');
-  assert.ok(/main\.css\?v=20260826k/.test(indexHtml), 'main.css cache bust missing');
+  assert.ok(/main\.css\?v=20260826m/.test(indexHtml), 'main.css cache bust missing');
   assert.ok(/hunt\.js\?v=20260826k/.test(indexHtml), 'hunt cache bust missing');
   assert.ok(/inventory\.js\?v=20260826k/.test(indexHtml), 'inventory cache bust missing');
   assert.ok(/marketplace\.js\?v=20260826k/.test(indexHtml), 'marketplace cache bust missing');
   assert.ok(/nav\.js\?v=20260826k/.test(indexHtml), 'nav cache bust missing');
-  assert.ok(/viz-magic-v150/.test(read('app/sw.js')), 'service worker cache should be v103');
+  assert.ok(/viz-magic-v151/.test(read('app/sw.js')), 'service worker cache should be v103');
 });
 
 
@@ -1335,10 +1344,10 @@ test('v103 weave surge, default avatars, and guide copy polish are explicit', fu
   assert.ok(/сатисфакцию вызывающему магу/.test(ruJs) && /по выбору отказывающегося — 1% Mana/.test(ruJs) && /1% Mana/.test(enJs), 'Duel no-show satisfaction design note should use the current exact 1% Mana copy');
   assert.ok(/home_lore_pages_intro/.test(homeJs + ruJs + enJs), 'Living pages should have a short fairy-tale intro');
 
-  assert.ok(/main\.css\?v=20260826k/.test(indexHtml), 'v103 CSS should be cache-busted');
+  assert.ok(/main\.css\?v=20260826m/.test(indexHtml), 'v103 CSS should be cache-busted');
   assert.ok(/home\.js\?v=20260826k/.test(indexHtml) && /character\.js\?v=20260826k/.test(indexHtml), 'v103 Home and Character should be cache-busted');
   assert.ok(/settings\.js\?v=20260826k/.test(indexHtml) && /help\.js\?v=20260826k/.test(indexHtml), 'v103 Settings and Help should be cache-busted');
-  assert.ok(/viz-magic-v150/.test(swJs), 'service worker should use v103 cache');
+  assert.ok(/viz-magic-v151/.test(swJs), 'service worker should use v103 cache');
 });
 
 
@@ -1369,7 +1378,7 @@ test('quest abandon charges only unstarted quests and warns before forfeit', fun
   assert.ok(/state-engine\.js\?v=20260826k/.test(indexPenalty), 'state engine cache bust missing for abandon penalty');
   assert.ok(/quests\.js\?v=20260826k/.test(indexPenalty), 'quests screen cache bust missing for abandon penalty');
   assert.ok(/js\/i18n\/ru\.js\?v=20260826k/.test(indexPenalty) && /js\/i18n\/en\.js\?v=20260826k/.test(indexPenalty), 'i18n cache bust missing for abandon penalty');
-  assert.ok(/viz-magic-v150/.test(swPenalty), 'service worker should use v104 cache');
+  assert.ok(/viz-magic-v151/.test(swPenalty), 'service worker should use v104 cache');
 });
 
 
@@ -1425,9 +1434,10 @@ test('v110 player feedback keeps requested icons, copy, vital explainers, and ev
   assert.ok(/tile-avatar-icon[\s\S]*1\.9rem/.test(css), 'Character button avatar should be enlarged for visual parity');
 
   ['main.css','ru.js','en.js','world-events.js','progress-bar.js','nav.js','home.js','character.js','hunt.js','inventory.js','arena.js','settings.js','leaderboard.js'].forEach(function(asset) {
-    assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=20260826k').test(index), asset + ' should be cache-busted for v110');
+    var version = asset === 'main.css' ? '20260826m' : '20260826k';
+    assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=' + version).test(index), asset + ' should be cache-busted for v110');
   });
-  assert.ok(/viz-magic-v150/.test(sw), 'service worker should use v110 cache');
+  assert.ok(/viz-magic-v151/.test(sw), 'service worker should use v110 cache');
 });
 
 test('v109 player polish batch removes stale text, fixes motion/copy/icons, and fills hunt tier gap', function () {
@@ -1479,9 +1489,10 @@ test('v109 player polish batch removes stale text, fixes motion/copy/icons, and 
   assert.ok(/leaderboard-title-icon[\s\S]*animation-name: vmagic-soft-breathe/.test(mainCssV109), 'Leaderboard title icon should use soft breathe, not jitter');
 
   ['main.css','ru.js','en.js','world-events.js','creatures.js','character.js','hunt.js','inventory.js','arena.js','guild.js','marketplace.js','leaderboard.js','settings.js'].forEach(function(asset) {
-    assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=20260826k').test(indexV109), asset + ' should be cache-busted for v109');
+    var version = asset === 'main.css' ? '20260826m' : '20260826k';
+    assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=' + version).test(indexV109), asset + ' should be cache-busted for v109');
   });
-  assert.ok(/viz-magic-v150/.test(swV109), 'service worker should use v109 cache');
+  assert.ok(/viz-magic-v151/.test(swV109), 'service worker should use v109 cache');
 });
 
 test('v108 inventory, bottom nav, hunt danger marker, and arena motion polish are explicit', function () {
@@ -1518,14 +1529,14 @@ test('v108 inventory, bottom nav, hunt danger marker, and arena motion polish ar
   assert.ok(/\.nav-tab \{ flex-direction: column; justify-content: center; align-items: center; gap: 2px; \}/.test(cssV108), 'Bottom nav icons should sit above labels');
   assert.ok(/\.nav-label \{ display: block; white-space: nowrap; line-height: 1\.05; text-align: center; \}/.test(cssV108), 'Bottom nav label should be one horizontal line under icon');
 
-  assert.ok(/main\.css\?v=20260826k/.test(indexV108), 'main CSS cache bust missing for v108');
+  assert.ok(/main\.css\?v=20260826m/.test(indexV108), 'main CSS cache bust missing for v108');
   assert.ok(/inventory\.js\?v=20260826k/.test(indexV108), 'inventory cache bust missing for v108');
   assert.ok(/hunt\.js\?v=20260826k/.test(indexV108), 'hunt cache bust missing for v108');
   assert.ok(/arena\.js\?v=20260826k/.test(indexV108), 'arena cache bust missing for v108');
   assert.ok(/nav\.js\?v=20260826k/.test(indexV108), 'nav cache bust missing for v108');
   assert.ok(/marketplace\.js\?v=20260826k/.test(indexV108), 'marketplace cache bust missing for v108 icon parity');
   assert.ok(/js\/i18n\/ru\.js\?v=20260826k/.test(indexV108) && /js\/i18n\/en\.js\?v=20260826k/.test(indexV108), 'i18n cache bust missing for v108 item labels');
-  assert.ok(/viz-magic-v150/.test(swV108), 'service worker should use v108 cache');
+  assert.ok(/viz-magic-v151/.test(swV108), 'service worker should use v108 cache');
 });
 
 test('v107 hunt combat uses spell mana cost, not full account energy', function () {
@@ -1554,7 +1565,7 @@ test('v107 hunt combat uses spell mana cost, not full account energy', function 
   assert.ok(/combat\.js\?v=20260826k/.test(indexV107), 'combat cache bust missing for v118 hunt mercy fix');
   assert.ok(/state-engine\.js\?v=20260826k/.test(indexV107), 'state engine cache bust missing for v107 hunt energy fix');
   assert.ok(/hunt\.js\?v=20260826k/.test(indexV107), 'hunt screen cache bust missing for v107 hunt energy fix');
-  assert.ok(/viz-magic-v150/.test(swV107), 'service worker should use v107 cache');
+  assert.ok(/viz-magic-v151/.test(swV107), 'service worker should use v107 cache');
 });
 
 test('v106 hunt danger copy is truthful and Weave title is single-line', function () {
@@ -1574,10 +1585,10 @@ test('v106 hunt danger copy is truthful and Weave title is single-line', functio
   assert.ok(/rift_colossus[\s\S]*deadly: true[\s\S]*baseHp: 420[\s\S]*basePot: 70/.test(creaturesV106), 'Rift Colossus should be explicitly and mechanically deadly');
   assert.ok(/c\.deadly === true[\s\S]*min <= level \+ 2/.test(huntV106), 'hunt should expose only one nearby deadly target');
   assert.ok(/function _isDangerCreature/.test(huntV106), 'danger helper may remain but card warning should not render');
-  assert.ok(/main\.css\?v=20260826k/.test(indexV106), 'v106 CSS cache bust missing');
+  assert.ok(/main\.css\?v=20260826m/.test(indexV106), 'v106 CSS cache bust missing');
   assert.ok(/creatures\.js\?v=20260826k/.test(indexV106), 'v106 creatures cache bust missing');
   assert.ok(/hunt\.js\?v=20260826k/.test(indexV106), 'v106 hunt cache bust missing');
-  assert.ok(/viz-magic-v150/.test(swV106), 'service worker should use v106 cache');
+  assert.ok(/viz-magic-v151/.test(swV106), 'service worker should use v106 cache');
 });
 
 test('v105 text quality, season colors, avatar title, and spell modal polish are explicit', function () {
@@ -1618,12 +1629,12 @@ test('v105 text quality, season colors, avatar title, and spell modal polish are
   assert.ok(/итог определяет блокчейн\.<br>Вызвать на дуэль/.test(ruJs), 'Guide duel challenge sentence should start on a new line');
   assert.ok(/по выбору отказывающегося — 1% Mana/.test(ruJs), 'Duel satisfaction rule should use the requested 1% Mana copy');
 
-  assert.ok(/main\.css\?v=20260826k/.test(indexV105), 'main CSS cache bust missing for v105');
+  assert.ok(/main\.css\?v=20260826m/.test(indexV105), 'main CSS cache bust missing for v105');
   assert.ok(/home\.js\?v=20260826k/.test(indexV105) && /character\.js\?v=20260826k/.test(indexV105), 'Home/Character cache bust missing for v105');
   assert.ok(/settings\.js\?v=20260826k/.test(indexV105) && /leaderboard\.js\?v=20260826k/.test(indexV105), 'Settings/Leaderboard cache bust missing for v105');
   assert.ok(/world-events\.js\?v=20260826k/.test(indexV105), 'world events cache bust missing for v105');
   assert.ok(/js\/i18n\/ru\.js\?v=20260826k/.test(indexV105) && /js\/i18n\/en\.js\?v=20260826k/.test(indexV105), 'i18n cache bust missing for v105');
-  assert.ok(/viz-magic-v150/.test(swV105), 'service worker should use v105 cache');
+  assert.ok(/viz-magic-v151/.test(swV105), 'service worker should use v105 cache');
 });
 
 
@@ -1673,9 +1684,10 @@ test('v112 player feedback fixes event surface weather inventory and ranking pol
   assert.ok(!/t\('class_' \+ ch\.className\) \+ ' \\u2022 '/.test(character), 'class subtitle under the shield should be removed');
 
   ['main.css','ru.js','en.js','world-events.js','progress-bar.js','nav.js','home.js','character.js','hunt.js','inventory.js','arena.js','settings.js','leaderboard.js','marketplace.js','guild.js','creatures.js'].forEach(function(asset) {
-    assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=20260826k').test(index), asset + ' should be cache-busted for v112');
+    var version = asset === 'main.css' ? '20260826m' : '20260826k';
+    assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=' + version).test(index), asset + ' should be cache-busted for v112');
   });
-  assert.ok(/viz-magic-v150/.test(sw), 'service worker should use v112 cache');
+  assert.ok(/viz-magic-v151/.test(sw), 'service worker should use v112 cache');
 });
 
 
@@ -1684,15 +1696,15 @@ test('v114 loading state does not invent an embercaster level-one character', fu
   assert.ok(/hasCharacter = !!character/.test(homeJs) && /characterLine = hasCharacter/.test(homeJs), 'Home should render neutral loading copy until the real character exists');
   assert.ok(/if \(!ch\)/.test(characterScreenJs) && /t\('loading'\)/.test(characterScreenJs), 'Character screen should show loading instead of a fake level-one class');
   assert.ok(/home.js\?v=20260826k/.test(indexHtml) && /character.js\?v=20260826k/.test(indexHtml), 'loading fallback fix should be cache-busted');
-  assert.ok(/viz-magic-v150/.test(swJs), 'service worker should publish v114');
+  assert.ok(/viz-magic-v151/.test(swJs), 'service worker should publish v114');
 });
 
 
 test('v115 service worker forces stale PWA windows onto the fresh cache-busted app shell', function () {
-  assert.ok(/app.js\?v=20260826k/.test(indexHtml), 'main app controller should be cache-busted with UI fixes');
+  assert.ok(/app.js\?v=20260826m/.test(indexHtml), 'main app controller should be cache-busted with UI fixes');
   assert.ok(/sw_reload_v123/.test(appJs) && /controllerchange/.test(appJs) && /window\.location\.reload/.test(appJs), 'app should reload once when a fresh service worker takes control');
   assert.ok(/clients\.matchAll/.test(swJs) && /client\.navigate\(client\.url\)/.test(swJs), 'service worker activation should navigate open PWA windows to fresh assets');
-  assert.ok(/viz-magic-v150/.test(swJs), 'service worker should publish v115');
+  assert.ok(/viz-magic-v151/.test(swJs), 'service worker should publish v115');
 });
 
 

@@ -27,7 +27,7 @@ button { color: inherit; font: inherit; }
 .emoji, .region-icon, .char-icon, .class-icon, .item-icon, .nav-icon,
 .home-character-icon, .duel-mage-icon, .arena-class-icon, .quest-icon,
 [class*="-icon"], [class*="icon-"] {
-    font-family: 'Noto Color Emoji', 'Segoe UI Emoji', 'Apple Color Emoji', 'Twemoji Mozilla', sans-serif;
+    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', sans-serif;
 }
 
 html { font-size: 16px; -webkit-text-size-adjust: 100%; }
@@ -749,6 +749,61 @@ body {
 .lore-map-viewport.zoomed .lore-map-image {
     width: min(150vw, 1400px);
     max-width: none;
+}
+.modal.lore-map-fullscreen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #05070b;
+}
+.modal.lore-map-fullscreen .lore-map-card {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    background: #05070b;
+}
+.modal.lore-map-fullscreen .lore-map-title,
+.modal.lore-map-fullscreen .lore-map-level,
+.modal.lore-map-fullscreen .lore-map-text {
+    display: none;
+}
+.modal.lore-map-fullscreen .lore-map-viewport {
+    flex: 1 1 auto;
+    max-height: none;
+    height: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+.modal.lore-map-fullscreen .lore-map-image {
+    width: auto;
+    height: 100%;
+    max-width: none;
+    border-radius: 0;
+}
+.modal.lore-map-fullscreen .lore-map-actions {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 10px;
+    background: rgba(5,7,11,0.94);
+}
+.modal.lore-map-fullscreen #lore-zoom-toggle {
+    display: none;
 }
 .lore-map-actions {
     display: grid;

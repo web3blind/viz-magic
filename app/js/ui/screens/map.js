@@ -8,7 +8,7 @@ var MapScreen = (function() {
 
     var t = Helpers.t;
     var pendingTravel = null;
-    var MAP_ASSET_VERSION = '20260826k';
+    var MAP_ASSET_VERSION = '20260826m';
     var PENDING_TRAVEL_TTL_MS = 5 * 60 * 1000;
     var TRAVEL_COST_LOW = 10;    // 0.1%
     var TRAVEL_COST_HIGH = 100;  // 1%
@@ -257,17 +257,34 @@ var MapScreen = (function() {
         html += '<div class="modal-actions lore-map-actions"><button type="button" class="btn btn-secondary" id="lore-zoom-toggle">' + t('map_zoom_toggle') + '</button><button type="button" class="btn btn-primary" id="lore-close">' + t('close') + '</button></div>';
         html += '</div>';
         ModalComponent.show(html);
+        var modal = Helpers.$('modal-container');
         var viewport = Helpers.$('lore-map-viewport');
         var zoomBtn = Helpers.$('lore-zoom-toggle');
-        if (zoomBtn && viewport) {
+        if (zoomBtn && viewport && modal) {
             zoomBtn.addEventListener('click', function() {
-                var zoomed = viewport.className.indexOf(' zoomed') === -1;
-                viewport.className = zoomed ? viewport.className + ' zoomed' : viewport.className.replace(' zoomed', '');
-                zoomBtn.textContent = zoomed ? t('map_zoom_reset') : t('map_zoom_toggle');
+                modal.classList.add('lore-map-fullscreen');
+                viewport.classList.add('zoomed');
+            });
+            viewport.addEventListener('click', function(e) {
+                if (modal.classList.contains('lore-map-fullscreen')) {
+                    e.preventDefault();
+                    _closeLoreFullscreen(modal, viewport);
+                }
             });
         }
         var closeBtn = Helpers.$('lore-close');
-        if (closeBtn) closeBtn.addEventListener('click', function() { ModalComponent.hide(); });
+        if (closeBtn) closeBtn.addEventListener('click', function() {
+            if (modal && modal.classList.contains('lore-map-fullscreen')) {
+                _closeLoreFullscreen(modal, viewport);
+                return;
+            }
+            ModalComponent.hide();
+        });
+    }
+
+    function _closeLoreFullscreen(modal, viewport) {
+        if (modal) modal.classList.remove('lore-map-fullscreen');
+        if (viewport) viewport.classList.remove('zoomed');
     }
 
     /**
