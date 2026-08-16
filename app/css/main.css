@@ -2943,7 +2943,7 @@ html body[data-icon-motion] .magical-forecast .forecast-card-hunt-summary .forec
 }
 
 
-/* Stable text/icon badges for desktop environments without color emoji support. */
+/* Stable CSS pictogram icons for desktop/mobile environments without color emoji support. */
 .boot-fallback {
     max-width: 720px;
     margin: 48px auto;
@@ -2957,51 +2957,109 @@ html body[data-icon-motion] .magical-forecast .forecast-card-hunt-summary .forec
 .boot-fallback h1 { margin-bottom: 12px; }
 .boot-fallback p { color: var(--color-text-muted); margin-bottom: 10px; }
 .vm-icon {
+    --vm-icon-bg: linear-gradient(135deg, #2d1b69, #8b5cf6);
+    --vm-icon-line: #fff7d6;
+    --vm-icon-line-2: rgba(255,255,255,0.64);
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
     width: 1.85em;
     height: 1.85em;
-    border-radius: 999px;
-    font-family: var(--font-base);
-    font-weight: 800;
-    font-size: 0.82em;
+    border-radius: 12px;
     line-height: 1;
-    color: #f0f6fc;
-    background: linear-gradient(135deg, #7c35ff, #58a6ff);
-    border: 1px solid rgba(255,255,255,0.22);
-    box-shadow: 0 0 0 1px rgba(88,166,255,0.14), 0 4px 14px rgba(88,166,255,0.22);
-    text-transform: uppercase;
+    color: transparent;
+    background: var(--vm-icon-bg);
+    border: 1px solid rgba(255,255,255,0.24);
+    box-shadow: 0 0 0 1px rgba(255,216,88,0.10), 0 4px 14px rgba(0,0,0,0.24);
+    overflow: hidden;
 }
-.vm-icon::before { content: '?'; }
-.vm-icon-home::before { content: 'H'; }
-.vm-icon-hunt::before { content: 'B'; }
-.vm-icon-map::before { content: 'M'; }
-.vm-icon-guild::before { content: 'G'; }
-.vm-icon-marketplace::before { content: 'Z'; }
-.vm-icon-crafting::before { content: 'W'; }
-.vm-icon-quests::before { content: 'Q'; }
-.vm-icon-temple::before { content: 'T'; }
-.vm-icon-boss::before { content: 'D'; }
-.vm-icon-character::before { content: 'C'; }
-.vm-icon-help::before { content: '?'; }
-.vm-icon-leaderboard::before { content: '#'; }
-.vm-icon-inventory::before { content: 'I'; }
-.vm-icon-chronicle::before { content: 'L'; }
-.vm-icon-arena::before { content: 'A'; }
-.vm-icon-settings::before { content: 'S'; }
-.vm-icon-developers::before { content: 'Dev'; font-size: 0.62em; }
-.vm-icon-spark::before { content: '*'; }
-.vm-icon-mana { background: linear-gradient(135deg, #1f6feb, #58a6ff); }
-.vm-icon-mana::before { content: 'M'; }
-.vm-icon-hp { background: linear-gradient(135deg, #da3633, #ff7b72); }
-.vm-icon-hp::before { content: 'HP'; font-size: 0.62em; }
-.vm-icon-xp { background: linear-gradient(135deg, #bf8700, #f2cc60); color: #161b22; }
-.vm-icon-xp::before { content: 'XP'; font-size: 0.62em; }
-.nav-icon.vm-icon { width: 28px; height: 28px; font-size: 0.72rem; margin-bottom: 2px; }
-.tile-icon.vm-icon { width: 34px; height: 34px; font-size: 0.9rem; }
-.vital-label-icon.vm-icon { width: 22px; height: 22px; font-size: 0.68rem; vertical-align: middle; }
+.vm-icon::before,
+.vm-icon::after {
+    content: '';
+    position: absolute;
+    display: block;
+    box-sizing: border-box;
+}
+.vm-icon::before {
+    width: 48%;
+    height: 48%;
+    border: 2px solid var(--vm-icon-line);
+    border-radius: 50%;
+}
+.vm-icon::after {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--vm-icon-line-2);
+}
+.vm-icon-home { --vm-icon-bg: linear-gradient(135deg, #5b3417, #d4a843); }
+.vm-icon-home::before { width: 54%; height: 42%; border-radius: 2px; transform: translateY(4px); }
+.vm-icon-home::after { width: 44%; height: 44%; border: 2px solid var(--vm-icon-line); border-width: 2px 2px 0 0; background: transparent; border-radius: 0; transform: translateY(-3px) rotate(-45deg); }
+.vm-icon-hunt { --vm-icon-bg: linear-gradient(135deg, #123d2b, #2f9e44); }
+.vm-icon-hunt::before { width: 60%; height: 60%; border: 2px solid var(--vm-icon-line); border-left-color: transparent; border-radius: 50%; transform: rotate(-25deg); }
+.vm-icon-hunt::after { width: 44%; height: 2px; background: var(--vm-icon-line); border-radius: 2px; transform: rotate(-25deg); }
+.vm-icon-map { --vm-icon-bg: linear-gradient(135deg, #164e63, #38bdf8); }
+.vm-icon-map::before { width: 58%; height: 58%; border-radius: 4px; transform: rotate(8deg); }
+.vm-icon-map::after { width: 2px; height: 56%; background: var(--vm-icon-line-2); border-radius: 2px; box-shadow: 7px 0 0 var(--vm-icon-line-2), -7px 0 0 var(--vm-icon-line-2); }
+.vm-icon-guild { --vm-icon-bg: linear-gradient(135deg, #4c1d95, #a78bfa); }
+.vm-icon-guild::before { width: 54%; height: 62%; border-radius: 10px 10px 4px 4px; }
+.vm-icon-guild::after { width: 34%; height: 2px; background: var(--vm-icon-line); box-shadow: 0 6px 0 var(--vm-icon-line-2); }
+.vm-icon-marketplace { --vm-icon-bg: linear-gradient(135deg, #7c2d12, #fb923c); }
+.vm-icon-marketplace::before { width: 58%; height: 44%; border-radius: 4px; transform: translateY(4px); }
+.vm-icon-marketplace::after { width: 56%; height: 18%; border: 2px solid var(--vm-icon-line); border-bottom: 0; background: transparent; border-radius: 8px 8px 0 0; transform: translateY(-7px); }
+.vm-icon-crafting { --vm-icon-bg: linear-gradient(135deg, #374151, #f59e0b); }
+.vm-icon-crafting::before { width: 56%; height: 2px; background: var(--vm-icon-line); border: 0; border-radius: 2px; transform: rotate(-45deg); }
+.vm-icon-crafting::after { width: 56%; height: 2px; background: var(--vm-icon-line-2); border-radius: 2px; transform: rotate(45deg); }
+.vm-icon-quests { --vm-icon-bg: linear-gradient(135deg, #1e3a8a, #60a5fa); }
+.vm-icon-quests::before { width: 48%; height: 58%; border-radius: 3px; }
+.vm-icon-quests::after { width: 32%; height: 2px; background: var(--vm-icon-line); box-shadow: 0 6px 0 var(--vm-icon-line-2); transform: translateY(-2px); }
+.vm-icon-temple { --vm-icon-bg: linear-gradient(135deg, #713f12, #fde68a); }
+.vm-icon-temple::before { width: 58%; height: 42%; border-radius: 2px; transform: translateY(5px); }
+.vm-icon-temple::after { width: 58%; height: 2px; background: var(--vm-icon-line); box-shadow: 0 -6px 0 var(--vm-icon-line-2), -9px 6px 0 -1px var(--vm-icon-line-2), 9px 6px 0 -1px var(--vm-icon-line-2); transform: translateY(-4px); }
+.vm-icon-boss { --vm-icon-bg: linear-gradient(135deg, #581c87, #dc2626); }
+.vm-icon-boss::before { width: 54%; height: 54%; border-radius: 50% 50% 45% 45%; }
+.vm-icon-boss::after { width: 40%; height: 2px; background: var(--vm-icon-line); box-shadow: -7px -7px 0 -1px var(--vm-icon-line), 7px -7px 0 -1px var(--vm-icon-line); }
+.vm-icon-character { --vm-icon-bg: linear-gradient(135deg, #312e81, #818cf8); }
+.vm-icon-character::before { width: 34%; height: 34%; border-radius: 50%; transform: translateY(-5px); }
+.vm-icon-character::after { width: 54%; height: 28%; border: 2px solid var(--vm-icon-line-2); border-radius: 50% 50% 4px 4px; background: transparent; transform: translateY(8px); }
+.vm-icon-help { --vm-icon-bg: linear-gradient(135deg, #0f766e, #5eead4); }
+.vm-icon-help::before { width: 54%; height: 42%; border-radius: 4px; }
+.vm-icon-help::after { width: 8px; height: 8px; border: 2px solid var(--vm-icon-line); border-left: 0; border-bottom: 0; border-radius: 0 7px 0 0; background: transparent; transform: translateY(-2px) rotate(-20deg); }
+.vm-icon-leaderboard { --vm-icon-bg: linear-gradient(135deg, #7f1d1d, #facc15); }
+.vm-icon-leaderboard::before { width: 58%; height: 46%; border-radius: 0 0 12px 12px; }
+.vm-icon-leaderboard::after { width: 44%; height: 2px; background: var(--vm-icon-line); box-shadow: 0 6px 0 var(--vm-icon-line-2); transform: translateY(7px); }
+.vm-icon-inventory { --vm-icon-bg: linear-gradient(135deg, #422006, #ca8a04); }
+.vm-icon-inventory::before { width: 54%; height: 48%; border-radius: 5px; transform: translateY(4px); }
+.vm-icon-inventory::after { width: 32%; height: 18%; border: 2px solid var(--vm-icon-line); border-bottom: 0; border-radius: 10px 10px 0 0; background: transparent; transform: translateY(-7px); }
+.vm-icon-chronicle { --vm-icon-bg: linear-gradient(135deg, #3b0764, #c084fc); }
+.vm-icon-chronicle::before { width: 52%; height: 58%; border-radius: 3px 9px 3px 9px; }
+.vm-icon-chronicle::after { width: 34%; height: 2px; background: var(--vm-icon-line); box-shadow: 0 6px 0 var(--vm-icon-line-2); }
+.vm-icon-arena { --vm-icon-bg: linear-gradient(135deg, #111827, #ef4444); }
+.vm-icon-arena::before { width: 58%; height: 2px; background: var(--vm-icon-line); border: 0; border-radius: 2px; transform: rotate(45deg); }
+.vm-icon-arena::after { width: 58%; height: 2px; background: var(--vm-icon-line-2); border-radius: 2px; transform: rotate(-45deg); }
+.vm-icon-settings { --vm-icon-bg: linear-gradient(135deg, #334155, #94a3b8); }
+.vm-icon-settings::before { width: 54%; height: 54%; border-radius: 50%; border-style: dashed; }
+.vm-icon-settings::after { width: 18%; height: 18%; background: var(--vm-icon-line); }
+.vm-icon-developers { --vm-icon-bg: linear-gradient(135deg, #064e3b, #34d399); }
+.vm-icon-developers::before { width: 48%; height: 36%; border-radius: 3px; }
+.vm-icon-developers::after { width: 54%; height: 2px; background: var(--vm-icon-line); box-shadow: -6px 5px 0 var(--vm-icon-line-2), 6px 5px 0 var(--vm-icon-line-2); }
+.vm-icon-spark { --vm-icon-bg: linear-gradient(135deg, #701a75, #f0abfc); }
+.vm-icon-spark::before { width: 2px; height: 58%; background: var(--vm-icon-line); border: 0; border-radius: 2px; }
+.vm-icon-spark::after { width: 58%; height: 2px; background: var(--vm-icon-line); border-radius: 2px; }
+.vm-icon-mana { --vm-icon-bg: linear-gradient(135deg, #1f6feb, #58a6ff); }
+.vm-icon-mana::before { width: 42%; height: 58%; border-radius: 50% 50% 55% 55%; transform: rotate(25deg); }
+.vm-icon-mana::after { width: 22%; height: 22%; background: var(--vm-icon-line-2); transform: translate(3px, -5px); }
+.vm-icon-hp { --vm-icon-bg: linear-gradient(135deg, #da3633, #ff7b72); }
+.vm-icon-hp::before { width: 58%; height: 58%; border: 0; background: var(--vm-icon-line); border-radius: 50% 50% 48% 48%; transform: rotate(45deg) scale(0.82); }
+.vm-icon-hp::after { width: 56%; height: 56%; background: transparent; border-radius: 0; }
+.vm-icon-xp { --vm-icon-bg: linear-gradient(135deg, #bf8700, #f2cc60); }
+.vm-icon-xp::before { width: 58%; height: 58%; border-radius: 4px; transform: rotate(45deg); }
+.vm-icon-xp::after { width: 22%; height: 22%; background: var(--vm-icon-line-2); }
+.nav-icon.vm-icon { width: 28px; height: 28px; margin-bottom: 2px; }
+.tile-icon.vm-icon { width: 34px; height: 34px; }
+.vital-label-icon.vm-icon { width: 22px; height: 22px; vertical-align: middle; }
 @media (prefers-reduced-motion: reduce) {
     .vm-icon { animation: none !important; }
 }
