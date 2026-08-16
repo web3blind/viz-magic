@@ -1,5 +1,5 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v157';
+var CACHE_NAME = 'viz-magic-v158';
 var NAVIGATION_TIMEOUT_MS = 3500;
 var RUNTIME_TIMEOUT_MS = 2500;
 var APP_SHELL_ASSETS = [
@@ -7,8 +7,8 @@ var APP_SHELL_ASSETS = [
     '/index.html',
     '/manifest.json',
     '/favicon.ico',
-    '/assets/icons/viz-magic-v157-192.png',
-    '/assets/icons/viz-magic-v157-512.png',
+    '/assets/icons/viz-magic-v158-192.png',
+    '/assets/icons/viz-magic-v158-512.png',
     '/css/main.css',
     '/css/themes.css',
     '/css/accessibility.css'
