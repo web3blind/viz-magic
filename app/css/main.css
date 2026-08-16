@@ -2937,3 +2937,67 @@ html body[data-icon-motion] .magical-forecast .forecast-card-hunt-summary .forec
 @media (max-width: 420px) {
     .lore-map-actions .btn { padding-left: 10px; padding-right: 10px; font-size: 0.92rem; }
 }
+
+
+/* Stable text/icon badges for desktop environments without color emoji support. */
+.boot-fallback {
+    max-width: 720px;
+    margin: 48px auto;
+    padding: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: var(--shadow-lg);
+}
+.boot-fallback h1 { margin-bottom: 12px; }
+.boot-fallback p { color: var(--color-text-muted); margin-bottom: 10px; }
+.vm-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 1.85em;
+    height: 1.85em;
+    border-radius: 999px;
+    font-family: var(--font-base);
+    font-weight: 800;
+    font-size: 0.82em;
+    line-height: 1;
+    color: #f0f6fc;
+    background: linear-gradient(135deg, #7c35ff, #58a6ff);
+    border: 1px solid rgba(255,255,255,0.22);
+    box-shadow: 0 0 0 1px rgba(88,166,255,0.14), 0 4px 14px rgba(88,166,255,0.22);
+    text-transform: uppercase;
+}
+.vm-icon::before { content: '?'; }
+.vm-icon-home::before { content: 'H'; }
+.vm-icon-hunt::before { content: 'B'; }
+.vm-icon-map::before { content: 'M'; }
+.vm-icon-guild::before { content: 'G'; }
+.vm-icon-marketplace::before { content: 'Z'; }
+.vm-icon-crafting::before { content: 'W'; }
+.vm-icon-quests::before { content: 'Q'; }
+.vm-icon-temple::before { content: 'T'; }
+.vm-icon-boss::before { content: 'D'; }
+.vm-icon-character::before { content: 'C'; }
+.vm-icon-help::before { content: '?'; }
+.vm-icon-leaderboard::before { content: '#'; }
+.vm-icon-inventory::before { content: 'I'; }
+.vm-icon-chronicle::before { content: 'L'; }
+.vm-icon-arena::before { content: 'A'; }
+.vm-icon-settings::before { content: 'S'; }
+.vm-icon-developers::before { content: 'Dev'; font-size: 0.62em; }
+.vm-icon-spark::before { content: '*'; }
+.vm-icon-mana { background: linear-gradient(135deg, #1f6feb, #58a6ff); }
+.vm-icon-mana::before { content: 'M'; }
+.vm-icon-hp { background: linear-gradient(135deg, #da3633, #ff7b72); }
+.vm-icon-hp::before { content: 'HP'; font-size: 0.62em; }
+.vm-icon-xp { background: linear-gradient(135deg, #bf8700, #f2cc60); color: #161b22; }
+.vm-icon-xp::before { content: 'XP'; font-size: 0.62em; }
+.nav-icon.vm-icon { width: 28px; height: 28px; font-size: 0.72rem; margin-bottom: 2px; }
+.tile-icon.vm-icon { width: 34px; height: 34px; font-size: 0.9rem; }
+.vital-label-icon.vm-icon { width: 22px; height: 22px; font-size: 0.68rem; vertical-align: middle; }
+@media (prefers-reduced-motion: reduce) {
+    .vm-icon { animation: none !important; }
+}

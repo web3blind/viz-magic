@@ -40,11 +40,11 @@ var CharacterScreen = (function() {
                 '<div class="char-header">' +
                     '<div><h2><span class="char-icon character-title-class-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(ch.className || 'embercaster') + '</span> ' + _classGuideName(ch.className, t) + ' <span class="title-dot" aria-hidden="true">•</span> <span class="character-title-level">' + t('home_level') + ' ' + ch.level + '</span></h2></div>' +
                 '</div>' +
-                ProgressBar.create({id:'char-mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">⚡</span> ' + t('home_mana'), value:0, max:100, color:'#2196f3', href: VIZ_ENERGY_DOC_URL, ariaLabel: t('char_mana_external_aria')}) +
+                ProgressBar.create({id:'char-mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vm-icon vm-icon-mana vmagic-breathe" aria-hidden="true"></span> ' + t('home_mana'), value:0, max:100, color:'#2196f3', href: VIZ_ENERGY_DOC_URL, ariaLabel: t('char_mana_external_aria')}) +
                 '<p class="quest-desc character-vital-note">' + t('char_mana_explainer') + '</p>' +
-                ProgressBar.create({id:'char-hp-bar', label:'HP', labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">❤️</span> HP', value:ch.hp, max:ch.maxHp, displayValue:hpShown, displayMax:CHARACTER_HP_DISPLAY_MAX, color:'#e53935', button: true, ariaLabel: t('char_hp_button_aria')}) +
+                ProgressBar.create({id:'char-hp-bar', label:'HP', labelHtml:'<span class="vital-label-icon vm-icon vm-icon-hp vmagic-breathe" aria-hidden="true"></span> HP', value:ch.hp, max:ch.maxHp, displayValue:hpShown, displayMax:CHARACTER_HP_DISPLAY_MAX, color:'#e53935', button: true, ariaLabel: t('char_hp_button_aria')}) +
                 '<p class="quest-desc character-vital-note">' + t('char_hp_explainer') + '</p>' +
-                ProgressBar.create({id:'char-xp-bar', label:'XP', labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">⭐</span> XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:CHARACTER_XP_DISPLAY_MAX, color:'#ffc107', button: true, ariaLabel: t('char_xp_button_aria')}) +
+                ProgressBar.create({id:'char-xp-bar', label:'XP', labelHtml:'<span class="vital-label-icon vm-icon vm-icon-xp vmagic-breathe" aria-hidden="true"></span> XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:CHARACTER_XP_DISPLAY_MAX, color:'#ffc107', button: true, ariaLabel: t('char_xp_button_aria')}) +
                 '<p class="quest-desc character-vital-note">' + t('char_xp_explainer') + '</p>' +
                 '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">📊</span> ' + t('char_stats') + '</h2>' +
                 '<div class="stats-list">' +

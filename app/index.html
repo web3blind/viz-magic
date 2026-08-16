@@ -8,12 +8,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Viz Magic</title>
-    <link rel="manifest" href="manifest.json?v=20260826p">
-    <link rel="icon" href="favicon.ico?v=20260826p">
-    <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/viz-magic-v153-192.png?v=20260826p">
-    <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/viz-magic-v153-512.png?v=20260826p">
-    <link rel="apple-touch-icon" href="assets/icons/viz-magic-v153-192.png?v=20260826p">
-    <link rel="stylesheet" href="css/main.css?v=20260826p">
+    <link rel="manifest" href="manifest.json?v=20260826q">
+    <link rel="icon" href="favicon.ico?v=20260826q">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/viz-magic-v155-192.png?v=20260826q">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/viz-magic-v155-512.png?v=20260826q">
+    <link rel="apple-touch-icon" href="assets/icons/viz-magic-v155-192.png?v=20260826q">
+    <link rel="stylesheet" href="css/main.css?v=20260826q">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/accessibility.css">
 </head>
@@ -26,6 +26,12 @@
     <div id="app-main" class="app-shell" tabindex="-1">
     <!-- Screen: Landing -->
     <main id="screen-landing" class="screen active" role="main" aria-hidden="false" aria-label="Landing">
+        <div class="boot-fallback" data-boot-fallback="BOOT_FALLBACK_MARKER" role="status" aria-live="polite">
+            <h1>Viz Magic</h1>
+            <p>Загрузка магического мира… Если интернет слабый, приложение покажет сохранённую версию или попросит открыть сайт в браузере.</p>
+            <p lang="en">Loading the magical world… If the network is weak, the app will use the saved shell or ask you to retry in the browser.</p>
+            <a class="btn btn-secondary" href="https://vizmagic.web3blind.xyz/">Открыть Viz Magic в браузере</a>
+        </div>
     </main>
 
     <!-- Screen: Login -->
@@ -124,8 +130,8 @@
     <script src="js/config.js?v=20260712a"></script>
 
     <!-- I18n -->
-    <script src="js/i18n/ru.js?v=20260826p"></script>
-    <script src="js/i18n/en.js?v=20260826p"></script>
+    <script src="js/i18n/ru.js?v=20260826q"></script>
+    <script src="js/i18n/en.js?v=20260826q"></script>
 
     <!-- Utilities -->
     <script src="js/utils/helpers.js?v=20260621l"></script>
@@ -183,15 +189,15 @@
     <script src="js/ui/components/progress-bar.js?v=20260826k"></script>
     <script src="js/ui/components/toast.js?v=20260711b"></script>
     <script src="js/ui/components/modal.js"></script>
-    <script src="js/ui/components/nav.js?v=20260826k"></script>
+    <script src="js/ui/components/nav.js?v=20260826q"></script>
     <script src="js/ui/components/battle-narrator.js?v=20260713c"></script>
 
     <!-- UI Screens -->
     <script src="js/ui/screens/landing.js?v=20260826p"></script>
     <script src="js/ui/screens/login.js?v=20260726b"></script>
     <script src="js/ui/screens/onboarding.js"></script>
-    <script src="js/ui/screens/home.js?v=20260826k"></script>
-    <script src="js/ui/screens/character.js?v=20260826k"></script>
+    <script src="js/ui/screens/home.js?v=20260826q"></script>
+    <script src="js/ui/screens/character.js?v=20260826q"></script>
     <script src="js/ui/screens/hunt.js?v=20260826k"></script>
     <script src="js/ui/screens/inventory.js?v=20260826k"></script>
     <script src="js/ui/screens/chronicle.js?v=20260826k"></script>
@@ -210,6 +216,6 @@
     <script src="js/ui/screens/developers.js?v=20260826k"></script>
 
     <!-- Main App Controller (must be last) -->
-    <script src="js/ui/app.js?v=20260826p"></script>
+    <script src="js/ui/app.js?v=20260826q"></script>
 </body>
 </html>

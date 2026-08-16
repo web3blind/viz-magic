@@ -1,12 +1,14 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v154';
+var CACHE_NAME = 'viz-magic-v155';
+var NAVIGATION_TIMEOUT_MS = 3500;
+var RUNTIME_TIMEOUT_MS = 2500;
 var APP_SHELL_ASSETS = [
     '/',
     '/index.html',
     '/manifest.json',
     '/favicon.ico',
-    '/assets/icons/viz-magic-v153-192.png',
-    '/assets/icons/viz-magic-v153-512.png',
+    '/assets/icons/viz-magic-v155-192.png',
+    '/assets/icons/viz-magic-v155-512.png',
     '/css/main.css',
     '/css/themes.css',
     '/css/accessibility.css'
@@ -22,6 +24,50 @@ function _cacheAppShell() {
             })
         );
     });
+}
+
+function _fetchWithTimeout(request, timeoutMs, fetchOptions) {
+    return new Promise(function(resolve, reject) {
+        var done = false;
+        var timer = setTimeout(function() {
+            if (done) return;
+            done = true;
+            reject(new Error('network-timeout'));
+        }, timeoutMs || RUNTIME_TIMEOUT_MS);
+
+        fetch(request, fetchOptions || {}).then(function(response) {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            resolve(response);
+        }).catch(function(err) {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            reject(err);
+        });
+    });
+}
+
+function _offlineShellResponse() {
+    var html = '<!doctype html><html lang="ru"><head><meta charset="utf-8">' +
+        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
+        '<title>Viz Magic</title>' +
+        '<style>body{margin:0;min-height:100vh;background:#0d1117;color:#f0f6fc;font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}main{max-width:560px;border:1px solid #30363d;border-radius:16px;background:#161b22;padding:24px;box-shadow:0 16px 48px rgba(0,0,0,.35)}a{color:#58a6ff}</style>' +
+        '</head><body><main role="status" aria-live="polite"><h1>Viz Magic</h1>' +
+        '<p>Магический мир не получил сеть вовремя, поэтому экран не должен оставаться чёрным.</p>' +
+        '<p>Проверь интернет и открой игру снова. Если ярлык зависает, открой сайт в браузере:</p>' +
+        '<p><a href="https://vizmagic.web3blind.xyz/">https://vizmagic.web3blind.xyz/</a></p>' +
+        '</main></body></html>';
+    return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+}
+
+function _cacheSuccessful(request, response) {
+    if (response && response.status === 200 && response.type === 'basic') {
+        var clone = response.clone();
+        caches.open(CACHE_NAME).then(function(cache) { cache.put(request, clone); });
+    }
+    return response;
 }
 
 self.addEventListener('install', function(event) {
@@ -55,17 +101,14 @@ self.addEventListener('activate', function(event) {
 self.addEventListener('fetch', function(event) {
     if (event.request.mode === 'navigate') {
         event.respondWith(
-            fetch(event.request).then(function(response) {
-                if (response && response.status === 200 && response.type === 'basic') {
-                    var clone = response.clone();
-                    caches.open(CACHE_NAME).then(function(cache) {
-                        cache.put(event.request, clone);
-                    });
-                }
-                return response;
+            _fetchWithTimeout(event.request, NAVIGATION_TIMEOUT_MS).then(function(response) {
+                return _cacheSuccessful(event.request, response);
             }).catch(function() {
                 return caches.match(event.request).then(function(cached) {
-                    return cached || caches.match('/index.html');
+                    if (cached) return cached;
+                    return caches.match('/index.html').then(function(indexCached) {
+                        return indexCached || _offlineShellResponse();
+                    });
                 });
             })
         );
@@ -77,12 +120,8 @@ self.addEventListener('fetch', function(event) {
 
     if (isMapImage) {
         event.respondWith(
-            fetch(event.request, { cache: 'reload' }).then(function(response) {
-                if (response && response.status === 200 && response.type === 'basic') {
-                    var clone = response.clone();
-                    caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, clone); });
-                }
-                return response;
+            _fetchWithTimeout(event.request, RUNTIME_TIMEOUT_MS, { cache: 'reload' }).then(function(response) {
+                return _cacheSuccessful(event.request, response);
             }).catch(function() { return caches.match(event.request); })
         );
         return;
@@ -92,12 +131,8 @@ self.addEventListener('fetch', function(event) {
 
     if (isRuntimeAsset) {
         event.respondWith(
-            fetch(event.request).then(function(response) {
-                if (response && response.status === 200 && response.type === 'basic') {
-                    var clone = response.clone();
-                    caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, clone); });
-                }
-                return response;
+            _fetchWithTimeout(event.request, RUNTIME_TIMEOUT_MS).then(function(response) {
+                return _cacheSuccessful(event.request, response);
             }).catch(function() { return caches.match(event.request); })
         );
         return;
@@ -105,12 +140,8 @@ self.addEventListener('fetch', function(event) {
 
     event.respondWith(
         caches.match(event.request).then(function(cached) {
-            return cached || fetch(event.request).then(function(response) {
-                if (response && response.status === 200 && response.type === 'basic') {
-                    var clone = response.clone();
-                    caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, clone); });
-                }
-                return response;
+            return cached || _fetchWithTimeout(event.request, RUNTIME_TIMEOUT_MS).then(function(response) {
+                return _cacheSuccessful(event.request, response);
             });
         })
     );

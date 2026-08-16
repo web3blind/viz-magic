@@ -34,10 +34,10 @@ var HomeScreen = (function() {
         var displayName = _displayCharacterName(character, hasCharacter, user, t);
         var characterLine = hasCharacter ? ('<span class="home-character-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(character.className) + '</span> ' + t('class_' + character.className) + ' \u2022 ' + t('home_level') + ' ' + character.level + (Helpers.magicRank ? (' \u2022 ' + t(Helpers.magicRank(character.level))) : '')) : t('loading');
         var vitalBars = hasCharacter ? (
-            ProgressBar.create({id:'mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">⚡</span> ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
-            ProgressBar.create({id:'hp-bar', label:'HP', labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">❤️</span> HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
-            ProgressBar.create({id:'xp-bar', label:'XP', labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">⭐</span> XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'})
-        ) : ProgressBar.create({id:'mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vmagic-breathe" aria-hidden="true">⚡</span> ' + t('home_mana'), value:0, max:100, color:'#2196f3'});
+            ProgressBar.create({id:'mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vm-icon vm-icon-mana vmagic-breathe" aria-hidden="true"></span> ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
+            ProgressBar.create({id:'hp-bar', label:'HP', labelHtml:'<span class="vital-label-icon vm-icon vm-icon-hp vmagic-breathe" aria-hidden="true"></span> HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
+            ProgressBar.create({id:'xp-bar', label:'XP', labelHtml:'<span class="vital-label-icon vm-icon vm-icon-xp vmagic-breathe" aria-hidden="true"></span> XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'})
+        ) : ProgressBar.create({id:'mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vm-icon vm-icon-mana vmagic-breathe" aria-hidden="true"></span> ' + t('home_mana'), value:0, max:100, color:'#2196f3'});
 
         el.innerHTML =
             '<div class="home-dashboard">' +
@@ -434,7 +434,7 @@ var HomeScreen = (function() {
     function _renderActionTiles(screens, primary, character) {
         var html = '';
         for (var i = 0; i < screens.length; i++) {
-            html += _tile(screens[i], _iconForScreen(screens[i]), _labelForScreen(screens[i], primary), character);
+            html += _tile(screens[i], _iconClassForScreen(screens[i]), _labelForScreen(screens[i], primary), character);
         }
         return html;
     }
@@ -450,31 +450,31 @@ var HomeScreen = (function() {
         return t('nav_' + screen) || screen;
     }
 
-    function _iconForScreen(screen) {
+    function _iconClassForScreen(screen) {
         var icons = {
-            home: '\uD83C\uDFE0',
-            hunt: '\uD83C\uDFF9',
-            map: '\uD83D\uDDFA\uFE0F',
-            guild: '\uD83D\uDEE1\uFE0F',
-            marketplace: '\uD83C\uDFEA',
-            crafting: '\uD83D\uDD28',
-            character: '\uD83E\uDDD9',
-            help: '\u2753',
-            leaderboard: '\uD83C\uDFC6',
-            temple: '\u26EA',
-            inventory: '\uD83C\uDF92',
-            chronicle: '\uD83D\uDCDD',
-            arena: '\u2694\uFE0F',
-            quests: '\uD83D\uDCDC',
-            'world-boss': '\uD83D\uDC32',
-            settings: '\u2699\uFE0F',
-            developers: '\uD83D\uDEE0\uFE0F'
+            home: 'vm-icon-home',
+            hunt: 'vm-icon-hunt',
+            map: 'vm-icon-map',
+            guild: 'vm-icon-guild',
+            marketplace: 'vm-icon-marketplace',
+            crafting: 'vm-icon-crafting',
+            character: 'vm-icon-character',
+            help: 'vm-icon-help',
+            leaderboard: 'vm-icon-leaderboard',
+            temple: 'vm-icon-temple',
+            inventory: 'vm-icon-inventory',
+            chronicle: 'vm-icon-chronicle',
+            arena: 'vm-icon-arena',
+            quests: 'vm-icon-quests',
+            'world-boss': 'vm-icon-boss',
+            settings: 'vm-icon-settings',
+            developers: 'vm-icon-developers'
         };
-        return icons[screen] || '\u2728';
+        return icons[screen] || 'vm-icon-spark';
     }
 
-    function _tile(screen, icon, label, character) {
-        var iconHtml = '<span class="tile-icon" aria-hidden="true">' + icon + '</span>';
+    function _tile(screen, iconClass, label, character) {
+        var iconHtml = '<span class="tile-icon vm-icon ' + iconClass + '" aria-hidden="true"></span>';
         if (screen === 'character' && character) {
             iconHtml = _renderAvatarMark(character, 'tile-icon tile-avatar-icon');
         }
