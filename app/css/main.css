@@ -1600,8 +1600,8 @@ body {
 }
 .help-library-link {
     width: 100%;
-    min-height: 44px;
-    padding: 10px 12px;
+    min-height: 40px;
+    padding: 8px 10px;
     border: 1px solid rgba(255, 216, 88, 0.24);
     border-radius: 10px;
     background: rgba(13, 17, 23, 0.36);
@@ -1609,6 +1609,10 @@ body {
     text-align: left;
     text-decoration: underline;
     cursor: pointer;
+    font-size: clamp(0.58rem, 2.1vw, 0.84rem);
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: visible;
 }
 .help-library-link:hover,
 .help-library-link:focus-visible {
