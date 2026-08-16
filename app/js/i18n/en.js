@@ -1295,6 +1295,9 @@ var LangEN = {
     help_lore_label: 'Living world pages',
     help_lore_title: 'Living world pages',
     help_lore_intro: 'These pages are lore and world mood. They do not require action — they simply remind you that a fairy tale lives behind the buttons.',
+    help_magic_library_title: 'Magical Library',
+    help_magic_library_intro: 'Long ago, many centuries back, the maps of the World looked very different. They survived in ancient scrolls, and you can step into the interwoven dusty magical pages and paths.',
+    help_magic_library_image_alt: 'Ancient map of {name}',
 
     help_section_mana: 'Mana',
     help_mana_text: 'Mana is your energy (0–100%). Every spell costs mana. Full regeneration takes ~5 days. Shown as a percentage — 1.00% = 100 basis points on the blockchain.',
