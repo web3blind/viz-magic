@@ -29,20 +29,23 @@ var LandingScreen = (function() {
                     '<button class="btn btn-primary btn-glow btn-large" id="btn-begin">' +
                         t('landing_cta') +
                     '</button>' +
+                    '<button class="btn btn-secondary btn-large landing-install-button" id="btn-landing-install">' +
+                        t('landing_install_shortcut') +
+                    '</button>' +
                 '</header>' +
                 '<section class="landing-cards" aria-label="Features">' +
                     '<div class="feature-card">' +
-                        '<span class="feature-icon" aria-hidden="true">🏹</span>' +
+                        '<span class="feature-icon feature-icon-hunt" aria-hidden="true"></span>' +
                         '<h3>' + t('landing_card_hunt') + '</h3>' +
                         '<p>' + t('landing_card_hunt_desc') + '</p>' +
                     '</div>' +
                     '<div class="feature-card">' +
-                        '<span class="feature-icon" aria-hidden="true">⚔️</span>' +
+                        '<span class="feature-icon feature-icon-duel" aria-hidden="true"></span>' +
                         '<h3>' + t('landing_card_duel') + '</h3>' +
                         '<p>' + t('landing_card_duel_desc') + '</p>' +
                     '</div>' +
                     '<div class="feature-card">' +
-                        '<span class="feature-icon" aria-hidden="true">\uD83D\uDCDC</span>' +
+                        '<span class="feature-icon feature-icon-chronicle" aria-hidden="true"></span>' +
                         '<h3>' + t('landing_card_chronicle') + '</h3>' +
                         '<p>' + t('landing_card_chronicle_desc') + '</p>' +
                     '</div>' +
@@ -58,6 +61,14 @@ var LandingScreen = (function() {
             SoundManager.init();  // must be first — creates AudioContext inside user gesture
             SoundManager.play('tap');
             Helpers.EventBus.emit('navigate', 'login');
+        });
+        var installBtn = Helpers.$('btn-landing-install');
+        if (installBtn) installBtn.addEventListener('click', function() {
+            SoundManager.init();
+            SoundManager.play('tap');
+            if (typeof App !== 'undefined' && App.installShortcut) {
+                App.installShortcut();
+            }
         });
         var btnRu = Helpers.$('landing-lang-ru');
         var btnEn = Helpers.$('landing-lang-en');

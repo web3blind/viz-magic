@@ -15,6 +15,7 @@ var LangRU = {
     landing_hero_line3: 'Каждое волшебство оставляет след навечно.',
     landing_hero_line4: 'Твоя история начинается с одного слова.',
     landing_cta: 'Начни Свою Легенду',
+    landing_install_shortcut: 'Установить ярлык игры',
     landing_login: 'Уже есть маг? Продолжи свою историю',
 
     // Login screen

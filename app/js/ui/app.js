@@ -15,8 +15,27 @@ var App = (function() {
     var _syncVisible = false;
     var _lastSyncPercent = -1;
     var _deferredInstallPrompt = null;
+    var _installPromptListenerBound = false;
     var INSTALL_ACK_KEY = VizMagicConfig.STORAGE_PREFIX + 'install_shortcut_ack';
     var POLL_INTERVAL_MS = 3000;
+
+    function _bindInstallPromptListener() {
+        if (_installPromptListenerBound || typeof window === 'undefined') return;
+        _installPromptListenerBound = true;
+        window.addEventListener('beforeinstallprompt', function(event) {
+            event.preventDefault();
+            _deferredInstallPrompt = event;
+        });
+        window.addEventListener('appinstalled', function() {
+            _deferredInstallPrompt = null;
+            try { localStorage.setItem(INSTALL_ACK_KEY, '1'); } catch (e) {}
+            if (typeof Toast !== 'undefined') {
+                Toast.success(Helpers.t('home_install_shortcut_installed'), 7000, { key: 'install_shortcut_installed' });
+            }
+        });
+    }
+
+    _bindInstallPromptListener();
 
     /**
      * Initialize the application
@@ -310,17 +329,7 @@ var App = (function() {
      */
     function _registerPWA() {
         if ('file://' === document.location.origin) return;
-        window.addEventListener('beforeinstallprompt', function(event) {
-            event.preventDefault();
-            _deferredInstallPrompt = event;
-        });
-        window.addEventListener('appinstalled', function() {
-            _deferredInstallPrompt = null;
-            try { localStorage.setItem(INSTALL_ACK_KEY, '1'); } catch (e) {}
-            if (typeof Toast !== 'undefined') {
-                Toast.success(Helpers.t('home_install_shortcut_installed'), 7000, { key: 'install_shortcut_installed' });
-            }
-        });
+        _bindInstallPromptListener();
         if ('serviceWorker' in navigator) {
             var swReloadKey = VizMagicConfig.STORAGE_PREFIX + 'sw_reload_v123';
             navigator.serviceWorker.addEventListener('controllerchange', function() {

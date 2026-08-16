@@ -137,12 +137,76 @@ body {
 .landing-login-link { margin-top: 16px; }
 .landing-login-link a { color: var(--color-accent); text-decoration: none; }
 .landing-login-link a:hover { text-decoration: underline; }
+.landing-install-button { margin-top: 12px; }
 .landing-cards { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 32px 0; }
 .feature-card {
     background: var(--color-surface); padding: 20px; border-radius: var(--radius);
     border: 1px solid var(--color-border); text-align: left;
 }
-.feature-icon { font-size: 1.5rem; display: block; margin-bottom: 8px; }
+.feature-icon {
+    display: block;
+    width: 30px;
+    height: 30px;
+    margin-bottom: 8px;
+    color: var(--color-accent);
+    position: relative;
+}
+.feature-icon::before,
+.feature-icon::after {
+    content: '';
+    position: absolute;
+    display: block;
+    box-sizing: border-box;
+}
+.feature-icon-hunt::before {
+    width: 26px;
+    height: 26px;
+    border: 3px solid currentColor;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    transform: rotate(45deg);
+    left: 1px;
+    top: 1px;
+}
+.feature-icon-hunt::after {
+    width: 22px;
+    height: 3px;
+    background: currentColor;
+    transform: rotate(-35deg);
+    left: 5px;
+    top: 14px;
+    box-shadow: 8px -5px 0 -1px currentColor;
+}
+.feature-icon-duel::before,
+.feature-icon-duel::after {
+    width: 24px;
+    height: 4px;
+    background: currentColor;
+    border-radius: 999px;
+    left: 3px;
+    top: 13px;
+    transform: rotate(45deg);
+    box-shadow: 9px 0 0 -1px rgba(255, 255, 255, 0.72);
+}
+.feature-icon-duel::after { transform: rotate(-45deg); }
+.feature-icon-chronicle::before {
+    width: 23px;
+    height: 26px;
+    border: 2px solid currentColor;
+    border-radius: 4px 10px 4px 4px;
+    left: 4px;
+    top: 2px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02));
+}
+.feature-icon-chronicle::after {
+    width: 13px;
+    height: 2px;
+    background: currentColor;
+    left: 9px;
+    top: 10px;
+    box-shadow: 0 6px 0 currentColor, 0 12px 0 currentColor;
+}
 .feature-card h3 { margin-bottom: 4px; }
 .feature-card p { color: var(--color-text-muted); font-size: 0.9rem; }
 .landing-assurances { color: var(--color-text-muted); font-size: 0.9rem; }

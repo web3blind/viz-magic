@@ -15,6 +15,7 @@ var LangEN = {
     landing_hero_line3: 'Every enchantment leaves a mark forever.',
     landing_hero_line4: 'Your story begins with a single word.',
     landing_cta: 'Begin Your Legend',
+    landing_install_shortcut: 'Install game shortcut',
     landing_login: 'Already a mage? Continue your story',
 
     // Login screen
