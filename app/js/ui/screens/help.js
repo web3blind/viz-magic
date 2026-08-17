@@ -29,39 +29,39 @@ var HelpScreen = (function() {
         if (!el) return;
 
         var sections = [
-            { key: 'mana',        icon: '\u2728' },
-            { key: 'hp',          icon: '\u2764\uFE0F' },
-            { key: 'quests',      icon: '\uD83D\uDCDC' },
-            { key: 'hunt',        icon: '\uD83C\uDFF9' },
-            { key: 'armageddon',  icon: '\u26A0\uFE0F' },
-            { key: 'crafting',    icon: '\uD83D\uDD28' },
-            { key: 'marketplace', icon: '\uD83C\uDFEA' },
-            { key: 'leaderboard', icon: '\uD83C\uDFC6' },
-            { key: 'narrator',    icon: '\uD83D\uDD0A' },
-            { key: 'classes',     icon: '\uD83E\uDDD9' },
-            { key: 'magic_ranks', icon: '🎓' },
-            { key: 'duels',       icon: '\uD83D\uDEE1\uFE0F' },
-            { key: 'guilds',      icon: '\uD83C\uDFF0' },
-            { key: 'boss',        icon: '\uD83D\uDC32' },
-            { key: 'temple',      icon: '\u26EA' },
-            { key: 'shares',      icon: '\uD83D\uDC8E' },
-            { key: 'blockchain',  icon: '\u26D3\uFE0F' }
+            { key: 'mana',        icon: 'mana' },
+            { key: 'hp',          icon: 'hp' },
+            { key: 'quests',      icon: 'quests' },
+            { key: 'hunt',        icon: 'hunt' },
+            { key: 'armageddon',  icon: 'boss' },
+            { key: 'crafting',    icon: 'crafting' },
+            { key: 'marketplace', icon: 'marketplace' },
+            { key: 'leaderboard', icon: 'leaderboard' },
+            { key: 'narrator',    icon: 'news' },
+            { key: 'classes',     icon: 'character' },
+            { key: 'magic_ranks', icon: 'leaderboard' },
+            { key: 'duels',       icon: 'arena' },
+            { key: 'guilds',      icon: 'guild' },
+            { key: 'boss',        icon: 'boss' },
+            { key: 'temple',      icon: 'temple' },
+            { key: 'shares',      icon: 'core' },
+            { key: 'blockchain',  icon: 'link' }
         ];
 
         var html = '<div class="help-screen magical-guide-screen">' +
             '<article class="help-book" aria-labelledby="magical-guide-title">' +
                 '<div class="help-book-binding" aria-hidden="true"></div>' +
                 '<header class="help-book-cover">' +
-                    '<h1 id="magical-guide-title"><span class="screen-title-icon vmagic-breathe" aria-hidden="true">📖</span> ' + t('help_title') + '</h1>' +
+                    '<h1 id="magical-guide-title">' + Helpers.icon('help', 'screen-title-icon vmagic-breathe') + ' ' + t('help_title') + '</h1>' +
                     '<p class="help-intro">' + t('help_intro') + '</p>' +
                 '</header>' +
                 '<section class="help-practical-pages" aria-label="' + t('help_practical_label') + '">' +
-                    '<h2 class="help-book-chapter"><span class="section-icon vmagic-breathe" aria-hidden="true">🔖</span> ' + t('help_practical_title') + '</h2>';
+                    '<h2 class="help-book-chapter">' + Helpers.icon('chronicle', 'section-icon vmagic-breathe') + ' ' + t('help_practical_title') + '</h2>';
 
         for (var i = 0; i < sections.length; i++) {
             var s = sections[i];
             html += '<section class="help-section help-page" aria-label="' + t('help_section_' + s.key) + '">' +
-                '<h3 id="help-section-' + s.key + '"><span class="section-icon vmagic-breathe" aria-hidden="true">' + s.icon + '</span> ' + t('help_section_' + s.key) + '</h3>' +
+                '<h3 id="help-section-' + s.key + '">' + Helpers.icon(s.icon, 'section-icon vmagic-breathe') + ' ' + t('help_section_' + s.key) + '</h3>' +
                 '<p>' + t('help_' + s.key + '_text') + '</p>' +
                 '</section>';
         }
@@ -101,15 +101,15 @@ var HelpScreen = (function() {
 
     function _renderLorePages(t) {
         return '<section class="help-lore-pages" aria-label="' + t('help_lore_label') + '">' +
-            '<h2 class="help-book-chapter"><span class="section-icon vmagic-breathe" aria-hidden="true">✨</span> ' + t('help_lore_title') + '</h2>' +
+            '<h2 class="help-book-chapter">' + Helpers.icon('spark', 'section-icon vmagic-breathe') + ' ' + t('help_lore_title') + '</h2>' +
             '<p class="help-lore-intro">' + t('help_lore_intro') + '</p>' +
             '<div class="help-lore-page-grid">' +
                 '<article class="help-lore-page">' +
-                    '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🌌</span> ' + t('help_section_world_days') + '</h3>' +
+                    '<h3>' + Helpers.icon('weather', 'section-icon vmagic-breathe') + ' ' + t('help_section_world_days') + '</h3>' +
                     '<p>' + t('help_world_days_text') + '</p>' +
                 '</article>' +
                 '<article class="help-lore-page">' +
-                    '<h3><span class="section-icon vmagic-breathe" aria-hidden="true">🗓️</span> ' + t('help_section_world_months') + '</h3>' +
+                    '<h3>' + Helpers.icon('festival', 'section-icon vmagic-breathe') + ' ' + t('help_section_world_months') + '</h3>' +
                     '<p>' + t('help_world_months_text') + '</p>' +
                 '</article>' +
             '</div>' + _renderMagicLibrary(t) + '</section>';
@@ -117,7 +117,7 @@ var HelpScreen = (function() {
 
     function _renderMagicLibrary(t) {
         var html = '<article class="help-magic-library" aria-labelledby="help-magic-library-title">' +
-            '<h3 id="help-magic-library-title"><span class="section-icon vmagic-breathe" aria-hidden="true">🗺️</span> ' + t('help_magic_library_title') + '</h3>' +
+            '<h3 id="help-magic-library-title">' + Helpers.icon('map', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_title') + '</h3>' +
             '<p>' + t('help_magic_library_intro') + '</p>' +
             '<div class="help-library-list">';
         for (var i = 0; i < HELP_LIBRARY_MAPS.length; i++) {
@@ -139,7 +139,7 @@ var HelpScreen = (function() {
         var title = Helpers.escapeHtml(entry.title);
         var description = Helpers.t('map_lore_' + entry.id);
         var html = '<div class="help-library-map-card">';
-        html += '<div class="lore-map-title"><span class="region-icon vmagic-breathe" aria-hidden="true">🗺️</span> ' + title + '</div>';
+        html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
         html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';
         html += '<img class="lore-map-image help-library-map-image" id="help-library-map-image" src="assets/library-maps/map-' + entry.id + '.jpg?v=' + HELP_LIBRARY_ASSET_VERSION + '" alt="' + Helpers.escapeHtml(Helpers.t('help_magic_library_image_alt', { name: entry.title })) + '" loading="lazy">';
         html += '</div>';

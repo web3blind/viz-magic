@@ -18,21 +18,21 @@ var MapScreen = (function() {
 
     /** Region emoji icons */
     var REGION_ICONS = {
-        commons_first_light: '\uD83C\uDF1F',  // 🌟
-        ember_wastes:        '\uD83D\uDD25',   // 🔥
-        deep_currents:       '\uD83C\uDF0A',   // 🌊
-        iron_root:           '\u26F0\uFE0F',    // ⛰️
-        shattered_sky:       '\uD83C\uDF29\uFE0F', // 🌩️
-        the_veil:            '\uD83C\uDF19',    // 🌙
-        forklands:           '\u2694\uFE0F',    // ⚔️
-        covenant_bazaar:     '\uD83C\uDFEA',   // 🏪
-        duel_spires:         '\uD83C\uDFF0',   // 🏰
-        starfall_vault:      '\uD83C\uDF1C',   // 🌜
-        emberheart:          '\uD83D\uDD25',   // 🔥
-        prismatic_depths:    '\uD83D\uDD07',   // 🔷
-        timeless_maze:       '\u23F1\uFE0F',   // ⏱️
-        grandmaster_peak:    '\u26F0\uFE0F',   // ⛰️
-        void_sanctum:        '\uD83C\uDF0C'    // 🌌
+        commons_first_light: 'spark',
+        ember_wastes:        'spark',
+        deep_currents:       'mana',
+        iron_root:           'map',
+        shattered_sky:       'weather',
+        the_veil:            'prophecy',
+        forklands:           'arena',
+        covenant_bazaar:     'marketplace',
+        duel_spires:         'arena',
+        starfall_vault:      'xp',
+        emberheart:          'hp',
+        prismatic_depths:    'core',
+        timeless_maze:       'chronicle',
+        grandmaster_peak:    'leaderboard',
+        void_sanctum:        'prophecy'
     };
 
     /** School colors for territory display */
@@ -74,7 +74,7 @@ var MapScreen = (function() {
 
         var html = '';
         html += '<div class="map-screen" role="region" aria-label="' + t('map_title') + '">';
-        html += '<h1><span class="screen-title-icon vmagic-breathe" aria-hidden="true">🗺️</span> ' + t('map_title') + '</h1>';
+        html += '<h1>' + Helpers.icon('map', 'screen-title-icon vmagic-breathe') + ' ' + t('map_title') + '</h1>';
         // v133: travel explanation once under the page title, not repeated in every region block
         html += '<p class="map-travel-hint-page">' + t('map_travel_hint') + '</p>';
 
@@ -94,7 +94,7 @@ var MapScreen = (function() {
         var activeSieges = state.territories ? TerritorySystem.getAllActiveSieges(state.territories) : [];
         if (activeSieges.length > 0) {
             html += '<div class="map-siege-alert" role="alert" aria-label="' + t('map_active_sieges') + '">';
-            html += '\u2694\uFE0F ' + t('map_active_sieges') + ': ' + activeSieges.length;
+            html += Helpers.icon('arena', 'section-icon') + ' ' + t('map_active_sieges') + ': ' + activeSieges.length;
             html += '</div>';
         }
 
@@ -105,7 +105,7 @@ var MapScreen = (function() {
             var regionId = regionIds[ri];
             var region = regions[regionId];
             var territory = state.territories ? state.territories[regionId] : null;
-            var icon = REGION_ICONS[regionId] || '\uD83C\uDF0D';
+            var icon = REGION_ICONS[regionId] || 'map';
             var isCurrent = regionId === currentZone;
             var controllerGuild = territory ? territory.controllerGuild : null;
             var controllerGuildObj = controllerGuild && state.guilds ? state.guilds[controllerGuild] : null;
@@ -130,7 +130,7 @@ var MapScreen = (function() {
 
             // Region header
             html += '<div class="region-header">';
-            html += '<span class="region-icon vmagic-breathe" aria-hidden="true">' + icon + '</span>';
+            html += Helpers.icon(icon, 'region-icon vmagic-breathe');
             html += '<div class="region-info">';
             // v134: region names become active links that open a lore "map" modal
             html += '<button type="button" class="region-name region-lore-link" data-lore-region="' + regionId + '" ';
@@ -144,7 +144,7 @@ var MapScreen = (function() {
             }
             html += '</div>';
             if (isCurrent) {
-                html += '<span class="region-here" aria-label="' + t('map_you_are_here') + '">\uD83D\uDCCD</span>';
+                html += '<span class="region-here" aria-label="' + t('map_you_are_here') + '">' + Helpers.icon('compass', 'region-status-icon') + '</span>';
             }
             html += '</div>';
 
@@ -157,7 +157,7 @@ var MapScreen = (function() {
             // Territory control overlay
             if (controllerGuildObj) {
                 html += '<div class="region-controller">';
-                html += '\uD83C\uDFF3\uFE0F ' + t('map_controlled_by') + ': ';
+                html += Helpers.icon('guild', 'region-status-icon') + ' ' + t('map_controlled_by') + ': ';
                 html += '<strong>[' + _esc(controllerGuildObj.tag) + '] ' + _esc(controllerGuildObj.name) + '</strong>';
                 html += '</div>';
             }
@@ -165,18 +165,18 @@ var MapScreen = (function() {
             // Active siege indicator
             if (siegeCount > 0) {
                 html += '<div class="region-siege-indicator">';
-                html += '\u2694\uFE0F ' + t('territory_under_siege') + ' (' + siegeCount + ')';
+                html += Helpers.icon('arena', 'region-status-icon') + ' ' + t('territory_under_siege') + ' (' + siegeCount + ')';
                 html += '</div>';
             }
 
             // Benefits display
             if (benefits && benefits.homeBonus > 0) {
                 html += '<div class="region-benefits">';
-                html += '\u2728 +' + Math.floor(benefits.homeBonus / 10) + '% ' + t('map_home_bonus');
+                html += Helpers.icon('spark', 'region-status-icon') + ' +' + Math.floor(benefits.homeBonus / 10) + '% ' + t('map_home_bonus');
                 html += '</div>';
             } else if (benefits && benefits.tax > 0) {
                 html += '<div class="region-tax">';
-                html += '\uD83D\uDCB0 ' + t('map_tax') + ': ' + (benefits.tax / 100) + '%';
+                html += Helpers.icon('marketplace', 'region-status-icon') + ' ' + t('map_tax') + ': ' + (benefits.tax / 100) + '%';
                 html += '</div>';
             }
 
@@ -189,17 +189,17 @@ var MapScreen = (function() {
                 html += '<button class="btn btn-secondary btn-sm region-travel-btn" ';
                 html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_LOW + '" ';
                 html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_LOW) + '">';
-                html += '\uD83D\uDEB6 ' + Helpers.manaCost(TRAVEL_COST_LOW);
+                html += Helpers.icon('map', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_LOW);
                 html += '</button>';
                 html += '<button class="btn btn-primary btn-sm region-travel-btn" ';
                 html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_HIGH + '" ';
                 html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_HIGH) + '">';
-                html += '\uD83D\uDEB6 ' + Helpers.manaCost(TRAVEL_COST_HIGH);
+                html += Helpers.icon('map', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_HIGH);
                 html += '</button>';
                 html += '<button class="btn btn-secondary btn-sm region-travel-btn" ';
                 html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_BURST + '" ';
                 html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_BURST) + '">';
-                html += '\uD83D\uDEB6 ' + Helpers.manaCost(TRAVEL_COST_BURST);
+                html += Helpers.icon('map', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_BURST);
                 html += '</button>';
                 html += '</div>';
             }
@@ -243,10 +243,10 @@ var MapScreen = (function() {
     function _openLore(regionId) {
         var region = GameRegions.getRegion(regionId);
         if (!region) return;
-        var icon = REGION_ICONS[regionId] || '\uD83C\uDF0D';
+        var icon = REGION_ICONS[regionId] || 'map';
         var loreText = t('map_lore_' + regionId);
         var html = '<div class="lore-map-card">';
-        html += '<div class="lore-map-title"><span class="region-icon vmagic-breathe" aria-hidden="true">' + icon + '</span> ' + region.name + '</div>';
+        html += '<div class="lore-map-title">' + Helpers.icon(icon, 'region-icon vmagic-breathe') + ' ' + region.name + '</div>';
         html += '<div class="lore-map-level">' + t('map_level') + ' ' + region.minLevel + '-' + region.maxLevel + '</div>';
         // v144: show the current painted-map image with a cache-busting version.
         // Portal guidance is visual inside the artwork; no extra hint text is shown here.
