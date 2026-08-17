@@ -4,6 +4,7 @@
 var HelpScreen = (function() {
     'use strict';
 
+    var HELP_LIBRARY_ASSET_VERSION = '20260817c';
     var HELP_LIBRARY_MAPS = [
         { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-10' },
         { id: 'covenant_bazaar', title: 'The Covenant Bazaar Ур. 3-50' },
@@ -139,12 +140,41 @@ var HelpScreen = (function() {
         var description = Helpers.t('map_lore_' + entry.id);
         var html = '<div class="help-library-map-card">';
         html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
+        html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';
+        html += '<img class="lore-map-image help-library-map-image" id="help-library-map-image" src="assets/library-maps-v3/map-' + entry.id + '.jpg?v=' + HELP_LIBRARY_ASSET_VERSION + '" alt="' + Helpers.escapeHtml(Helpers.t('help_magic_library_image_alt', { name: entry.title })) + '" loading="lazy">';
+        html += '</div>';
         html += '<p class="lore-map-text help-library-map-text">' + description + '</p>';
-        html += '<div class="modal-actions lore-map-actions help-library-map-actions"><button type="button" class="btn btn-primary" id="help-library-close">' + Helpers.t('close') + '</button></div>';
+        html += '<div class="modal-actions lore-map-actions help-library-map-actions"><button type="button" class="btn btn-secondary" id="help-library-zoom-toggle">' + Helpers.t('map_zoom_toggle') + '</button><button type="button" class="btn btn-primary" id="help-library-close">' + Helpers.t('close') + '</button></div>';
         html += '</div>';
         ModalComponent.show(html);
+        var modal = Helpers.$('modal-container');
+        var viewport = Helpers.$('help-library-map-viewport');
+        var zoomBtn = Helpers.$('help-library-zoom-toggle');
+        if (zoomBtn && viewport && modal) {
+            zoomBtn.addEventListener('click', function() {
+                modal.classList.add('help-library-fullscreen');
+                viewport.classList.add('zoomed');
+            });
+            viewport.addEventListener('click', function(e) {
+                if (modal.classList.contains('help-library-fullscreen')) {
+                    e.preventDefault();
+                    _closeLibraryFullscreen(modal, viewport);
+                }
+            });
+        }
         var closeBtn = Helpers.$('help-library-close');
-        if (closeBtn) closeBtn.addEventListener('click', ModalComponent.hide);
+        if (closeBtn) closeBtn.addEventListener('click', function() {
+            if (modal && modal.classList.contains('help-library-fullscreen')) {
+                _closeLibraryFullscreen(modal, viewport);
+                return;
+            }
+            ModalComponent.hide();
+        });
+    }
+
+    function _closeLibraryFullscreen(modal, viewport) {
+        if (modal) modal.classList.remove('help-library-fullscreen');
+        if (viewport) viewport.classList.remove('zoomed');
     }
 
     return { render: render };

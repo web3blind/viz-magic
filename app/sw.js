@@ -1,5 +1,5 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v162';
+var CACHE_NAME = 'viz-magic-v163';
 var NAVIGATION_TIMEOUT_MS = 3500;
 var RUNTIME_TIMEOUT_MS = 2500;
 var APP_SHELL_ASSETS = [
@@ -117,7 +117,8 @@ self.addEventListener('fetch', function(event) {
 
     var url = new URL(event.request.url);
     var isMapImage = url.pathname.indexOf('/assets/maps/') === 0 && /\.jpg$/.test(url.pathname);
-    var isLibraryMapImage = (url.pathname.indexOf('/assets/library-maps-v2/') === 0 ||
+    var isLibraryMapImage = (url.pathname.indexOf('/assets/library-maps-v3/') === 0 ||
+        url.pathname.indexOf('/assets/library-maps-v2/') === 0 ||
         url.pathname.indexOf('/assets/library-maps/') === 0) && /\.jpg$/.test(url.pathname);
 
     if (isMapImage || isLibraryMapImage) {
