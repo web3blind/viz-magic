@@ -4,7 +4,7 @@
 var HelpScreen = (function() {
     'use strict';
 
-    var HELP_LIBRARY_ASSET_VERSION = '20260826s';
+    var HELP_LIBRARY_ASSET_VERSION = '20260826u';
     var HELP_LIBRARY_MAPS = [
         { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-10' },
         { id: 'covenant_bazaar', title: 'The Covenant Bazaar Ур. 3-50' },

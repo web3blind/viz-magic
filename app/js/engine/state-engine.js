@@ -7,6 +7,7 @@ var StateEngine = (function() {
 
     var cfg = VizMagicConfig;
     var AT = cfg.ACTION_TYPES;
+    var CHECKPOINT_SCHEMA_VERSION = 2;
 
     /** Current world state */
     var worldState = _createEmptyState();
@@ -16,6 +17,7 @@ var StateEngine = (function() {
      */
     function _createEmptyState() {
         return {
+            checkpointSchemaVersion: CHECKPOINT_SCHEMA_VERSION,
             headBlock: 0,
             checkpointBlock: 0,
             characters: {},
@@ -75,11 +77,11 @@ var StateEngine = (function() {
             }
 
             CheckpointSystem.loadLatestCheckpoint('global', function(err, checkpoint) {
-                if (checkpoint && checkpoint.state) {
+                if (checkpoint && checkpoint.state && checkpoint.state.checkpointSchemaVersion === CHECKPOINT_SCHEMA_VERSION) {
                     worldState = _normalizeWorldState(checkpoint.state);
                     console.log('StateEngine: Loaded checkpoint at block', worldState.headBlock);
                 } else {
-                    console.log('StateEngine: No checkpoint found, starting fresh');
+                    console.log(checkpoint && checkpoint.state ? 'StateEngine: Stale checkpoint schema, rebuilding from chain' : 'StateEngine: No checkpoint found, starting fresh');
                 }
                 callback(null, worldState);
             });
@@ -95,6 +97,7 @@ var StateEngine = (function() {
         var events = [];
         var blockNum = processedBlock.blockNum;
         var blockHash = processedBlock.blockHash;
+        var huntEntropy = processedBlock.huntEntropy || blockHash;
 
         _ensureSocialState();
 
@@ -105,7 +108,8 @@ var StateEngine = (function() {
                 vmAction.sender,
                 vmAction.action,
                 blockNum,
-                blockHash
+                blockHash,
+                huntEntropy
             );
             events = events.concat(actionEvents);
         }
@@ -241,7 +245,7 @@ var StateEngine = (function() {
     /**
      * Process a single game action
      */
-    function _processGameAction(sender, action, blockNum, blockHash) {
+    function _processGameAction(sender, action, blockNum, blockHash, huntEntropy) {
         var events = [];
 
         // Validate the action
@@ -260,7 +264,7 @@ var StateEngine = (function() {
                 events = events.concat(_handleCharAttune(sender, action.data, blockNum));
                 break;
             case AT.HUNT:
-                events = events.concat(_handleHunt(sender, action.data, blockNum, blockHash));
+                events = events.concat(_handleHunt(sender, action.data, blockNum, huntEntropy || blockHash));
                 break;
             case AT.HUNT_ARMAGEDDON:
                 events = events.concat(_handleHuntArmageddon(sender, action.data, blockNum));
@@ -477,6 +481,12 @@ var StateEngine = (function() {
                     true // volatile
                 );
                 worldState.inventories[sender].push(lootItem);
+            }
+        } else {
+            var defeatXp = Math.floor(GameFormulas.huntXp(character.level, result.creatureLevel, creature.baseXp || 50) / 4);
+            if (defeatXp > 0) {
+                CharacterSystem.addXp(character, defeatXp);
+                result.xpGained = defeatXp;
             }
         }
 

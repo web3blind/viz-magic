@@ -225,16 +225,28 @@ var Helpers = (function() {
     }
 
     /**
-     * Get class icon emoji
+     * Render a font-independent icon from the inline SVG sprite.
+     * @param {string} name
+     * @param {string} [extraClass]
+     * @returns {string}
+     */
+    function icon(name, extraClass) {
+        var safeName = /^[a-z0-9-]+$/.test(String(name || '')) ? String(name) : 'spark';
+        var safeClass = String(extraClass || '').replace(/[^a-zA-Z0-9_\- ]/g, '');
+        return '<svg class="ui-svg-icon' + (safeClass ? ' ' + safeClass : '') + '" aria-hidden="true" focusable="false"><use href="#vm-i-' + safeName + '"></use></svg>';
+    }
+
+    /**
+     * Get a font-independent class icon.
      */
     function classIcon(className) {
         var icons = {
-            stonewarden: '\uD83D\uDEE1\uFE0F',
-            embercaster: '\uD83D\uDD25',
-            moonrunner: '\uD83C\uDF19',
-            bloomsage: '\uD83C\uDF3F'
+            stonewarden: 'guild',
+            embercaster: 'flame',
+            moonrunner: 'moon',
+            bloomsage: 'leaf'
         };
-        return icons[className] || '\u2728';
+        return icon(icons[className] || 'spark', 'class-svg-icon');
     }
 
     /**
@@ -292,6 +304,7 @@ var Helpers = (function() {
         bpToPercent: bpToPercent,
         manaCost: manaCost,
         rarityClass: rarityClass,
+        icon: icon,
         classIcon: classIcon,
         magicRank: magicRank,
         schoolColor: schoolColor,

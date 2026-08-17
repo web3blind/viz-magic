@@ -25,9 +25,11 @@ var App = (function() {
         window.addEventListener('beforeinstallprompt', function(event) {
             event.preventDefault();
             _deferredInstallPrompt = event;
+            window.__vizMagicDeferredInstallPrompt = event;
         });
         window.addEventListener('appinstalled', function() {
             _deferredInstallPrompt = null;
+            window.__vizMagicDeferredInstallPrompt = null;
             try { localStorage.setItem(INSTALL_ACK_KEY, '1'); } catch (e) {}
             if (typeof Toast !== 'undefined') {
                 Toast.success(Helpers.t('home_install_shortcut_installed'), 7000, { key: 'install_shortcut_installed' });
@@ -371,11 +373,13 @@ var App = (function() {
             if (typeof Toast !== 'undefined') Toast.info(Helpers.t('home_install_shortcut_already'), 5000, { key: 'install_shortcut_already' });
             return;
         }
-        if (_deferredInstallPrompt) {
+        var installPrompt = _deferredInstallPrompt || window.__vizMagicDeferredInstallPrompt;
+        if (installPrompt) {
             if (typeof Toast !== 'undefined') Toast.info(Helpers.t('home_install_shortcut_requested'), 7000, { key: 'install_shortcut_requested' });
-            _deferredInstallPrompt.prompt();
-            _deferredInstallPrompt.userChoice.then(function(choice) {
+            installPrompt.prompt();
+            installPrompt.userChoice.then(function(choice) {
                 _deferredInstallPrompt = null;
+                window.__vizMagicDeferredInstallPrompt = null;
                 if (choice && choice.outcome === 'accepted' && typeof Toast !== 'undefined') {
                     try { localStorage.setItem(INSTALL_ACK_KEY, '1'); } catch (e) {}
                     Toast.success(Helpers.t('home_install_shortcut_installed'), 7000, { key: 'install_shortcut_installed' });
@@ -783,6 +787,7 @@ var App = (function() {
                         veEvents: [],
                         awards: [],
                         blockHash: ev.block_id || ev.previous || '',
+                        huntEntropy: ev.previous || ev.block_id || '',
                         blockNum: blockNum,
                         timestamp: ev.timestamp || ''
                     };

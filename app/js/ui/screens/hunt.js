@@ -454,13 +454,14 @@ var HuntScreen = (function() {
     }
 
     /**
-     * Fetch block data from chain, extract witness_signature as Fate Entropy,
+     * Fetch block data from chain and use the previous block id as canonical Fate Entropy.
+     * `previous` is available from live RPC and every archive replay path.
      * then resolve combat deterministically.
      * If block_num is 0 or fetch fails, falls back to DGP head block.
      */
     function _resolveHuntFromBlock(blockNum, ch, creature, spell, playerEnergy, user, resultEl, t) {
         var _doResolve = function(fateEntropy, finalBlockNum) {
-            console.log('Hunt resolving with Fate Entropy (witness_signature):', fateEntropy.substring(0, 32) + '..., block:', finalBlockNum);
+            console.log('Hunt resolving with canonical Fate Entropy:', fateEntropy.substring(0, 32) + '..., block:', finalBlockNum);
 
             // Route through state-engine — single authoritative path for all item creation
             var result = StateEngine.processHuntResult(user, selectedCreature, selectedSpell, fateEntropy, finalBlockNum, playerEnergy);
@@ -540,8 +541,8 @@ var HuntScreen = (function() {
                     _fallbackDGP();
                     return;
                 }
-                // Use witness_signature as Fate Entropy — unforgeable, unique per block
-                var entropy = block.witness_signature || block.previous || '';
+                // The previous block id is deterministic and preserved by archive mirrors.
+                var entropy = block.previous || block.block_id || '';
                 _doResolve(entropy, num);
             });
         };

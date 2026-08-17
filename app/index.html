@@ -8,17 +8,67 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        // Capture Chrome's one-shot install event before the deferred app bundle loads.
+        window.__vizMagicDeferredInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', function(event) {
+            event.preventDefault();
+            window.__vizMagicDeferredInstallPrompt = event;
+        });
+        window.addEventListener('appinstalled', function() {
+            window.__vizMagicDeferredInstallPrompt = null;
+        });
+    </script>
     <title>Viz Magic</title>
     <link rel="manifest" href="manifest.json?v=20260826t">
     <link rel="icon" href="favicon.ico?v=20260826t">
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/viz-magic-v158-192.png?v=20260826t">
     <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/viz-magic-v158-512.png?v=20260826t">
     <link rel="apple-touch-icon" href="assets/icons/viz-magic-v158-192.png?v=20260826t">
-    <link rel="stylesheet" href="css/main.css?v=20260826t">
+    <link rel="stylesheet" href="css/main.css?v=20260826u">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/accessibility.css">
 </head>
 <body>
+    <svg class="vm-icon-sprite" aria-hidden="true" focusable="false" width="0" height="0">
+        <defs>
+            <symbol id="vm-i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+            <symbol id="vm-i-hunt" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></symbol>
+            <symbol id="vm-i-map" viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15m6-12v15"/></symbol>
+            <symbol id="vm-i-guild" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6z"/><path d="M9 12h6M12 9v6"/></symbol>
+            <symbol id="vm-i-marketplace" viewBox="0 0 24 24"><path d="M4 10v10h16V10M3 10l2-6h14l2 6M8 20v-6h8v6"/><path d="M3 10c1.5 2 3 2 4.5 0 1.5 2 3 2 4.5 0 1.5 2 3 2 4.5 0 1.5 2 3 2 4.5 0"/></symbol>
+            <symbol id="vm-i-crafting" viewBox="0 0 24 24"><path d="m14 5 5 5M12 7l5-5 3 3-5 5M4 20l7-7M3 15l6 6"/></symbol>
+            <symbol id="vm-i-quests" viewBox="0 0 24 24"><path d="M6 3h12v18H6zM9 8h6m-6 4h6m-6 4h3"/><path d="m8 12 1 1 2-2"/></symbol>
+            <symbol id="vm-i-temple" viewBox="0 0 24 24"><path d="M3 9h18L12 3zM5 9v9m4-9v9m6-9v9m4-9v9M3 21h18M4 18h16"/></symbol>
+            <symbol id="vm-i-boss" viewBox="0 0 24 24"><path d="M5 8 3 4l5 2 4-4 4 4 5-2-2 4v9l-7 4-7-4z"/><path d="M8 12h.01M16 12h.01M9 16h6"/></symbol>
+            <symbol id="vm-i-character" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></symbol>
+            <symbol id="vm-i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.7 2.7 0 1 1 4.2 2.3c-1 .7-1.7 1.2-1.7 2.7M12 18h.01"/></symbol>
+            <symbol id="vm-i-leaderboard" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4v2c0 3 2 4 5 4m7-6h4v2c0 3-2 4-5 4M12 13v5m-4 3h8m-6-3h4"/></symbol>
+            <symbol id="vm-i-inventory" viewBox="0 0 24 24"><path d="M5 8h14l1 13H4zM8 8V6a4 4 0 0 1 8 0v2"/></symbol>
+            <symbol id="vm-i-chronicle" viewBox="0 0 24 24"><path d="M3 5c4-2 7-1 9 1v15c-2-2-5-3-9-1zM21 5c-4-2-7-1-9 1v15c2-2 5-3 9-1z"/></symbol>
+            <symbol id="vm-i-arena" viewBox="0 0 24 24"><path d="m4 4 7 7m-5-9 5 5-3 3-5-5zM20 4l-7 7m5-9-5 5 3 3 5-5zM8 16l8 6m0-6-8 6"/></symbol>
+            <symbol id="vm-i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+            <symbol id="vm-i-developers" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-2-12-4 14"/></symbol>
+            <symbol id="vm-i-spark" viewBox="0 0 24 24"><path d="m12 2 1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></symbol>
+            <symbol id="vm-i-rift" viewBox="0 0 24 24"><path d="M17 5c-5-3-11 0-11 5 0 4 4 7 8 5 3-1 4-5 1-7-2-2-6 0-5 3 0 2 3 2 3 0"/></symbol>
+            <symbol id="vm-i-mana" viewBox="0 0 24 24"><path d="M12 2S5 10 5 15a7 7 0 0 0 14 0c0-5-7-13-7-13z"/></symbol>
+            <symbol id="vm-i-hp" viewBox="0 0 24 24"><path d="M12 21S3 15 3 8.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 9 2.5C21 15 12 21 12 21z"/></symbol>
+            <symbol id="vm-i-xp" viewBox="0 0 24 24"><path d="m12 2 3 6 7 .9-5 4.8 1.4 7-6.4-3.4-6.4 3.4 1.4-7-5-4.8L9 8z"/></symbol>
+            <symbol id="vm-i-link" viewBox="0 0 24 24"><path d="m10 14-2 2a4 4 0 0 1-6-6l3-3a4 4 0 0 1 6 0m3 3 2-2a4 4 0 0 1 6 6l-3 3a4 4 0 0 1-6 0m-5-5h8"/></symbol>
+            <symbol id="vm-i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4M12 6v7m-3-3 3 3 3-3"/></symbol>
+            <symbol id="vm-i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15 9-2 4-4 2 2-4z"/></symbol>
+            <symbol id="vm-i-weather" viewBox="0 0 24 24"><path d="M7 17h10a4 4 0 0 0 0-8 6 6 0 0 0-11-1A4.5 4.5 0 0 0 7 17zM8 20l-1 2m5-2-1 2m5-2-1 2"/></symbol>
+            <symbol id="vm-i-festival" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 2v6m10-6v6M3 10h18m-9 3v5m-2-3h4"/></symbol>
+            <symbol id="vm-i-news" viewBox="0 0 24 24"><path d="M4 4h14v16H4zM18 8h2v12a2 2 0 0 1-2 2H6"/><path d="M7 8h8M7 12h8M7 16h5"/></symbol>
+            <symbol id="vm-i-prophecy" viewBox="0 0 24 24"><circle cx="12" cy="10" r="6"/><path d="M8 20h8M10 16v4m4-4v4M9 10c1-3 5-3 6 0"/></symbol>
+            <symbol id="vm-i-stats" viewBox="0 0 24 24"><path d="M4 20V10h4v10m4 0V4h4v16m4 0v-7h-4"/></symbol>
+            <symbol id="vm-i-core" viewBox="0 0 24 24"><path d="m12 2 8 6-3 11H7L4 8zM4 8h16M7 19l5-11 5 11"/></symbol>
+            <symbol id="vm-i-spells" viewBox="0 0 24 24"><path d="m4 20 11-11m-2-4 6 6M3 14l7 7M18 2v4m-2-2h4M7 3v3M5 5h4"/></symbol>
+            <symbol id="vm-i-flame" viewBox="0 0 24 24"><path d="M13 2c2 5-3 6 0 10 1-2 3-3 4-5 3 4 4 9 1 13a8 8 0 0 1-12-1C2 13 8 9 13 2z"/></symbol>
+            <symbol id="vm-i-moon" viewBox="0 0 24 24"><path d="M20 15a8 8 0 1 1-11-11 7 7 0 0 0 11 11z"/></symbol>
+            <symbol id="vm-i-leaf" viewBox="0 0 24 24"><path d="M20 4C10 4 4 9 4 16c0 3 2 5 5 5 7 0 11-7 11-17zM5 20c4-6 8-9 13-12"/></symbol>
+        </defs>
+    </svg>
     <a class="skip-link" href="#app-main">Skip to current screen</a>
 
     <!-- Connection status banner -->
@@ -135,7 +185,7 @@
     <script src="js/i18n/en.js?v=20260826q"></script>
 
     <!-- Utilities -->
-    <script src="js/utils/helpers.js?v=20260621l"></script>
+    <script src="js/utils/helpers.js?v=20260826u"></script>
     <script src="js/utils/crypto.js"></script>
     <script src="js/utils/a11y.js?v=20260724b"></script>
 
@@ -175,13 +225,13 @@
     <script src="js/engine/enchanting.js"></script>
     <script src="js/engine/marketplace.js"></script>
     <script src="js/engine/checkpoint.js"></script>
-    <script src="js/engine/block-processor.js"></script>
+    <script src="js/engine/block-processor.js?v=20260826u"></script>
     <script src="js/engine/world-events.js?v=20260826k"></script>
     <script src="js/engine/world-boss.js?v=20260716a"></script>
     <script src="js/engine/quest-system.js?v=20260826k"></script>
     <script src="js/engine/loci.js"></script>
     <script src="js/engine/npc-framework.js"></script>
-    <script src="js/engine/state-engine.js?v=20260826k"></script>
+    <script src="js/engine/state-engine.js?v=20260826u"></script>
     <script src="js/engine/daily-leaderboard-storage.js"></script>
     <script src="js/engine/daily-leaderboard.js?v=20260826k"></script>
 
@@ -190,33 +240,33 @@
     <script src="js/ui/components/progress-bar.js?v=20260826k"></script>
     <script src="js/ui/components/toast.js?v=20260711b"></script>
     <script src="js/ui/components/modal.js"></script>
-    <script src="js/ui/components/nav.js?v=20260826t"></script>
+    <script src="js/ui/components/nav.js?v=20260826u"></script>
     <script src="js/ui/components/battle-narrator.js?v=20260713c"></script>
 
     <!-- UI Screens -->
     <script src="js/ui/screens/landing.js?v=20260826p"></script>
     <script src="js/ui/screens/login.js?v=20260726b"></script>
     <script src="js/ui/screens/onboarding.js"></script>
-    <script src="js/ui/screens/home.js?v=20260826t"></script>
-    <script src="js/ui/screens/character.js?v=20260826t"></script>
-    <script src="js/ui/screens/hunt.js?v=20260826k"></script>
+    <script src="js/ui/screens/home.js?v=20260826u"></script>
+    <script src="js/ui/screens/character.js?v=20260826u"></script>
+    <script src="js/ui/screens/hunt.js?v=20260826u"></script>
     <script src="js/ui/screens/inventory.js?v=20260826k"></script>
     <script src="js/ui/screens/chronicle.js?v=20260826k"></script>
     <script src="js/ui/screens/duel.js?v=20260726b"></script>
     <script src="js/ui/screens/arena.js?v=20260826k"></script>
     <script src="js/ui/screens/guild.js?v=20260826k"></script>
-    <script src="js/ui/screens/map.js?v=20260826s"></script>
+    <script src="js/ui/screens/map.js?v=20260826u"></script>
     <script src="js/ui/screens/marketplace.js?v=20260826k"></script>
     <script src="js/ui/screens/crafting.js?v=20260724b"></script>
     <script src="js/ui/screens/quests.js?v=20260826k"></script>
     <script src="js/ui/screens/world-boss.js?v=20260826k"></script>
     <script src="js/ui/screens/settings.js?v=20260826k"></script>
-    <script src="js/ui/screens/help.js?v=20260826s"></script>
+    <script src="js/ui/screens/help.js?v=20260826u"></script>
     <script src="js/ui/screens/leaderboard.js?v=20260826k"></script>
     <script src="js/ui/screens/temple.js?v=20260826k"></script>
     <script src="js/ui/screens/developers.js?v=20260826k"></script>
 
     <!-- Main App Controller (must be last) -->
-    <script src="js/ui/app.js?v=20260826t"></script>
+    <script src="js/ui/app.js?v=20260826u"></script>
 </body>
 </html>

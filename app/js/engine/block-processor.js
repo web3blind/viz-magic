@@ -21,6 +21,7 @@ var BlockProcessor = (function() {
             veEvents: [],
             awards: [],
             blockHash: block.block_id || '',
+            huntEntropy: block.previous || block.block_id || '',
             blockNum: blockNum,
             timestamp: block.timestamp || ''
         };

@@ -40,13 +40,13 @@ var CharacterScreen = (function() {
                 '<div class="char-header">' +
                     '<div><h2><span class="char-icon character-title-class-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(ch.className || 'embercaster') + '</span> ' + _classGuideName(ch.className, t) + ' <span class="title-dot" aria-hidden="true">•</span> <span class="character-title-level">' + t('home_level') + ' ' + ch.level + '</span></h2></div>' +
                 '</div>' +
-                ProgressBar.create({id:'char-mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vm-icon vm-icon-mana vmagic-breathe" aria-hidden="true"></span> ' + t('home_mana'), value:0, max:100, color:'#2196f3', href: VIZ_ENERGY_DOC_URL, ariaLabel: t('char_mana_external_aria')}) +
+                ProgressBar.create({id:'char-mana-bar', label:t('home_mana'), labelHtml:Helpers.icon('mana', 'vital-label-icon vm-icon vmagic-breathe') + ' ' + t('home_mana'), value:0, max:100, color:'#2196f3', href: VIZ_ENERGY_DOC_URL, ariaLabel: t('char_mana_external_aria')}) +
                 '<p class="quest-desc character-vital-note">' + t('char_mana_explainer') + '</p>' +
-                ProgressBar.create({id:'char-hp-bar', label:'HP', labelHtml:'<span class="vital-label-icon vm-icon vm-icon-hp vmagic-breathe" aria-hidden="true"></span> HP', value:ch.hp, max:ch.maxHp, displayValue:hpShown, displayMax:CHARACTER_HP_DISPLAY_MAX, color:'#e53935', button: true, ariaLabel: t('char_hp_button_aria')}) +
+                ProgressBar.create({id:'char-hp-bar', label:'HP', labelHtml:Helpers.icon('hp', 'vital-label-icon vm-icon vmagic-breathe') + ' HP', value:ch.hp, max:ch.maxHp, displayValue:hpShown, displayMax:CHARACTER_HP_DISPLAY_MAX, color:'#e53935', button: true, ariaLabel: t('char_hp_button_aria')}) +
                 '<p class="quest-desc character-vital-note">' + t('char_hp_explainer') + '</p>' +
-                ProgressBar.create({id:'char-xp-bar', label:'XP', labelHtml:'<span class="vital-label-icon vm-icon vm-icon-xp vmagic-breathe" aria-hidden="true"></span> XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:CHARACTER_XP_DISPLAY_MAX, color:'#ffc107', button: true, ariaLabel: t('char_xp_button_aria')}) +
+                ProgressBar.create({id:'char-xp-bar', label:'XP', labelHtml:Helpers.icon('xp', 'vital-label-icon vm-icon vmagic-breathe') + ' XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:CHARACTER_XP_DISPLAY_MAX, color:'#ffc107', button: true, ariaLabel: t('char_xp_button_aria')}) +
                 '<p class="quest-desc character-vital-note">' + t('char_xp_explainer') + '</p>' +
-                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">📊</span> ' + t('char_stats') + '</h2>' +
+                '<h2>' + Helpers.icon('stats', 'section-icon vmagic-breathe') + ' ' + t('char_stats') + '</h2>' +
                 '<div class="stats-list">' +
                     _statRow(t('char_potency'), ch.pot || 0, corePerStat, 0, totalPot) +
                     _statRow(t('char_resilience'), ch.res || 0, corePerStat, 0, totalRes) +
@@ -55,10 +55,10 @@ var CharacterScreen = (function() {
                     _statRow(t('char_fortune'), ch.for_ || 0, corePerStat, 0, totalFor) +
                 '</div>' +
                 '<p class="quest-desc">' + t('char_stats_growth_hint') + '</p>' +
-                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">💠</span> ' + t('char_core') + '</h2>' +
+                '<h2>' + Helpers.icon('core', 'section-icon vmagic-breathe') + ' ' + t('char_core') + '</h2>' +
                 '<p>' + t('char_core_power') + ': ' + Helpers.formatNumber(ch.coreBonus) + '</p>' +
                 '<p>' + t('char_core_per_stat', { value: corePerStat }) + '</p>' +
-                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">🪄</span> ' + t('char_spells') + '</h2>' +
+                '<h2>' + Helpers.icon('spells', 'section-icon vmagic-breathe') + ' ' + t('char_spells') + '</h2>' +
                 _renderSpells(ch) +
             '</div>';
 
@@ -162,7 +162,7 @@ var CharacterScreen = (function() {
         var spell = GameSpells.getSpell(spellId);
         if (!spell) return;
         var body = '<div class="modal-content spell-detail-modal">' +
-            '<h2 class="modal-title"><span class="spell-detail-title-icon vmagic-breathe" aria-hidden="true">🪄</span> ' + t('char_spell_details') + '</h2>' +
+            '<h2 class="modal-title">' + Helpers.icon('spells', 'spell-detail-title-icon vmagic-breathe') + ' ' + t('char_spell_details') + '</h2>' +
             '<div class="modal-body">' +
             '<dl class="spell-detail-list">' +
             '<dt>' + t('char_spell_school') + '</dt><dd>' + Helpers.escapeHtml(spell.school) + '</dd>' +
@@ -180,11 +180,11 @@ var CharacterScreen = (function() {
 
     function _showVitalDetails(kind) {
         var t = Helpers.t;
-        var icon = kind === 'hp' ? '❤️' : '⭐';
+        var iconName = kind === 'hp' ? 'hp' : 'xp';
         var title = kind === 'hp' ? t('char_hp_modal_title') : t('char_xp_modal_title');
         var bodyKey = kind === 'hp' ? 'char_hp_modal_body' : 'char_xp_modal_body';
         var body = '<div class="modal-content character-vital-modal">' +
-            '<h2 class="modal-title"><span class="modal-title-icon vmagic-breathe" aria-hidden="true">' + icon + '</span> ' + title + '</h2>' +
+            '<h2 class="modal-title">' + Helpers.icon(iconName, 'modal-title-icon vmagic-breathe') + ' ' + title + '</h2>' +
             '<div class="modal-body"><p>' + t(bodyKey) + '</p></div>' +
             '<div class="modal-actions"><button type="button" class="btn btn-primary modal-close">' + t('char_spell_close') + '</button></div>' +
             '</div>';

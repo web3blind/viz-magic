@@ -34,10 +34,10 @@ var HomeScreen = (function() {
         var displayName = _displayCharacterName(character, hasCharacter, user, t);
         var characterLine = hasCharacter ? ('<span class="home-character-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(character.className) + '</span> ' + t('class_' + character.className) + ' \u2022 ' + t('home_level') + ' ' + character.level + (Helpers.magicRank ? (' \u2022 ' + t(Helpers.magicRank(character.level))) : '')) : t('loading');
         var vitalBars = hasCharacter ? (
-            ProgressBar.create({id:'mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vm-icon vm-icon-mana vmagic-breathe" aria-hidden="true"></span> ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
-            ProgressBar.create({id:'hp-bar', label:'HP', labelHtml:'<span class="vital-label-icon vm-icon vm-icon-hp vmagic-breathe" aria-hidden="true"></span> HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
-            ProgressBar.create({id:'xp-bar', label:'XP', labelHtml:'<span class="vital-label-icon vm-icon vm-icon-xp vmagic-breathe" aria-hidden="true"></span> XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'})
-        ) : ProgressBar.create({id:'mana-bar', label:t('home_mana'), labelHtml:'<span class="vital-label-icon vm-icon vm-icon-mana vmagic-breathe" aria-hidden="true"></span> ' + t('home_mana'), value:0, max:100, color:'#2196f3'});
+            ProgressBar.create({id:'mana-bar', label:t('home_mana'), labelHtml:Helpers.icon('mana', 'vital-label-icon vm-icon vmagic-breathe') + ' ' + t('home_mana'), value:0, max:100, color:'#2196f3'}) +
+            ProgressBar.create({id:'hp-bar', label:'HP', labelHtml:Helpers.icon('hp', 'vital-label-icon vm-icon vmagic-breathe') + ' HP', value:character.hp, max:character.maxHp, displayValue:hpShown, displayMax:HOME_HP_DISPLAY_MAX, color:'#e53935'}) +
+            ProgressBar.create({id:'xp-bar', label:'XP', labelHtml:Helpers.icon('xp', 'vital-label-icon vm-icon vmagic-breathe') + ' XP', value:xpCurrent, max:xpNeeded, displayValue:xpShown, displayMax:HOME_XP_DISPLAY_MAX, color:'#ffc107'})
+        ) : ProgressBar.create({id:'mana-bar', label:t('home_mana'), labelHtml:Helpers.icon('mana', 'vital-label-icon vm-icon vmagic-breathe') + ' ' + t('home_mana'), value:0, max:100, color:'#2196f3'});
 
         el.innerHTML =
             '<div class="home-dashboard">' +
@@ -53,7 +53,7 @@ var HomeScreen = (function() {
                     vitalBars +
                     '<button class="help-tip-btn" aria-label="' + t('help_tip_mana') + '" ' +
                     'title="' + t('help_tip_mana') + '" ' +
-                    'onclick="Helpers.EventBus.emit(\'navigate\', \'help\')">❓</button>' +
+                    'onclick="Helpers.EventBus.emit(\'navigate\', \'help\')">' + Helpers.icon('help', 'help-tip-icon') + '</button>' +
                 '</section>' +
 
 
@@ -77,12 +77,12 @@ var HomeScreen = (function() {
                 '</section>' +
                 _renderLorePages(blockNum, t) +
                 '<section class="home-share" aria-label="' + t('home_share_title') + '">' +
-                    '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">\uD83D\uDD17</span> ' + t('home_share_title') + '</h2>' +
+                    '<h2>' + Helpers.icon('link', 'section-icon vmagic-breathe') + ' ' + t('home_share_title') + '</h2>' +
                     '<p>' + t('home_share_desc') + '</p>' +
                     '<button type="button" class="btn btn-primary btn-share-game" id="btn-share-game">' + t('home_share_button') + '</button>' +
                 '</section>' +
                 '<section class="home-install" aria-label="' + t('home_install_shortcut') + '">' +
-                    '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">\uD83D\uDCF2</span> ' + t('home_install_shortcut') + '</h2>' +
+                    '<h2>' + Helpers.icon('phone', 'section-icon vmagic-breathe') + ' ' + t('home_install_shortcut') + '</h2>' +
                     '<p>' + t('home_install_shortcut_text') + '</p>' +
                     '<button type="button" class="btn btn-primary btn-install-shortcut" id="btn-install-shortcut">' + t('home_install_shortcut_button') + '</button>' +
                 '</section>' +
@@ -220,10 +220,11 @@ var HomeScreen = (function() {
             var target = (evt.type === 'minor_rift' || evt.type === 'weave_surge') ? 'hunt' : '';
             var tag = target ? 'button' : 'div';
             var attrs = target ? ' type="button" data-screen="' + target + '" data-event-type="' + evt.type + '"' : '';
-            var effectBadge = evt.type === 'weave_surge' ? '<span class="event-effect-badge">⚡ ' + t('home_weave_hunt_hint') + ' ' + String(t('home_mana')).toLowerCase() + ' ×' + (evt.manaRegenMultiplier || 2) + '</span>' : '';
+            var eventIcon = evt.type === 'weave_surge' ? 'spark' : (evt.type === 'minor_rift' ? 'rift' : 'festival');
+            var effectBadge = evt.type === 'weave_surge' ? '<span class="event-effect-badge">' + Helpers.icon('spark', 'event-effect-icon') + ' ' + t('home_weave_hunt_hint') + ' ' + String(t('home_mana')).toLowerCase() + ' ×' + (evt.manaRegenMultiplier || 2) + '</span>' : '';
             html += '<' + tag + ' class="event-banner-item event-banner-' + evt.type + (target ? ' event-banner-button' : '') + '"' + attrs + ' aria-label="' +
                 t(evt.nameKey) + (desc ? '. ' + desc : '') + ' ' + t('event_time_left', {time: timeStr}) + '">' +
-                '<span class="event-icon vmagic-breathe" aria-hidden="true">' + evt.icon + '</span>' +
+                Helpers.icon(eventIcon, 'event-icon vmagic-breathe') +
                 '<span class="event-copy">' +
                     '<span class="event-name">' + t(evt.nameKey) + '</span>' +
                     (desc ? '<span class="event-desc">' + desc + '</span>' : '') +
@@ -336,7 +337,7 @@ var HomeScreen = (function() {
         if (!bossStatus || !bossStatus.active) return '';
 
         return '<button class="boss-alert" role="alert" aria-label="' + t('boss_active_alert') + '">' +
-            '<span class="boss-alert-mark boss-alert-icon vmagic-breathe" aria-hidden="true">🐲</span>' +
+            Helpers.icon('boss', 'boss-alert-mark boss-alert-icon vmagic-breathe') +
             '<span class="boss-alert-text">' + t('boss_active_alert') + '</span>' +
             '<span class="boss-alert-hp">' + bossStatus.hpPercent + '% HP</span>' +
         '</button>';
@@ -359,7 +360,7 @@ var HomeScreen = (function() {
         var magicNews = WorldEvents.getCurrentMagicNews ? WorldEvents.getCurrentMagicNews(blockNum) : null;
         var festivalHtml = festival ? '<div class="forecast-card forecast-card-festival">' +
                 '<div class="forecast-head">' +
-                    '<span class="forecast-icon vmagic-breathe" aria-hidden="true">' + (festival.icon || '🎆') + '</span>' +
+                    Helpers.icon('festival', 'forecast-icon vmagic-breathe') +
                     '<span class="forecast-kicker">' + t(festival.prefixKey || 'festival_today_prefix') + '</span>' +
                 '</div>' +
                 '<p class="forecast-line">' + (festival.nameText || t(festival.nameKey)) + '</p>' +
@@ -368,16 +369,16 @@ var HomeScreen = (function() {
         return '<section class="season-indicator magical-forecast" aria-label="' + t('weather_forecast_label') + '">' +
             '<div class="forecast-card forecast-card-season forecast-card-hunt-summary">' +
                 '<div class="forecast-head">' +
-                    '<span class="forecast-icon forecast-weather-icon vmagic-breathe" aria-hidden="true">\uD83E\uDDED</span>' +
+                    Helpers.icon('compass', 'forecast-icon forecast-weather-icon vmagic-breathe') +
                     '<p class="forecast-line"><span class="forecast-season-name ' + _seasonColorClass(season.id) + '">' + t(season.nameKey) + '</span> · <span class="forecast-world-month ' + _seasonColorClass(season.id) + '">' + _getWorldMonthName() + '</span></p>' +
                 '</div>' +
-                '<span class="forecast-icon forecast-hunt-icon vmagic-breathe" aria-hidden="true">\uD83C\uDFF9</span>' +
+                Helpers.icon('hunt', 'forecast-icon forecast-hunt-icon vmagic-breathe') +
                 '<p class="forecast-kicker forecast-hunt-copy">' + t('weather_hunt_effect_sentence') + '</p>' +
                 '<p class="season-bonus">' + _formatWeatherReport(season, dominantBonus, secondaryBonus, weather, t) + ' ' + effect + '</p>' +
             '</div>' +
             '<div class="forecast-card forecast-card-sky">' +
                 '<div class="forecast-head">' +
-                    '<span class="forecast-icon forecast-sky-icon" aria-hidden="true">' + (sky ? sky.icon : '\u26C5') + '</span>' +
+                    Helpers.icon('weather', 'forecast-icon forecast-sky-icon') +
                     '<span class="forecast-kicker">' + (worldDay ? t(worldDay.nameKey) : t('weather_sky_title')) + '</span>' +
                 '</div>' +
                 '<p class="forecast-line">' + skyText + '</p>' +
@@ -385,7 +386,7 @@ var HomeScreen = (function() {
             festivalHtml +
             (magicNews ? '<div class="forecast-card forecast-card-news">' +
                 '<div class="forecast-head">' +
-                    '<span class="forecast-icon" aria-hidden="true">' + magicNews.icon + '</span>' +
+                    Helpers.icon('news', 'forecast-icon') +
                     '<span class="forecast-kicker">' + t('magic_news_title') + '</span>' +
                 '</div>' +
                 '<p class="forecast-line">' + t(magicNews.summaryKey) + (magicNews.twistText ? ' ' + magicNews.twistText : '') + '</p>' +
@@ -401,7 +402,7 @@ var HomeScreen = (function() {
         for (var i = 0; i < pages.length; i++) {
             var page = pages[i];
             html += '<article class="home-lore-card">' +
-                '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">' + page.icon + '</span> ' + t(page.titleKey) + '</h2>' +
+                '<h2>' + Helpers.icon('chronicle', 'section-icon vmagic-breathe') + ' ' + t(page.titleKey) + '</h2>' +
                 '<p>' + page.text + '</p>' +
             '</article>';
         }
@@ -420,12 +421,12 @@ var HomeScreen = (function() {
 
         return '<section class="home-prophecy" aria-label="' + t('home_daily_prophecy') + '">' +
             '<button type="button" class="prophecy-mini prophecy-mini-button" aria-label="' + t('home_daily_prophecy') + ': ' + t(prophecy.titleKey) + '">' +
-                '<span class="prophecy-icon vmagic-breathe" aria-hidden="true">\uD83D\uDD2E</span>' +
+                Helpers.icon('prophecy', 'prophecy-icon vmagic-breathe') +
                 '<div class="prophecy-info">' +
                     '<h3>' + t('home_daily_prophecy') + '</h3>' +
                     '<p class="daily-quest-title">' + t(prophecy.titleKey) + '</p>' +
                     '<p class="daily-quest-desc"><small>' + t(prophecy.descriptionKey) + '</small></p>' +
-                    '<span class="prophecy-reward">\u2B50 ' + (prophecy.rewards ? prophecy.rewards.xp : 0) + ' XP</span>' +
+                    '<span class="prophecy-reward">' + Helpers.icon('xp', 'prophecy-reward-icon') + ' ' + (prophecy.rewards ? prophecy.rewards.xp : 0) + ' XP</span>' +
                 '</div>' +
             '</button>' +
         '</section>';
@@ -452,29 +453,29 @@ var HomeScreen = (function() {
 
     function _iconClassForScreen(screen) {
         var icons = {
-            home: 'vm-icon-home',
-            hunt: 'vm-icon-hunt',
-            map: 'vm-icon-map',
-            guild: 'vm-icon-guild',
-            marketplace: 'vm-icon-marketplace',
-            crafting: 'vm-icon-crafting',
-            character: 'vm-icon-character',
-            help: 'vm-icon-help',
-            leaderboard: 'vm-icon-leaderboard',
-            temple: 'vm-icon-temple',
-            inventory: 'vm-icon-inventory',
-            chronicle: 'vm-icon-chronicle',
-            arena: 'vm-icon-arena',
-            quests: 'vm-icon-quests',
-            'world-boss': 'vm-icon-boss',
-            settings: 'vm-icon-settings',
-            developers: 'vm-icon-developers'
+            home: 'home',
+            hunt: 'hunt',
+            map: 'map',
+            guild: 'guild',
+            marketplace: 'marketplace',
+            crafting: 'crafting',
+            character: 'character',
+            help: 'help',
+            leaderboard: 'leaderboard',
+            temple: 'temple',
+            inventory: 'inventory',
+            chronicle: 'chronicle',
+            arena: 'arena',
+            quests: 'quests',
+            'world-boss': 'boss',
+            settings: 'settings',
+            developers: 'developers'
         };
-        return icons[screen] || 'vm-icon-spark';
+        return icons[screen] || 'spark';
     }
 
     function _tile(screen, iconClass, label, character) {
-        var iconHtml = '<span class="tile-icon vm-icon ' + iconClass + '" aria-hidden="true"></span>';
+        var iconHtml = Helpers.icon(iconClass, 'tile-icon vm-icon');
         if (screen === 'character' && character) {
             iconHtml = _renderAvatarMark(character, 'tile-icon tile-avatar-icon');
         }
@@ -490,7 +491,7 @@ var HomeScreen = (function() {
         if (character.avatarUrl) {
             return '<img class="account-avatar defaultable-avatar ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(character.avatarUrl) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
         }
-        return '<span class="account-avatar default-avatar ' + (extraClass || '') + '" aria-hidden="true">' + (character.className ? Helpers.classIcon(character.className) : '\uD83E\uDDD9') + '</span>';
+        return '<span class="account-avatar default-avatar ' + (extraClass || '') + '" aria-hidden="true">' + (character.className ? Helpers.classIcon(character.className) : Helpers.icon('character', 'class-svg-icon')) + '</span>';
     }
 
     return { render: render };
