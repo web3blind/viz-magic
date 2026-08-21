@@ -619,9 +619,42 @@ body {
 }
 .arena-player-info { display: flex; align-items: center; gap: 6px; }
 .arena-player-level { color: var(--color-text-muted); font-size: 0.85rem; }
-.region-travel-options { display: flex; flex-wrap: nowrap; gap: 5px; margin-top: 8px; }
-.region-travel-hint { font-size: 0.85rem; color: var(--color-text-muted); margin-top: 6px; }
+.region-action-group { margin-top: 10px; }
+.region-travel-group { display: flex; align-items: center; gap: 10px; }
+.map-action-heading {
+    color: var(--color-accent);
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.18);
+}
+.region-travel-options { display: flex; flex: 1 1 auto; flex-wrap: nowrap; gap: 5px; margin: 0; }
 .region-travel-options .region-travel-btn { flex: 1 1 0; min-width: 0; padding: 7px 6px; font-size: 0.85rem; white-space: nowrap; justify-content: center; }
+.region-exploration-group {
+    padding-top: 9px;
+    border-top: 1px solid rgba(212, 175, 55, 0.28);
+}
+.map-exploration-heading { margin-bottom: 7px; }
+.region-exploration-options {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 5px;
+    width: 100%;
+}
+.region-exploration-options .region-exploration-btn {
+    min-width: 0;
+    margin: 0;
+    padding: 7px 3px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    justify-content: center;
+}
+.region-exploration-options .region-exploration-btn:disabled {
+    opacity: 0.62;
+    cursor: not-allowed;
+}
+.region-travel-hint { font-size: 0.85rem; color: var(--color-text-muted); margin-top: 6px; }
 
 .arena-history-entry {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -1862,6 +1895,18 @@ body,
 .chronicle-compose-footer,
 .modal-actions {
     max-width: 100%;
+}
+
+@media (max-width: 600px) {
+    .region-exploration-options {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
+    }
+
+    .region-exploration-options .region-exploration-btn {
+        min-height: var(--touch-target);
+        font-size: 0.84rem;
+    }
 }
 
 @media (max-width: 480px) {

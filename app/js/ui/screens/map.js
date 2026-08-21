@@ -13,6 +13,7 @@ var MapScreen = (function() {
     var TRAVEL_COST_LOW = 10;    // 0.1%
     var TRAVEL_COST_HIGH = 100;  // 1%
     var TRAVEL_COST_BURST = 300; // 3%
+    var EXPLORATION_COSTS = [100, 300, 500, 700, 900, 1100];
     var TRAVEL_TREASURY = 'denis-skripnik'; // travel fee receiver (game account), same award pattern as hunt->author
     var TRAVEL_FIND_TYPES = ['shadow_shard', 'thorn_essence', 'ancient_shard', 'altar_spark', 'data_core'];
 
@@ -180,28 +181,40 @@ var MapScreen = (function() {
                 html += '</div>';
             }
 
-            // Travel button — v134: buttons show in every region block, including
-            // the current one (Denis: "I have a huge home, I travel around it with a map").
+            // Travel remains available in every region block, including the current one.
+            // Reward-bearing exploration is presented only on the current region and
+            // stays disabled until deterministic entropy and payment verification ship.
             if (pendingTravel && pendingTravel.account === user && regionId === pendingTravel.to) {
                 html += '<div class="region-benefits" role="status">⏳ ' + t('map_pending_travel_short') + '</div>';
             } else if (character && !(pendingTravel && pendingTravel.account === user)) {
+                html += '<div class="region-action-group region-travel-group">';
+                html += '<div class="map-action-heading" role="heading" aria-level="3">' + t('map_travel_heading') + '</div>';
                 html += '<div class="region-travel-options">';
                 html += '<button class="btn btn-secondary btn-sm region-travel-btn" ';
                 html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_LOW + '" ';
                 html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_LOW) + '">';
                 html += Helpers.icon('map', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_LOW);
                 html += '</button>';
-                html += '<button class="btn btn-primary btn-sm region-travel-btn" ';
-                html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_HIGH + '" ';
-                html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_HIGH) + '">';
-                html += Helpers.icon('map', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_HIGH);
-                html += '</button>';
-                html += '<button class="btn btn-secondary btn-sm region-travel-btn" ';
-                html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_BURST + '" ';
-                html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_BURST) + '">';
-                html += Helpers.icon('map', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_BURST);
-                html += '</button>';
                 html += '</div>';
+                html += '</div>';
+
+                if (isCurrent) {
+                    var explorationNoteId = 'map-exploration-note-' + regionId;
+                    html += '<div class="region-action-group region-exploration-group">';
+                    html += '<div class="map-action-heading map-exploration-heading" role="heading" aria-level="3">' + t('map_exploration_heading') + '</div>';
+                    html += '<span class="sr-only" id="' + explorationNoteId + '">' + t('map_exploration_unavailable') + '</span>';
+                    html += '<div class="region-exploration-options">';
+                    for (var ec = 0; ec < EXPLORATION_COSTS.length; ec++) {
+                        var explorationCost = EXPLORATION_COSTS[ec];
+                        html += '<button type="button" class="btn btn-secondary btn-sm region-exploration-btn" disabled ';
+                        html += 'aria-describedby="' + explorationNoteId + '" ';
+                        html += 'aria-label="' + t('map_exploration_heading') + ' ' + Helpers.manaCost(explorationCost) + '. ' + t('map_exploration_unavailable') + '">';
+                        html += Helpers.manaCost(explorationCost);
+                        html += '</button>';
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                }
             }
 
             html += '</section>';
