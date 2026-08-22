@@ -24,6 +24,7 @@ var StateEngine = (function() {
             inventories: {},
             guilds: {},
             territories: {},
+            libraryAccess: {}, // account → {chapter2: unlockBlock}
             marketplace: null,
             recentActions: [],
             social: {
@@ -53,6 +54,7 @@ var StateEngine = (function() {
         state.inventories = state.inventories || {};
         state.guilds = state.guilds || {};
         state.territories = state.territories || {};
+        state.libraryAccess = state.libraryAccess || {};
         state.recentActions = state.recentActions || [];
         state.social = state.social || { knownAccounts: [] };
         state.social.knownAccounts = state.social.knownAccounts || [];
@@ -101,6 +103,8 @@ var StateEngine = (function() {
 
         _ensureSocialState();
 
+        var libraryPayments = _collectLibraryUnlockPayments(processedBlock.awards || []);
+
         // Process VM game actions
         for (var i = 0; i < processedBlock.vmActions.length; i++) {
             var vmAction = processedBlock.vmActions[i];
@@ -109,7 +113,8 @@ var StateEngine = (function() {
                 vmAction.action,
                 blockNum,
                 blockHash,
-                huntEntropy
+                huntEntropy,
+                !!libraryPayments[_libraryPaymentKey(vmAction.sender, vmAction.txIndex)]
             );
             events = events.concat(actionEvents);
         }
@@ -245,7 +250,7 @@ var StateEngine = (function() {
     /**
      * Process a single game action
      */
-    function _processGameAction(sender, action, blockNum, blockHash, huntEntropy) {
+    function _processGameAction(sender, action, blockNum, blockHash, huntEntropy, libraryPaymentVerified) {
         var events = [];
 
         // Validate the action
@@ -284,6 +289,11 @@ var StateEngine = (function() {
                 break;
             case AT.MOVE:
                 events = events.concat(_handleMove(sender, action.data, blockNum));
+                break;
+            case AT.LIBRARY_UNLOCK:
+                if (libraryPaymentVerified && action.data && action.data.chapter === 'chapter2') {
+                    events.push(_handleLibraryUnlock(sender, blockNum));
+                }
                 break;
             // Duel actions — delegated to DuelStateManager
             case AT.CHALLENGE:
@@ -702,6 +712,48 @@ var StateEngine = (function() {
             account: sender,
             zone: data.zone
         }];
+    }
+
+    function _libraryPaymentKey(account, txIndex) {
+        return String(account || '') + ':' + String(Number(txIndex));
+    }
+
+    function _collectLibraryUnlockPayments(awards) {
+        var payments = {};
+        var libraryCfg = cfg.LIBRARY || {};
+        for (var i = 0; i < awards.length; i++) {
+            var award = awards[i] || {};
+            if (!award.initiator || !isFinite(Number(award.txIndex))) continue;
+            if (String(award.memo || '') !== libraryCfg.CHAPTER_TWO_MEMO) continue;
+            if (award.receiver !== libraryCfg.TREASURY) continue;
+            if (Number(award.energy) !== libraryCfg.CHAPTER_TWO_COST) continue;
+            payments[_libraryPaymentKey(award.initiator, award.txIndex)] = true;
+        }
+        return payments;
+    }
+
+    function _handleLibraryUnlock(account, blockNum) {
+        if (!worldState.libraryAccess) worldState.libraryAccess = {};
+        if (!worldState.libraryAccess[account]) worldState.libraryAccess[account] = {};
+        if (!worldState.libraryAccess[account].chapter2) {
+            worldState.libraryAccess[account].chapter2 = blockNum || worldState.headBlock || 1;
+        }
+        return {
+            type: 'library_chapter_two_unlocked',
+            account: account,
+            chapter: 'chapter2',
+            blockNum: worldState.libraryAccess[account].chapter2
+        };
+    }
+
+    function hasLibraryAccess(account, chapter) {
+        return !!(account && chapter && worldState.libraryAccess &&
+            worldState.libraryAccess[account] && worldState.libraryAccess[account][chapter]);
+    }
+
+    function processLibraryUnlockResult(account, blockNum) {
+        if (!account) return null;
+        return _handleLibraryUnlock(account, blockNum || 0);
     }
 
     /**
@@ -1570,6 +1622,7 @@ var StateEngine = (function() {
         getState: getState,
         getCharacter: getCharacter,
         getInventory: getInventory,
+        hasLibraryAccess: hasLibraryAccess,
         getTempleBlessing: getTempleBlessing,
         processHuntResult: processHuntResult,
         processMoveResult: processMoveResult,
@@ -1583,6 +1636,7 @@ var StateEngine = (function() {
         processQuestAbandonResult: processQuestAbandonResult,
         processArmageddonResult: processArmageddonResult,
         processTempleOfferingResult: processTempleOfferingResult,
+        processLibraryUnlockResult: processLibraryUnlockResult,
         reset: reset
     };
 })();

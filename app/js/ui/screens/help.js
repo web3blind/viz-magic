@@ -5,6 +5,8 @@ var HelpScreen = (function() {
     'use strict';
 
     var HELP_LIBRARY_ASSET_VERSION = '20260817d';
+    var HELP_SECRET_LIBRARY_ASSET_VERSION = '20260822a';
+    var secretLibraryBusy = false;
     var HELP_LIBRARY_MAPS = [
         { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-10' },
         { id: 'covenant_bazaar', title: 'The Covenant Bazaar Ур. 3-50' },
@@ -21,6 +23,23 @@ var HelpScreen = (function() {
         { id: 'timeless_maze', title: 'The Timeless Maze Ур. 81-90' },
         { id: 'grandmaster_peak', title: 'The Grandmaster Peak Ур. 91-100' },
         { id: 'void_sanctum', title: 'The Void Sanctum Ур. 101+' }
+    ];
+    var HELP_SECRET_LIBRARY_MAPS = [
+        { id: '01', titleKey: 'help_secret_map_01_title', textKey: 'help_secret_map_01_text' },
+        { id: '02', titleKey: 'help_secret_map_02_title', textKey: 'help_secret_map_02_text' },
+        { id: '03', titleKey: 'help_secret_map_03_title', textKey: 'help_secret_map_03_text' },
+        { id: '04', titleKey: 'help_secret_map_04_title', textKey: 'help_secret_map_04_text' },
+        { id: '05', titleKey: 'help_secret_map_05_title', textKey: 'help_secret_map_05_text' },
+        { id: '06', titleKey: 'help_secret_map_06_title', textKey: 'help_secret_map_06_text' },
+        { id: '07', titleKey: 'help_secret_map_07_title', textKey: 'help_secret_map_07_text' },
+        { id: '08', titleKey: 'help_secret_map_08_title', textKey: 'help_secret_map_08_text' },
+        { id: '09', titleKey: 'help_secret_map_09_title', textKey: 'help_secret_map_09_text' },
+        { id: '10', titleKey: 'help_secret_map_10_title', textKey: 'help_secret_map_10_text' },
+        { id: '11', titleKey: 'help_secret_map_11_title', textKey: 'help_secret_map_11_text' },
+        { id: '12', titleKey: 'help_secret_map_12_title', textKey: 'help_secret_map_12_text' },
+        { id: '13', titleKey: 'help_secret_map_13_title', textKey: 'help_secret_map_13_text' },
+        { id: '14', titleKey: 'help_secret_map_14_title', textKey: 'help_secret_map_14_text' },
+        { id: '15', titleKey: 'help_secret_map_15_title', textKey: 'help_secret_map_15_text' }
     ];
 
     function render() {
@@ -71,6 +90,7 @@ var HelpScreen = (function() {
         el.innerHTML = html;
         _bindNavLinks(el);
         _bindLibraryLinks(el);
+        _bindSecretLibrary(el);
     }
 
     function _bindNavLinks(el) {
@@ -113,7 +133,7 @@ var HelpScreen = (function() {
                     '<h3>' + Helpers.icon('festival', 'section-icon vmagic-breathe') + ' ' + t('help_section_world_months') + '</h3>' +
                     '<p>' + t('help_world_months_text') + '</p>' +
                 '</article>' +
-            '</div>' + _renderMagicLibrary(t) + '</section>';
+            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + '</section>';
     }
 
     function _renderMagicLibrary(t) {
@@ -127,6 +147,136 @@ var HelpScreen = (function() {
         }
         html += '</div></article>';
         return html;
+    }
+
+    function _renderSecretLibrary(t) {
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        var unlocked = StateEngine.hasLibraryAccess(user, 'chapter2');
+        var html = '<article class="help-magic-library help-secret-library" aria-labelledby="help-secret-library-title">' +
+            '<h3 id="help-secret-library-title" tabindex="-1">' + Helpers.icon('map', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_chapter_two_title') + '</h3>' +
+            '<p>' + t('help_magic_library_chapter_two_intro') + '</p>' +
+            '<p id="help-secret-library-status" class="help-secret-library-status" role="status" aria-live="polite"></p>';
+        if (!unlocked) {
+            html += '<div class="help-secret-library-lock">' +
+                '<p>' + t('help_magic_library_chapter_two_locked') + '</p>' +
+                '<button type="button" class="btn btn-primary" id="help-secret-library-unlock">' + t('help_magic_library_chapter_two_unlock') + '</button>' +
+                '</div>';
+        } else {
+            html += '<p class="help-secret-library-opened">' + t('help_magic_library_chapter_two_opened') + '</p>' +
+                '<div class="help-library-list help-secret-library-list">';
+            for (var i = 0; i < HELP_SECRET_LIBRARY_MAPS.length; i++) {
+                var entry = HELP_SECRET_LIBRARY_MAPS[i];
+                html += '<button type="button" class="help-library-link help-secret-library-link" data-secret-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
+            }
+            html += '</div>';
+        }
+        html += '</article>';
+        return html;
+    }
+
+    function _bindSecretLibrary(el) {
+        var unlock = Helpers.$('help-secret-library-unlock');
+        if (unlock) unlock.addEventListener('click', _confirmSecretLibraryUnlock);
+        var links = el.querySelectorAll('.help-secret-library-link');
+        for (var i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function() {
+                var entry = _findSecretLibraryEntry(this.getAttribute('data-secret-library-map'));
+                if (entry) {
+                    if (typeof SoundManager !== 'undefined') SoundManager.play('tap');
+                    _openSecretLibraryMap(entry);
+                }
+            });
+        }
+    }
+
+    function _findSecretLibraryEntry(id) {
+        for (var i = 0; i < HELP_SECRET_LIBRARY_MAPS.length; i++) {
+            if (HELP_SECRET_LIBRARY_MAPS[i].id === id) return HELP_SECRET_LIBRARY_MAPS[i];
+        }
+        return null;
+    }
+
+    function _setSecretLibraryStatus(message) {
+        var status = Helpers.$('help-secret-library-status');
+        if (status) status.textContent = message || '';
+    }
+
+    function _confirmSecretLibraryUnlock() {
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        if (!user) {
+            Toast.error(Helpers.t('error_no_account'));
+            return;
+        }
+        var html = '<div class="help-secret-library-confirm-card" aria-labelledby="help-secret-library-confirm-title" aria-describedby="help-secret-library-confirm-text">' +
+            '<h2 id="help-secret-library-confirm-title">' + Helpers.t('help_magic_library_chapter_two_confirm_title') + '</h2>' +
+            '<p id="help-secret-library-confirm-text">' + Helpers.t('help_magic_library_chapter_two_confirm_text') + '</p>' +
+            '<div class="modal-actions">' +
+                '<button type="button" class="btn btn-secondary" id="help-secret-library-cancel">' + Helpers.t('cancel') + '</button>' +
+                '<button type="button" class="btn btn-primary" id="help-secret-library-confirm">' + Helpers.t('help_magic_library_chapter_two_confirm') + '</button>' +
+            '</div></div>';
+        ModalComponent.show(html);
+        var dialog = Helpers.$('modal-container');
+        if (dialog) dialog.setAttribute('aria-describedby', 'help-secret-library-confirm-text');
+        var cancel = Helpers.$('help-secret-library-cancel');
+        var confirm = Helpers.$('help-secret-library-confirm');
+        if (cancel) cancel.addEventListener('click', function() { ModalComponent.hide(); });
+        if (confirm) confirm.addEventListener('click', _unlockSecretLibrary);
+    }
+
+    function _unlockSecretLibrary() {
+        if (secretLibraryBusy) return;
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        if (!user) {
+            ModalComponent.hide();
+            Toast.error(Helpers.t('error_no_account'));
+            return;
+        }
+        var confirm = Helpers.$('help-secret-library-confirm');
+        secretLibraryBusy = true;
+        if (confirm) {
+            confirm.disabled = true;
+            confirm.setAttribute('aria-busy', 'true');
+        }
+        VizAccount.getAccount(user, function(energyErr, accountData) {
+            if (energyErr || !accountData) {
+                secretLibraryBusy = false;
+                if (confirm) { confirm.disabled = false; confirm.removeAttribute('aria-busy'); }
+                Toast.error(Helpers.t('help_magic_library_chapter_two_energy_failed'));
+                return;
+            }
+            var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
+            if (currentEnergy < VizMagicConfig.LIBRARY.CHAPTER_TWO_COST) {
+                secretLibraryBusy = false;
+                if (confirm) { confirm.disabled = false; confirm.removeAttribute('aria-busy'); }
+                Toast.error(Helpers.t('help_magic_library_chapter_two_not_enough'));
+                return;
+            }
+            VizBroadcast.libraryUnlockAction(
+                VizMagicConfig.LIBRARY.CHAPTER_TWO_COST,
+                function(err, result) {
+                    secretLibraryBusy = false;
+                    if (err) {
+                        if (confirm) { confirm.disabled = false; confirm.removeAttribute('aria-busy'); }
+                        Toast.error(Helpers.t('help_magic_library_chapter_two_failed'));
+                        return;
+                    }
+                    var blockNum = result ? (result.block_num || result.block || 0) : 0;
+                    var event = StateEngine.processLibraryUnlockResult(user, blockNum);
+                    if (!event) {
+                        Toast.error(Helpers.t('help_magic_library_chapter_two_failed'));
+                        return;
+                    }
+                    StateEngine.saveCheckpoint(function() {});
+                    ModalComponent.hide();
+                    Toast.success(Helpers.t('help_magic_library_chapter_two_success'));
+                    render();
+                    setTimeout(function() {
+                        var heading = Helpers.$('help-secret-library-title');
+                        if (heading) heading.focus();
+                    }, 0);
+                }
+            );
+        });
     }
 
     function _findLibraryEntry(id) {
@@ -143,6 +293,44 @@ var HelpScreen = (function() {
         html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
         html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';
         html += '<img class="lore-map-image help-library-map-image" id="help-library-map-image" src="assets/library-maps-v2/map-' + entry.id + '.jpg?v=' + HELP_LIBRARY_ASSET_VERSION + '" alt="' + Helpers.escapeHtml(Helpers.t('help_magic_library_image_alt', { name: entry.title })) + '" loading="lazy">';
+        html += '</div>';
+        html += '<p class="lore-map-text help-library-map-text">' + description + '</p>';
+        html += '<div class="modal-actions lore-map-actions help-library-map-actions"><button type="button" class="btn btn-secondary" id="help-library-zoom-toggle">' + Helpers.t('map_zoom_toggle') + '</button><button type="button" class="btn btn-primary" id="help-library-close">' + Helpers.t('close') + '</button></div>';
+        html += '</div>';
+        ModalComponent.show(html);
+        var modal = Helpers.$('modal-container');
+        var viewport = Helpers.$('help-library-map-viewport');
+        var zoomBtn = Helpers.$('help-library-zoom-toggle');
+        if (zoomBtn && viewport && modal) {
+            zoomBtn.addEventListener('click', function() {
+                modal.classList.add('help-library-fullscreen');
+                viewport.classList.add('zoomed');
+            });
+            viewport.addEventListener('click', function(e) {
+                if (modal.classList.contains('help-library-fullscreen')) {
+                    e.preventDefault();
+                    _closeLibraryFullscreen(modal, viewport);
+                }
+            });
+        }
+        var closeBtn = Helpers.$('help-library-close');
+        if (closeBtn) closeBtn.addEventListener('click', function() {
+            if (modal && modal.classList.contains('help-library-fullscreen')) {
+                _closeLibraryFullscreen(modal, viewport);
+                return;
+            }
+            ModalComponent.hide();
+        });
+    }
+
+    function _openSecretLibraryMap(entry) {
+        var titleText = Helpers.t(entry.titleKey);
+        var title = Helpers.escapeHtml(titleText);
+        var description = Helpers.t(entry.textKey);
+        var html = '<div class="help-library-map-card">';
+        html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
+        html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';
+        html += '<img class="lore-map-image help-library-map-image" id="help-library-map-image" src="assets/library-maps-chapter2/secret-map-' + entry.id + '.jpg?v=' + HELP_SECRET_LIBRARY_ASSET_VERSION + '" alt="' + Helpers.escapeHtml(Helpers.t('help_magic_library_image_alt', { name: titleText })) + '" loading="lazy">';
         html += '</div>';
         html += '<p class="lore-map-text help-library-map-text">' + description + '</p>';
         html += '<div class="modal-actions lore-map-actions help-library-map-actions"><button type="button" class="btn btn-secondary" id="help-library-zoom-toggle">' + Helpers.t('map_zoom_toggle') + '</button><button type="button" class="btn btn-primary" id="help-library-close">' + Helpers.t('close') + '</button></div>';

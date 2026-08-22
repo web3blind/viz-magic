@@ -1652,6 +1652,35 @@ body {
     border-color: var(--color-primary, #d4a843);
     background: rgba(255, 216, 88, 0.08);
 }
+.help-secret-library {
+    margin-top: 18px;
+    background:
+        linear-gradient(145deg, rgba(40, 90, 120, 0.2), rgba(126, 87, 194, 0.12)),
+        rgba(255,255,255,0.035);
+    border-color: rgba(88, 166, 255, 0.34);
+    border-left-color: var(--color-accent, #58a6ff);
+}
+.help-secret-library h3 { color: #9fd3ff; }
+.help-secret-library-lock {
+    padding: 12px;
+    border: 1px solid rgba(159, 211, 255, 0.24);
+    border-radius: 12px;
+    background: rgba(5, 10, 20, 0.36);
+}
+.help-secret-library-lock .btn { width: 100%; min-height: 44px; }
+.help-secret-library-status:empty { display: none; }
+.help-secret-library-opened { color: #b8efc8 !important; }
+.help-secret-library-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: clamp(0.72rem, 2.5vw, 0.9rem);
+    line-height: 1.25;
+}
+.help-secret-library-confirm-card h2 { margin-top: 0; }
+.help-secret-library-confirm-card p { line-height: 1.5; }
 .help-library-map-card { padding: 4px 2px; }
 .help-library-map-text { display: block; }
 .modal.help-library-fullscreen {

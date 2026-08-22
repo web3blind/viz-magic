@@ -776,6 +776,7 @@ var App = (function() {
 
             var grouped = {};
             var order = [];
+            var libraryProofBlocks = {};
             for (var i = 0; i < events.length; i++) {
                 var ev = events[i];
                 var blockNum = ev.blockNum || 0;
@@ -799,27 +800,56 @@ var App = (function() {
                         sender: ev.sender || '',
                         action: parsedAction,
                         blockNum: blockNum,
+                        txIndex: ev.txIndex || ev.tx_index || 0,
                         raw: ev.raw || {}
                     });
+                    if (parsedAction.type === VizMagicConfig.ACTION_TYPES.LIBRARY_UNLOCK) {
+                        libraryProofBlocks[blockNum] = true;
+                    }
                 }
             }
 
-            var eventsCollected = [];
-            for (var j = 0; j < order.length; j++) {
-                var processed = grouped[order[j]];
-                var stateEvents = StateEngine.processBlock(processed);
-                for (var k = 0; k < stateEvents.length; k++) {
-                    eventsCollected.push(stateEvents[k]);
+            function finishArchiveBatch() {
+                var eventsCollected = [];
+                for (var j = 0; j < order.length; j++) {
+                    var processed = grouped[order[j]];
+                    var stateEvents = StateEngine.processBlock(processed);
+                    for (var k = 0; k < stateEvents.length; k++) {
+                        eventsCollected.push(stateEvents[k]);
+                    }
                 }
+
+                // Archive mode intentionally skips empty blocks. Advance the head so
+                // stale checkpoints can catch up without replaying empty RPC blocks.
+                var state = StateEngine.getState();
+                state.headBlock = endBlock;
+                _finishProcessedBatch(endBlock, chainHead, eventsCollected);
+                done(true);
             }
 
-            // Archive mode intentionally skips empty blocks. Advance the head so
-            // stale checkpoints can catch up in seconds without replaying tens
-            // of thousands of empty blocks through RPC.
-            var state = StateEngine.getState();
-            state.headBlock = endBlock;
-            _finishProcessedBatch(endBlock, chainHead, eventsCollected);
-            done(true);
+            var proofBlockNums = Object.keys(libraryProofBlocks).map(function(value) {
+                return Number(value);
+            });
+            if (!proofBlockNums.length) {
+                finishArchiveBatch();
+                return;
+            }
+
+            var proofIndex = 0;
+            function hydrateNextLibraryProof() {
+                if (proofIndex >= proofBlockNums.length) {
+                    finishArchiveBatch();
+                    return;
+                }
+                var proofBlockNum = proofBlockNums[proofIndex++];
+                HistorySource.getBlock(proofBlockNum, function(blockErr, fullBlock) {
+                    if (!blockErr && fullBlock) {
+                        grouped[proofBlockNum] = BlockProcessor.processBlock(fullBlock, proofBlockNum);
+                    }
+                    hydrateNextLibraryProof();
+                });
+            }
+            hydrateNextLibraryProof();
         });
     }
 

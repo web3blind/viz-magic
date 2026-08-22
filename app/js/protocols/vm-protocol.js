@@ -304,14 +304,14 @@ var VMProtocol = (function() {
             }
 
             var nextBlock = response.custom_sequence_block_num;
-            _fetchAction(nextBlock, actions, maxDepth, callback, source);
+            _fetchAction(nextBlock, account, actions, maxDepth, callback, source);
         });
     }
 
     /**
      * Recursively fetch actions by following block references
      */
-    function _fetchAction(blockNum, actions, remaining, callback, source) {
+    function _fetchAction(blockNum, account, actions, remaining, callback, source) {
         if (!blockNum || blockNum <= 0 || remaining <= 0) {
             callback(null, actions);
             return;
@@ -333,7 +333,7 @@ var VMProtocol = (function() {
                     if (tx.operations) {
                         for (var j = 0; j < tx.operations.length; j++) {
                             var op = tx.operations[j];
-                            if (op[0] === 'custom' && op[1].id === cfg.PROTOCOLS.VM) {
+                            if (op[0] === 'custom' && op[1].id === cfg.PROTOCOLS.VM && getSender(op) === account) {
                                 var parsed = parseAction(op[1].json);
                                 if (parsed) {
                                     actions.push({
@@ -353,7 +353,7 @@ var VMProtocol = (function() {
             }
 
             if (found && previousBlock > 0) {
-                _fetchAction(previousBlock, actions, remaining - 1, callback, source);
+                _fetchAction(previousBlock, account, actions, remaining - 1, callback, source);
             } else {
                 callback(null, actions);
             }

@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
 
@@ -78,6 +79,42 @@ test('VM chain traversal uses injectable history source for block fetches', func
   assert.ok(/var source = blockSource/.test(vmProtocolJs), 'traverseChain should accept/use a source dependency');
   assert.ok(/HistorySource/.test(vmProtocolJs), 'traverseChain should use HistorySource by default when available');
   assert.ok(/source\.getBlock\(blockNum/.test(vmProtocolJs), 'recursive action fetch should call source.getBlock');
+});
+
+test('VM chain traversal stays on the requested account when a block contains other senders', function () {
+  const context = {
+    console: { log: function() {} },
+    VizMagicConfig: { PROTOCOLS: { VM: 'VIZMAGIC', V: 'V', VE: 'VE' }, APP_VERSION: 1, ACTION_TYPES: {} },
+    VizAccount: {
+      getAccountProtocol: function(account, protocol, callback) {
+        callback(null, { custom_sequence_block_num: 200 });
+      }
+    }
+  };
+  const blocks = {
+    200: { transactions: [{ operations: [
+      ['custom', { id: 'VIZMAGIC', required_regular_auths: ['alice'], json: JSON.stringify({ p: 'VIZMAGIC', b: 100, t: 'rest', d: {} }) }],
+      ['custom', { id: 'VIZMAGIC', required_regular_auths: ['bob'], json: JSON.stringify({ p: 'VIZMAGIC', b: 150, t: 'move', d: {} }) }]
+    ] }] },
+    150: { transactions: [{ operations: [[
+      'custom', { id: 'VIZMAGIC', required_regular_auths: ['bob'], json: JSON.stringify({ p: 'VIZMAGIC', b: 0, t: 'rest', d: {} }) }
+    ]] }] },
+    100: { transactions: [{ operations: [[
+      'custom', { id: 'VIZMAGIC', required_regular_auths: ['alice'], json: JSON.stringify({ p: 'VIZMAGIC', b: 0, t: 'library.unlock', d: { chapter: 'chapter2' } }) }
+    ]] }] }
+  };
+  const source = { getBlock: function(blockNum, callback) { callback(null, blocks[blockNum] || null); } };
+  vm.createContext(context);
+  vm.runInContext(vmProtocolJs, context, { filename: 'vm-protocol.js' });
+  let recovered = null;
+  context.VMProtocol.traverseChain('alice', 10, function(err, actions) {
+    assert.ifError(err);
+    recovered = actions;
+  }, source);
+  assert.ok(recovered, 'traversal callback should complete synchronously in the fixture');
+  assert.deepStrictEqual(Array.from(recovered, function(entry) { return entry.sender; }), ['alice', 'alice']);
+  assert.deepStrictEqual(Array.from(recovered, function(entry) { return entry.blockNum; }), [200, 100]);
+  assert.strictEqual(recovered[1].action.type, 'library.unlock');
 });
 
 test('degraded-mode copy exists in both languages', function () {

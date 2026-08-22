@@ -46,6 +46,13 @@ var VizMagicConfig = (function() {
         MIN_BLESS_COST: 1                    // Minimum mana for blessing (0.01%)
     };
 
+    /** Permanent Magical Library access paid by one replayable award. */
+    var LIBRARY = {
+        CHAPTER_TWO_COST: 1000,              // 10% energy
+        TREASURY: 'denis-skripnik',
+        CHAPTER_TWO_MEMO: 'viz://vm/library/chapter2'
+    };
+
     /** HP passive regeneration constants */
     var HP_REGEN = {
         HP_REGEN_RATE: 100,      // blocks per +1 HP (~5 min)
@@ -184,6 +191,7 @@ var VizMagicConfig = (function() {
         QUEST_ABANDON:  'quest.abandon',
         BOSS_ATTACK:    'boss.attack',
         TEMPLE_OFFERING:'temple.offering',
+        LIBRARY_UNLOCK: 'library.unlock',
         // Guild discovery
         GUILD_LISTING:  'guild.listing'
     };
@@ -221,6 +229,7 @@ var VizMagicConfig = (function() {
         APP_VERSION: APP_VERSION,
         STORAGE_PREFIX: STORAGE_PREFIX,
         ENERGY: ENERGY,
+        LIBRARY: LIBRARY,
         HP_REGEN: HP_REGEN,
         BLOCK: BLOCK,
         CLASSES: CLASSES,

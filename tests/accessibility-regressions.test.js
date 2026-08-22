@@ -81,6 +81,18 @@ test('skip link styles are present', function () {
   assert.ok(/\.skip-link/.test(mainCss), 'skip-link CSS missing');
 });
 
+test('paid secret library uses labeled regions, buttons, live status, and focus handoff', function () {
+  const help = read('app/js/ui/screens/help.js');
+  const css = read('app/css/main.css');
+  assert.ok(/help-secret-library[\s\S]*aria-labelledby="help-secret-library-title"/.test(help), 'secret library should be a labeled region');
+  assert.ok(/id="help-secret-library-title" tabindex="-1"/.test(help), 'secret library heading should receive focus after unlock');
+  assert.ok(/help-secret-library-status[\s\S]*role="status" aria-live="polite"/.test(help), 'unlock status should be announced politely');
+  assert.ok(/type="button" class="btn btn-primary" id="help-secret-library-unlock"/.test(help), 'locked chapter entry should be a real button');
+  assert.ok(/dialog\.setAttribute\('aria-describedby', 'help-secret-library-confirm-text'\)/.test(help), 'payment warning should describe the actual dialog container');
+  assert.ok(/type="button" class="help-library-link help-secret-library-link"/.test(help), 'secret map entries should remain keyboard-operable buttons');
+  assert.ok(/\.help-secret-library-link[\s\S]*min-height:\s*44px[\s\S]*white-space:\s*normal[\s\S]*overflow-wrap:\s*anywhere/.test(css), 'secret map buttons should have 44px touch targets and wrap without mobile overflow');
+});
+
 test('core screen fallbacks avoid blank controls and fixture crashes', function () {
   assert.ok(/typeof num === 'undefined'/.test(helpersJs), 'formatNumber should tolerate missing numeric values');
   assert.ok(/ch\.coreBonus = ch\.coreBonus \|\| 0/.test(characterJs), 'character screen should default missing coreBonus');

@@ -129,6 +129,57 @@ var VizBroadcast = (function() {
     }
 
     /**
+     * Atomically pay for and record a permanent Magical Library unlock.
+     * The award and backward-linked VM action share one signed transaction,
+     * allowing replay to verify payment by transaction index.
+     */
+    function libraryUnlockAction(energy, callback) {
+        var wif = VizAccount.getRegularKey();
+        var user = VizAccount.getCurrentUser();
+        if (!wif || !user) {
+            callback(new Error('not_logged_in'));
+            return;
+        }
+        VizAccount.getAccountProtocol(user, cfg.PROTOCOLS.VM, function(err, response) {
+            if (err || !response) {
+                callback(err || new Error('protocol_history_unavailable'));
+                return;
+            }
+            var previous = response.custom_sequence_block_num || 0;
+            var action = {
+                p: cfg.PROTOCOLS.VM,
+                v: cfg.APP_VERSION,
+                b: previous,
+                t: cfg.ACTION_TYPES.LIBRARY_UNLOCK,
+                d: { chapter: 'chapter2' }
+            };
+            var transaction = {
+                extensions: [],
+                operations: [
+                    ['award', {
+                        initiator: user,
+                        receiver: cfg.LIBRARY.TREASURY,
+                        energy: energy,
+                        custom_sequence: 0,
+                        memo: cfg.LIBRARY.CHAPTER_TWO_MEMO,
+                        beneficiaries: []
+                    }],
+                    ['custom', {
+                        required_active_auths: [],
+                        required_regular_auths: [user],
+                        id: cfg.PROTOCOLS.VM,
+                        json: JSON.stringify(action)
+                    }]
+                ]
+            };
+            viz.broadcast.send(transaction, { regular: wif }, function(sendErr, result) {
+                if (sendErr) console.log('Library unlock broadcast error:', sendErr);
+                callback(sendErr, result);
+            });
+        });
+    }
+
+    /**
      * Send a hunt action — records hunt on chain + awards mana to the creature's author.
      * Each creature has an `author` field — the VIZ account of the developer who created it.
      * When a player hunts, an award operation is sent to that author as a reward for their
@@ -351,6 +402,7 @@ var VizBroadcast = (function() {
         award: award,
         custom: custom,
         gameAction: gameAction,
+        libraryUnlockAction: libraryUnlockAction,
         huntAction: huntAction,
         armageddonAction: armageddonAction,
         templeOffering: templeOffering,

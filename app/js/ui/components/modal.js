@@ -66,6 +66,7 @@ var ModalComponent = (function() {
         modal.className = 'modal show';
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
+        modal.removeAttribute('aria-describedby');
         overlay.classList.add('show');
 
         var titleEl = modal.querySelector('.modal-title, h1, h2, h3');
@@ -115,6 +116,7 @@ var ModalComponent = (function() {
             modal.className = 'modal';
             modal.removeAttribute('aria-labelledby');
             modal.removeAttribute('aria-label');
+            modal.removeAttribute('aria-describedby');
             modal.removeAttribute('aria-modal');
             modal.removeAttribute('role');
         }
