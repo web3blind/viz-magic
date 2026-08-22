@@ -63,6 +63,7 @@ var HistorySource = (function() {
         options = options || {};
         var params = [];
         if (options.protocol) params.push('protocol=' + encodeURIComponent(String(options.protocol)));
+        if (options.account) params.push('account=' + encodeURIComponent(String(options.account)));
         if (options.start || options.from) params.push('start=' + encodeURIComponent(String(options.start || options.from)));
         if (options.end || options.to) params.push('end=' + encodeURIComponent(String(options.end || options.to)));
         if (options.limit) params.push('limit=' + encodeURIComponent(String(options.limit)));
@@ -316,12 +317,97 @@ var HistorySource = (function() {
         next(0);
     }
 
+    function findAccountAction(account, protocol, actionType, callback) {
+        callback = callback || function() {};
+        if (!account || !protocol || !actionType) {
+            callback(_makeError('Account, protocol and action type are required'));
+            return;
+        }
+        var pageLimit = 5000;
+        var nextEnd = 2147483647;
+
+        function scanRecentChain() {
+            if (typeof VMProtocol === 'undefined' || !VMProtocol.traverseChain) {
+                callback(_makeError('Recent VM history lookup is unavailable'));
+                return;
+            }
+            getAccountProtocol(account, protocol, function(pointerErr, pointer) {
+                if (pointerErr) {
+                    callback(pointerErr);
+                    return;
+                }
+                if (!pointer || !pointer.custom_sequence_block_num) {
+                    callback(null, null);
+                    return;
+                }
+                VMProtocol.traverseChain(account, 100, function(recentErr, actions) {
+                    if (recentErr) {
+                        callback(recentErr);
+                        return;
+                    }
+                    actions = actions || [];
+                    for (var i = 0; i < actions.length; i++) {
+                        var entry = actions[i] || {};
+                        if (entry.action && entry.action.type === actionType) {
+                            callback(null, {
+                                blockNum: entry.blockNum,
+                                type: actionType,
+                                sender: entry.sender,
+                                payload: entry.action
+                            });
+                            return;
+                        }
+                    }
+                    callback(null, null);
+                }, HistorySource);
+            });
+        }
+
+        function loadPage() {
+            getEventsRange({
+                account: account,
+                protocol: protocol,
+                start: 1,
+                end: nextEnd,
+                limit: pageLimit
+            }, function(err, events) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                events = events || [];
+                for (var i = events.length - 1; i >= 0; i--) {
+                    var event = events[i] || {};
+                    if (event.type === actionType || (event.payload && (event.payload.t === actionType || event.payload.type === actionType))) {
+                        callback(null, event);
+                        return;
+                    }
+                }
+                if (events.length >= pageLimit) {
+                    var oldestBlock = nextEnd;
+                    for (var j = 0; j < events.length; j++) {
+                        var blockNum = Number(events[j] && events[j].blockNum) || 0;
+                        if (blockNum > 0 && blockNum < oldestBlock) oldestBlock = blockNum;
+                    }
+                    if (oldestBlock > 1 && oldestBlock <= nextEnd) {
+                        nextEnd = oldestBlock - 1;
+                        loadPage();
+                        return;
+                    }
+                }
+                scanRecentChain();
+            });
+        }
+        loadPage();
+    }
+
     return {
         getBlock: getBlock,
         getAccountProtocol: getAccountProtocol,
         getAccountActions: getAccountActions,
         getCapabilities: getCapabilities,
         getGuildDirectory: getGuildDirectory,
-        getEventsRange: getEventsRange
+        getEventsRange: getEventsRange,
+        findAccountAction: findAccountAction
     };
 })();

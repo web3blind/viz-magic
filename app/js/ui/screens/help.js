@@ -223,6 +223,66 @@ var HelpScreen = (function() {
         if (confirm) confirm.addEventListener('click', _unlockSecretLibrary);
     }
 
+    function _preflightSecretLibraryEntitlement(user, callback) {
+        if (StateEngine.hasLibraryAccess(user, 'chapter2')) {
+            callback(null, true);
+            return;
+        }
+        if (typeof HistorySource === 'undefined' || !HistorySource.findAccountAction ||
+                typeof BlockProcessor === 'undefined' || !BlockProcessor.processBlock) {
+            callback(new Error('library_history_check_unavailable'));
+            return;
+        }
+        HistorySource.findAccountAction(
+            user,
+            VizMagicConfig.PROTOCOLS.VM,
+            VizMagicConfig.ACTION_TYPES.LIBRARY_UNLOCK,
+            function(historyErr, unlockEvent) {
+                if (historyErr) {
+                    callback(historyErr);
+                    return;
+                }
+                if (!unlockEvent || !unlockEvent.blockNum) {
+                    callback(null, false);
+                    return;
+                }
+                HistorySource.getBlock(unlockEvent.blockNum, function(blockErr, block) {
+                    if (blockErr || !block) {
+                        callback(blockErr || new Error('library_proof_block_unavailable'));
+                        return;
+                    }
+                    var processed = BlockProcessor.processBlock(block, unlockEvent.blockNum);
+                    if (!StateEngine.verifyLibraryUnlockProof(processed, user, 'chapter2')) {
+                        callback(new Error('library_unlock_proof_invalid'));
+                        return;
+                    }
+                    StateEngine.processLibraryUnlockResult(user, unlockEvent.blockNum);
+                    StateEngine.saveCheckpoint(function() {});
+                    callback(null, true);
+                });
+            }
+        );
+    }
+
+    function _resetSecretLibraryConfirm(confirm) {
+        secretLibraryBusy = false;
+        if (confirm) {
+            confirm.disabled = false;
+            confirm.removeAttribute('aria-busy');
+            confirm.textContent = Helpers.t('help_magic_library_chapter_two_confirm');
+        }
+    }
+
+    function _finishSecretLibraryOpen(messageKey) {
+        ModalComponent.hide();
+        Toast.success(Helpers.t(messageKey));
+        render();
+        setTimeout(function() {
+            var heading = Helpers.$('help-secret-library-title');
+            if (heading) heading.focus();
+        }, 0);
+    }
+
     function _unlockSecretLibrary() {
         if (secretLibraryBusy) return;
         var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
@@ -236,46 +296,53 @@ var HelpScreen = (function() {
         if (confirm) {
             confirm.disabled = true;
             confirm.setAttribute('aria-busy', 'true');
+            confirm.textContent = Helpers.t('help_secret_library_checking');
         }
-        VizAccount.getAccount(user, function(energyErr, accountData) {
-            if (energyErr || !accountData) {
-                secretLibraryBusy = false;
-                if (confirm) { confirm.disabled = false; confirm.removeAttribute('aria-busy'); }
-                Toast.error(Helpers.t('help_magic_library_chapter_two_energy_failed'));
+
+        _preflightSecretLibraryEntitlement(user, function(historyErr, alreadyUnlocked) {
+            if (historyErr) {
+                _resetSecretLibraryConfirm(confirm);
+                Toast.error(Helpers.t('help_secret_library_history_check_failed'));
                 return;
             }
-            var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
-            if (currentEnergy < VizMagicConfig.LIBRARY.CHAPTER_TWO_COST) {
+            if (alreadyUnlocked) {
                 secretLibraryBusy = false;
-                if (confirm) { confirm.disabled = false; confirm.removeAttribute('aria-busy'); }
-                Toast.error(Helpers.t('help_magic_library_chapter_two_not_enough'));
+                _finishSecretLibraryOpen('help_magic_library_chapter_two_already_open');
                 return;
             }
-            VizBroadcast.libraryUnlockAction(
-                VizMagicConfig.LIBRARY.CHAPTER_TWO_COST,
-                function(err, result) {
-                    secretLibraryBusy = false;
-                    if (err) {
-                        if (confirm) { confirm.disabled = false; confirm.removeAttribute('aria-busy'); }
-                        Toast.error(Helpers.t('help_magic_library_chapter_two_failed'));
-                        return;
-                    }
-                    var blockNum = result ? (result.block_num || result.block || 0) : 0;
-                    var event = StateEngine.processLibraryUnlockResult(user, blockNum);
-                    if (!event) {
-                        Toast.error(Helpers.t('help_magic_library_chapter_two_failed'));
-                        return;
-                    }
-                    StateEngine.saveCheckpoint(function() {});
-                    ModalComponent.hide();
-                    Toast.success(Helpers.t('help_magic_library_chapter_two_success'));
-                    render();
-                    setTimeout(function() {
-                        var heading = Helpers.$('help-secret-library-title');
-                        if (heading) heading.focus();
-                    }, 0);
+
+            VizAccount.getAccount(user, function(energyErr, accountData) {
+                if (energyErr || !accountData) {
+                    _resetSecretLibraryConfirm(confirm);
+                    Toast.error(Helpers.t('help_magic_library_chapter_two_energy_failed'));
+                    return;
                 }
-            );
+                var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
+                if (currentEnergy < VizMagicConfig.LIBRARY.CHAPTER_TWO_COST) {
+                    _resetSecretLibraryConfirm(confirm);
+                    Toast.error(Helpers.t('help_magic_library_chapter_two_not_enough'));
+                    return;
+                }
+                VizBroadcast.libraryUnlockAction(
+                    VizMagicConfig.LIBRARY.CHAPTER_TWO_COST,
+                    function(err, result) {
+                        secretLibraryBusy = false;
+                        if (err) {
+                            _resetSecretLibraryConfirm(confirm);
+                            Toast.error(Helpers.t('help_magic_library_chapter_two_failed'));
+                            return;
+                        }
+                        var blockNum = result ? (result.block_num || result.block || 0) : 0;
+                        var event = StateEngine.processLibraryUnlockResult(user, blockNum);
+                        if (!event) {
+                            Toast.error(Helpers.t('help_magic_library_chapter_two_failed'));
+                            return;
+                        }
+                        StateEngine.saveCheckpoint(function() {});
+                        _finishSecretLibraryOpen('help_magic_library_chapter_two_success');
+                    }
+                );
+            });
         });
     }
 

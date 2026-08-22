@@ -746,6 +746,22 @@ var StateEngine = (function() {
         };
     }
 
+    function verifyLibraryUnlockProof(processedBlock, account, chapter) {
+        if (!processedBlock || !account || chapter !== 'chapter2') return false;
+        var payments = _collectLibraryUnlockPayments(processedBlock.awards || []);
+        var vmActions = processedBlock.vmActions || [];
+        for (var i = 0; i < vmActions.length; i++) {
+            var vmAction = vmActions[i] || {};
+            var action = vmAction.action || {};
+            if (vmAction.sender === account && action.type === AT.LIBRARY_UNLOCK &&
+                    action.data && action.data.chapter === chapter &&
+                    payments[_libraryPaymentKey(account, vmAction.txIndex)]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function hasLibraryAccess(account, chapter) {
         return !!(account && chapter && worldState.libraryAccess &&
             worldState.libraryAccess[account] && worldState.libraryAccess[account][chapter]);
@@ -1623,6 +1639,7 @@ var StateEngine = (function() {
         getCharacter: getCharacter,
         getInventory: getInventory,
         hasLibraryAccess: hasLibraryAccess,
+        verifyLibraryUnlockProof: verifyLibraryUnlockProof,
         getTempleBlessing: getTempleBlessing,
         processHuntResult: processHuntResult,
         processMoveResult: processMoveResult,

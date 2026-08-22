@@ -117,6 +117,92 @@ test('VM chain traversal stays on the requested account when a block contains ot
   assert.strictEqual(recovered[1].action.type, 'library.unlock');
 });
 
+test('archive account action lookup paginates beyond the latest 5000 actions', function () {
+  assert.ok(/function findAccountAction\(account, protocol, actionType, callback\)/.test(historySourceJs), 'targeted account-action lookup should exist');
+  assert.ok(/account=/.test(historySourceJs), 'archive range URL should support account filtering');
+  assert.ok(/events.length >= pageLimit/.test(historySourceJs) && /oldestBlock - 1/.test(historySourceJs), 'lookup should continue to older pages when one page is full');
+  assert.ok(/event.type === actionType/.test(historySourceJs), 'lookup should match the requested action type');
+  assert.ok(/VMProtocol\.traverseChain\(account, 100/.test(historySourceJs), 'lookup should cover recent actions that the archive indexer has not stored yet');
+  assert.ok(/getAccountProtocol\(account, protocol/.test(historySourceJs) && /if \(pointerErr\)/.test(historySourceJs), 'recent-history preflight should fail closed when the live protocol pointer cannot be checked');
+  assert.ok(/history-source\.js\?v=20260822m/.test(indexHtml), 'targeted history lookup should be cache-busted');
+});
+
+test('archive account lookup behavior finds an unlock on an older page', function () {
+  const urls = [];
+  function FakeXHR() { this.readyState = 0; this.status = 0; this.responseText = ''; }
+  FakeXHR.prototype.open = function(method, url) { this.url = url; };
+  FakeXHR.prototype.send = function() {
+    urls.push(this.url);
+    let events;
+    if (urls.length === 1) {
+      events = Array.from({ length: 5000 }, function(_, index) {
+        return { blockNum: 6000 - index, type: 'rest', payload: { t: 'rest' } };
+      });
+    } else {
+      events = [{ blockNum: 500, type: 'library.unlock', sender: 'alice', payload: { t: 'library.unlock' } }];
+    }
+    this.status = 200;
+    this.readyState = 4;
+    this.responseText = JSON.stringify({ events: events });
+    this.onreadystatechange();
+  };
+  FakeXHR.prototype.abort = function() {};
+  const context = {
+    console: { log: function() {} },
+    setTimeout: function() { return 1; },
+    clearTimeout: function() {},
+    XMLHttpRequest: FakeXHR,
+    VizMagicConfig: {
+      HISTORY_ARCHIVE_MIRRORS: [{ apiBase: 'https://archive.example' }],
+      PROTOCOLS: { VM: 'VM' }
+    },
+    VMProtocol: { traverseChain: function() { throw new Error('recent fallback should not run after archive hit'); } }
+  };
+  vm.createContext(context);
+  vm.runInContext(historySourceJs, context, { filename: 'history-source.js' });
+  let found = null;
+  context.HistorySource.findAccountAction('alice', 'VM', 'library.unlock', function(err, event) {
+    assert.ifError(err);
+    found = event;
+  });
+  assert.strictEqual(found && found.blockNum, 500);
+  assert.strictEqual(urls.length, 2);
+  assert.ok(/account=alice/.test(urls[0]));
+  assert.ok(/end=1000/.test(urls[1]), 'second page should end before the oldest block from page one');
+});
+
+test('account action preflight fails closed when recent protocol lookup fails', function () {
+  function EmptyXHR() { this.readyState = 0; this.status = 0; this.responseText = ''; }
+  EmptyXHR.prototype.open = function() {};
+  EmptyXHR.prototype.send = function() {
+    this.status = 200;
+    this.readyState = 4;
+    this.responseText = JSON.stringify({ events: [] });
+    this.onreadystatechange();
+  };
+  EmptyXHR.prototype.abort = function() {};
+  const context = {
+    console: { log: function() {} },
+    setTimeout: function() { return 1; },
+    clearTimeout: function() {},
+    XMLHttpRequest: EmptyXHR,
+    VizMagicConfig: {
+      HISTORY_ARCHIVE_MIRRORS: [{ apiBase: 'https://archive.example' }],
+      PROTOCOLS: { VM: 'VM' }
+    },
+    VizAccount: {
+      getAccountProtocol: function(account, protocol, callback) { callback(new Error('rpc unavailable')); }
+    },
+    VMProtocol: { traverseChain: function() { throw new Error('traversal must not run after pointer error'); } }
+  };
+  vm.createContext(context);
+  vm.runInContext(historySourceJs, context, { filename: 'history-source.js' });
+  let resultError = null;
+  context.HistorySource.findAccountAction('alice', 'VM', 'library.unlock', function(err) { resultError = err; });
+  assert.ok(resultError);
+  assert.match(String(resultError.message || resultError), /rpc unavailable/);
+});
+
 test('degraded-mode copy exists in both languages', function () {
   assert.ok(/conn_history_limited/.test(ruJs), 'Russian history-limited copy missing');
   assert.ok(/conn_history_limited/.test(enJs), 'English history-limited copy missing');

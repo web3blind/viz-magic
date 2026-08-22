@@ -161,6 +161,16 @@ async function run() {
             assert.strictEqual(range.status, 200);
             assert.strictEqual(range.body.count, 6);
 
+            var accountRange = await getJson(port, '/archive-mirror/v1/range?start=100&end=200&account=' + ACCOUNT + '&protocol=VM');
+            assert.strictEqual(accountRange.status, 200);
+            assert.strictEqual(accountRange.body.count, 3);
+            assert.ok(accountRange.body.events.every(function(event) { return event.sender === ACCOUNT; }));
+            var missingAccountRange = await getJson(port, '/archive-mirror/v1/range?start=100&end=200&account=unknown-mage&protocol=VM');
+            assert.strictEqual(missingAccountRange.status, 200);
+            assert.strictEqual(missingAccountRange.body.count, 0);
+            var ambiguousAccountRange = await getJson(port, '/archive-mirror/v1/range?start=100&end=200&account=' + ACCOUNT + '&protocol=VM,V');
+            assert.strictEqual(ambiguousAccountRange.status, 400);
+
             var blockEvents = await getJson(port, '/archive-mirror/v1/events/block/123.json');
             assert.strictEqual(blockEvents.status, 200);
             assert.strictEqual(blockEvents.body.blockNum, 123);

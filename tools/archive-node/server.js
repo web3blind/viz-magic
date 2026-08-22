@@ -261,10 +261,17 @@ function createServer(options) {
 
         if (parts.length === 2 && parts[0] === 'v1' && parts[1] === 'range') {
             var protocols = parsedUrl.query.protocol ? String(parsedUrl.query.protocol).split(',').map(function(x) { return x.trim(); }).filter(Boolean) : null;
+            var accountFilter = parsedUrl.query.account ? String(parsedUrl.query.account).trim() : '';
+            if (accountFilter && (!protocols || protocols.length !== 1)) {
+                json(res, 400, { error: 'account_requires_single_protocol' }, { 'Cache-Control': 'no-store' });
+                return;
+            }
             var events = archive.queryEvents({
                 start: safeNum(parsedUrl.query.start || parsedUrl.query.from, 0),
                 end: safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647),
-                protocols: protocols,
+                account: accountFilter || null,
+                protocol: accountFilter ? protocols[0] : null,
+                protocols: accountFilter ? null : protocols,
                 limit: safeNum(parsedUrl.query.limit, 500)
             });
             json(res, 200, { events: events, count: events.length });
