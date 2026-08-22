@@ -32,6 +32,7 @@ var HelpScreen = (function() {
             { key: 'mana',        icon: 'mana' },
             { key: 'hp',          icon: 'hp' },
             { key: 'quests',      icon: 'quests' },
+            { key: 'travel_exploration', icon: 'map' },
             { key: 'hunt',        icon: 'hunt' },
             { key: 'armageddon',  icon: 'boss' },
             { key: 'crafting',    icon: 'crafting' },
@@ -61,7 +62,7 @@ var HelpScreen = (function() {
         for (var i = 0; i < sections.length; i++) {
             var s = sections[i];
             html += '<section class="help-section help-page" aria-label="' + t('help_section_' + s.key) + '">' +
-                '<h3 id="help-section-' + s.key + '">' + Helpers.icon(s.icon, 'section-icon vmagic-breathe') + ' ' + t('help_section_' + s.key) + '</h3>' +
+                '<h3 id="help-section-' + s.key + '" tabindex="-1">' + Helpers.icon(s.icon, 'section-icon vmagic-breathe') + ' ' + t('help_section_' + s.key) + '</h3>' +
                 '<p>' + t('help_' + s.key + '_text') + '</p>' +
                 '</section>';
         }

@@ -558,7 +558,8 @@ var LangEN = {
     map_region_already_visited_today: 'You have already visited this region today.',
     map_find_item: 'On the way you found: {item}!',
     map_find_double: 'Lucky journey! Double find: {item} ×2!',
-    map_travel_hint: 'Travel spends energy: bigger investment — higher chance of a travelling find (crafting materials).',
+    map_travel_hint: 'Travel spends energy: bigger investment — higher chance of a travelling find (crafting materials). Details are in the ',
+    map_travel_help_link: 'Magical Guide',
     map_regions: 'Regions',
     map_view_lore: 'Open map',
     map_zoom_toggle: 'Zoom',
@@ -1316,6 +1317,9 @@ var LangEN = {
 
     help_section_quests: 'Quests & Prophecies',
     help_quests_text: 'Regular quests are accepted in the <button type="button" class="help-nav-link" data-help-nav="quests">Quests</button> screen. “Traveler” currently means visiting 3 different regions via the <button type="button" class="help-nav-link" data-help-nav="map">World Map</button> — open the map, choose another region, and press “Travel”.<br>The <button type="button" class="help-nav-link" data-help-nav="quests">Daily Prophecy</button> must also be accepted first, then completed. If it tells you to bless others, do that in the <button type="button" class="help-nav-link" data-help-nav="chronicle">Chronicle</button> with the “Bless” button on other mages\' entries. Abandoning a quest after progress only loses that progress; abandoning a quest before the first step pays a small forfeit to the World — 1.00% Mana.',
+
+    help_section_travel_exploration: 'Travel and Exploration',
+    help_travel_exploration_text: 'Below each map are buttons for travelling and exploring World maps, with different probabilities of random finds for the <button type="button" class="help-nav-link" data-help-nav="crafting">Workshop</button>.<br><br>0.10% energy: the chance of a Workshop find during travel is 0%.<br>Use this only to complete quests.<br>1% energy — 8.3% chance.<br>3% energy — 26.6% chance.<br>5% energy — 45.0% chance.<br>7% energy — 63.3% chance.<br>9% energy — 81.7% chance.<br>11% energy — 100% chance.<br><br>Linear chance formula:<br>Chance = (energy spent − 0.10%) / (11% − 0.10%) × 100%',
 
     help_section_hunt: 'Hunting',
     help_hunt_text: 'Choose a creature and a spell, then attack. Victory earns XP and loot. Defeat gives 25% XP. Loot is volatile — bank it in a safe zone to keep it.',

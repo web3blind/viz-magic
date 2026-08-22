@@ -77,7 +77,9 @@ var MapScreen = (function() {
         html += '<div class="map-screen" role="region" aria-label="' + t('map_title') + '">';
         html += '<h1>' + Helpers.icon('map', 'screen-title-icon vmagic-breathe') + ' ' + t('map_title') + '</h1>';
         // v133: travel explanation once under the page title, not repeated in every region block
-        html += '<p class="map-travel-hint-page">' + t('map_travel_hint') + '</p>';
+        html += '<p class="map-travel-hint-page">' + t('map_travel_hint') +
+            '<a href="#help-section-travel_exploration" class="help-nav-link map-help-link" data-help-section="travel_exploration">' +
+            t('map_travel_help_link') + '</a>.</p>';
 
         // Current location
         if (character) {
@@ -231,6 +233,21 @@ var MapScreen = (function() {
      * Bind map events
      */
     function _bindEvents(container, user, state) {
+        var helpLinks = container.querySelectorAll('.map-help-link');
+        for (var h = 0; h < helpLinks.length; h++) {
+            helpLinks[h].addEventListener('click', function(e) {
+                if (e && e.preventDefault) e.preventDefault();
+                var helpSection = this.getAttribute('data-help-section');
+                Helpers.EventBus.emit('navigate', 'help');
+                setTimeout(function() {
+                    var target = Helpers.$('help-section-' + helpSection);
+                    if (!target) return;
+                    if (target.scrollIntoView) target.scrollIntoView({ block: 'start' });
+                    if (target.focus) target.focus();
+                }, 0);
+            });
+        }
+
         var travelBtns = container.querySelectorAll('.region-travel-btn');
         for (var i = 0; i < travelBtns.length; i++) {
             travelBtns[i].addEventListener('click', function() {
