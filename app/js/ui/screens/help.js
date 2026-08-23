@@ -101,7 +101,7 @@ var HelpScreen = (function() {
             secretLibraryExpiryTimer = null;
             if (document.querySelector('.help-secret-library-map-card')) ModalComponent.hide();
             render();
-        }, StateEngine.getLibraryMidnightDelay() + 50);
+        }, StateEngine.getLibraryMidnightDelay());
     }
 
     function _bindNavLinks(el) {
@@ -287,8 +287,43 @@ var HelpScreen = (function() {
                     StateEngine.saveCheckpoint(function() {});
                     callback(null, true);
                 });
+            },
+            function(event) {
+                var payload = event && event.payload ? event.payload : {};
+                var data = payload.d || payload.data || {};
+                return data.chapter === 'chapter2' && data.day === day;
             }
         );
+    }
+
+    function _confirmSecretLibraryBroadcastProof(user, day, result, callback) {
+        var blockNum = result ? Number(result.block_num || result.block || 0) : 0;
+        if (!blockNum || typeof HistorySource === 'undefined' || !HistorySource.getBlock) {
+            callback(new Error('library_confirmation_pending'));
+            return;
+        }
+        HistorySource.getBlock(blockNum, function(blockErr, block) {
+            if (blockErr || !block) {
+                callback(blockErr || new Error('library_confirmation_pending'));
+                return;
+            }
+            try {
+                var processed = BlockProcessor.processBlock(block, blockNum);
+                if (!StateEngine.verifyLibraryUnlockProof(processed, user, 'chapter2', day)) {
+                    callback(new Error('library_unlock_proof_invalid'));
+                    return;
+                }
+                var event = StateEngine.processLibraryUnlockResult(user, blockNum, day);
+                if (!event) {
+                    callback(new Error('library_unlock_state_rejected'));
+                    return;
+                }
+                StateEngine.saveCheckpoint(function() {});
+                callback(null, event);
+            } catch (err) {
+                callback(err);
+            }
+        });
     }
 
     function _resetSecretLibraryConfirm(confirm) {
@@ -351,6 +386,11 @@ var HelpScreen = (function() {
                     Toast.error(Helpers.t('help_magic_library_chapter_two_not_enough'));
                     return;
                 }
+                if (StateEngine.getLibraryDay() !== day) {
+                    _resetSecretLibraryConfirm(confirm);
+                    _unlockSecretLibrary();
+                    return;
+                }
                 VizBroadcast.libraryUnlockAction(
                     VizMagicConfig.LIBRARY.CHAPTER_TWO_COST,
                     day,
@@ -361,14 +401,15 @@ var HelpScreen = (function() {
                             Toast.error(Helpers.t('help_magic_library_chapter_two_failed'));
                             return;
                         }
-                        var blockNum = result ? (result.block_num || result.block || 0) : 0;
-                        var event = StateEngine.processLibraryUnlockResult(user, blockNum, day);
-                        if (!event) {
-                            Toast.error(Helpers.t('help_magic_library_chapter_two_failed'));
-                            return;
-                        }
-                        StateEngine.saveCheckpoint(function() {});
-                        _finishSecretLibraryOpen('help_magic_library_chapter_two_success');
+                        _confirmSecretLibraryBroadcastProof(user, day, result, function(proofErr) {
+                            if (proofErr) {
+                                _resetSecretLibraryConfirm(confirm);
+                                ModalComponent.hide();
+                                Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                                return;
+                            }
+                            _finishSecretLibraryOpen('help_magic_library_chapter_two_success');
+                        });
                     }
                 );
             });

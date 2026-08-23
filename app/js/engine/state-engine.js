@@ -716,7 +716,15 @@ var StateEngine = (function() {
     }
 
     function _isLibraryDay(day) {
-        return /^\d{4}-\d{2}-\d{2}$/.test(String(day || ''));
+        var text = String(day || '');
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+        var parts = text.split('-');
+        var year = Number(parts[0]);
+        var month = Number(parts[1]);
+        var date = Number(parts[2]);
+        if (year < 2000 || year > 9999 || month < 1 || month > 12 || date < 1 || date > 31) return false;
+        var parsed = new Date(Date.UTC(year, month - 1, date));
+        return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === date;
     }
 
     function getLibraryDay(nowMs) {
@@ -760,11 +768,12 @@ var StateEngine = (function() {
         if (!worldState.libraryAccess) worldState.libraryAccess = {};
         if (!worldState.libraryAccess[account]) worldState.libraryAccess[account] = {};
         var existing = worldState.libraryAccess[account].chapter2;
-        if (existing && typeof existing === 'object' && existing.day > day) return null;
+        var incomingBlock = blockNum || worldState.headBlock || 1;
+        if (existing && typeof existing === 'object' && Number(existing.blockNum) > Number(incomingBlock)) return null;
         if (!existing || typeof existing !== 'object' || existing.day !== day) {
             worldState.libraryAccess[account].chapter2 = {
                 day: day,
-                blockNum: blockNum || worldState.headBlock || 1
+                blockNum: incomingBlock
             };
         }
         return {

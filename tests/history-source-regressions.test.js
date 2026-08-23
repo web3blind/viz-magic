@@ -124,7 +124,7 @@ test('archive account action lookup paginates beyond the latest 5000 actions', f
   assert.ok(/event.type === actionType/.test(historySourceJs), 'lookup should match the requested action type');
   assert.ok(/VMProtocol\.traverseChain\(account, 100/.test(historySourceJs), 'lookup should cover recent actions that the archive indexer has not stored yet');
   assert.ok(/getAccountProtocol\(account, protocol/.test(historySourceJs) && /if \(pointerErr\)/.test(historySourceJs), 'recent-history preflight should fail closed when the live protocol pointer cannot be checked');
-  assert.ok(/history-source\.js\?v=20260822m/.test(indexHtml), 'targeted history lookup should be cache-busted');
+  assert.ok(/history-source\.js\?v=20260823b/.test(indexHtml), 'targeted history lookup should be cache-busted');
 });
 
 test('archive account lookup behavior finds an unlock on an older page', function () {
@@ -169,6 +169,36 @@ test('archive account lookup behavior finds an unlock on an older page', functio
   assert.strictEqual(urls.length, 2);
   assert.ok(/account=alice/.test(urls[0]));
   assert.ok(/end=1000/.test(urls[1]), 'second page should end before the oldest block from page one');
+});
+
+test('account action lookup skips newer actions rejected by an exact-day matcher', function () {
+  function FakeXHR() { this.readyState = 0; this.status = 0; this.responseText = ''; }
+  FakeXHR.prototype.open = function() {};
+  FakeXHR.prototype.send = function() {
+    this.status = 200;
+    this.readyState = 4;
+    this.responseText = JSON.stringify({ events: [
+      { blockNum: 650, type: 'library.unlock', sender: 'alice', payload: { t: 'library.unlock', d: { chapter: 'chapter2', day: '2026-08-23' } } },
+      { blockNum: 700, type: 'library.unlock', sender: 'alice', payload: { t: 'library.unlock', d: { chapter: 'chapter2', day: '2026-08-24' } } }
+    ] });
+    this.onreadystatechange();
+  };
+  FakeXHR.prototype.abort = function() {};
+  const context = {
+    console: { log: function() {} }, setTimeout: function() { return 1; }, clearTimeout: function() {},
+    XMLHttpRequest: FakeXHR,
+    VizMagicConfig: { HISTORY_ARCHIVE_MIRRORS: [{ apiBase: 'https://archive.example' }], PROTOCOLS: { VM: 'VM' } },
+    VMProtocol: { traverseChain: function() { throw new Error('fallback should not run'); } }
+  };
+  vm.createContext(context);
+  vm.runInContext(historySourceJs, context, { filename: 'history-source.js' });
+  let found = null;
+  context.HistorySource.findAccountAction('alice', 'VM', 'library.unlock', function(err, event) {
+    assert.ifError(err); found = event;
+  }, function(event) {
+    return event && event.payload && event.payload.d && event.payload.d.day === '2026-08-23';
+  });
+  assert.strictEqual(found && found.blockNum, 650, 'newer future-day action must not hide today’s valid proof');
 });
 
 test('account action preflight fails closed when recent protocol lookup fails', function () {

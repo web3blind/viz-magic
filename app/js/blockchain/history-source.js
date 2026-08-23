@@ -319,12 +319,23 @@ var HistorySource = (function() {
 
     function findAccountAction(account, protocol, actionType, callback) {
         callback = callback || function() {};
+        var matcher = typeof arguments[4] === 'function' ? arguments[4] : null;
         if (!account || !protocol || !actionType) {
             callback(_makeError('Account, protocol and action type are required'));
             return;
         }
         var pageLimit = 5000;
         var nextEnd = 2147483647;
+
+        function matches(candidate) {
+            if (!matcher) return true;
+            try {
+                return !!matcher(candidate);
+            } catch (err) {
+                callback(err);
+                return null;
+            }
+        }
 
         function scanRecentChain() {
             if (typeof VMProtocol === 'undefined' || !VMProtocol.traverseChain) {
@@ -349,13 +360,18 @@ var HistorySource = (function() {
                     for (var i = 0; i < actions.length; i++) {
                         var entry = actions[i] || {};
                         if (entry.action && entry.action.type === actionType) {
-                            callback(null, {
+                            var candidate = {
                                 blockNum: entry.blockNum,
                                 type: actionType,
                                 sender: entry.sender,
                                 payload: entry.action
-                            });
-                            return;
+                            };
+                            var accepted = matches(candidate);
+                            if (accepted === null) return;
+                            if (accepted) {
+                                callback(null, candidate);
+                                return;
+                            }
                         }
                     }
                     callback(null, null);
@@ -379,8 +395,12 @@ var HistorySource = (function() {
                 for (var i = events.length - 1; i >= 0; i--) {
                     var event = events[i] || {};
                     if (event.type === actionType || (event.payload && (event.payload.t === actionType || event.payload.type === actionType))) {
-                        callback(null, event);
-                        return;
+                        var accepted = matches(event);
+                        if (accepted === null) return;
+                        if (accepted) {
+                            callback(null, event);
+                            return;
+                        }
                     }
                 }
                 if (events.length >= pageLimit) {
