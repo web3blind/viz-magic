@@ -7,6 +7,7 @@ var HelpScreen = (function() {
     var HELP_LIBRARY_ASSET_VERSION = '20260817d';
     var HELP_SECRET_LIBRARY_ASSET_VERSION = '20260822a';
     var secretLibraryBusy = false;
+    var secretLibraryExpiryTimer = null;
     var HELP_LIBRARY_MAPS = [
         { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-10' },
         { id: 'covenant_bazaar', title: 'The Covenant Bazaar Ур. 3-50' },
@@ -91,6 +92,16 @@ var HelpScreen = (function() {
         _bindNavLinks(el);
         _bindLibraryLinks(el);
         _bindSecretLibrary(el);
+        _scheduleSecretLibraryExpiry();
+    }
+
+    function _scheduleSecretLibraryExpiry() {
+        if (secretLibraryExpiryTimer) clearTimeout(secretLibraryExpiryTimer);
+        secretLibraryExpiryTimer = setTimeout(function() {
+            secretLibraryExpiryTimer = null;
+            if (document.querySelector('.help-secret-library-map-card')) ModalComponent.hide();
+            render();
+        }, StateEngine.getLibraryMidnightDelay() + 50);
     }
 
     function _bindNavLinks(el) {
@@ -151,7 +162,8 @@ var HelpScreen = (function() {
 
     function _renderSecretLibrary(t) {
         var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
-        var unlocked = StateEngine.hasLibraryAccess(user, 'chapter2');
+        var day = StateEngine.getLibraryDay();
+        var unlocked = StateEngine.hasLibraryAccess(user, 'chapter2', day);
         var html = '<article class="help-magic-library help-secret-library" aria-labelledby="help-secret-library-title">' +
             '<h3 id="help-secret-library-title" tabindex="-1">' + Helpers.icon('map', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_chapter_two_title') + '</h3>' +
             '<p>' + t('help_magic_library_chapter_two_intro') + '</p>' +
@@ -162,7 +174,7 @@ var HelpScreen = (function() {
                 '<button type="button" class="btn btn-primary" id="help-secret-library-unlock">' + t('help_magic_library_chapter_two_unlock') + '</button>' +
                 '</div>';
         } else {
-            html += '<p class="help-secret-library-opened">' + t('help_magic_library_chapter_two_opened') + '</p>' +
+            html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_chapter_two_opened') + '</p>' +
                 '<div class="help-library-list help-secret-library-list">';
             for (var i = 0; i < HELP_SECRET_LIBRARY_MAPS.length; i++) {
                 var entry = HELP_SECRET_LIBRARY_MAPS[i];
@@ -223,8 +235,8 @@ var HelpScreen = (function() {
         if (confirm) confirm.addEventListener('click', _unlockSecretLibrary);
     }
 
-    function _preflightSecretLibraryEntitlement(user, callback) {
-        if (StateEngine.hasLibraryAccess(user, 'chapter2')) {
+    function _preflightSecretLibraryEntitlement(user, day, callback) {
+        if (StateEngine.hasLibraryAccess(user, 'chapter2', day)) {
             callback(null, true);
             return;
         }
@@ -252,11 +264,26 @@ var HelpScreen = (function() {
                         return;
                     }
                     var processed = BlockProcessor.processBlock(block, unlockEvent.blockNum);
-                    if (!StateEngine.verifyLibraryUnlockProof(processed, user, 'chapter2')) {
+                    var hasTodayAction = false;
+                    var vmActions = processed.vmActions || [];
+                    for (var i = 0; i < vmActions.length; i++) {
+                        var item = vmActions[i] || {};
+                        var action = item.action || {};
+                        if (item.sender === user && action.type === VizMagicConfig.ACTION_TYPES.LIBRARY_UNLOCK &&
+                                action.data && action.data.chapter === 'chapter2' && action.data.day === day) {
+                            hasTodayAction = true;
+                            break;
+                        }
+                    }
+                    if (!hasTodayAction) {
+                        callback(null, false);
+                        return;
+                    }
+                    if (!StateEngine.verifyLibraryUnlockProof(processed, user, 'chapter2', day)) {
                         callback(new Error('library_unlock_proof_invalid'));
                         return;
                     }
-                    StateEngine.processLibraryUnlockResult(user, unlockEvent.blockNum);
+                    StateEngine.processLibraryUnlockResult(user, unlockEvent.blockNum, day);
                     StateEngine.saveCheckpoint(function() {});
                     callback(null, true);
                 });
@@ -292,6 +319,7 @@ var HelpScreen = (function() {
             return;
         }
         var confirm = Helpers.$('help-secret-library-confirm');
+        var day = StateEngine.getLibraryDay();
         secretLibraryBusy = true;
         if (confirm) {
             confirm.disabled = true;
@@ -299,7 +327,7 @@ var HelpScreen = (function() {
             confirm.textContent = Helpers.t('help_secret_library_checking');
         }
 
-        _preflightSecretLibraryEntitlement(user, function(historyErr, alreadyUnlocked) {
+        _preflightSecretLibraryEntitlement(user, day, function(historyErr, alreadyUnlocked) {
             if (historyErr) {
                 _resetSecretLibraryConfirm(confirm);
                 Toast.error(Helpers.t('help_secret_library_history_check_failed'));
@@ -325,6 +353,7 @@ var HelpScreen = (function() {
                 }
                 VizBroadcast.libraryUnlockAction(
                     VizMagicConfig.LIBRARY.CHAPTER_TWO_COST,
+                    day,
                     function(err, result) {
                         secretLibraryBusy = false;
                         if (err) {
@@ -333,7 +362,7 @@ var HelpScreen = (function() {
                             return;
                         }
                         var blockNum = result ? (result.block_num || result.block || 0) : 0;
-                        var event = StateEngine.processLibraryUnlockResult(user, blockNum);
+                        var event = StateEngine.processLibraryUnlockResult(user, blockNum, day);
                         if (!event) {
                             Toast.error(Helpers.t('help_magic_library_chapter_two_failed'));
                             return;
@@ -394,7 +423,7 @@ var HelpScreen = (function() {
         var titleText = Helpers.t(entry.titleKey);
         var title = Helpers.escapeHtml(titleText);
         var description = Helpers.t(entry.textKey);
-        var html = '<div class="help-library-map-card">';
+        var html = '<div class="help-library-map-card help-secret-library-map-card">';
         html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
         html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';
         html += '<img class="lore-map-image help-library-map-image" id="help-library-map-image" src="assets/library-maps-chapter2/secret-map-' + entry.id + '.jpg?v=' + HELP_SECRET_LIBRARY_ASSET_VERSION + '" alt="' + Helpers.escapeHtml(Helpers.t('help_magic_library_image_alt', { name: titleText })) + '" loading="lazy">';

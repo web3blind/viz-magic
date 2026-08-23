@@ -24,7 +24,7 @@ var StateEngine = (function() {
             inventories: {},
             guilds: {},
             territories: {},
-            libraryAccess: {}, // account → {chapter2: unlockBlock}
+            libraryAccess: {}, // account → {chapter2: {day, blockNum}}
             marketplace: null,
             recentActions: [],
             social: {
@@ -114,7 +114,7 @@ var StateEngine = (function() {
                 blockNum,
                 blockHash,
                 huntEntropy,
-                !!libraryPayments[_libraryPaymentKey(vmAction.sender, vmAction.txIndex)]
+                !!libraryPayments[_libraryPaymentKey(vmAction.sender, vmAction.txIndex, vmAction.action && vmAction.action.data && vmAction.action.data.day)]
             );
             events = events.concat(actionEvents);
         }
@@ -291,8 +291,9 @@ var StateEngine = (function() {
                 events = events.concat(_handleMove(sender, action.data, blockNum));
                 break;
             case AT.LIBRARY_UNLOCK:
-                if (libraryPaymentVerified && action.data && action.data.chapter === 'chapter2') {
-                    events.push(_handleLibraryUnlock(sender, blockNum));
+                if (libraryPaymentVerified && action.data && action.data.chapter === 'chapter2' && _isLibraryDay(action.data.day)) {
+                    var libraryEvent = _handleLibraryUnlock(sender, blockNum, action.data.day);
+                    if (libraryEvent) events.push(libraryEvent);
                 }
                 break;
             // Duel actions — delegated to DuelStateManager
@@ -714,8 +715,26 @@ var StateEngine = (function() {
         }];
     }
 
-    function _libraryPaymentKey(account, txIndex) {
-        return String(account || '') + ':' + String(Number(txIndex));
+    function _isLibraryDay(day) {
+        return /^\d{4}-\d{2}-\d{2}$/.test(String(day || ''));
+    }
+
+    function getLibraryDay(nowMs) {
+        var shifted = new Date((typeof nowMs === 'number' ? nowMs : Date.now()) + (3 * 60 * 60 * 1000));
+        return shifted.getUTCFullYear() + '-' +
+            String(shifted.getUTCMonth() + 1).padStart(2, '0') + '-' +
+            String(shifted.getUTCDate()).padStart(2, '0');
+    }
+
+    function getLibraryMidnightDelay(nowMs) {
+        var now = typeof nowMs === 'number' ? nowMs : Date.now();
+        var shifted = now + (3 * 60 * 60 * 1000);
+        var nextMidnight = (Math.floor(shifted / 86400000) + 1) * 86400000;
+        return nextMidnight - shifted;
+    }
+
+    function _libraryPaymentKey(account, txIndex, day) {
+        return String(account || '') + ':' + String(Number(txIndex)) + ':' + String(day || '');
     }
 
     function _collectLibraryUnlockPayments(awards) {
@@ -724,52 +743,64 @@ var StateEngine = (function() {
         for (var i = 0; i < awards.length; i++) {
             var award = awards[i] || {};
             if (!award.initiator || !isFinite(Number(award.txIndex))) continue;
-            if (String(award.memo || '') !== libraryCfg.CHAPTER_TWO_MEMO) continue;
+            var memo = String(award.memo || '');
+            var prefix = String(libraryCfg.CHAPTER_TWO_MEMO_PREFIX || '');
+            if (!prefix || memo.indexOf(prefix) !== 0) continue;
+            var day = memo.substring(prefix.length);
+            if (!_isLibraryDay(day)) continue;
             if (award.receiver !== libraryCfg.TREASURY) continue;
             if (Number(award.energy) !== libraryCfg.CHAPTER_TWO_COST) continue;
-            payments[_libraryPaymentKey(award.initiator, award.txIndex)] = true;
+            payments[_libraryPaymentKey(award.initiator, award.txIndex, day)] = true;
         }
         return payments;
     }
 
-    function _handleLibraryUnlock(account, blockNum) {
+    function _handleLibraryUnlock(account, blockNum, day) {
+        if (!_isLibraryDay(day)) return null;
         if (!worldState.libraryAccess) worldState.libraryAccess = {};
         if (!worldState.libraryAccess[account]) worldState.libraryAccess[account] = {};
-        if (!worldState.libraryAccess[account].chapter2) {
-            worldState.libraryAccess[account].chapter2 = blockNum || worldState.headBlock || 1;
+        var existing = worldState.libraryAccess[account].chapter2;
+        if (existing && typeof existing === 'object' && existing.day > day) return null;
+        if (!existing || typeof existing !== 'object' || existing.day !== day) {
+            worldState.libraryAccess[account].chapter2 = {
+                day: day,
+                blockNum: blockNum || worldState.headBlock || 1
+            };
         }
         return {
             type: 'library_chapter_two_unlocked',
             account: account,
             chapter: 'chapter2',
-            blockNum: worldState.libraryAccess[account].chapter2
+            day: day,
+            blockNum: worldState.libraryAccess[account].chapter2.blockNum
         };
     }
 
-    function verifyLibraryUnlockProof(processedBlock, account, chapter) {
-        if (!processedBlock || !account || chapter !== 'chapter2') return false;
+    function verifyLibraryUnlockProof(processedBlock, account, chapter, day) {
+        if (!processedBlock || !account || chapter !== 'chapter2' || !_isLibraryDay(day)) return false;
         var payments = _collectLibraryUnlockPayments(processedBlock.awards || []);
         var vmActions = processedBlock.vmActions || [];
         for (var i = 0; i < vmActions.length; i++) {
             var vmAction = vmActions[i] || {};
             var action = vmAction.action || {};
             if (vmAction.sender === account && action.type === AT.LIBRARY_UNLOCK &&
-                    action.data && action.data.chapter === chapter &&
-                    payments[_libraryPaymentKey(account, vmAction.txIndex)]) {
+                    action.data && action.data.chapter === chapter && action.data.day === day &&
+                    payments[_libraryPaymentKey(account, vmAction.txIndex, day)]) {
                 return true;
             }
         }
         return false;
     }
 
-    function hasLibraryAccess(account, chapter) {
-        return !!(account && chapter && worldState.libraryAccess &&
-            worldState.libraryAccess[account] && worldState.libraryAccess[account][chapter]);
+    function hasLibraryAccess(account, chapter, day) {
+        var access = account && chapter && worldState.libraryAccess &&
+            worldState.libraryAccess[account] && worldState.libraryAccess[account][chapter];
+        return !!(access && typeof access === 'object' && access.day === (day || getLibraryDay()));
     }
 
-    function processLibraryUnlockResult(account, blockNum) {
-        if (!account) return null;
-        return _handleLibraryUnlock(account, blockNum || 0);
+    function processLibraryUnlockResult(account, blockNum, day) {
+        if (!account || !_isLibraryDay(day)) return null;
+        return _handleLibraryUnlock(account, blockNum || 0, day);
     }
 
     /**
@@ -1638,6 +1669,8 @@ var StateEngine = (function() {
         getState: getState,
         getCharacter: getCharacter,
         getInventory: getInventory,
+        getLibraryDay: getLibraryDay,
+        getLibraryMidnightDelay: getLibraryMidnightDelay,
         hasLibraryAccess: hasLibraryAccess,
         verifyLibraryUnlockProof: verifyLibraryUnlockProof,
         getTempleBlessing: getTempleBlessing,

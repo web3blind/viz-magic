@@ -46,11 +46,11 @@ var VizMagicConfig = (function() {
         MIN_BLESS_COST: 1                    // Minimum mana for blessing (0.01%)
     };
 
-    /** Permanent Magical Library access paid by one replayable award. */
+    /** Daily Secret Maps room access paid by one replayable atomic award. */
     var LIBRARY = {
         CHAPTER_TWO_COST: 1000,              // 10% energy
         TREASURY: 'denis-skripnik',
-        CHAPTER_TWO_MEMO: 'viz://vm/library/chapter2'
+        CHAPTER_TWO_MEMO_PREFIX: 'viz://vm/library/chapter2/'
     };
 
     /** HP passive regeneration constants */

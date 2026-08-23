@@ -620,7 +620,7 @@ body {
 .arena-player-info { display: flex; align-items: center; gap: 6px; }
 .arena-player-level { color: var(--color-text-muted); font-size: 0.85rem; }
 .region-action-group { margin-top: 10px; }
-.region-travel-group { display: flex; align-items: center; gap: 10px; }
+.region-travel-group { display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden; border-radius: 8px; }
 .map-action-heading {
     color: var(--color-accent);
     font-family: var(--font-heading);
@@ -631,6 +631,31 @@ body {
 }
 .region-travel-options { display: flex; flex: 1 1 auto; flex-wrap: nowrap; gap: 5px; margin: 0; }
 .region-travel-options .region-travel-btn { flex: 1 1 0; min-width: 0; padding: 7px 6px; font-size: 0.85rem; white-space: nowrap; justify-content: center; }
+.energy-path-shimmer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(105deg, transparent 15%, rgba(255, 220, 90, 0.12) 35%, rgba(126, 222, 255, 0.7) 49%, rgba(255, 220, 90, 0.14) 62%, transparent 82%);
+    background-size: 260% 100%;
+}
+.region-travel-group > :not(.energy-path-shimmer) { position: relative; z-index: 1; }
+.energy-path-shimmer-map {
+    inset: 8% 5%;
+    border-radius: 45% 30% 55% 35%;
+    mix-blend-mode: screen;
+    clip-path: polygon(0 72%, 14% 58%, 29% 66%, 43% 43%, 57% 50%, 71% 25%, 85% 36%, 100% 12%, 100% 24%, 86% 48%, 73% 38%, 59% 63%, 45% 56%, 31% 79%, 15% 70%, 0 84%);
+}
+@keyframes energy-path-flow {
+    0% { background-position: 220% 0; filter: drop-shadow(0 0 1px rgba(126, 222, 255, 0.2)); }
+    50% { filter: drop-shadow(0 0 8px rgba(126, 222, 255, 0.85)); }
+    100% { background-position: -40% 0; filter: drop-shadow(0 0 1px rgba(255, 220, 90, 0.25)); }
+}
+body[data-icon-motion="sparkle"] .energy-path-shimmer {
+    opacity: 0.9;
+    animation: energy-path-flow 2.8s linear infinite;
+}
 .region-exploration-group {
     padding-top: 9px;
     border-top: 1px solid rgba(212, 175, 55, 0.28);
@@ -816,7 +841,18 @@ body {
     background: rgba(248,81,73,0.15); border-radius: 4px;
     color: var(--color-error); font-weight: 600;
 }
-.region-here { font-size: 1.5rem; }
+.region-here {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(212, 175, 55, 0.14);
+    color: var(--color-primary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
 .region-desc { font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 8px; }
 .region-lore {
     font-size: 0.85rem; color: var(--color-text-secondary);
@@ -830,6 +866,7 @@ body {
 }
 .lore-map-level { font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px; }
 .lore-map-viewport {
+    position: relative;
     width: 100%;
     max-height: min(62vh, 760px);
     overflow: auto;
@@ -1660,16 +1697,28 @@ body {
     border-color: rgba(88, 166, 255, 0.34);
     border-left-color: var(--color-accent, #58a6ff);
 }
-.help-secret-library h3 { color: #9fd3ff; }
+.help-secret-library h3 { color: #9fd3ff; white-space: pre-line; }
+.help-secret-library > p { white-space: pre-line; }
 .help-secret-library-lock {
     padding: 12px;
     border: 1px solid rgba(159, 211, 255, 0.24);
     border-radius: 12px;
     background: rgba(5, 10, 20, 0.36);
 }
-.help-secret-library-lock .btn { width: 100%; min-height: 44px; }
+.help-secret-library-lock .btn {
+    width: 100%;
+    min-height: 44px;
+    background: #e6bd3f;
+    border-color: #f5d76e;
+    color: #171208;
+}
 .help-secret-library-status:empty { display: none; }
-.help-secret-library-opened { color: #b8efc8 !important; }
+.help-secret-library-midnight {
+    color: #ff6b63 !important;
+    font-weight: 800;
+    border-left: 3px solid #ff4d4d;
+    padding-left: 10px;
+}
 .help-secret-library-link {
     min-height: 44px;
     display: flex;
@@ -3074,4 +3123,5 @@ html body[data-icon-motion] .magical-forecast .forecast-card-hunt-summary .forec
 .class-svg-icon { width: 1em; height: 1em; }
 @media (prefers-reduced-motion: reduce) {
     .ui-svg-icon { animation: none !important; }
+    .energy-path-shimmer { animation: none !important; opacity: 0 !important; }
 }

@@ -81,16 +81,10 @@ var MapScreen = (function() {
             '<a href="#help-section-travel_exploration" class="help-nav-link map-help-link" data-help-section="travel_exploration">' +
             t('map_travel_help_link') + '</a>.</p>';
 
-        // Current location
-        if (character) {
-            var curRegion = GameRegions.getRegion(currentZone);
-            var curName = curRegion ? curRegion.name : currentZone;
-            html += '<p class="map-current-location">' + t('map_current') + ': <strong>' + curName + '</strong></p>';
-            if (pendingTravel && pendingTravel.account === user) {
-                var pendingRegion = GameRegions.getRegion(pendingTravel.to);
-                var pendingName = pendingRegion ? pendingRegion.name : pendingTravel.to;
-                html += '<p class="map-siege-alert" role="status">⏳ ' + t('map_pending_travel_to') + ' <strong>' + pendingName + '</strong></p>';
-            }
+        if (character && pendingTravel && pendingTravel.account === user) {
+            var pendingRegion = GameRegions.getRegion(pendingTravel.to);
+            var pendingName = pendingRegion ? pendingRegion.name : pendingTravel.to;
+            html += '<p class="map-siege-alert" role="status">⏳ ' + t('map_pending_travel_to') + ' <strong>' + pendingName + '</strong></p>';
         }
 
         // Active sieges summary
@@ -147,7 +141,7 @@ var MapScreen = (function() {
             }
             html += '</div>';
             if (isCurrent) {
-                html += '<span class="region-here" aria-label="' + t('map_you_are_here') + '">' + Helpers.icon('compass', 'region-status-icon') + '</span>';
+                html += '<span class="region-here">' + Helpers.icon('compass', 'region-status-icon') + ' ' + t('map_you_are_here') + '</span>';
             }
             html += '</div>';
 
@@ -190,6 +184,7 @@ var MapScreen = (function() {
                 html += '<div class="region-benefits" role="status">⏳ ' + t('map_pending_travel_short') + '</div>';
             } else if (character && !(pendingTravel && pendingTravel.account === user)) {
                 html += '<div class="region-action-group region-travel-group">';
+                html += '<span class="energy-path-shimmer" aria-hidden="true"></span>';
                 html += '<div class="map-action-heading" role="heading" aria-level="3">' + t('map_travel_heading') + '</div>';
                 html += '<div class="region-travel-options">';
                 html += '<button class="btn btn-secondary btn-sm region-travel-btn" ';
@@ -282,6 +277,7 @@ var MapScreen = (function() {
         // Portal guidance is visual inside the artwork; no extra hint text is shown here.
         html += '<div class="lore-map-viewport" id="lore-map-viewport">';
         html += '<img class="lore-map-image" id="lore-map-image" src="assets/maps/map-' + regionId + '.jpg?v=' + MAP_ASSET_VERSION + '" alt="' + t('map_lore_image_alt', { name: region.name }) + '" loading="lazy" onerror="this.style.display=\'none\';var nx=document.getElementById(\'lore-fallback\');if(nx)nx.style.display=\'block\';">';
+        html += '<span class="energy-path-shimmer energy-path-shimmer-map" aria-hidden="true"></span>';
         html += '</div>';
         html += '<p class="lore-map-text" id="lore-fallback" style="display:none">' + loreText + '</p>';
         html += '<div class="modal-actions lore-map-actions"><button type="button" class="btn btn-secondary" id="lore-zoom-toggle">' + t('map_zoom_toggle') + '</button><button type="button" class="btn btn-primary" id="lore-close">' + t('close') + '</button></div>';

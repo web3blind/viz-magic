@@ -129,15 +129,19 @@ var VizBroadcast = (function() {
     }
 
     /**
-     * Atomically pay for and record a permanent Magical Library unlock.
+     * Atomically pay for and record one day of Secret Maps room access.
      * The award and backward-linked VM action share one signed transaction,
      * allowing replay to verify payment by transaction index.
      */
-    function libraryUnlockAction(energy, callback) {
+    function libraryUnlockAction(energy, day, callback) {
         var wif = VizAccount.getRegularKey();
         var user = VizAccount.getCurrentUser();
         if (!wif || !user) {
             callback(new Error('not_logged_in'));
+            return;
+        }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(String(day || ''))) {
+            callback(new Error('invalid_library_day'));
             return;
         }
         VizAccount.getAccountProtocol(user, cfg.PROTOCOLS.VM, function(err, response) {
@@ -151,7 +155,7 @@ var VizBroadcast = (function() {
                 v: cfg.APP_VERSION,
                 b: previous,
                 t: cfg.ACTION_TYPES.LIBRARY_UNLOCK,
-                d: { chapter: 'chapter2' }
+                d: { chapter: 'chapter2', day: day }
             };
             var transaction = {
                 extensions: [],
@@ -161,7 +165,7 @@ var VizBroadcast = (function() {
                         receiver: cfg.LIBRARY.TREASURY,
                         energy: energy,
                         custom_sequence: 0,
-                        memo: cfg.LIBRARY.CHAPTER_TWO_MEMO,
+                        memo: cfg.LIBRARY.CHAPTER_TWO_MEMO_PREFIX + day,
                         beneficiaries: []
                     }],
                     ['custom', {
