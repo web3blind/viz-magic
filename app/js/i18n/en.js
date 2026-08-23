@@ -1312,6 +1312,7 @@ var LangEN = {
     help_magic_library_chapter_two_confirm_text: 'Exactly 10% energy will be spent. Access to all fifteen maps lasts until the next game-world midnight in Moscow time.',
     help_magic_library_chapter_two_confirm: 'Enter for 10% energy',
     help_secret_library_checking: 'Checking for an earlier payment…',
+    help_secret_library_waiting_confirmation: 'Payment sent. Waiting for confirmation…',
     help_secret_library_history_check_failed: 'Could not safely verify previous payment history. No energy was spent. Please try again later.',
     help_secret_library_confirmation_pending: 'The transaction was sent but is not confirmed yet. Do not pay again: open the room later and today’s payment will be recovered.',
     help_magic_library_chapter_two_already_open: 'Today’s payment was found. The room opened without another charge.',

@@ -1312,6 +1312,7 @@ var LangRU = {
     help_magic_library_chapter_two_confirm_text: 'Будет потрачено ровно 10% энергии. Доступ к пятнадцати картам действует до ближайшей полуночи игрового мира по Москве.',
     help_magic_library_chapter_two_confirm: 'Войти за 10% энергии',
     help_secret_library_checking: 'Проверяем предыдущую оплату…',
+    help_secret_library_waiting_confirmation: 'Оплата отправлена. Ждём подтверждение…',
     help_secret_library_history_check_failed: 'Не удалось безопасно проверить предыдущую оплату. Энергия не списана. Попробуйте позже.',
     help_secret_library_confirmation_pending: 'Транзакция отправлена, но подтверждение ещё не получено. Не платите повторно: откройте комнату позже, и сегодняшняя оплата будет найдена.',
     help_magic_library_chapter_two_already_open: 'Сегодняшняя оплата найдена. Комната открыта без повторного списания.',

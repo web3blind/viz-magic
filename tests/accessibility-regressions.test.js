@@ -88,7 +88,8 @@ test('paid secret library uses labeled regions, buttons, live status, and focus 
   assert.ok(/id="help-secret-library-title" tabindex="-1"/.test(help), 'secret library heading should receive focus after unlock');
   assert.ok(/help-secret-library-status[\s\S]*role="status" aria-live="polite"/.test(help), 'unlock status should be announced politely');
   assert.ok(/type="button" class="btn btn-primary" id="help-secret-library-unlock"/.test(help), 'locked chapter entry should be a real button');
-  assert.ok(/dialog\.setAttribute\('aria-describedby', 'help-secret-library-confirm-text'\)/.test(help), 'payment warning should describe the actual dialog container');
+  assert.ok(/unlock\.addEventListener\('click', _unlockSecretLibrary\)/.test(help), 'the labeled room button should launch the single-step payment flow directly');
+  assert.ok(/confirm\.setAttribute\('aria-busy', 'true'\)/.test(help) && /help_secret_library_waiting_confirmation/.test(help), 'the same button should expose busy state while payment proof is pending');
   assert.ok(/type="button" class="help-library-link help-secret-library-link"/.test(help), 'secret map entries should remain keyboard-operable buttons');
   assert.ok(/\.help-secret-library-link[\s\S]*min-height:\s*44px[\s\S]*white-space:\s*normal[\s\S]*overflow-wrap:\s*anywhere/.test(css), 'secret map buttons should have 44px touch targets and wrap without mobile overflow');
 });

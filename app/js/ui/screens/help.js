@@ -188,7 +188,7 @@ var HelpScreen = (function() {
 
     function _bindSecretLibrary(el) {
         var unlock = Helpers.$('help-secret-library-unlock');
-        if (unlock) unlock.addEventListener('click', _confirmSecretLibraryUnlock);
+        if (unlock) unlock.addEventListener('click', _unlockSecretLibrary);
         var links = el.querySelectorAll('.help-secret-library-link');
         for (var i = 0; i < links.length; i++) {
             links[i].addEventListener('click', function() {
@@ -213,27 +213,6 @@ var HelpScreen = (function() {
         if (status) status.textContent = message || '';
     }
 
-    function _confirmSecretLibraryUnlock() {
-        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
-        if (!user) {
-            Toast.error(Helpers.t('error_no_account'));
-            return;
-        }
-        var html = '<div class="help-secret-library-confirm-card" aria-labelledby="help-secret-library-confirm-title" aria-describedby="help-secret-library-confirm-text">' +
-            '<h2 id="help-secret-library-confirm-title">' + Helpers.t('help_magic_library_chapter_two_confirm_title') + '</h2>' +
-            '<p id="help-secret-library-confirm-text">' + Helpers.t('help_magic_library_chapter_two_confirm_text') + '</p>' +
-            '<div class="modal-actions">' +
-                '<button type="button" class="btn btn-secondary" id="help-secret-library-cancel">' + Helpers.t('cancel') + '</button>' +
-                '<button type="button" class="btn btn-primary" id="help-secret-library-confirm">' + Helpers.t('help_magic_library_chapter_two_confirm') + '</button>' +
-            '</div></div>';
-        ModalComponent.show(html);
-        var dialog = Helpers.$('modal-container');
-        if (dialog) dialog.setAttribute('aria-describedby', 'help-secret-library-confirm-text');
-        var cancel = Helpers.$('help-secret-library-cancel');
-        var confirm = Helpers.$('help-secret-library-confirm');
-        if (cancel) cancel.addEventListener('click', function() { ModalComponent.hide(); });
-        if (confirm) confirm.addEventListener('click', _unlockSecretLibrary);
-    }
 
     function _preflightSecretLibraryEntitlement(user, day, callback) {
         if (StateEngine.hasLibraryAccess(user, 'chapter2', day)) {
@@ -330,13 +309,43 @@ var HelpScreen = (function() {
         });
     }
 
-    function _resetSecretLibraryConfirm(confirm) {
+    function _resetSecretLibraryAction(button) {
         secretLibraryBusy = false;
-        if (confirm) {
-            confirm.disabled = false;
-            confirm.removeAttribute('aria-busy');
-            confirm.textContent = Helpers.t('help_magic_library_chapter_two_confirm');
+        if (button) {
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+            button.textContent = button.getAttribute('data-idle-label') || Helpers.t('help_magic_library_chapter_two_unlock');
         }
+    }
+
+    function _waitForSecretLibraryProof(user, day, result, attempt, callback) {
+        if (StateEngine.getLibraryDay() !== day) {
+            callback(new Error('library_day_changed'));
+            return;
+        }
+        function retry() {
+            if (attempt >= 40) {
+                callback(new Error('library_confirmation_pending'));
+                return;
+            }
+            setTimeout(function() {
+                _waitForSecretLibraryProof(user, day, null, attempt + 1, callback);
+            }, 1500);
+        }
+        if (result && attempt === 0) {
+            _confirmSecretLibraryBroadcastProof(user, day, result, function(proofErr, event) {
+                if (!proofErr) callback(null, event);
+                else retry();
+            });
+            return;
+        }
+        _preflightSecretLibraryEntitlement(user, day, function(historyErr, unlocked) {
+            if (!historyErr && unlocked) {
+                callback(null, true);
+                return;
+            }
+            retry();
+        });
     }
 
     function _finishSecretLibraryOpen(messageKey) {
@@ -357,10 +366,11 @@ var HelpScreen = (function() {
             Toast.error(Helpers.t('error_no_account'));
             return;
         }
-        var confirm = Helpers.$('help-secret-library-confirm');
+        var confirm = Helpers.$('help-secret-library-unlock');
         var day = StateEngine.getLibraryDay();
         secretLibraryBusy = true;
         if (confirm) {
+            confirm.setAttribute('data-idle-label', confirm.textContent);
             confirm.disabled = true;
             confirm.setAttribute('aria-busy', 'true');
             confirm.textContent = Helpers.t('help_secret_library_checking');
@@ -368,7 +378,7 @@ var HelpScreen = (function() {
 
         _preflightSecretLibraryEntitlement(user, day, function(historyErr, alreadyUnlocked) {
             if (historyErr) {
-                _resetSecretLibraryConfirm(confirm);
+                _resetSecretLibraryAction(confirm);
                 Toast.error(Helpers.t('help_secret_library_history_check_failed'));
                 return;
             }
@@ -380,18 +390,18 @@ var HelpScreen = (function() {
 
             VizAccount.getAccount(user, function(energyErr, accountData) {
                 if (energyErr || !accountData) {
-                    _resetSecretLibraryConfirm(confirm);
+                    _resetSecretLibraryAction(confirm);
                     Toast.error(Helpers.t('help_magic_library_chapter_two_energy_failed'));
                     return;
                 }
                 var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
                 if (currentEnergy < VizMagicConfig.LIBRARY.CHAPTER_TWO_COST) {
-                    _resetSecretLibraryConfirm(confirm);
+                    _resetSecretLibraryAction(confirm);
                     Toast.error(Helpers.t('help_magic_library_chapter_two_not_enough'));
                     return;
                 }
                 if (StateEngine.getLibraryDay() !== day) {
-                    _resetSecretLibraryConfirm(confirm);
+                    _resetSecretLibraryAction(confirm);
                     _unlockSecretLibrary();
                     return;
                 }
@@ -399,19 +409,19 @@ var HelpScreen = (function() {
                     VizMagicConfig.LIBRARY.CHAPTER_TWO_COST,
                     day,
                     function(err, result) {
-                        secretLibraryBusy = false;
                         if (err) {
-                            _resetSecretLibraryConfirm(confirm);
+                            _resetSecretLibraryAction(confirm);
                             Toast.error(Helpers.t('help_magic_library_chapter_two_failed'));
                             return;
                         }
-                        _confirmSecretLibraryBroadcastProof(user, day, result, function(proofErr) {
+                        if (confirm) confirm.textContent = Helpers.t('help_secret_library_waiting_confirmation');
+                        _setSecretLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
+                        _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
-                                _resetSecretLibraryConfirm(confirm);
-                                ModalComponent.hide();
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
                                 return;
                             }
+                            secretLibraryBusy = false;
                             _finishSecretLibraryOpen('help_magic_library_chapter_two_success');
                         });
                     }
