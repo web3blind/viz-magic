@@ -263,29 +263,33 @@ var HelpScreen = (function() {
                         callback(blockErr || new Error('library_proof_block_unavailable'));
                         return;
                     }
-                    var processed = BlockProcessor.processBlock(block, unlockEvent.blockNum);
-                    var hasTodayAction = false;
-                    var vmActions = processed.vmActions || [];
-                    for (var i = 0; i < vmActions.length; i++) {
-                        var item = vmActions[i] || {};
-                        var action = item.action || {};
-                        if (item.sender === user && action.type === VizMagicConfig.ACTION_TYPES.LIBRARY_UNLOCK &&
-                                action.data && action.data.chapter === 'chapter2' && action.data.day === day) {
-                            hasTodayAction = true;
-                            break;
+                    try {
+                        var processed = BlockProcessor.processBlock(block, unlockEvent.blockNum);
+                        var hasTodayAction = false;
+                        var vmActions = processed.vmActions || [];
+                        for (var i = 0; i < vmActions.length; i++) {
+                            var item = vmActions[i] || {};
+                            var action = item.action || {};
+                            if (item.sender === user && action.type === VizMagicConfig.ACTION_TYPES.LIBRARY_UNLOCK &&
+                                    action.data && action.data.chapter === 'chapter2' && action.data.day === day) {
+                                hasTodayAction = true;
+                                break;
+                            }
                         }
+                        if (!hasTodayAction) {
+                            callback(null, false);
+                            return;
+                        }
+                        if (!StateEngine.verifyLibraryUnlockProof(processed, user, 'chapter2', day)) {
+                            callback(new Error('library_unlock_proof_invalid'));
+                            return;
+                        }
+                        StateEngine.processLibraryUnlockResult(user, unlockEvent.blockNum, day);
+                        StateEngine.saveCheckpoint(function() {});
+                        callback(null, true);
+                    } catch (err) {
+                        callback(err);
                     }
-                    if (!hasTodayAction) {
-                        callback(null, false);
-                        return;
-                    }
-                    if (!StateEngine.verifyLibraryUnlockProof(processed, user, 'chapter2', day)) {
-                        callback(new Error('library_unlock_proof_invalid'));
-                        return;
-                    }
-                    StateEngine.processLibraryUnlockResult(user, unlockEvent.blockNum, day);
-                    StateEngine.saveCheckpoint(function() {});
-                    callback(null, true);
                 });
             },
             function(event) {
