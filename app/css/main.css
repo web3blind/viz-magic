@@ -648,22 +648,18 @@ body {
     clip-path: polygon(0 72%, 14% 58%, 29% 66%, 43% 43%, 57% 50%, 71% 25%, 85% 36%, 100% 12%, 100% 24%, 86% 48%, 73% 38%, 59% 63%, 45% 56%, 31% 79%, 15% 70%, 0 84%);
 }
 @keyframes energy-path-flow {
-    0%, 45% {
+    0% {
         background-position: 220% 0;
-        filter: drop-shadow(0 0 1px rgba(126, 222, 255, 0.12));
+        filter: drop-shadow(0 0 2px rgba(126, 222, 255, 0.24));
     }
-    70% {
-        background-position: 90% 0;
-        filter: drop-shadow(0 0 4px rgba(126, 222, 255, 0.42));
-    }
-    88%, 100% {
+    100% {
         background-position: -40% 0;
-        filter: drop-shadow(0 0 1px rgba(255, 220, 90, 0.14));
+        filter: drop-shadow(0 0 2px rgba(126, 222, 255, 0.24));
     }
 }
 body[data-icon-motion="sparkle"] .energy-path-shimmer {
     opacity: 0.6;
-    animation: energy-path-flow 10s ease-in-out infinite;
+    animation: energy-path-flow 10s linear infinite;
 }
 .region-exploration-group {
     padding-top: 9px;
