@@ -2515,14 +2515,26 @@ body,
     outline: 3px solid var(--color-accent, #58a6ff);
     outline-offset: 2px;
 }
-.creators-gratitude {
-    margin-bottom: 0;
-    border-left-color: var(--color-primary, #d4a843);
+.creators-page-gratitude {
+    margin-top: 18px;
+    padding: 14px;
+    border: 1px solid rgba(214, 174, 92, 0.24);
+    border-radius: 11px;
+    background: rgba(214, 174, 92, 0.07);
 }
-.creators-gratitude .developers-custom-reward {
+.creators-page-gratitude h3 {
+    margin: 0 0 8px;
+    color: #f0d99f;
+    font-size: 1rem;
+}
+.creators-page-gratitude > p {
+    margin-bottom: 9px;
+    font-size: 0.94rem;
+}
+.creators-page-gratitude .developers-custom-reward {
     margin-top: 14px;
 }
-.creators-gratitude .btn {
+.creators-page-gratitude .btn {
     min-height: 44px;
 }
 .developers-note {

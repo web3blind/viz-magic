@@ -100,6 +100,9 @@ test('Creators book has ordered headings, labeled pages, and keyboard-safe exter
   assert.ok(/aria-labelledby="creators-book-title"/.test(developersJs), 'creator book should be named by its visible heading');
   assert.ok(/id="creators-book-title"/.test(developersJs), 'creator book title id should exist');
   assert.ok(/aria-labelledby="creators-denis-title"/.test(developersJs) && /aria-labelledby="creators-evgeny-title"/.test(developersJs), 'both creator pages should be labelled by headings');
+  assert.ok(/titleId = 'creators-reward-' \+ creator\.id/.test(developersJs) && /class="creators-page-gratitude" aria-labelledby="' \+ titleId/.test(developersJs), 'each rendered gratitude seal should be a uniquely labelled subsection');
+  assert.ok(/creators-custom-energy-' \+ creator\.id/.test(developersJs), 'creator reward inputs should have unique ids');
+  assert.ok(/if \(!creator\.account\) return ''/.test(developersJs), 'creator without an account should expose no empty reward controls');
   assert.ok(/target="_blank" rel="noopener noreferrer"/.test(developersJs), 'external links should be isolated safely');
   assert.ok(/\.creators-link[\s\S]*min-height:\s*44px[\s\S]*overflow-wrap:\s*anywhere/.test(mainCss), 'creator links should meet touch size and wrapping requirements');
   assert.ok(/\.creators-link:focus-visible/.test(mainCss), 'creator links should expose a visible keyboard focus state');

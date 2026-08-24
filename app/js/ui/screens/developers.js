@@ -5,11 +5,42 @@
 var DevelopersScreen = (function() {
     'use strict';
 
-    var DEVELOPER_ACCOUNT = 'denis-skripnik';
+    var CREATORS = {
+        denis: { id: 'denis', account: 'denis-skripnik', nameKey: 'developers_denis_name' },
+        evgeny: { id: 'evgeny', account: 'ko4evnik', nameKey: 'developers_evgeny_name' }
+    };
     var REWARD_OPTIONS = [100]; // one quick reward button: 1.00%
 
     function _externalLink(href, labelKey) {
         return '<a class="creators-link" href="' + href + '" target="_blank" rel="noopener noreferrer">' + Helpers.t(labelKey) + '</a>';
+    }
+
+    function _renderRewardSeal(creator, t, user) {
+        if (!creator.account) return '';
+        var inputId = 'creators-custom-energy-' + creator.id;
+        var titleId = 'creators-reward-' + creator.id;
+        var html = '<section class="creators-page-gratitude" aria-labelledby="' + titleId + '">';
+        html += '<h3 id="' + titleId + '">' + Helpers.icon('core', 'section-icon vmagic-breathe') + ' ' + t('developers_reward_title') + '</h3>';
+        html += '<p>' + t('developers_reward_text', { creator: t(creator.nameKey), account: creator.account }) + '</p>';
+        html += '<p class="developers-note">' + t('developers_reward_note') + '</p>';
+        if (!user) {
+            html += '<div class="empty-state">' + t('developers_login_required', { creator: t(creator.nameKey) }) + '</div>';
+        } else {
+            html += '<div class="developers-custom-reward">';
+            html += '<label for="' + inputId + '" class="input-label">' + t('developers_custom_reward_label') + '</label>';
+            html += '<input id="' + inputId + '" class="input-field" type="number" min="0.01" max="100" step="0.01" inputmode="decimal" placeholder="0.25">';
+            html += '<p class="developers-note">' + t('developers_custom_reward_hint') + '</p>';
+            html += '<button type="button" class="btn btn-primary dev-custom-reward-btn" data-creator="' + creator.id + '">' + t('developers_custom_reward_button') + '</button>';
+            html += '</div>';
+            html += '<div class="developers-reward-options" role="group" aria-label="' + t('developers_reward_group_label', { creator: t(creator.nameKey) }) + '">';
+            for (var i = 0; i < REWARD_OPTIONS.length; i++) {
+                html += '<button type="button" class="btn btn-primary dev-reward-btn" data-creator="' + creator.id + '" data-energy="' + REWARD_OPTIONS[i] + '">' +
+                    t('developers_reward_button', { amount: Helpers.bpToPercent(REWARD_OPTIONS[i]) }) + '</button>';
+            }
+            html += '</div>';
+        }
+        html += '</section>';
+        return html;
     }
 
     function render() {
@@ -43,6 +74,7 @@ var DevelopersScreen = (function() {
         html += _externalLink('https://life.blinddev.xyz/', 'developers_link_life');
         html += _externalLink('https://vk.ru/life_harbor_game', 'developers_link_life_story');
         html += '</nav>';
+        html += _renderRewardSeal(CREATORS.denis, t, user);
         html += '</section>';
 
         html += '<div class="creators-book-seal" aria-hidden="true"></div>';
@@ -56,28 +88,7 @@ var DevelopersScreen = (function() {
         html += '<nav class="creators-link-list" aria-label="' + t('developers_evgeny_links_label') + '">';
         html += _externalLink('https://vk.ru/id55771964', 'developers_link_evgeny_vk');
         html += '</nav>';
-        html += '</section>';
-
-        html += '<section class="creators-page creators-gratitude" aria-labelledby="creators-reward-title">';
-        html += '<h2 id="creators-reward-title">' + Helpers.icon('core', 'section-icon vmagic-breathe') + ' ' + t('developers_reward_title') + '</h2>';
-        html += '<p>' + t('developers_reward_text') + '</p>';
-        html += '<p class="developers-note">' + t('developers_reward_note') + '</p>';
-        if (!user) {
-            html += '<div class="empty-state">' + t('developers_login_required') + '</div>';
-        } else {
-            html += '<div class="developers-custom-reward">';
-            html += '<label for="developers-custom-energy" class="input-label">' + t('developers_custom_reward_label') + '</label>';
-            html += '<input id="developers-custom-energy" class="input-field" type="number" min="0.01" max="100" step="0.01" inputmode="decimal" placeholder="0.25">';
-            html += '<p class="developers-note">' + t('developers_custom_reward_hint') + '</p>';
-            html += '<button type="button" class="btn btn-primary dev-custom-reward-btn">' + t('developers_custom_reward_button') + '</button>';
-            html += '</div>';
-            html += '<div class="developers-reward-options" role="group" aria-label="' + t('developers_reward_title') + '">';
-            for (var i = 0; i < REWARD_OPTIONS.length; i++) {
-                html += '<button type="button" class="btn btn-primary dev-reward-btn" data-energy="' + REWARD_OPTIONS[i] + '">' +
-                    t('developers_reward_button', { amount: Helpers.bpToPercent(REWARD_OPTIONS[i]) }) + '</button>';
-            }
-            html += '</div>';
-        }
+        html += _renderRewardSeal(CREATORS.evgeny, t, user);
         html += '</section>';
         html += '</article>';
         html += '</div>';
@@ -85,41 +96,52 @@ var DevelopersScreen = (function() {
         _bindEvents(el);
     }
 
+    function _creatorFromButton(button) {
+        return CREATORS[button.getAttribute('data-creator')] || null;
+    }
+
     function _bindEvents(el) {
-        var customBtn = el.querySelector('.dev-custom-reward-btn');
-        if (customBtn) {
-            customBtn.addEventListener('click', function() {
-                var input = el.querySelector('#developers-custom-energy');
+        var customButtons = el.querySelectorAll('.dev-custom-reward-btn');
+        for (var i = 0; i < customButtons.length; i++) {
+            customButtons[i].addEventListener('click', function() {
+                var creator = _creatorFromButton(this);
+                if (!creator || !creator.account) return;
+                var input = el.querySelector('#creators-custom-energy-' + creator.id);
                 var percent = input ? parseFloat(String(input.value || '').replace(',', '.')) : 0;
                 if (!(percent >= 0.01 && percent <= 100)) {
                     Toast.error(Helpers.t('developers_reward_invalid'));
                     SoundManager.play('error');
                     return;
                 }
-                _confirmReward(Math.round(percent * 100));
+                _confirmReward(creator, Math.round(percent * 100));
             });
         }
 
         var buttons = el.querySelectorAll('.dev-reward-btn');
-        for (var i = 0; i < buttons.length; i++) {
-            buttons[i].addEventListener('click', function() {
+        for (var j = 0; j < buttons.length; j++) {
+            buttons[j].addEventListener('click', function() {
+                var creator = _creatorFromButton(this);
                 var energy = parseInt(this.getAttribute('data-energy'), 10) || 0;
-                _confirmReward(energy);
+                if (creator && creator.account) _confirmReward(creator, energy);
             });
         }
     }
 
-    function _confirmReward(energy) {
+    function _confirmReward(creator, energy) {
         var t = Helpers.t;
         SoundManager.play('tap');
         Modal.show({
             title: t('developers_reward_confirm_title'),
-            text: t('developers_reward_confirm_text', { amount: Helpers.bpToPercent(energy), account: DEVELOPER_ACCOUNT }),
+            text: t('developers_reward_confirm_text', {
+                amount: Helpers.bpToPercent(energy),
+                creator: t(creator.nameKey),
+                account: creator.account
+            }),
             buttons: [
                 {
                     text: t('developers_reward_confirm_button'),
                     className: 'btn-primary',
-                    action: function() { _sendReward(energy); }
+                    action: function() { _sendReward(creator, energy); }
                 },
                 {
                     text: t('cancel'),
@@ -130,16 +152,17 @@ var DevelopersScreen = (function() {
         });
     }
 
-    function _sendReward(energy) {
+    function _sendReward(creator, energy) {
         var t = Helpers.t;
-        var memo = 'viz://vm/developers/thanks — ' + t('developers_reward_memo');
-        VizBroadcast.award(DEVELOPER_ACCOUNT, energy, 0, memo, [], function(err) {
+        var creatorName = t(creator.nameKey);
+        var memo = 'viz://vm/developers/thanks — ' + t('developers_reward_memo', { creator: creatorName });
+        VizBroadcast.award(creator.account, energy, 0, memo, [], function(err) {
             if (err) {
-                Toast.error(t('developers_reward_error'));
+                Toast.error(t('developers_reward_error', { creator: creatorName }));
                 SoundManager.play('error');
                 return;
             }
-            Toast.success(t('developers_reward_success'));
+            Toast.success(t('developers_reward_success', { creator: creatorName }));
             SoundManager.play('success');
             SoundManager.vibrate('success');
         });
