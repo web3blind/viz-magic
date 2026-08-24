@@ -33,6 +33,7 @@ const helpersJs = read('app/js/utils/helpers.js');
 const characterJs = read('app/js/ui/screens/character.js');
 const inventoryJs = read('app/js/ui/screens/inventory.js');
 const guildJs = read('app/js/ui/screens/guild.js');
+const developersJs = read('app/js/ui/screens/developers.js');
 
 test('manifest does not lock orientation', function () {
   assert.ok(!Object.prototype.hasOwnProperty.call(manifest, 'orientation'), 'orientation lock should be removed');
@@ -92,6 +93,16 @@ test('paid secret library uses labeled regions, buttons, live status, and focus 
   assert.ok(/confirm\.setAttribute\('aria-busy', 'true'\)/.test(help) && /help_secret_library_waiting_confirmation/.test(help), 'the same button should expose busy state while payment proof is pending');
   assert.ok(/type="button" class="help-library-link help-secret-library-link"/.test(help), 'secret map entries should remain keyboard-operable buttons');
   assert.ok(/\.help-secret-library-link[\s\S]*min-height:\s*44px[\s\S]*white-space:\s*normal[\s\S]*overflow-wrap:\s*anywhere/.test(css), 'secret map buttons should have 44px touch targets and wrap without mobile overflow');
+});
+
+test('Creators book has ordered headings, labeled pages, and keyboard-safe external links', function () {
+  assert.ok(/setAttribute\('aria-label', t\('developers_title'\)\)/.test(developersJs), 'creator route label should follow the selected language');
+  assert.ok(/aria-labelledby="creators-book-title"/.test(developersJs), 'creator book should be named by its visible heading');
+  assert.ok(/id="creators-book-title"/.test(developersJs), 'creator book title id should exist');
+  assert.ok(/aria-labelledby="creators-denis-title"/.test(developersJs) && /aria-labelledby="creators-evgeny-title"/.test(developersJs), 'both creator pages should be labelled by headings');
+  assert.ok(/target="_blank" rel="noopener noreferrer"/.test(developersJs), 'external links should be isolated safely');
+  assert.ok(/\.creators-link[\s\S]*min-height:\s*44px[\s\S]*overflow-wrap:\s*anywhere/.test(mainCss), 'creator links should meet touch size and wrapping requirements');
+  assert.ok(/\.creators-link:focus-visible/.test(mainCss), 'creator links should expose a visible keyboard focus state');
 });
 
 test('core screen fallbacks avoid blank controls and fixture crashes', function () {
