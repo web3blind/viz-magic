@@ -1704,6 +1704,35 @@ body[data-icon-motion="sparkle"] .energy-path-shimmer {
 }
 .help-secret-library h3 { color: #9fd3ff; white-space: pre-line; }
 .help-secret-library > p { white-space: pre-line; }
+.help-library-danger {
+    color: #ff6159 !important;
+    font-weight: 800;
+    white-space: pre-line;
+}
+.help-unknown-library {
+    background:
+        linear-gradient(145deg, rgba(75, 43, 105, 0.24), rgba(22, 79, 86, 0.14)),
+        rgba(255,255,255,0.035);
+    border-color: rgba(183, 133, 214, 0.38);
+    border-left-color: #b785d6;
+}
+.help-unknown-library h3 { color: #d9b8ee; }
+.help-unknown-library-divider {
+    width: 100%;
+    margin: 16px 0 10px;
+    border: 0;
+    border-top: 1px solid rgba(217, 184, 238, 0.52);
+}
+.help-unknown-library-fading-title {
+    margin: 0 0 10px;
+    color: var(--color-text, #e6edf3);
+    font: inherit;
+    font-weight: 400;
+}
+.help-unknown-library [role="group"] {
+    display: grid;
+    gap: 8px;
+}
 .help-secret-library-lock {
     padding: 12px;
     border: 1px solid rgba(159, 211, 255, 0.24);

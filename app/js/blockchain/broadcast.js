@@ -133,7 +133,21 @@ var VizBroadcast = (function() {
      * The award and backward-linked VM action share one signed transaction,
      * allowing replay to verify payment by transaction index.
      */
-    function libraryUnlockAction(energy, day, callback) {
+    function libraryUnlockChapterAction(chapter, energy, day, callback) {
+        var library = cfg.LIBRARY || {};
+        var chapterConfig = chapter === 'chapter2'
+            ? { cost: library.CHAPTER_TWO_COST, memoPrefix: library.CHAPTER_TWO_MEMO_PREFIX }
+            : chapter === 'chapter3'
+                ? { cost: library.CHAPTER_THREE_COST, memoPrefix: library.CHAPTER_THREE_MEMO_PREFIX }
+                : null;
+        if (!chapterConfig || !chapterConfig.memoPrefix) {
+            callback(new Error('invalid_library_chapter'));
+            return;
+        }
+        if (Number(energy) !== Number(chapterConfig.cost)) {
+            callback(new Error('invalid_library_energy'));
+            return;
+        }
         var wif = VizAccount.getRegularKey();
         var user = VizAccount.getCurrentUser();
         if (!wif || !user) {
@@ -155,17 +169,17 @@ var VizBroadcast = (function() {
                 v: cfg.APP_VERSION,
                 b: previous,
                 t: cfg.ACTION_TYPES.LIBRARY_UNLOCK,
-                d: { chapter: 'chapter2', day: day }
+                d: { chapter: chapter, day: day }
             };
             var transaction = {
                 extensions: [],
                 operations: [
                     ['award', {
                         initiator: user,
-                        receiver: cfg.LIBRARY.TREASURY,
+                        receiver: library.TREASURY,
                         energy: energy,
                         custom_sequence: 0,
-                        memo: cfg.LIBRARY.CHAPTER_TWO_MEMO_PREFIX + day,
+                        memo: chapterConfig.memoPrefix + day,
                         beneficiaries: []
                     }],
                     ['custom', {
@@ -181,6 +195,10 @@ var VizBroadcast = (function() {
                 callback(sendErr, result);
             });
         });
+    }
+
+    function libraryUnlockAction(energy, day, callback) {
+        return libraryUnlockChapterAction('chapter2', energy, day, callback);
     }
 
     /**
@@ -407,6 +425,7 @@ var VizBroadcast = (function() {
         custom: custom,
         gameAction: gameAction,
         libraryUnlockAction: libraryUnlockAction,
+        libraryUnlockChapterAction: libraryUnlockChapterAction,
         huntAction: huntAction,
         armageddonAction: armageddonAction,
         templeOffering: templeOffering,

@@ -34,6 +34,7 @@ const characterJs = read('app/js/ui/screens/character.js');
 const inventoryJs = read('app/js/ui/screens/inventory.js');
 const guildJs = read('app/js/ui/screens/guild.js');
 const developersJs = read('app/js/ui/screens/developers.js');
+const helpJs = read('app/js/ui/screens/help.js');
 
 test('manifest does not lock orientation', function () {
   assert.ok(!Object.prototype.hasOwnProperty.call(manifest, 'orientation'), 'orientation lock should be removed');
@@ -106,6 +107,15 @@ test('Creators book has ordered headings, labeled pages, and keyboard-safe exter
   assert.ok(/target="_blank" rel="noopener noreferrer"/.test(developersJs), 'external links should be isolated safely');
   assert.ok(/\.creators-link[\s\S]*min-height:\s*44px[\s\S]*overflow-wrap:\s*anywhere/.test(mainCss), 'creator links should meet touch size and wrapping requirements');
   assert.ok(/\.creators-link:focus-visible/.test(mainCss), 'creator links should expose a visible keyboard focus state');
+});
+
+test('Unknown Maps chapter and Fading Path are labelled without hiding the red warning', function () {
+  assert.ok(/help-unknown-library[^>]*aria-labelledby="help-unknown-library-title"/.test(helpJs), 'chapter three article should be named by its visible heading');
+  assert.ok(/id="help-unknown-library-title" tabindex="-1"/.test(helpJs), 'chapter heading should accept programmatic focus after unlock');
+  assert.ok(/class="help-library-danger"/.test(helpJs) && !/help-library-danger[^>]*aria-hidden/.test(helpJs), 'danger warning should remain exposed to screen readers');
+  assert.ok(/\.help-library-danger\s*\{[\s\S]*color:\s*#ff6159\s*!important/.test(mainCss), 'danger warning should have an explicit red color');
+  assert.ok(/<hr class="help-unknown-library-divider">[\s\S]*id="help-unknown-library-fading-title"[\s\S]*role="group" aria-labelledby="help-unknown-library-fading-title"/.test(helpJs), 'Fading Path should be separated and label its final button group');
+  assert.ok(/\.help-secret-library-link[\s\S]*min-height:\s*44px/.test(mainCss), 'unknown map links should inherit 44px touch targets');
 });
 
 test('core screen fallbacks avoid blank controls and fixture crashes', function () {
