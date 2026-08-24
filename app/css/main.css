@@ -835,7 +835,7 @@ body[data-icon-motion="sparkle"] .energy-path-shimmer {
 }
 .region-name.region-lore-link { text-decoration: underline; text-decoration-style: dotted; text-decoration-color: var(--color-accent); }
 .region-name.region-lore-link:hover, .region-name.region-lore-link:focus { color: var(--color-accent); }
-.region-level { font-size: 0.8rem; color: var(--color-text-muted); }
+.region-level { font-size: 0.8rem; color: var(--color-text-muted); margin-inline-start: 0.25em; }
 .region-school {
     font-size: 0.75rem; padding: 2px 6px;
     background: var(--color-surface-2); border-radius: 4px;
