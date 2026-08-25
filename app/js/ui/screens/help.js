@@ -45,13 +45,13 @@ var HelpScreen = (function() {
         { id: '15', titleKey: 'help_secret_map_15_title', textKey: 'help_secret_map_15_text' }
     ];
     var HELP_UNKNOWN_LIBRARY_MAPS = [
+        { id: '01', titleKey: 'help_unknown_map_01_title', textKey: 'help_unknown_map_01_text' },
         { id: '13', titleKey: 'help_unknown_map_13_title', textKey: 'help_unknown_map_13_text' },
         { id: '14', titleKey: 'help_unknown_map_14_title', textKey: 'help_unknown_map_14_text' },
         { id: '09', titleKey: 'help_unknown_map_09_title', textKey: 'help_unknown_map_09_text' },
         { id: '10', titleKey: 'help_unknown_map_10_title', textKey: 'help_unknown_map_10_text' },
         { id: '11', titleKey: 'help_unknown_map_11_title', textKey: 'help_unknown_map_11_text' },
         { id: '06', titleKey: 'help_unknown_map_06_title', textKey: 'help_unknown_map_06_text' },
-        { id: '01', titleKey: 'help_unknown_map_01_title', textKey: 'help_unknown_map_01_text' },
         { id: '02', titleKey: 'help_unknown_map_02_title', textKey: 'help_unknown_map_02_text' },
         { id: '03', titleKey: 'help_unknown_map_03_title', textKey: 'help_unknown_map_03_text' },
         { id: '04', titleKey: 'help_unknown_map_04_title', textKey: 'help_unknown_map_04_text' }
