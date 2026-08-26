@@ -72,6 +72,7 @@ var HelpScreen = (function() {
         var sections = [
             { key: 'mana',        icon: 'mana' },
             { key: 'hp',          icon: 'hp' },
+            { key: 'levels',      icon: 'xp' },
             { key: 'quests',      icon: 'quests' },
             { key: 'travel_exploration', icon: 'map' },
             { key: 'hunt',        icon: 'hunt' },

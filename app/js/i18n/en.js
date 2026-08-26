@@ -1420,6 +1420,9 @@ var LangEN = {
     help_section_hp: 'HP & Recovery',
     help_hp_text: 'HP is your health. Max HP grows from your level, class, and Resilience: base 100 + level × 10 + RES × 3, then your class multiplier is applied. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 100 blocks, ~5 min). <br>Full recovery: open the Hunt screen and press <button type="button" class="help-nav-link" data-help-nav="hunt">Rest at camp</button>, or use a Health Scroll (craftable or dropped by creatures).',
 
+    help_section_levels: 'Levels & Experience',
+    help_levels_text: 'Your level grows from accumulated experience — XP. Hunts, Armageddon, and completed duels grant XP. Reaching level 2 requires 1000 XP; level 2 to 3 requires 1150 more XP; level 3 to 4 requires 1300 more XP. Each later transition requires 150 XP more than the previous one. Spending a cumulative 100% Mana does not raise your level by itself. Current XP progress appears on Home and Character.',
+
     help_section_quests: 'Quests & Prophecies',
     help_quests_text: 'Regular quests are accepted in the <button type="button" class="help-nav-link" data-help-nav="quests">Quests</button> screen. “Traveler” currently means visiting 3 different regions via the <button type="button" class="help-nav-link" data-help-nav="map">World Map</button> — open the map, choose another region, and press “Travel”.<br>The <button type="button" class="help-nav-link" data-help-nav="quests">Daily Prophecy</button> must also be accepted first, then completed. If it tells you to bless others, do that in the <button type="button" class="help-nav-link" data-help-nav="chronicle">Chronicle</button> with the “Bless” button on other mages\' entries. Abandoning a quest after progress only loses that progress; abandoning a quest before the first step pays a small forfeit to the World — 1.00% Mana.',
 
