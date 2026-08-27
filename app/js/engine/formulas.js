@@ -60,18 +60,25 @@ var GameFormulas = (function() {
         return intPow(wholeShares, 300); // 0.3 = 300/1000
     }
 
-    /**
-     * Calculate XP required for a given level.
-     * Lv2=1000, Lv3=1150, Lv4=1300, Lv5=1450... gentle acceleration.
-     * @param {number} level
-     * @returns {number} XP required
-     */
-    function xpForLevel(level) {
+    function xpForLevelLegacy(level) {
         if (level <= 1) return 0;
-        // Base 1000 for Lv2, +100-200 per level with gentle acceleration
         var base = 800 + level * 100;
         var bonus = (level > 2) ? (level - 2) * 50 : 0;
         return base + bonus;
+    }
+
+    /**
+     * Quadratic v2 curve. Levels 2..9 require
+     * 1000, 1250, 1750, 2500, 3500, 4750, 6250, 8000 XP.
+     */
+    function xpForLevelV2(level) {
+        if (level <= 1) return 0;
+        return 1000 + 125 * (level - 2) * (level - 1);
+    }
+
+    /** Calculate XP required for a target level under a progression version. */
+    function xpForLevel(level, progressionVersion) {
+        return progressionVersion === 1 ? xpForLevelLegacy(level) : xpForLevelV2(level);
     }
 
     /**
@@ -79,10 +86,10 @@ var GameFormulas = (function() {
      * @param {number} level
      * @returns {number}
      */
-    function totalXpForLevel(level) {
+    function totalXpForLevel(level, progressionVersion) {
         var total = 0;
         for (var i = 2; i <= level; i++) {
-            total += xpForLevel(i);
+            total += xpForLevel(i, progressionVersion);
         }
         return total;
     }
@@ -92,11 +99,11 @@ var GameFormulas = (function() {
      * @param {number} totalXp
      * @returns {number} current level
      */
-    function levelFromXp(totalXp) {
+    function levelFromXp(totalXp, progressionVersion) {
         var level = 1;
         var cumulative = 0;
         while (level < 100) {
-            var needed = xpForLevel(level + 1);
+            var needed = xpForLevel(level + 1, progressionVersion);
             if (cumulative + needed > totalXp) break;
             cumulative += needed;
             level++;
@@ -285,6 +292,8 @@ var GameFormulas = (function() {
     return {
         intPow: intPow,
         coreBonusFromShares: coreBonusFromShares,
+        xpForLevelLegacy: xpForLevelLegacy,
+        xpForLevelV2: xpForLevelV2,
         xpForLevel: xpForLevel,
         totalXpForLevel: totalXpForLevel,
         levelFromXp: levelFromXp,

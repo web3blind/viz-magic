@@ -103,6 +103,16 @@ var VizMagicConfig = (function() {
         SUBORDINATE:  700    // 0.7x
     };
 
+    /**
+     * Versioned XP progression. The activation block is consensus-critical:
+     * historical blocks below it must continue to use the legacy curve.
+     */
+    var PROGRESSION = {
+        LEGACY_VERSION: 1,
+        CURRENT_VERSION: 2,
+        V2_ACTIVATION_BLOCK: 83000000
+    };
+
     /** XP and leveling */
     var LEVELING = {
         SOFT_CAP: 50,
@@ -238,6 +248,7 @@ var VizMagicConfig = (function() {
         SCHOOLS: SCHOOLS,
         DOMINANCE: DOMINANCE,
         ELEMENT_MODS: ELEMENT_MODS,
+        PROGRESSION: PROGRESSION,
         LEVELING: LEVELING,
         RARITY: RARITY,
         STATS: STATS,

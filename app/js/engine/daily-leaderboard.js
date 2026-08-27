@@ -338,7 +338,7 @@ var DailyLeaderboard = (function() {
             players: {}
         };
 
-        _primeCharactersForActions(ctx, vmActions, function() {
+        _primeCharactersForActions(ctx, vmActions, processed.blockNum, function() {
             for (var i = 0; i < vmActions.length; i++) {
                 _applyVmAction(ctx, processed, vmActions[i], blockContrib);
             }
@@ -356,7 +356,7 @@ var DailyLeaderboard = (function() {
         if (!action) return;
 
         if (action.type === VizMagicConfig.ACTION_TYPES.CHAR_ATTUNE) {
-            _handleCharAttune(ctx, sender, action.data || {});
+            _handleCharAttune(ctx, sender, action.data || {}, processed.blockNum);
             return;
         }
 
@@ -370,7 +370,7 @@ var DailyLeaderboard = (function() {
         }
     }
 
-    function _primeCharactersForActions(ctx, vmActions, callback) {
+    function _primeCharactersForActions(ctx, vmActions, blockNum, callback) {
         callback = callback || function() {};
 
         var accountsToFetch = [];
@@ -382,7 +382,7 @@ var DailyLeaderboard = (function() {
             if (!sender || ctx.characters[sender] || seen[sender]) continue;
 
             if (action && action.type === VizMagicConfig.ACTION_TYPES.CHAR_ATTUNE && action.data && action.data.class) {
-                _handleCharAttune(ctx, sender, action.data);
+                _handleCharAttune(ctx, sender, action.data, blockNum);
                 continue;
             }
 
@@ -407,14 +407,14 @@ var DailyLeaderboard = (function() {
             }
 
             for (i = 0; i < accountsToFetch.length; i++) {
-                _hydrateCharacter(ctx, accountsToFetch[i], byName[accountsToFetch[i]] || null);
+                _hydrateCharacter(ctx, accountsToFetch[i], byName[accountsToFetch[i]] || null, blockNum);
             }
 
             callback();
         });
     }
 
-    function _hydrateCharacter(ctx, account, accountData) {
+    function _hydrateCharacter(ctx, account, accountData, blockNum) {
         if (!account || ctx.characters[account]) return;
 
         var character = null;
@@ -422,10 +422,9 @@ var DailyLeaderboard = (function() {
             var avatarUrl = VizAccount.getProfileAvatar ? VizAccount.getProfileAvatar(accountData) : '';
             var grimoire = VizAccount.parseGrimoire(accountData);
             if (grimoire && grimoire.class) {
-                character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class);
+                character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class, blockNum);
                 if (character) {
-                    character.level = grimoire.level || character.level;
-                    character.xp = grimoire.xp || 0;
+                    CharacterSystem.restoreProgression(character, grimoire);
                     character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
                     character.maxHp = character.hp;
                 }
@@ -433,15 +432,15 @@ var DailyLeaderboard = (function() {
         }
 
         if (!character) {
-            character = CharacterSystem.createCharacter(account, account, 'embercaster');
+            character = CharacterSystem.createCharacter(account, account, 'embercaster', blockNum);
         }
 
         if (avatarUrl) character.avatarUrl = avatarUrl;
         ctx.characters[account] = character;
     }
 
-    function _handleCharAttune(ctx, account, data) {
-        var character = CharacterSystem.createCharacter(account, data.name || account, data.class || 'embercaster');
+    function _handleCharAttune(ctx, account, data, blockNum) {
+        var character = CharacterSystem.createCharacter(account, data.name || account, data.class || 'embercaster', blockNum);
         if (character) {
             ctx.characters[account] = character;
         }
@@ -458,7 +457,7 @@ var DailyLeaderboard = (function() {
         var result = CombatSystem.resolveHunt(character, creature, spell, processed.blockHash || '', processed.blockNum, VizMagicConfig.ENERGY.MAX);
         if (!result || !result.victory) return;
 
-        CharacterSystem.addXp(character, result.xpGained);
+        CharacterSystem.addXp(character, result.xpGained, processed.blockNum);
         _addContribution(ctx.players, blockContrib.players, account, character.name || account, result.xpGained, 1, character.avatarUrl || '');
     }
 
@@ -470,7 +469,7 @@ var DailyLeaderboard = (function() {
         if (!creature) return;
 
         var xp = GameFormulas.armageddonXp(character.level, creature.minLevel, creature.baseXp || 25);
-        CharacterSystem.addXp(character, xp);
+        CharacterSystem.addXp(character, xp, processed.blockNum);
         _addContribution(ctx.players, blockContrib.players, account, character.name || account, xp, 1, character.avatarUrl || '');
     }
 

@@ -255,7 +255,7 @@ var QuestSystem = (function() {
 
             // Add XP
             if (rewards.xp > 0 && typeof CharacterSystem !== 'undefined') {
-                CharacterSystem.addXp(character, rewards.xp);
+                CharacterSystem.addXp(character, rewards.xp, blockNum);
             }
 
             // Add items to inventory

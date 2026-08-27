@@ -116,10 +116,9 @@ var App = (function() {
                             if (!state.characters[user]) {
                                 var character = CharacterSystem.createCharacter(user, grimoire.name, grimoire.class);
                                 if (character) {
-                                    // Restore level/xp from Grimoire cache hint
-                                    if (grimoire.level && grimoire.level > 1) {
-                                        character.level = grimoire.level;
-                                        character.xp = grimoire.xp || 0;
+                                    // Restore versioned progression from Grimoire cache hint.
+                                    CharacterSystem.restoreProgression(character, grimoire);
+                                    if (character.level > 1) {
                                         character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
                                         character.maxHp = character.hp;
                                     }

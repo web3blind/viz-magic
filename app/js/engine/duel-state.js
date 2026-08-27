@@ -272,7 +272,7 @@ var DuelStateManager = (function() {
         var duelOver = (winsA >= 2 || winsB >= 2 || duel.roundResults.length >= duel.rounds);
 
         if (duelOver) {
-            events = events.concat(_completeDuel(duel, winsA, winsB, worldState));
+            events = events.concat(_completeDuel(duel, winsA, winsB, worldState, blockNum));
         } else {
             // Advance to next round
             duel.currentRound = round + 1;
@@ -284,7 +284,7 @@ var DuelStateManager = (function() {
     /**
      * Complete a duel and move to history.
      */
-    function _completeDuel(duel, winsA, winsB, worldState) {
+    function _completeDuel(duel, winsA, winsB, worldState, blockNum) {
         var duels = _ensureState(worldState);
         var winner = null;
         var loser = null;
@@ -308,12 +308,12 @@ var DuelStateManager = (function() {
 
         if (winner && worldState.characters[winner]) {
             if (typeof CharacterSystem !== 'undefined' && CharacterSystem.addXp) {
-                CharacterSystem.addXp(worldState.characters[winner], xpWinner);
+                CharacterSystem.addXp(worldState.characters[winner], xpWinner, blockNum);
             }
         }
         if (loser && worldState.characters[loser]) {
             if (typeof CharacterSystem !== 'undefined' && CharacterSystem.addXp) {
-                CharacterSystem.addXp(worldState.characters[loser], xpLoser);
+                CharacterSystem.addXp(worldState.characters[loser], xpLoser, blockNum);
             }
         }
 

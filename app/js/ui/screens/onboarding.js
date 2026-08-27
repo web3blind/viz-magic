@@ -97,7 +97,7 @@ var OnboardingScreen = (function() {
 
         var displayName = mageName || user;
         var state = StateEngine.getState();
-        var character = CharacterSystem.createCharacter(user, displayName, selectedClass);
+        var character = CharacterSystem.createCharacter(user, displayName, selectedClass, state.headBlock);
         if (character) {
             state.characters[user] = character;
             state.inventories[user] = state.inventories[user] || [];
@@ -111,7 +111,7 @@ var OnboardingScreen = (function() {
             }
         });
 
-        VizAccount.updateGrimoire({ class: selectedClass, name: displayName }, function(err3) {
+        VizAccount.updateGrimoire(CharacterSystem.toGrimoire(character), function(err3) {
             if (err3) {
                 console.log('Grimoire save error:', err3);
             }

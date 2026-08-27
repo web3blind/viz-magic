@@ -26,8 +26,8 @@ var HomeScreen = (function() {
             character = { name: user || t('loading'), className: '', level: 0, hp: 0, maxHp: 1, xp: 0 };
         }
 
-        var xpNeeded = hasCharacter ? (GameFormulas.xpForLevel(character.level + 1) || 1000) : 1;
-        var xpCurrent = hasCharacter ? (character.xp - GameFormulas.totalXpForLevel(character.level)) : 0;
+        var xpNeeded = hasCharacter ? (CharacterSystem.getXpForNextLevel(character) || 1000) : 1;
+        var xpCurrent = hasCharacter ? CharacterSystem.getLevelProgress(character) : 0;
         if (xpCurrent < 0) xpCurrent = 0;
         var hpShown = hasCharacter ? _scaleForDisplay(character.hp, character.maxHp, HOME_HP_DISPLAY_MAX) : 0;
         var xpShown = hasCharacter ? _scaleForDisplay(xpCurrent, xpNeeded, HOME_XP_DISPLAY_MAX) : 0;

@@ -437,7 +437,7 @@ var StateEngine = (function() {
      * Handle character attunement (creation)
      */
     function _handleCharAttune(sender, data, blockNum) {
-        var character = CharacterSystem.createCharacter(sender, data.name, data.class);
+        var character = CharacterSystem.createCharacter(sender, data.name, data.class, blockNum);
         if (!character) return [];
 
         worldState.characters[sender] = character;
@@ -484,7 +484,7 @@ var StateEngine = (function() {
 
         // Apply results
         if (result.victory) {
-            var xpResult = CharacterSystem.addXp(character, result.xpGained);
+            var xpResult = CharacterSystem.addXp(character, result.xpGained, blockNum);
 
             // Add loot to inventory
             for (var i = 0; i < result.loot.length; i++) {
@@ -501,7 +501,7 @@ var StateEngine = (function() {
         } else {
             var defeatXp = Math.floor(GameFormulas.huntXp(character.level, result.creatureLevel, creature.baseXp || 50) / 4);
             if (defeatXp > 0) {
-                CharacterSystem.addXp(character, defeatXp);
+                CharacterSystem.addXp(character, defeatXp, blockNum);
                 result.xpGained = defeatXp;
             }
         }
@@ -567,7 +567,7 @@ var StateEngine = (function() {
 
         // Calculate XP: 100x normal hunt XP
         var xp = GameFormulas.armageddonXp(character.level, creature.minLevel, creature.baseXp || 25);
-        var xpResult = CharacterSystem.addXp(character, xp);
+        var xpResult = CharacterSystem.addXp(character, xp, blockNum);
 
         character.lastHuntBlock = blockNum;
 
@@ -1387,7 +1387,7 @@ var StateEngine = (function() {
             var character = worldState.characters[entry.account];
             if (character && typeof CharacterSystem !== 'undefined' && CharacterSystem.addXp) {
                 if (typeof character.xp !== 'number' || isNaN(character.xp)) character.xp = 0;
-                CharacterSystem.addXp(character, entry.xpReward);
+                CharacterSystem.addXp(character, entry.xpReward, blockNum);
             }
             if (!worldState.inventories[entry.account]) worldState.inventories[entry.account] = [];
             if (typeof ItemSystem !== 'undefined' && ItemSystem.createItem) {
@@ -1534,7 +1534,7 @@ var StateEngine = (function() {
         var result = CombatSystem.resolveHunt(character, creature, spell, blockHash, blockNum, combatEnergy);
 
         if (result.victory) {
-            var xpResult = CharacterSystem.addXp(character, result.xpGained);
+            var xpResult = CharacterSystem.addXp(character, result.xpGained, blockNum);
             result.levelsGained = xpResult ? (xpResult.levelsGained || 0) : 0;
             if (!worldState.inventories[account]) worldState.inventories[account] = [];
             for (var i = 0; i < result.loot.length; i++) {
@@ -1550,7 +1550,7 @@ var StateEngine = (function() {
         } else {
             var defeatXp = Math.floor(GameFormulas.huntXp(character.level, result.creatureLevel, creature.baseXp || 50) / 4);
             if (defeatXp > 0) {
-                var defeatXpResult = CharacterSystem.addXp(character, defeatXp);
+                var defeatXpResult = CharacterSystem.addXp(character, defeatXp, blockNum);
                 result.xpGained = defeatXp;
                 result.levelsGained = defeatXpResult ? (defeatXpResult.levelsGained || 0) : 0;
             }

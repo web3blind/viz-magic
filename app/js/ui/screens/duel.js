@@ -911,9 +911,8 @@ var DuelScreen = (function() {
             var character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class);
             if (!character) return;
 
-            if (grimoire.level && grimoire.level > 1) {
-                character.level = grimoire.level;
-                character.xp = grimoire.xp || 0;
+            CharacterSystem.restoreProgression(character, grimoire);
+            if (character.level > 1) {
                 if (typeof GameFormulas !== 'undefined' && GameFormulas.calculateMaxHp && CharacterSystem.getTotalStat) {
                     character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
                     character.maxHp = character.hp;

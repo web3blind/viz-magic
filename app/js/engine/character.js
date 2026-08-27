@@ -85,7 +85,18 @@ var CharacterSystem = (function() {
      * @param {string} className - class ID
      * @returns {Object} CharacterState
      */
-    function createCharacter(account, displayName, className) {
+    function progressionVersionForBlock(blockNum) {
+        var progression = cfg.PROGRESSION || {};
+        var current = progression.CURRENT_VERSION || 2;
+        var legacy = progression.LEGACY_VERSION || 1;
+        var activationBlock = progression.V2_ACTIVATION_BLOCK || 0;
+        if (typeof blockNum === 'number' && blockNum > 0 && blockNum < activationBlock) {
+            return legacy;
+        }
+        return current;
+    }
+
+    function createCharacter(account, displayName, className, blockNum) {
         var classDef = getClassDef(className);
         if (!classDef) return null;
 
@@ -97,6 +108,8 @@ var CharacterSystem = (function() {
             school: classDef.school,
             level: 1,
             xp: 0,
+            progressionVersion: progressionVersionForBlock(blockNum),
+            progressionMigratedAtBlock: 0,
             hp: classDef.baseHp,
             maxHp: classDef.baseHp,
             pot: bs.pot,
@@ -150,9 +163,24 @@ var CharacterSystem = (function() {
      * @returns {boolean}
      */
     function canLevelUp(character) {
-        var xpNeeded = GameFormulas.xpForLevel(character.level + 1);
-        var totalNeeded = GameFormulas.totalXpForLevel(character.level + 1);
+        var version = character.progressionVersion || (cfg.PROGRESSION && cfg.PROGRESSION.LEGACY_VERSION) || 1;
+        var totalNeeded = GameFormulas.totalXpForLevel(character.level + 1, version);
         return character.xp >= totalNeeded;
+    }
+
+    function _migrateToV2(character, blockNum) {
+        var progression = cfg.PROGRESSION || {};
+        var currentVersion = progression.CURRENT_VERSION || 2;
+        if (character.progressionVersion === currentVersion) return character;
+
+        var oldVersion = character.progressionVersion || progression.LEGACY_VERSION || 1;
+        var level = Math.max(1, character.level || 1);
+        var oldFloor = GameFormulas.totalXpForLevel(level, oldVersion);
+        var withinLevelProgress = Math.max(0, (character.xp || 0) - oldFloor);
+        character.xp = GameFormulas.totalXpForLevel(level, currentVersion) + withinLevelProgress;
+        character.progressionVersion = currentVersion;
+        character.progressionMigratedAtBlock = blockNum || 0;
+        return character;
     }
 
     /**
@@ -161,7 +189,16 @@ var CharacterSystem = (function() {
      * @param {number} xpGain
      * @returns {Object} {character, leveled: boolean, newLevel: number}
      */
-    function addXp(character, xpGain) {
+    function addXp(character, xpGain, blockNum) {
+        var targetVersion = progressionVersionForBlock(blockNum);
+        if (!character.progressionVersion) {
+            // Unversioned persisted characters were created before progression v2.
+            // New post-activation characters already receive v2 in createCharacter().
+            character.progressionVersion = (cfg.PROGRESSION && cfg.PROGRESSION.LEGACY_VERSION) || 1;
+        }
+        if (targetVersion > character.progressionVersion) {
+            _migrateToV2(character, blockNum);
+        }
         character.xp += xpGain;
         var leveled = false;
         var startLevel = character.level;
@@ -177,6 +214,26 @@ var CharacterSystem = (function() {
             newLevel: character.level,
             levelsGained: character.level - startLevel
         };
+    }
+
+    function getLevelProgress(character) {
+        var version = character.progressionVersion || (cfg.PROGRESSION && cfg.PROGRESSION.LEGACY_VERSION) || 1;
+        return Math.max(0, (character.xp || 0) - GameFormulas.totalXpForLevel(character.level || 1, version));
+    }
+
+    function getXpForNextLevel(character) {
+        var version = character.progressionVersion || (cfg.PROGRESSION && cfg.PROGRESSION.LEGACY_VERSION) || 1;
+        return GameFormulas.xpForLevel((character.level || 1) + 1, version);
+    }
+
+    function restoreProgression(character, grimoire) {
+        grimoire = grimoire || {};
+        character.level = Math.max(1, Number(grimoire.level) || character.level || 1);
+        character.xp = Math.max(0, Number(grimoire.xp) || 0);
+        character.progressionVersion = Number(grimoire.progression_version) ||
+            ((cfg.PROGRESSION && cfg.PROGRESSION.LEGACY_VERSION) || 1);
+        character.progressionMigratedAtBlock = Math.max(0, Number(grimoire.progression_migrated_at_block) || 0);
+        return character;
     }
 
     /**
@@ -238,6 +295,9 @@ var CharacterSystem = (function() {
             name: character.name,
             class: character.className,
             level: character.level,
+            xp: character.xp || 0,
+            progression_version: character.progressionVersion || ((cfg.PROGRESSION && cfg.PROGRESSION.LEGACY_VERSION) || 1),
+            progression_migrated_at_block: character.progressionMigratedAtBlock || 0,
             title: character.title || '',
             guild: character.guild || '',
             home_locus: '',
@@ -250,10 +310,14 @@ var CharacterSystem = (function() {
         CLASS_DEFS: CLASS_DEFS,
         getClassDef: getClassDef,
         getAllClasses: getAllClasses,
+        progressionVersionForBlock: progressionVersionForBlock,
         createCharacter: createCharacter,
         levelUp: levelUp,
         canLevelUp: canLevelUp,
         addXp: addXp,
+        getLevelProgress: getLevelProgress,
+        getXpForNextLevel: getXpForNextLevel,
+        restoreProgression: restoreProgression,
         updateCoreBonus: updateCoreBonus,
         isFallen: isFallen,
         getTotalStat: getTotalStat,

@@ -28,8 +28,8 @@ var CharacterScreen = (function() {
         var totalSwf = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat) ? CharacterSystem.getTotalStat(ch, 'swf') : ((ch.swf || 0) + corePerStat);
         var totalInt = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat) ? CharacterSystem.getTotalStat(ch, 'int') : ((ch.int || 0) + corePerStat);
         var totalFor = (typeof CharacterSystem !== 'undefined' && CharacterSystem.getTotalStat) ? CharacterSystem.getTotalStat(ch, 'for_') : ((ch.for_ || 0) + corePerStat);
-        var xpNeeded = GameFormulas.xpForLevel(ch.level + 1) || 1000;
-        var xpCurrent = (ch.xp || 0) - GameFormulas.totalXpForLevel(ch.level);
+        var xpNeeded = CharacterSystem.getXpForNextLevel(ch) || 1000;
+        var xpCurrent = CharacterSystem.getLevelProgress(ch);
         if (xpCurrent < 0) xpCurrent = 0;
         var hpShown = _scaleForDisplay(ch.hp, ch.maxHp, CHARACTER_HP_DISPLAY_MAX);
         var xpShown = _scaleForDisplay(xpCurrent, xpNeeded, CHARACTER_XP_DISPLAY_MAX);

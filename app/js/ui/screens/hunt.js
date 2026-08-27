@@ -412,7 +412,7 @@ var HuntScreen = (function() {
             CheckpointSystem.saveCheckpoint('global', finalBlockNum, state, function() {});
 
             // Update Grimoire
-            VizAccount.updateGrimoire({ class: ch.className, name: ch.name, level: ch.level, xp: ch.xp }, function() {});
+            VizAccount.updateGrimoire(CharacterSystem.toGrimoire(ch), function() {});
 
             SoundManager.play('victory');
             SoundManager.vibrate('triple');
@@ -510,12 +510,7 @@ var HuntScreen = (function() {
             });
 
             // Update Grimoire on chain (cache hint for level/xp)
-            VizAccount.updateGrimoire({
-                class: ch.className,
-                name: ch.name,
-                level: ch.level,
-                xp: ch.xp
-            }, function(grimErr) {
+            VizAccount.updateGrimoire(CharacterSystem.toGrimoire(ch), function(grimErr) {
                 if (grimErr) {
                     console.log('Grimoire update error (non-fatal):', grimErr);
                 } else {
