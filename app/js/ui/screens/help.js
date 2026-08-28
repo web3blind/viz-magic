@@ -64,6 +64,9 @@ var HelpScreen = (function() {
         { id: '08', titleKey: 'help_unknown_map_08_title', textKey: 'help_unknown_map_08_text' },
         { id: '05', titleKey: 'help_unknown_map_05_title', textKey: 'help_unknown_map_05_text' }
     ];
+    var HELP_MIDDLE_LIBRARY_REVEALING_MAPS = [
+        { id: '14', titleKey: 'help_middle_map_14_title', textKey: 'help_middle_map_14_text' }
+    ];
     var HELP_MIDDLE_LIBRARY_MAPS = [
         { id: '01', titleKey: 'help_middle_map_01_title', textKey: 'help_middle_map_01_text' },
         { id: '02', titleKey: 'help_middle_map_02_title', textKey: 'help_middle_map_02_text' },
@@ -78,7 +81,6 @@ var HelpScreen = (function() {
         { id: '11', titleKey: 'help_middle_map_11_title', textKey: 'help_middle_map_11_text' },
         { id: '12', titleKey: 'help_middle_map_12_title', textKey: 'help_middle_map_12_text' },
         { id: '13', titleKey: 'help_middle_map_13_title', textKey: 'help_middle_map_13_text' },
-        { id: '14', titleKey: 'help_middle_map_14_title', textKey: 'help_middle_map_14_text' },
         { id: '15', titleKey: 'help_middle_map_15_title', textKey: 'help_middle_map_15_text' }
     ];
 
@@ -271,7 +273,14 @@ var HelpScreen = (function() {
         var html = '<article class="help-magic-library help-secret-library help-unknown-library help-middle-library" aria-labelledby="help-middle-library-title">' +
             '<h3 id="help-middle-library-title" tabindex="-1">' + Helpers.icon('map', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_middle_title') + '</h3>' +
             '<p>' + t('help_magic_library_middle_intro') + '</p>' +
-            '<div class="help-library-list help-secret-library-list">';
+            '<div class="help-library-list help-secret-library-list">' +
+            '<p id="help-middle-library-revealing-title" class="help-unknown-library-fading-title">' + t('help_middle_library_revealing_path') + '</p>' +
+            '<div role="group" aria-labelledby="help-middle-library-revealing-title">';
+        for (var r = 0; r < HELP_MIDDLE_LIBRARY_REVEALING_MAPS.length; r++) {
+            var revealingEntry = HELP_MIDDLE_LIBRARY_REVEALING_MAPS[r];
+            html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + revealingEntry.id + '">' + Helpers.escapeHtml(t(revealingEntry.titleKey)) + '</button>';
+        }
+        html += '</div><hr class="help-unknown-library-divider">';
         for (var i = 0; i < HELP_MIDDLE_LIBRARY_MAPS.length; i++) {
             var entry = HELP_MIDDLE_LIBRARY_MAPS[i];
             html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
@@ -324,8 +333,9 @@ var HelpScreen = (function() {
     }
 
     function _findMiddleLibraryEntry(id) {
-        for (var i = 0; i < HELP_MIDDLE_LIBRARY_MAPS.length; i++) {
-            if (HELP_MIDDLE_LIBRARY_MAPS[i].id === id) return HELP_MIDDLE_LIBRARY_MAPS[i];
+        var allMaps = HELP_MIDDLE_LIBRARY_REVEALING_MAPS.concat(HELP_MIDDLE_LIBRARY_MAPS);
+        for (var i = 0; i < allMaps.length; i++) {
+            if (allMaps[i].id === id) return allMaps[i];
         }
         return null;
     }

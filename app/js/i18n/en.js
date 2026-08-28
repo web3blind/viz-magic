@@ -1410,6 +1410,7 @@ var LangEN = {
     help_secret_map_15_text: 'Aerial docks split into two routes among whales, sailboats, and cloud cargo crews.',
     help_magic_library_middle_title: 'Middle World Maps\nfourth alley',
     help_magic_library_middle_intro: 'Rumor says the World is split into black and white, kind and cruel, but it is not. There are far more colors and emotions here...',
+    help_middle_library_revealing_path: 'Revealing Path',
     help_middle_map_01_title: 'Seven Weathers Caravan',
     help_middle_map_01_text: 'A caravan road changes weather at every camp, with cells marking winds, rests, meetings, and dangerous turns.',
     help_middle_map_02_title: 'Valley of Living Bells',
