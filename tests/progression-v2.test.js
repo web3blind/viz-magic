@@ -216,5 +216,5 @@ test('all changed progression bundles carry the v2 cache suffix', function () {
     const escaped = asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     assert.ok(new RegExp(escaped + '\\?v=[^" ]*20260827p').test(index), asset + ' must carry the v2 cache suffix');
   });
-  assert.ok(/viz-magic-v187/.test(read('app/sw.js')));
+  assert.ok(/viz-magic-v188/.test(read('app/sw.js')));
 });
