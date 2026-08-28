@@ -8,6 +8,7 @@ var HelpScreen = (function() {
     var HELP_SECRET_LIBRARY_ASSET_VERSION = '20260822a';
     var HELP_UNKNOWN_LIBRARY_ASSET_VERSION = '20260824a';
     var HELP_MIDDLE_LIBRARY_ASSET_VERSION = '20260828a';
+    var HELP_ATTRACTION_LIBRARY_ASSET_VERSION = '20260828a';
     var secretLibraryBusy = false;
     var unknownLibraryBusy = false;
     var middleLibraryBusy = false;
@@ -84,6 +85,25 @@ var HelpScreen = (function() {
         { id: '09', titleKey: 'help_middle_map_09_title', textKey: 'help_middle_map_09_text' },
         { id: '05', titleKey: 'help_middle_map_05_title', textKey: 'help_middle_map_05_text' }
     ];
+    var HELP_ATTRACTION_LIBRARY_FIRST_MAPS = [
+        { id: '01', titleKey: 'help_attraction_map_01_title', textKey: 'help_attraction_map_01_text' }
+    ];
+    var HELP_ATTRACTION_LIBRARY_GROWING_MAPS = [
+        { id: '02', titleKey: 'help_attraction_map_02_title', textKey: 'help_attraction_map_02_text' },
+        { id: '05', titleKey: 'help_attraction_map_05_title', textKey: 'help_attraction_map_05_text' },
+        { id: '03', titleKey: 'help_attraction_map_03_title', textKey: 'help_attraction_map_03_text' },
+        { id: '06', titleKey: 'help_attraction_map_06_title', textKey: 'help_attraction_map_06_text' },
+        { id: '14', titleKey: 'help_attraction_map_14_title', textKey: 'help_attraction_map_14_text' },
+        { id: '04', titleKey: 'help_attraction_map_04_title', textKey: 'help_attraction_map_04_text' },
+        { id: '11', titleKey: 'help_attraction_map_11_title', textKey: 'help_attraction_map_11_text' },
+        { id: '07', titleKey: 'help_attraction_map_07_title', textKey: 'help_attraction_map_07_text' },
+        { id: '12', titleKey: 'help_attraction_map_12_title', textKey: 'help_attraction_map_12_text' },
+        { id: '09', titleKey: 'help_attraction_map_09_title', textKey: 'help_attraction_map_09_text' },
+        { id: '13', titleKey: 'help_attraction_map_13_title', textKey: 'help_attraction_map_13_text' },
+        { id: '10', titleKey: 'help_attraction_map_10_title', textKey: 'help_attraction_map_10_text' },
+        { id: '15', titleKey: 'help_attraction_map_15_title', textKey: 'help_attraction_map_15_text' },
+        { id: '08', titleKey: 'help_attraction_map_08_title', textKey: 'help_attraction_map_08_text' }
+    ];
 
     function render() {
         var t = Helpers.t;
@@ -137,6 +157,7 @@ var HelpScreen = (function() {
         _bindSecretLibrary(el);
         _bindUnknownLibrary(el);
         _bindMiddleLibrary(el);
+        _bindAttractionLibrary(el);
         _scheduleSecretLibraryExpiry();
     }
 
@@ -189,7 +210,7 @@ var HelpScreen = (function() {
                     '<h3>' + Helpers.icon('festival', 'section-icon vmagic-breathe') + ' ' + t('help_section_world_months') + '</h3>' +
                     '<p>' + t('help_world_months_text') + '</p>' +
                 '</article>' +
-            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + _renderMiddleLibrary(t) + '</section>';
+            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + _renderMiddleLibrary(t) + _renderAttractionLibrary(t) + '</section>';
     }
 
     function _renderMagicLibrary(t) {
@@ -304,6 +325,26 @@ var HelpScreen = (function() {
         return html;
     }
 
+    function _renderAttractionLibrary(t) {
+        var html = '<article class="help-magic-library help-secret-library help-unknown-library help-attraction-library" aria-labelledby="help-attraction-library-title">' +
+            '<h3 id="help-attraction-library-title" tabindex="-1">' + Helpers.icon('spark', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_attraction_title') + '</h3>' +
+            '<p>' + t('help_magic_library_attraction_intro') + '</p>' +
+            '<div class="help-library-list help-secret-library-list">';
+        for (var a = 0; a < HELP_ATTRACTION_LIBRARY_FIRST_MAPS.length; a++) {
+            var firstEntry = HELP_ATTRACTION_LIBRARY_FIRST_MAPS[a];
+            html += '<button type="button" class="help-library-link help-secret-library-link help-attraction-library-link" data-attraction-library-map="' + firstEntry.id + '">' + Helpers.escapeHtml(t(firstEntry.titleKey)) + '</button>';
+        }
+        html += '<hr class="help-unknown-library-divider">' +
+            '<p id="help-attraction-library-growing-title" class="help-unknown-library-fading-title">' + t('help_attraction_library_growing') + '</p>' +
+            '<div role="group" aria-labelledby="help-attraction-library-growing-title">';
+        for (var i = 0; i < HELP_ATTRACTION_LIBRARY_GROWING_MAPS.length; i++) {
+            var entry = HELP_ATTRACTION_LIBRARY_GROWING_MAPS[i];
+            html += '<button type="button" class="help-library-link help-secret-library-link help-attraction-library-link" data-attraction-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
+        }
+        html += '</div></div></article>';
+        return html;
+    }
+
     function _bindSecretLibrary(el) {
         var unlock = Helpers.$('help-secret-library-unlock');
         if (unlock) unlock.addEventListener('click', _unlockSecretLibrary);
@@ -344,6 +385,19 @@ var HelpScreen = (function() {
                 if (entry) {
                     if (typeof SoundManager !== 'undefined') SoundManager.play('tap');
                     _openMiddleLibraryMap(entry);
+                }
+            });
+        }
+    }
+
+    function _bindAttractionLibrary(el) {
+        var links = el.querySelectorAll('.help-attraction-library-link');
+        for (var i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function() {
+                var entry = _findAttractionLibraryEntry(this.getAttribute('data-attraction-library-map'));
+                if (entry) {
+                    if (typeof SoundManager !== 'undefined') SoundManager.play('tap');
+                    _openAttractionLibraryMap(entry);
                 }
             });
         }
@@ -432,6 +486,14 @@ var HelpScreen = (function() {
                 );
             });
         }, 'chapter4');
+    }
+
+    function _findAttractionLibraryEntry(id) {
+        var allMaps = HELP_ATTRACTION_LIBRARY_FIRST_MAPS.concat(HELP_ATTRACTION_LIBRARY_GROWING_MAPS);
+        for (var i = 0; i < allMaps.length; i++) {
+            if (allMaps[i].id === id) return allMaps[i];
+        }
+        return null;
     }
 
     function _findMiddleLibraryEntry(id) {
@@ -823,16 +885,24 @@ var HelpScreen = (function() {
         _openPaidLibraryMap(entry, 'chapter4');
     }
 
+    function _openAttractionLibraryMap(entry) {
+        _openPaidLibraryMap(entry, 'attraction');
+    }
+
     function _openPaidLibraryMap(entry, chapter) {
         var titleText = Helpers.t(entry.titleKey);
         var title = Helpers.escapeHtml(titleText);
         var description = Helpers.t(entry.textKey);
-        var imagePath = chapter === 'chapter4'
-            ? 'assets/library-maps-middle/middle-map-' + entry.id + '.jpg?v=' + HELP_MIDDLE_LIBRARY_ASSET_VERSION
-            : chapter === 'chapter3'
+        var imagePath = chapter === 'attraction'
+            ? 'assets/library-maps-attraction/attraction-map-' + entry.id + '.jpg?v=' + HELP_ATTRACTION_LIBRARY_ASSET_VERSION
+            : chapter === 'chapter4'
+                ? 'assets/library-maps-middle/middle-map-' + entry.id + '.jpg?v=' + HELP_MIDDLE_LIBRARY_ASSET_VERSION
+                : chapter === 'chapter3'
                 ? 'assets/library-maps-chapter3/unknown-map-' + entry.id + '.jpg?v=' + HELP_UNKNOWN_LIBRARY_ASSET_VERSION
                 : 'assets/library-maps-chapter2/secret-map-' + entry.id + '.jpg?v=' + HELP_SECRET_LIBRARY_ASSET_VERSION;
-        var cardClass = chapter === 'chapter3' ? ' help-unknown-library-map-card' : chapter === 'chapter4' ? ' help-middle-library-map-card' : '';
+        var cardClass = chapter === 'chapter3' ? ' help-unknown-library-map-card' :
+            chapter === 'chapter4' ? ' help-middle-library-map-card' :
+                chapter === 'attraction' ? ' help-attraction-library-map-card' : '';
         var html = '<div class="help-library-map-card help-secret-library-map-card' + cardClass + '">';
         html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
         html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';
