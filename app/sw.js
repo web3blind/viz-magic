@@ -118,7 +118,8 @@ self.addEventListener('fetch', function(event) {
     var url = new URL(event.request.url);
     var isMapImage = url.pathname.indexOf('/assets/maps/') === 0 && /\.jpg$/.test(url.pathname);
     var isLibraryMapImage = (url.pathname.indexOf('/assets/library-maps-v2/') === 0 ||
-        url.pathname.indexOf('/assets/library-maps/') === 0) && /\.jpg$/.test(url.pathname);
+        url.pathname.indexOf('/assets/library-maps/') === 0 ||
+        url.pathname.indexOf('/assets/library-maps-middle/') === 0) && /\.(jpg|png)$/.test(url.pathname);
 
     if (isMapImage || isLibraryMapImage) {
         event.respondWith(

@@ -7,6 +7,7 @@ var HelpScreen = (function() {
     var HELP_LIBRARY_ASSET_VERSION = '20260817d';
     var HELP_SECRET_LIBRARY_ASSET_VERSION = '20260822a';
     var HELP_UNKNOWN_LIBRARY_ASSET_VERSION = '20260824a';
+    var HELP_MIDDLE_LIBRARY_ASSET_VERSION = '20260828a';
     var secretLibraryBusy = false;
     var unknownLibraryBusy = false;
     var secretLibraryExpiryTimer = null;
@@ -63,6 +64,23 @@ var HelpScreen = (function() {
         { id: '08', titleKey: 'help_unknown_map_08_title', textKey: 'help_unknown_map_08_text' },
         { id: '05', titleKey: 'help_unknown_map_05_title', textKey: 'help_unknown_map_05_text' }
     ];
+    var HELP_MIDDLE_LIBRARY_MAPS = [
+        { id: '01', titleKey: 'help_middle_map_01_title', textKey: 'help_middle_map_01_text' },
+        { id: '02', titleKey: 'help_middle_map_02_title', textKey: 'help_middle_map_02_text' },
+        { id: '03', titleKey: 'help_middle_map_03_title', textKey: 'help_middle_map_03_text' },
+        { id: '04', titleKey: 'help_middle_map_04_title', textKey: 'help_middle_map_04_text' },
+        { id: '05', titleKey: 'help_middle_map_05_title', textKey: 'help_middle_map_05_text' },
+        { id: '06', titleKey: 'help_middle_map_06_title', textKey: 'help_middle_map_06_text' },
+        { id: '07', titleKey: 'help_middle_map_07_title', textKey: 'help_middle_map_07_text' },
+        { id: '08', titleKey: 'help_middle_map_08_title', textKey: 'help_middle_map_08_text' },
+        { id: '09', titleKey: 'help_middle_map_09_title', textKey: 'help_middle_map_09_text' },
+        { id: '10', titleKey: 'help_middle_map_10_title', textKey: 'help_middle_map_10_text' },
+        { id: '11', titleKey: 'help_middle_map_11_title', textKey: 'help_middle_map_11_text' },
+        { id: '12', titleKey: 'help_middle_map_12_title', textKey: 'help_middle_map_12_text' },
+        { id: '13', titleKey: 'help_middle_map_13_title', textKey: 'help_middle_map_13_text' },
+        { id: '14', titleKey: 'help_middle_map_14_title', textKey: 'help_middle_map_14_text' },
+        { id: '15', titleKey: 'help_middle_map_15_title', textKey: 'help_middle_map_15_text' }
+    ];
 
     function render() {
         var t = Helpers.t;
@@ -115,6 +133,7 @@ var HelpScreen = (function() {
         _bindLibraryLinks(el);
         _bindSecretLibrary(el);
         _bindUnknownLibrary(el);
+        _bindMiddleLibrary(el);
         _scheduleSecretLibraryExpiry();
     }
 
@@ -167,7 +186,7 @@ var HelpScreen = (function() {
                     '<h3>' + Helpers.icon('festival', 'section-icon vmagic-breathe') + ' ' + t('help_section_world_months') + '</h3>' +
                     '<p>' + t('help_world_months_text') + '</p>' +
                 '</article>' +
-            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + '</section>';
+            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + _renderMiddleLibrary(t) + '</section>';
     }
 
     function _renderMagicLibrary(t) {
@@ -247,6 +266,20 @@ var HelpScreen = (function() {
         return html;
     }
 
+
+    function _renderMiddleLibrary(t) {
+        var html = '<article class="help-magic-library help-secret-library help-unknown-library help-middle-library" aria-labelledby="help-middle-library-title">' +
+            '<h3 id="help-middle-library-title" tabindex="-1">' + Helpers.icon('map', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_middle_title') + '</h3>' +
+            '<p>' + t('help_magic_library_middle_intro') + '</p>' +
+            '<div class="help-library-list help-secret-library-list">';
+        for (var i = 0; i < HELP_MIDDLE_LIBRARY_MAPS.length; i++) {
+            var entry = HELP_MIDDLE_LIBRARY_MAPS[i];
+            html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
+        }
+        html += '</div></article>';
+        return html;
+    }
+
     function _bindSecretLibrary(el) {
         var unlock = Helpers.$('help-secret-library-unlock');
         if (unlock) unlock.addEventListener('click', _unlockSecretLibrary);
@@ -275,6 +308,26 @@ var HelpScreen = (function() {
                 }
             });
         }
+    }
+
+    function _bindMiddleLibrary(el) {
+        var links = el.querySelectorAll('.help-middle-library-link');
+        for (var i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function() {
+                var entry = _findMiddleLibraryEntry(this.getAttribute('data-middle-library-map'));
+                if (entry) {
+                    if (typeof SoundManager !== 'undefined') SoundManager.play('tap');
+                    _openMiddleLibraryMap(entry);
+                }
+            });
+        }
+    }
+
+    function _findMiddleLibraryEntry(id) {
+        for (var i = 0; i < HELP_MIDDLE_LIBRARY_MAPS.length; i++) {
+            if (HELP_MIDDLE_LIBRARY_MAPS[i].id === id) return HELP_MIDDLE_LIBRARY_MAPS[i];
+        }
+        return null;
     }
 
     function _findUnknownLibraryEntry(id) {
@@ -654,14 +707,20 @@ var HelpScreen = (function() {
         _openPaidLibraryMap(entry, 'chapter3');
     }
 
+    function _openMiddleLibraryMap(entry) {
+        _openPaidLibraryMap(entry, 'middle');
+    }
+
     function _openPaidLibraryMap(entry, chapter) {
         var titleText = Helpers.t(entry.titleKey);
         var title = Helpers.escapeHtml(titleText);
         var description = Helpers.t(entry.textKey);
-        var imagePath = chapter === 'chapter3'
-            ? 'assets/library-maps-chapter3/unknown-map-' + entry.id + '.jpg?v=' + HELP_UNKNOWN_LIBRARY_ASSET_VERSION
-            : 'assets/library-maps-chapter2/secret-map-' + entry.id + '.jpg?v=' + HELP_SECRET_LIBRARY_ASSET_VERSION;
-        var cardClass = chapter === 'chapter3' ? ' help-unknown-library-map-card' : '';
+        var imagePath = chapter === 'middle'
+            ? 'assets/library-maps-middle/middle-map-' + entry.id + '.jpg?v=' + HELP_MIDDLE_LIBRARY_ASSET_VERSION
+            : chapter === 'chapter3'
+                ? 'assets/library-maps-chapter3/unknown-map-' + entry.id + '.jpg?v=' + HELP_UNKNOWN_LIBRARY_ASSET_VERSION
+                : 'assets/library-maps-chapter2/secret-map-' + entry.id + '.jpg?v=' + HELP_SECRET_LIBRARY_ASSET_VERSION;
+        var cardClass = chapter === 'chapter3' ? ' help-unknown-library-map-card' : chapter === 'middle' ? ' help-middle-library-map-card' : '';
         var html = '<div class="help-library-map-card help-secret-library-map-card' + cardClass + '">';
         html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
         html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';

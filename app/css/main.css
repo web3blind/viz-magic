@@ -1717,6 +1717,14 @@ body[data-icon-motion="sparkle"] .energy-path-shimmer {
     border-left-color: #b785d6;
 }
 .help-unknown-library h3 { color: #d9b8ee; }
+.help-middle-library {
+    background:
+        linear-gradient(145deg, rgba(122, 91, 48, 0.22), rgba(42, 86, 88, 0.16)),
+        var(--color-surface, #111827);
+    border-left-color: #d9b56f;
+}
+.help-middle-library h3 { color: #f0d7a0; white-space: pre-line; }
+.help-middle-library > p { white-space: pre-line; }
 .help-unknown-library-divider {
     width: 100%;
     margin: 16px 0 10px;
