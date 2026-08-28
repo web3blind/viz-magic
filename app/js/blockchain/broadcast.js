@@ -139,7 +139,9 @@ var VizBroadcast = (function() {
             ? { cost: library.CHAPTER_TWO_COST, memoPrefix: library.CHAPTER_TWO_MEMO_PREFIX }
             : chapter === 'chapter3'
                 ? { cost: library.CHAPTER_THREE_COST, memoPrefix: library.CHAPTER_THREE_MEMO_PREFIX }
-                : null;
+                : chapter === 'chapter4'
+                    ? { cost: library.CHAPTER_FOUR_COST, memoPrefix: library.CHAPTER_FOUR_MEMO_PREFIX }
+                    : null;
         if (!chapterConfig || !chapterConfig.memoPrefix) {
             callback(new Error('invalid_library_chapter'));
             return;

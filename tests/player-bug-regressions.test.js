@@ -768,7 +768,7 @@ test('map regions separate safe travel from gated current-region exploration', f
   assert.ok(/js\/ui\/screens\/map.js\?v=20260824b/.test(indexHtml), 'map controls should be cache-busted');
   assert.ok(/main.css\?v=20260824a/.test(indexHtml), 'map action styles should be cache-busted');
   assert.ok(/i18n\/ru.js\?v=20260824f/.test(indexHtml) && /i18n\/en.js\?v=20260824f/.test(indexHtml), 'map action translations should be cache-busted');
-  assert.ok(/viz-magic-v186/.test(swJs), 'service worker cache should advance for the map action layout');
+  assert.ok(/viz-magic-v187/.test(swJs), 'service worker cache should advance for the map action layout');
 });
 
 test('map travel hint links to a permanent travel and exploration guide page', function () {
@@ -1073,7 +1073,7 @@ test('magical library restores the original board-game artwork with full lore', 
   assert.ok(/help\.js\?v=20260824c/.test(index), 'Help should be cache-busted for restored board-game artwork');
   assert.ok(/main\.css\?v=20260824a/.test(index), 'CSS should be cache-busted for the Magical Library');
   assert.ok(/js\/i18n\/ru\.js\?v=20260824f/.test(index) && /js\/i18n\/en\.js\?v=20260824f/.test(index), 'i18n should be cache-busted for the Magical Library');
-  assert.ok(/viz-magic-v186/.test(sw), 'service worker should publish the restored library cache bump');
+  assert.ok(/viz-magic-v187/.test(sw), 'service worker should publish the restored library cache bump');
 });
 
 test('magical guide replaces extra magical pages tab without shuffling practical help', function () {
@@ -1090,7 +1090,7 @@ test('magical guide replaces extra magical pages tab without shuffling practical
   assert.ok(!/magical-pages|magic-pages|screen-magical-pages|nav_magical_pages/.test(appJs + navJs + indexHtml + ruJs + enJs), 'no separate Magical Pages route or tab should be added');
   assert.ok(/help\.js\?v=20260824c/.test(indexHtml), 'Help should be cache-busted for guide redesign');
   assert.ok(/main\.css\?v=20260824a/.test(indexHtml), 'main CSS should be cache-busted for guide redesign');
-  assert.ok(/viz-magic-v186/.test(swJsV83), 'service worker should use the current v91 cache');
+  assert.ok(/viz-magic-v187/.test(swJsV83), 'service worker should use the current v91 cache');
   assert.ok(/animation-delay/.test(mainCss) && /nth-child/.test(mainCss), 'breathing icons should not all pulse in sync');
 });
 
@@ -1150,7 +1150,7 @@ test('Denis v91 polish batch keeps quests fair and icons lively', () => {
   assert.ok(/quest-system\.js\?v=20260826k/.test(indexHtml) && /quests\.js\?v=20260826k/.test(indexHtml), 'quest engine and UI should be cache-busted');
   assert.ok(/inventory\.js\?v=20260826k/.test(indexHtml) && /marketplace\.js\?v=20260826k/.test(indexHtml), 'item icon screens should be cache-busted');
   assert.ok(/guild\.js\?v=20260826k/.test(indexHtml) && /settings\.js\?v=20260826k/.test(indexHtml), 'guild/settings screens should be cache-busted');
-  assert.ok(/viz-magic-v186/.test(swJs), 'service worker should use v91 cache');
+  assert.ok(/viz-magic-v187/.test(swJs), 'service worker should use v91 cache');
 });
 
 
@@ -1207,7 +1207,7 @@ test('profile avatars from VIZ json_metadata are bounded and optional', function
   assert.ok(/world-boss\.js\?v=20260826k/.test(indexHtml), 'world boss UI should be cache-busted');
   assert.ok(/character\.js\?v=20260826u/.test(indexHtml), 'character UI should be cache-busted');
   assert.ok(/main\.css\?v=20260824a/.test(indexHtml), 'avatar CSS should be cache-busted');
-  assert.ok(/viz-magic-v186/.test(swJs), 'service worker should use v92 cache');
+  assert.ok(/viz-magic-v187/.test(swJs), 'service worker should use v92 cache');
 });
 
 
@@ -1392,7 +1392,7 @@ test('bottom navigation keeps icons above single-line labels and cache-busts cha
   assert.ok(/inventory\.js\?v=20260826k/.test(indexHtml), 'inventory cache bust missing');
   assert.ok(/marketplace\.js\?v=20260826k/.test(indexHtml), 'marketplace cache bust missing');
   assert.ok(/nav\.js\?v=20260826u/.test(indexHtml), 'nav cache bust missing');
-  assert.ok(/viz-magic-v186/.test(read('app/sw.js')), 'service worker cache should be v103');
+  assert.ok(/viz-magic-v187/.test(read('app/sw.js')), 'service worker cache should be v103');
 });
 
 
@@ -1424,7 +1424,7 @@ test('v103 weave surge, default avatars, and guide copy polish are explicit', fu
   assert.ok(/main\.css\?v=20260824a/.test(indexHtml), 'v103 CSS should be cache-busted');
   assert.ok(/home\.js\?v=20260826u/.test(indexHtml) && /character\.js\?v=20260826u/.test(indexHtml), 'v103 Home and Character should be cache-busted');
   assert.ok(/settings\.js\?v=20260826k/.test(indexHtml) && /help\.js\?v=20260824c/.test(indexHtml), 'v103 Settings and Help should be cache-busted');
-  assert.ok(/viz-magic-v186/.test(swJs), 'service worker should use v103 cache');
+  assert.ok(/viz-magic-v187/.test(swJs), 'service worker should use v103 cache');
 });
 
 
@@ -1455,7 +1455,7 @@ test('quest abandon charges only unstarted quests and warns before forfeit', fun
   assert.ok(/state-engine\.js\?v=20260824a/.test(indexPenalty), 'state engine cache bust missing for abandon penalty');
   assert.ok(/quests\.js\?v=20260826k/.test(indexPenalty), 'quests screen cache bust missing for abandon penalty');
   assert.ok(/js\/i18n\/ru\.js\?v=20260824f/.test(indexPenalty) && /js\/i18n\/en\.js\?v=20260824f/.test(indexPenalty), 'i18n cache bust missing for abandon penalty');
-  assert.ok(/viz-magic-v186/.test(swPenalty), 'service worker should use v104 cache');
+  assert.ok(/viz-magic-v187/.test(swPenalty), 'service worker should use v104 cache');
 });
 
 
@@ -1514,7 +1514,7 @@ test('v110 player feedback keeps requested icons, copy, vital explainers, and ev
     var version = asset === 'main.css' ? '20260824a' : ((asset === 'home.js' || asset === 'character.js' || asset === 'nav.js' || asset === 'hunt.js') ? '20260826u' : ((asset === 'ru.js' || asset === 'en.js') ? '20260824f' : '20260826k'));
     assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=' + version).test(index), asset + ' should be cache-busted for v110');
   });
-  assert.ok(/viz-magic-v186/.test(sw), 'service worker should use v110 cache');
+  assert.ok(/viz-magic-v187/.test(sw), 'service worker should use v110 cache');
 });
 
 test('v109 player polish batch removes stale text, fixes motion/copy/icons, and fills hunt tier gap', function () {
@@ -1569,7 +1569,7 @@ test('v109 player polish batch removes stale text, fixes motion/copy/icons, and 
     var version = asset === 'main.css' ? '20260824a' : ((asset === 'home.js' || asset === 'character.js' || asset === 'nav.js' || asset === 'hunt.js') ? '20260826u' : ((asset === 'ru.js' || asset === 'en.js') ? '20260824f' : '20260826k'));
     assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=' + version).test(indexV109), asset + ' should be cache-busted for v109');
   });
-  assert.ok(/viz-magic-v186/.test(swV109), 'service worker should use v109 cache');
+  assert.ok(/viz-magic-v187/.test(swV109), 'service worker should use v109 cache');
 });
 
 test('v108 inventory, bottom nav, hunt danger marker, and arena motion polish are explicit', function () {
@@ -1613,7 +1613,7 @@ test('v108 inventory, bottom nav, hunt danger marker, and arena motion polish ar
   assert.ok(/nav\.js\?v=20260826u/.test(indexV108), 'nav cache bust missing for v108');
   assert.ok(/marketplace\.js\?v=20260826k/.test(indexV108), 'marketplace cache bust missing for v108 icon parity');
   assert.ok(/js\/i18n\/ru\.js\?v=20260824f/.test(indexV108) && /js\/i18n\/en\.js\?v=20260824f/.test(indexV108), 'i18n cache bust missing for v108 item labels');
-  assert.ok(/viz-magic-v186/.test(swV108), 'service worker should use v108 cache');
+  assert.ok(/viz-magic-v187/.test(swV108), 'service worker should use v108 cache');
 });
 
 test('v107 hunt combat uses spell mana cost, not full account energy', function () {
@@ -1642,7 +1642,7 @@ test('v107 hunt combat uses spell mana cost, not full account energy', function 
   assert.ok(/combat\.js\?v=20260826k/.test(indexV107), 'combat cache bust missing for v118 hunt mercy fix');
   assert.ok(/state-engine\.js\?v=20260824a/.test(indexV107), 'state engine cache bust missing for v107 hunt energy fix');
   assert.ok(/hunt\.js\?v=20260826u/.test(indexV107), 'hunt screen cache bust missing for v107 hunt energy fix');
-  assert.ok(/viz-magic-v186/.test(swV107), 'service worker should use v107 cache');
+  assert.ok(/viz-magic-v187/.test(swV107), 'service worker should use v107 cache');
 });
 
 test('v106 hunt danger copy is truthful and Weave title is single-line', function () {
@@ -1665,7 +1665,7 @@ test('v106 hunt danger copy is truthful and Weave title is single-line', functio
   assert.ok(/main\.css\?v=20260824a/.test(indexV106), 'v106 CSS cache bust missing');
   assert.ok(/creatures\.js\?v=20260826k/.test(indexV106), 'v106 creatures cache bust missing');
   assert.ok(/hunt\.js\?v=20260826u/.test(indexV106), 'v106 hunt cache bust missing');
-  assert.ok(/viz-magic-v186/.test(swV106), 'service worker should use v106 cache');
+  assert.ok(/viz-magic-v187/.test(swV106), 'service worker should use v106 cache');
 });
 
 test('v105 text quality, season colors, avatar title, and spell modal polish are explicit', function () {
@@ -1711,7 +1711,7 @@ test('v105 text quality, season colors, avatar title, and spell modal polish are
   assert.ok(/settings\.js\?v=20260826k/.test(indexV105) && /leaderboard\.js\?v=20260826k/.test(indexV105), 'Settings/Leaderboard cache bust missing for v105');
   assert.ok(/world-events\.js\?v=20260826k/.test(indexV105), 'world events cache bust missing for v105');
   assert.ok(/js\/i18n\/ru\.js\?v=20260824f/.test(indexV105) && /js\/i18n\/en\.js\?v=20260824f/.test(indexV105), 'i18n cache bust missing for v105');
-  assert.ok(/viz-magic-v186/.test(swV105), 'service worker should use v105 cache');
+  assert.ok(/viz-magic-v187/.test(swV105), 'service worker should use v105 cache');
 });
 
 
@@ -1764,7 +1764,7 @@ test('v112 player feedback fixes event surface weather inventory and ranking pol
     var version = asset === 'main.css' ? '20260824a' : ((asset === 'home.js' || asset === 'character.js' || asset === 'nav.js' || asset === 'hunt.js') ? '20260826u' : ((asset === 'ru.js' || asset === 'en.js') ? '20260824f' : '20260826k'));
     assert.ok(new RegExp(asset.replace('.', '\\.') + '\\?v=' + version).test(index), asset + ' should be cache-busted for v112');
   });
-  assert.ok(/viz-magic-v186/.test(sw), 'service worker should use v112 cache');
+  assert.ok(/viz-magic-v187/.test(sw), 'service worker should use v112 cache');
 });
 
 
@@ -1773,7 +1773,7 @@ test('v114 loading state does not invent an embercaster level-one character', fu
   assert.ok(/hasCharacter = !!character/.test(homeJs) && /characterLine = hasCharacter/.test(homeJs), 'Home should render neutral loading copy until the real character exists');
   assert.ok(/if \(!ch\)/.test(characterScreenJs) && /t\('loading'\)/.test(characterScreenJs), 'Character screen should show loading instead of a fake level-one class');
   assert.ok(/home.js\?v=20260826u/.test(indexHtml) && /character.js\?v=20260826u/.test(indexHtml), 'loading fallback fix should be cache-busted');
-  assert.ok(/viz-magic-v186/.test(swJs), 'service worker should publish v114');
+  assert.ok(/viz-magic-v187/.test(swJs), 'service worker should publish v114');
 });
 
 
@@ -1781,7 +1781,7 @@ test('v115 service worker forces stale PWA windows onto the fresh cache-busted a
   assert.ok(/app.js\?v=20260822l/.test(indexHtml), 'main app controller should be cache-busted with UI fixes');
   assert.ok(/sw_reload_v123/.test(appJs) && /controllerchange/.test(appJs) && /window\.location\.reload/.test(appJs), 'app should reload once when a fresh service worker takes control');
   assert.ok(/clients\.matchAll/.test(swJs) && /client\.navigate\(client\.url\)/.test(swJs), 'service worker activation should navigate open PWA windows to fresh assets');
-  assert.ok(/viz-magic-v186/.test(swJs), 'service worker should publish v115');
+  assert.ok(/viz-magic-v187/.test(swJs), 'service worker should publish v115');
 });
 
 
@@ -1837,7 +1837,7 @@ test('production PWA install is available before login and landing icons do not 
   assert.ok(/\.feature-icon-chronicle::before[\s\S]*linear-gradient/.test(mainCss), 'CSS fallback icon should draw the chronicle symbol without emoji font support');
   assert.ok(/manifest\.json\?v=20260826t/.test(indexHtml), 'manifest should be cache-busted for the new install surface');
   assert.ok(/viz-magic-v158/.test(manifestJson), 'PWA manifest identity should remain stable across install-event fixes');
-  assert.ok(/viz-magic-v186/.test(swJs), 'service-worker cache should advance for fresh runtime assets');
+  assert.ok(/viz-magic-v187/.test(swJs), 'service-worker cache should advance for fresh runtime assets');
 });
 
 
@@ -1845,7 +1845,7 @@ test('installed app cold-start has visible fallback and service-worker network t
   const swJs = read('app/sw.js');
   const indexHtml = read('app/index.html');
   assert.ok(/BOOT_FALLBACK_MARKER/.test(indexHtml), 'index should contain a static visible boot fallback before runtime JS renders');
-  assert.ok(/viz-magic-v186/.test(swJs), 'service worker cache should advance for cold-start black-screen fix');
+  assert.ok(/viz-magic-v187/.test(swJs), 'service worker cache should advance for cold-start black-screen fix');
   assert.ok(/NAVIGATION_TIMEOUT_MS\s*=\s*3500/.test(swJs), 'navigation fetch should have a short timeout before cached fallback');
   assert.ok(/RUNTIME_TIMEOUT_MS\s*=\s*2500/.test(swJs), 'runtime JS/CSS fetches should have a timeout before cached fallback');
   assert.ok(/function _fetchWithTimeout/.test(swJs), 'SW should wrap fetches with a timeout');
@@ -1920,9 +1920,18 @@ test('secret maps room requires an exact daily award and unlock action in one tr
     vmActions: [{ sender: 'alice', txIndex: 7, action: { type: 'library.unlock', data: { chapter: 'chapter3', day: day } } }],
     awards: [{ initiator: 'alice', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter3/' + day, txIndex: 7 }]
   };
+  const chapterFourProofBlock = {
+    vmActions: [{ sender: 'alice', txIndex: 9, action: { type: 'library.unlock', data: { chapter: 'chapter4', day: day } } }],
+    awards: [{ initiator: 'alice', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter4/' + day, txIndex: 9 }]
+  };
   assert.strictEqual(engine.verifyLibraryUnlockProof(chapterThreeProofBlock, 'alice', 'chapter3', day), true, 'chapter three should verify its own exact atomic proof');
   assert.strictEqual(engine.verifyLibraryUnlockProof(chapterThreeProofBlock, 'alice', 'chapter2', day), false, 'chapter three payment must not open chapter two');
+  assert.strictEqual(engine.verifyLibraryUnlockProof(chapterThreeProofBlock, 'alice', 'chapter4', day), false, 'chapter three payment must not open chapter four');
+  assert.strictEqual(engine.verifyLibraryUnlockProof(chapterFourProofBlock, 'alice', 'chapter4', day), true, 'chapter four should verify its own exact atomic proof');
+  assert.strictEqual(engine.verifyLibraryUnlockProof(chapterFourProofBlock, 'alice', 'chapter2', day), false, 'chapter four payment must not open chapter two');
+  assert.strictEqual(engine.verifyLibraryUnlockProof(chapterFourProofBlock, 'alice', 'chapter3', day), false, 'chapter four payment must not open chapter three');
   assert.strictEqual(engine.verifyLibraryUnlockProof(normalizedProofBlock, 'alice', 'chapter3', day), false, 'chapter two payment must not open chapter three');
+  assert.strictEqual(engine.verifyLibraryUnlockProof(normalizedProofBlock, 'alice', 'chapter4', day), false, 'chapter two payment must not open chapter four');
 
   const unlock = function(account, txIndex, unlockDay, chapter) {
     return { sender: account, txIndex: txIndex, action: { type: 'library.unlock', data: { chapter: chapter || 'chapter2', day: unlockDay } } };
@@ -1939,7 +1948,9 @@ test('secret maps room requires an exact daily award and unlock action in one tr
       unlock('mismatched-tx', 4, day),
       unlock('wrong-memo', 6, day),
       unlock('chapter-three', 7, day, 'chapter3'),
-      unlock('cross-chapter', 8, day, 'chapter3')
+      unlock('cross-chapter', 8, day, 'chapter3'),
+      unlock('chapter-four', 9, day, 'chapter4'),
+      unlock('cross-middle', 10, day, 'chapter4')
     ],
     voicePosts: [],
     awards: [
@@ -1949,7 +1960,9 @@ test('secret maps room requires an exact daily award and unlock action in one tr
       { initiator: 'mismatched-tx', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter2/' + day, txIndex: 5 },
       { initiator: 'wrong-memo', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/other/' + day, txIndex: 6 },
       { initiator: 'chapter-three', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter3/' + day, txIndex: 7 },
-      { initiator: 'cross-chapter', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter2/' + day, txIndex: 8 }
+      { initiator: 'cross-chapter', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter2/' + day, txIndex: 8 },
+      { initiator: 'chapter-four', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter4/' + day, txIndex: 9 },
+      { initiator: 'cross-middle', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter3/' + day, txIndex: 10 }
     ]
   });
 
@@ -1966,6 +1979,10 @@ test('secret maps room requires an exact daily award and unlock action in one tr
   assert.strictEqual(engine.hasLibraryAccess('chapter-three', 'chapter3', day), true, 'exact chapter three replay should open chapter three');
   assert.strictEqual(engine.hasLibraryAccess('chapter-three', 'chapter2', day), false, 'chapter three replay should not open chapter two');
   assert.strictEqual(engine.hasLibraryAccess('cross-chapter', 'chapter3', day), false, 'chapter two memo must not validate a chapter three action');
+  assert.strictEqual(engine.hasLibraryAccess('chapter-four', 'chapter4', day), true, 'exact chapter four replay should open middle maps');
+  assert.strictEqual(engine.hasLibraryAccess('chapter-four', 'chapter2', day), false, 'chapter four replay should not open chapter two');
+  assert.strictEqual(engine.hasLibraryAccess('chapter-four', 'chapter3', day), false, 'chapter four replay should not open chapter three');
+  assert.strictEqual(engine.hasLibraryAccess('cross-middle', 'chapter4', day), false, 'chapter three memo must not validate a chapter four action');
   ['award-only', 'action-only', 'mismatched-tx', 'wrong-memo'].forEach(function(account) {
     assert.strictEqual(engine.hasLibraryAccess(account, 'chapter2', day), false, account + ' must not unlock access');
   });
@@ -2082,6 +2099,11 @@ test('middle world maps begin with the separated Revealing Path card', function 
   assert.deepStrictEqual(Array.from(middleMapSource[1].matchAll(/id:\s*'(\d+)'/g), function (match) { return match[1]; }), ['01', '08', '10', '03', '06', '11', '04', '12', '13', '07', '15', '02', '09', '05'], 'the remaining middle maps should follow the curated story order');
   assert.ok(/data-middle-library-map=\"' \+ revealingEntry\.id[\s\S]*help-unknown-library-divider[\s\S]*help_middle_library_revealing_path[\s\S]*HELP_MIDDLE_LIBRARY_MAPS/.test(helpJs), 'Revealing Path title should render under the divider after the first card and before the rest of the cards');
   assert.ok(/HELP_MIDDLE_LIBRARY_REVEALING_MAPS\.concat\(HELP_MIDDLE_LIBRARY_MAPS\)/.test(helpJs), 'the modal lookup should include the separated first card');
+  assert.ok(/StateEngine\.hasLibraryAccess\(user, 'chapter4', day\)/.test(helpJs), 'middle maps should use an independent daily chapter-four entitlement');
+  assert.ok(/help_magic_library_middle_warning:\s*'Не входить!!!\\nОтнимает 10% жизненной энергии'/.test(ruJs), 'middle maps should preserve the paid red warning');
+  assert.ok(/VizMagicConfig\.LIBRARY\.CHAPTER_FOUR_COST/.test(helpJs) && /libraryUnlockChapterAction\(\s*'chapter4'/.test(helpJs), 'middle maps should charge the canonical 10% chapter-four payment');
+  assert.ok(/help-middle-library-unlock/.test(helpJs) && /_unlockMiddleLibrary/.test(helpJs), 'middle maps should expose an accessible paid unlock action');
+  assert.ok(/assets\/library-maps-middle\/middle-map-' \+ entry\.id \+ '\.jpg/.test(helpJs), 'chapter four modal should load the accepted middle assets');
   assert.strictEqual(fs.readdirSync(path.join(root, 'app/assets/library-maps-middle')).filter(name => /^middle-map-\d{2}\.jpg$/.test(name)).length, 15, 'middle maps should still contain all 15 optimized JPEG maps');
 });
 
@@ -2092,7 +2114,7 @@ test('secret maps daily broadcast builder binds award and proof to the same day'
     VizMagicConfig: {
       PROTOCOLS: { VM: 'VIZMAGIC' }, APP_VERSION: 1,
       ACTION_TYPES: { LIBRARY_UNLOCK: 'library.unlock' },
-      LIBRARY: { TREASURY: 'denis-skripnik', CHAPTER_TWO_COST: 1000, CHAPTER_TWO_MEMO_PREFIX: 'viz://vm/library/chapter2/', CHAPTER_THREE_COST: 1000, CHAPTER_THREE_MEMO_PREFIX: 'viz://vm/library/chapter3/' }
+      LIBRARY: { TREASURY: 'denis-skripnik', CHAPTER_TWO_COST: 1000, CHAPTER_TWO_MEMO_PREFIX: 'viz://vm/library/chapter2/', CHAPTER_THREE_COST: 1000, CHAPTER_THREE_MEMO_PREFIX: 'viz://vm/library/chapter3/', CHAPTER_FOUR_COST: 1000, CHAPTER_FOUR_MEMO_PREFIX: 'viz://vm/library/chapter4/' }
     },
     VizAccount: {
       getRegularKey: function () { return 'test-wif'; },
@@ -2116,7 +2138,12 @@ test('secret maps daily broadcast builder binds award and proof to the same day'
   assert.strictEqual(sent.operations[0][1].memo, 'viz://vm/library/chapter3/2026-08-23');
   assert.strictEqual(JSON.parse(sent.operations[1][1].json).d.chapter, 'chapter3');
   sent = null;
-  context.VizBroadcast.libraryUnlockChapterAction('chapter3', 999, '2026-08-23', function (err) { error = err; });
+  context.VizBroadcast.libraryUnlockChapterAction('chapter4', 1000, '2026-08-23', function (err) { error = err; });
+  assert.ifError(error);
+  assert.strictEqual(sent.operations[0][1].memo, 'viz://vm/library/chapter4/2026-08-23');
+  assert.strictEqual(JSON.parse(sent.operations[1][1].json).d.chapter, 'chapter4');
+  sent = null;
+  context.VizBroadcast.libraryUnlockChapterAction('chapter4', 999, '2026-08-23', function (err) { error = err; });
   assert.ok(error && /invalid_library_energy/.test(error.message));
   assert.strictEqual(sent, null, 'wrong chapter cost must not broadcast');
   context.VizBroadcast.libraryUnlockChapterAction('chapter99', 1000, '2026-08-23', function (err) { error = err; });
@@ -2200,7 +2227,7 @@ test('verified world maps and font-independent SVG icons remain intact', functio
   assert.ok(/Font-independent inline SVG icons/.test(mainCss), 'critical icon styling should target inline SVG');
   assert.ok(/MAP_ASSET_VERSION = '20260826w'/.test(mapJs), 'travel maps should remain on the verified portal artwork');
   assert.ok(/help\.js\?v=20260824c/.test(indexHtml), 'Help bundle should be cache-busted for text-only library mode');
-  assert.ok(/viz-magic-v186/.test(swJs), 'service worker cache should advance for text-only library mode');
+  assert.ok(/viz-magic-v187/.test(swJs), 'service worker cache should advance for text-only library mode');
   assert.ok(/main\.css\?v=20260824a/.test(indexHtml), 'SVG icon styles should stay cache-busted');
 });
 
@@ -2213,5 +2240,5 @@ test('Magical Library uses the original board-game artwork with lore and Close',
   assert.ok(/library-maps-v2/.test(helpJs) && /help-library-map-image|help-library-map-viewport|help-library-zoom-toggle/.test(helpJs), 'library dialog should render the original board-game artwork and zoom controls');
   assert.ok(!/library-maps-v3/.test(helpJs), 'failed illustrated v3 artwork must stay unreachable from runtime');
   assert.ok(/help\.js\?v=20260824c/.test(indexHtml), 'restored-art Help bundle should be cache-busted');
-  assert.ok(/viz-magic-v186/.test(swJs), 'service worker cache should advance for restored board-game artwork');
+  assert.ok(/viz-magic-v187/.test(swJs), 'service worker cache should advance for restored board-game artwork');
 });

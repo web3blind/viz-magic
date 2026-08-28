@@ -10,6 +10,7 @@ var HelpScreen = (function() {
     var HELP_MIDDLE_LIBRARY_ASSET_VERSION = '20260828a';
     var secretLibraryBusy = false;
     var unknownLibraryBusy = false;
+    var middleLibraryBusy = false;
     var secretLibraryExpiryTimer = null;
     var HELP_LIBRARY_MAPS = [
         { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-10' },
@@ -270,22 +271,36 @@ var HelpScreen = (function() {
 
 
     function _renderMiddleLibrary(t) {
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        var day = StateEngine.getLibraryDay();
+        var unlocked = StateEngine.hasLibraryAccess(user, 'chapter4', day);
         var html = '<article class="help-magic-library help-secret-library help-unknown-library help-middle-library" aria-labelledby="help-middle-library-title">' +
             '<h3 id="help-middle-library-title" tabindex="-1">' + Helpers.icon('map', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_middle_title') + '</h3>' +
             '<p>' + t('help_magic_library_middle_intro') + '</p>' +
-            '<div class="help-library-list help-secret-library-list">';
-        for (var r = 0; r < HELP_MIDDLE_LIBRARY_REVEALING_MAPS.length; r++) {
-            var revealingEntry = HELP_MIDDLE_LIBRARY_REVEALING_MAPS[r];
-            html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + revealingEntry.id + '">' + Helpers.escapeHtml(t(revealingEntry.titleKey)) + '</button>';
+            '<p class="help-library-danger">' + t('help_magic_library_middle_warning') + '</p>' +
+            '<p id="help-middle-library-status" class="help-secret-library-status" role="status" aria-live="polite"></p>';
+        if (!unlocked) {
+            html += '<div class="help-secret-library-lock">' +
+                '<p>' + t('help_magic_library_middle_locked') + '</p>' +
+                '<button type="button" class="btn btn-primary" id="help-middle-library-unlock">' + t('help_magic_library_middle_unlock') + '</button>' +
+                '</div>';
+        } else {
+            html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_middle_opened') + '</p>' +
+                '<div class="help-library-list help-secret-library-list">';
+            for (var r = 0; r < HELP_MIDDLE_LIBRARY_REVEALING_MAPS.length; r++) {
+                var revealingEntry = HELP_MIDDLE_LIBRARY_REVEALING_MAPS[r];
+                html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + revealingEntry.id + '">' + Helpers.escapeHtml(t(revealingEntry.titleKey)) + '</button>';
+            }
+            html += '<hr class="help-unknown-library-divider">' +
+                '<p id="help-middle-library-revealing-title" class="help-unknown-library-fading-title">' + t('help_middle_library_revealing_path') + '</p>' +
+                '<div role="group" aria-labelledby="help-middle-library-revealing-title">';
+            for (var i = 0; i < HELP_MIDDLE_LIBRARY_MAPS.length; i++) {
+                var entry = HELP_MIDDLE_LIBRARY_MAPS[i];
+                html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
+            }
+            html += '</div></div>';
         }
-        html += '<hr class="help-unknown-library-divider">' +
-            '<p id="help-middle-library-revealing-title" class="help-unknown-library-fading-title">' + t('help_middle_library_revealing_path') + '</p>' +
-            '<div role="group" aria-labelledby="help-middle-library-revealing-title">';
-        for (var i = 0; i < HELP_MIDDLE_LIBRARY_MAPS.length; i++) {
-            var entry = HELP_MIDDLE_LIBRARY_MAPS[i];
-            html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
-        }
-        html += '</div></div></article>';
+        html += '</article>';
         return html;
     }
 
@@ -320,6 +335,8 @@ var HelpScreen = (function() {
     }
 
     function _bindMiddleLibrary(el) {
+        var unlock = Helpers.$('help-middle-library-unlock');
+        if (unlock) unlock.addEventListener('click', _unlockMiddleLibrary);
         var links = el.querySelectorAll('.help-middle-library-link');
         for (var i = 0; i < links.length; i++) {
             links[i].addEventListener('click', function() {
@@ -330,6 +347,91 @@ var HelpScreen = (function() {
                 }
             });
         }
+    }
+
+    function _setMiddleLibraryStatus(message) {
+        var status = Helpers.$('help-middle-library-status');
+        if (status) status.textContent = message || '';
+    }
+
+    function _resetMiddleLibraryAction(button) {
+        middleLibraryBusy = false;
+        if (button) {
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+            button.textContent = button.getAttribute('data-idle-label') || Helpers.t('help_magic_library_middle_unlock');
+        }
+    }
+
+    function _unlockMiddleLibrary() {
+        if (middleLibraryBusy) return;
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        if (!user) {
+            ModalComponent.hide();
+            Toast.error(Helpers.t('error_no_account'));
+            return;
+        }
+        var button = Helpers.$('help-middle-library-unlock');
+        var day = StateEngine.getLibraryDay();
+        middleLibraryBusy = true;
+        if (button) {
+            button.setAttribute('data-idle-label', button.textContent);
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+            button.textContent = Helpers.t('help_secret_library_checking');
+        }
+        _preflightSecretLibraryEntitlement(user, day, function(historyErr, alreadyUnlocked) {
+            if (historyErr) {
+                _resetMiddleLibraryAction(button);
+                Toast.error(Helpers.t('help_secret_library_history_check_failed'));
+                return;
+            }
+            if (alreadyUnlocked) {
+                middleLibraryBusy = false;
+                _finishSecretLibraryOpen('help_magic_library_middle_already_open', 'help-middle-library-title');
+                return;
+            }
+            VizAccount.getAccount(user, function(energyErr, accountData) {
+                if (energyErr || !accountData) {
+                    _resetMiddleLibraryAction(button);
+                    Toast.error(Helpers.t('help_magic_library_middle_energy_failed'));
+                    return;
+                }
+                var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
+                if (currentEnergy < VizMagicConfig.LIBRARY.CHAPTER_FOUR_COST) {
+                    _resetMiddleLibraryAction(button);
+                    Toast.error(Helpers.t('help_magic_library_middle_not_enough'));
+                    return;
+                }
+                if (StateEngine.getLibraryDay() !== day) {
+                    _resetMiddleLibraryAction(button);
+                    _unlockMiddleLibrary();
+                    return;
+                }
+                VizBroadcast.libraryUnlockChapterAction(
+                    'chapter4',
+                    VizMagicConfig.LIBRARY.CHAPTER_FOUR_COST,
+                    day,
+                    function(err, result) {
+                        if (err) {
+                            _resetMiddleLibraryAction(button);
+                            Toast.error(Helpers.t('help_magic_library_middle_failed'));
+                            return;
+                        }
+                        if (button) button.textContent = Helpers.t('help_secret_library_waiting_confirmation');
+                        _setMiddleLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
+                        _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
+                            if (proofErr) {
+                                Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                                return;
+                            }
+                            middleLibraryBusy = false;
+                            _finishSecretLibraryOpen('help_magic_library_middle_success', 'help-middle-library-title');
+                        }, 'chapter4');
+                    }
+                );
+            });
+        }, 'chapter4');
     }
 
     function _findMiddleLibraryEntry(id) {
@@ -718,19 +820,19 @@ var HelpScreen = (function() {
     }
 
     function _openMiddleLibraryMap(entry) {
-        _openPaidLibraryMap(entry, 'middle');
+        _openPaidLibraryMap(entry, 'chapter4');
     }
 
     function _openPaidLibraryMap(entry, chapter) {
         var titleText = Helpers.t(entry.titleKey);
         var title = Helpers.escapeHtml(titleText);
         var description = Helpers.t(entry.textKey);
-        var imagePath = chapter === 'middle'
+        var imagePath = chapter === 'chapter4'
             ? 'assets/library-maps-middle/middle-map-' + entry.id + '.jpg?v=' + HELP_MIDDLE_LIBRARY_ASSET_VERSION
             : chapter === 'chapter3'
                 ? 'assets/library-maps-chapter3/unknown-map-' + entry.id + '.jpg?v=' + HELP_UNKNOWN_LIBRARY_ASSET_VERSION
                 : 'assets/library-maps-chapter2/secret-map-' + entry.id + '.jpg?v=' + HELP_SECRET_LIBRARY_ASSET_VERSION;
-        var cardClass = chapter === 'chapter3' ? ' help-unknown-library-map-card' : chapter === 'middle' ? ' help-middle-library-map-card' : '';
+        var cardClass = chapter === 'chapter3' ? ' help-unknown-library-map-card' : chapter === 'chapter4' ? ' help-middle-library-map-card' : '';
         var html = '<div class="help-library-map-card help-secret-library-map-card' + cardClass + '">';
         html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
         html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';

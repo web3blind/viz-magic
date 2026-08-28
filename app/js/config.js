@@ -52,7 +52,9 @@ var VizMagicConfig = (function() {
         TREASURY: 'denis-skripnik',
         CHAPTER_TWO_MEMO_PREFIX: 'viz://vm/library/chapter2/',
         CHAPTER_THREE_COST: 1000,            // 10% energy
-        CHAPTER_THREE_MEMO_PREFIX: 'viz://vm/library/chapter3/'
+        CHAPTER_THREE_MEMO_PREFIX: 'viz://vm/library/chapter3/',
+        CHAPTER_FOUR_COST: 1000,             // 10% energy
+        CHAPTER_FOUR_MEMO_PREFIX: 'viz://vm/library/chapter4/'
     };
 
     /** HP passive regeneration constants */
