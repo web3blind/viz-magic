@@ -273,19 +273,19 @@ var HelpScreen = (function() {
         var html = '<article class="help-magic-library help-secret-library help-unknown-library help-middle-library" aria-labelledby="help-middle-library-title">' +
             '<h3 id="help-middle-library-title" tabindex="-1">' + Helpers.icon('map', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_middle_title') + '</h3>' +
             '<p>' + t('help_magic_library_middle_intro') + '</p>' +
-            '<div class="help-library-list help-secret-library-list">' +
-            '<p id="help-middle-library-revealing-title" class="help-unknown-library-fading-title">' + t('help_middle_library_revealing_path') + '</p>' +
-            '<div role="group" aria-labelledby="help-middle-library-revealing-title">';
+            '<div class="help-library-list help-secret-library-list">';
         for (var r = 0; r < HELP_MIDDLE_LIBRARY_REVEALING_MAPS.length; r++) {
             var revealingEntry = HELP_MIDDLE_LIBRARY_REVEALING_MAPS[r];
             html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + revealingEntry.id + '">' + Helpers.escapeHtml(t(revealingEntry.titleKey)) + '</button>';
         }
-        html += '</div><hr class="help-unknown-library-divider">';
+        html += '<hr class="help-unknown-library-divider">' +
+            '<p id="help-middle-library-revealing-title" class="help-unknown-library-fading-title">' + t('help_middle_library_revealing_path') + '</p>' +
+            '<div role="group" aria-labelledby="help-middle-library-revealing-title">';
         for (var i = 0; i < HELP_MIDDLE_LIBRARY_MAPS.length; i++) {
             var entry = HELP_MIDDLE_LIBRARY_MAPS[i];
             html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
         }
-        html += '</div></article>';
+        html += '</div></div></article>';
         return html;
     }
 
