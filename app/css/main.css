@@ -2702,7 +2702,6 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
     border: 1px solid rgba(255, 216, 88, 0.55);
     color: #ffe680;
     font-size: 0.82rem;
-    font-weight: 800;
     text-shadow: 0 0 10px rgba(255, 216, 88, 0.45);
 }
 
