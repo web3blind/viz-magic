@@ -1315,7 +1315,7 @@ var LangEN = {
     help_lore_label: 'Living world pages',
     help_lore_title: 'Living world pages',
     help_lore_intro: 'These pages are lore and world mood. They do not require action — they simply remind you that a fairy tale lives behind the buttons.',
-    help_magic_library_title: 'Magical Library',
+    help_magic_library_title: 'Magical Library day one',
     help_magic_library_intro: 'Long ago, many centuries back, the maps of the World looked very different. They survived in ancient scrolls, and you can step into the interwoven dusty magical pages and paths.',
     help_magic_library_image_alt: 'Ancient map of {name}',
     help_magic_library_chapter_two_title: 'Secret Maps of the World\nroom two',
@@ -1451,7 +1451,7 @@ var LangEN = {
     help_middle_map_15_title: 'Opal Lotus River Foundry',
     help_middle_map_15_text: 'An opal river, lotus mills, and a fish foundry lead the delta path toward the moonlit sluice.',
 
-    help_magic_library_attraction_title: 'World Attraction Maps',
+    help_magic_library_attraction_title: 'World Attraction Maps fifth scroll',
     help_magic_library_attraction_intro: 'These maps are not about seduction, but about magical attraction: beauty, masks, celebration, stage charm, shyness, trust, and the wish to study the path again.',
     help_attraction_library_growing: 'Growing Up',
     help_attraction_map_01_title: 'Night Observatory of Masks and Lanterns',
