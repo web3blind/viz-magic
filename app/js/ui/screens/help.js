@@ -15,21 +15,21 @@ var HelpScreen = (function() {
     var attractionLibraryBusy = false;
     var secretLibraryExpiryTimer = null;
     var HELP_LIBRARY_MAPS = [
-        { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-7' },
-        { id: 'covenant_bazaar', title: 'The Covenant Bazaar Ур. 8-14' },
-        { id: 'deep_currents', title: 'The Deep Currents Ур. 15-21' },
-        { id: 'ember_wastes', title: 'The Ember Wastes Ур. 22-28' },
-        { id: 'duel_spires', title: 'The Duel Spires Ур. 29-35' },
-        { id: 'iron_root', title: 'The Iron Root Ур. 36-42' },
-        { id: 'shattered_sky', title: 'The Shattered Sky Ур. 43-49' },
-        { id: 'forklands', title: 'The Forklands Ур. 50-56' },
-        { id: 'the_veil', title: 'The Veil Ур. 57-63' },
-        { id: 'starfall_vault', title: 'The Starfall Vault Ур. 64-70' },
-        { id: 'emberheart', title: 'The Emberheart Ур. 71-77' },
-        { id: 'prismatic_depths', title: 'The Prismatic Depths Ур. 78-84' },
-        { id: 'timeless_maze', title: 'The Timeless Maze Ур. 85-91' },
-        { id: 'grandmaster_peak', title: 'The Grandmaster Peak Ур. 92-98' },
-        { id: 'void_sanctum', title: 'The Void Sanctum Ур. 99-105' }
+        { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-10' },
+        { id: 'covenant_bazaar', title: 'The Covenant Bazaar Ур. 3-50' },
+        { id: 'deep_currents', title: 'The Deep Currents Ур. 5-20' },
+        { id: 'ember_wastes', title: 'The Ember Wastes Ур. 5-20' },
+        { id: 'duel_spires', title: 'The Duel Spires Ур. 5-50' },
+        { id: 'iron_root', title: 'The Iron Root Ур. 10-25' },
+        { id: 'shattered_sky', title: 'The Shattered Sky Ур. 12-25' },
+        { id: 'forklands', title: 'The Forklands Ур. 15-50' },
+        { id: 'the_veil', title: 'The Veil Ур. 18-30' },
+        { id: 'starfall_vault', title: 'The Starfall Vault Ур. 51-60' },
+        { id: 'emberheart', title: 'The Emberheart Ур. 61-70' },
+        { id: 'prismatic_depths', title: 'The Prismatic Depths Ур. 71-80' },
+        { id: 'timeless_maze', title: 'The Timeless Maze Ур. 81-90' },
+        { id: 'grandmaster_peak', title: 'The Grandmaster Peak Ур. 91-100' },
+        { id: 'void_sanctum', title: 'The Void Sanctum Ур. 101+' }
     ];
     var HELP_SECRET_LIBRARY_MAPS = [
         { id: '01', titleKey: 'help_secret_map_01_title', textKey: 'help_secret_map_01_text' },
