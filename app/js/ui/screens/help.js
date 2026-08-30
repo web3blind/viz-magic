@@ -12,23 +12,24 @@ var HelpScreen = (function() {
     var secretLibraryBusy = false;
     var unknownLibraryBusy = false;
     var middleLibraryBusy = false;
+    var attractionLibraryBusy = false;
     var secretLibraryExpiryTimer = null;
     var HELP_LIBRARY_MAPS = [
-        { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-10' },
-        { id: 'covenant_bazaar', title: 'The Covenant Bazaar Ур. 3-50' },
-        { id: 'deep_currents', title: 'The Deep Currents Ур. 5-20' },
-        { id: 'ember_wastes', title: 'The Ember Wastes Ур. 5-20' },
-        { id: 'duel_spires', title: 'The Duel Spires Ур. 5-50' },
-        { id: 'iron_root', title: 'The Iron Root Ур. 10-25' },
-        { id: 'shattered_sky', title: 'The Shattered Sky Ур. 12-25' },
-        { id: 'forklands', title: 'The Forklands Ур. 15-50' },
-        { id: 'the_veil', title: 'The Veil Ур. 18-30' },
-        { id: 'starfall_vault', title: 'The Starfall Vault Ур. 51-60' },
-        { id: 'emberheart', title: 'The Emberheart Ур. 61-70' },
-        { id: 'prismatic_depths', title: 'The Prismatic Depths Ур. 71-80' },
-        { id: 'timeless_maze', title: 'The Timeless Maze Ур. 81-90' },
-        { id: 'grandmaster_peak', title: 'The Grandmaster Peak Ур. 91-100' },
-        { id: 'void_sanctum', title: 'The Void Sanctum Ур. 101+' }
+        { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-7' },
+        { id: 'covenant_bazaar', title: 'The Covenant Bazaar Ур. 8-14' },
+        { id: 'deep_currents', title: 'The Deep Currents Ур. 15-21' },
+        { id: 'ember_wastes', title: 'The Ember Wastes Ур. 22-28' },
+        { id: 'duel_spires', title: 'The Duel Spires Ур. 29-35' },
+        { id: 'iron_root', title: 'The Iron Root Ур. 36-42' },
+        { id: 'shattered_sky', title: 'The Shattered Sky Ур. 43-49' },
+        { id: 'forklands', title: 'The Forklands Ур. 50-56' },
+        { id: 'the_veil', title: 'The Veil Ур. 57-63' },
+        { id: 'starfall_vault', title: 'The Starfall Vault Ур. 64-70' },
+        { id: 'emberheart', title: 'The Emberheart Ур. 71-77' },
+        { id: 'prismatic_depths', title: 'The Prismatic Depths Ур. 78-84' },
+        { id: 'timeless_maze', title: 'The Timeless Maze Ур. 85-91' },
+        { id: 'grandmaster_peak', title: 'The Grandmaster Peak Ур. 92-98' },
+        { id: 'void_sanctum', title: 'The Void Sanctum Ур. 99-105' }
     ];
     var HELP_SECRET_LIBRARY_MAPS = [
         { id: '01', titleKey: 'help_secret_map_01_title', textKey: 'help_secret_map_01_text' },
@@ -326,22 +327,36 @@ var HelpScreen = (function() {
     }
 
     function _renderAttractionLibrary(t) {
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        var day = StateEngine.getLibraryDay();
+        var unlocked = StateEngine.hasLibraryAccess(user, 'chapter5', day);
         var html = '<article class="help-magic-library help-secret-library help-unknown-library help-attraction-library" aria-labelledby="help-attraction-library-title">' +
             '<h3 id="help-attraction-library-title" tabindex="-1">' + Helpers.icon('spark', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_attraction_title') + '</h3>' +
             '<p>' + t('help_magic_library_attraction_intro') + '</p>' +
-            '<div class="help-library-list help-secret-library-list">';
-        for (var a = 0; a < HELP_ATTRACTION_LIBRARY_FIRST_MAPS.length; a++) {
-            var firstEntry = HELP_ATTRACTION_LIBRARY_FIRST_MAPS[a];
-            html += '<button type="button" class="help-library-link help-secret-library-link help-attraction-library-link" data-attraction-library-map="' + firstEntry.id + '">' + Helpers.escapeHtml(t(firstEntry.titleKey)) + '</button>';
+            '<p class="help-library-danger">' + t('help_magic_library_attraction_warning') + '</p>' +
+            '<p id="help-attraction-library-status" class="help-secret-library-status" role="status" aria-live="polite"></p>';
+        if (!unlocked) {
+            html += '<div class="help-secret-library-lock">' +
+                '<p>' + t('help_magic_library_attraction_locked') + '</p>' +
+                '<button type="button" class="btn btn-primary" id="help-attraction-library-unlock">' + t('help_magic_library_attraction_unlock') + '</button>' +
+                '</div>';
+        } else {
+            html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_attraction_opened') + '</p>' +
+                '<div class="help-library-list help-secret-library-list">';
+            for (var a = 0; a < HELP_ATTRACTION_LIBRARY_FIRST_MAPS.length; a++) {
+                var firstEntry = HELP_ATTRACTION_LIBRARY_FIRST_MAPS[a];
+                html += '<button type="button" class="help-library-link help-secret-library-link help-attraction-library-link" data-attraction-library-map="' + firstEntry.id + '">' + Helpers.escapeHtml(t(firstEntry.titleKey)) + '</button>';
+            }
+            html += '<hr class="help-unknown-library-divider">' +
+                '<p id="help-attraction-library-growing-title" class="help-unknown-library-fading-title">' + t('help_attraction_library_growing') + '</p>' +
+                '<div role="group" aria-labelledby="help-attraction-library-growing-title">';
+            for (var i = 0; i < HELP_ATTRACTION_LIBRARY_GROWING_MAPS.length; i++) {
+                var entry = HELP_ATTRACTION_LIBRARY_GROWING_MAPS[i];
+                html += '<button type="button" class="help-library-link help-secret-library-link help-attraction-library-link" data-attraction-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
+            }
+            html += '</div></div>';
         }
-        html += '<hr class="help-unknown-library-divider">' +
-            '<p id="help-attraction-library-growing-title" class="help-unknown-library-fading-title">' + t('help_attraction_library_growing') + '</p>' +
-            '<div role="group" aria-labelledby="help-attraction-library-growing-title">';
-        for (var i = 0; i < HELP_ATTRACTION_LIBRARY_GROWING_MAPS.length; i++) {
-            var entry = HELP_ATTRACTION_LIBRARY_GROWING_MAPS[i];
-            html += '<button type="button" class="help-library-link help-secret-library-link help-attraction-library-link" data-attraction-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
-        }
-        html += '</div></div></article>';
+        html += '</article>';
         return html;
     }
 
@@ -391,6 +406,8 @@ var HelpScreen = (function() {
     }
 
     function _bindAttractionLibrary(el) {
+        var unlock = Helpers.$('help-attraction-library-unlock');
+        if (unlock) unlock.addEventListener('click', _unlockAttractionLibrary);
         var links = el.querySelectorAll('.help-attraction-library-link');
         for (var i = 0; i < links.length; i++) {
             links[i].addEventListener('click', function() {
@@ -415,6 +432,91 @@ var HelpScreen = (function() {
             button.removeAttribute('aria-busy');
             button.textContent = button.getAttribute('data-idle-label') || Helpers.t('help_magic_library_middle_unlock');
         }
+    }
+
+    function _setAttractionLibraryStatus(message) {
+        var status = Helpers.$('help-attraction-library-status');
+        if (status) status.textContent = message || '';
+    }
+
+    function _resetAttractionLibraryAction(button) {
+        attractionLibraryBusy = false;
+        if (button) {
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+            button.textContent = button.getAttribute('data-idle-label') || Helpers.t('help_magic_library_attraction_unlock');
+        }
+    }
+
+    function _unlockAttractionLibrary() {
+        if (attractionLibraryBusy) return;
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        if (!user) {
+            ModalComponent.hide();
+            Toast.error(Helpers.t('error_no_account'));
+            return;
+        }
+        var button = Helpers.$('help-attraction-library-unlock');
+        var day = StateEngine.getLibraryDay();
+        attractionLibraryBusy = true;
+        if (button) {
+            button.setAttribute('data-idle-label', button.textContent);
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+            button.textContent = Helpers.t('help_secret_library_checking');
+        }
+        _preflightSecretLibraryEntitlement(user, day, function(historyErr, alreadyUnlocked) {
+            if (historyErr) {
+                _resetAttractionLibraryAction(button);
+                Toast.error(Helpers.t('help_secret_library_history_check_failed'));
+                return;
+            }
+            if (alreadyUnlocked) {
+                attractionLibraryBusy = false;
+                _finishSecretLibraryOpen('help_magic_library_attraction_already_open', 'help-attraction-library-title');
+                return;
+            }
+            VizAccount.getAccount(user, function(energyErr, accountData) {
+                if (energyErr || !accountData) {
+                    _resetAttractionLibraryAction(button);
+                    Toast.error(Helpers.t('help_magic_library_attraction_energy_failed'));
+                    return;
+                }
+                var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
+                if (currentEnergy < VizMagicConfig.LIBRARY.CHAPTER_FIVE_COST) {
+                    _resetAttractionLibraryAction(button);
+                    Toast.error(Helpers.t('help_magic_library_attraction_not_enough'));
+                    return;
+                }
+                if (StateEngine.getLibraryDay() !== day) {
+                    _resetAttractionLibraryAction(button);
+                    _unlockAttractionLibrary();
+                    return;
+                }
+                VizBroadcast.libraryUnlockChapterAction(
+                    'chapter5',
+                    VizMagicConfig.LIBRARY.CHAPTER_FIVE_COST,
+                    day,
+                    function(err, result) {
+                        if (err) {
+                            _resetAttractionLibraryAction(button);
+                            Toast.error(Helpers.t('help_magic_library_attraction_failed'));
+                            return;
+                        }
+                        if (button) button.textContent = Helpers.t('help_secret_library_waiting_confirmation');
+                        _setAttractionLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
+                        _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
+                            if (proofErr) {
+                                Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                                return;
+                            }
+                            attractionLibraryBusy = false;
+                            _finishSecretLibraryOpen('help_magic_library_attraction_success', 'help-attraction-library-title');
+                        }, 'chapter5');
+                    }
+                );
+            });
+        }, 'chapter5');
     }
 
     function _unlockMiddleLibrary() {
@@ -886,14 +988,14 @@ var HelpScreen = (function() {
     }
 
     function _openAttractionLibraryMap(entry) {
-        _openPaidLibraryMap(entry, 'attraction');
+        _openPaidLibraryMap(entry, 'chapter5');
     }
 
     function _openPaidLibraryMap(entry, chapter) {
         var titleText = Helpers.t(entry.titleKey);
         var title = Helpers.escapeHtml(titleText);
         var description = Helpers.t(entry.textKey);
-        var imagePath = chapter === 'attraction'
+        var imagePath = chapter === 'chapter5'
             ? 'assets/library-maps-attraction/attraction-map-' + entry.id + '.jpg?v=' + HELP_ATTRACTION_LIBRARY_ASSET_VERSION
             : chapter === 'chapter4'
                 ? 'assets/library-maps-middle/middle-map-' + entry.id + '.jpg?v=' + HELP_MIDDLE_LIBRARY_ASSET_VERSION
@@ -902,7 +1004,7 @@ var HelpScreen = (function() {
                 : 'assets/library-maps-chapter2/secret-map-' + entry.id + '.jpg?v=' + HELP_SECRET_LIBRARY_ASSET_VERSION;
         var cardClass = chapter === 'chapter3' ? ' help-unknown-library-map-card' :
             chapter === 'chapter4' ? ' help-middle-library-map-card' :
-                chapter === 'attraction' ? ' help-attraction-library-map-card' : '';
+                chapter === 'chapter5' ? ' help-attraction-library-map-card' : '';
         var html = '<div class="help-library-map-card help-secret-library-map-card' + cardClass + '">';
         html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
         html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';

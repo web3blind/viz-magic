@@ -757,6 +757,9 @@ var StateEngine = (function() {
         if (chapter === 'chapter4') {
             return { cost: libraryCfg.CHAPTER_FOUR_COST, memoPrefix: libraryCfg.CHAPTER_FOUR_MEMO_PREFIX };
         }
+        if (chapter === 'chapter5') {
+            return { cost: libraryCfg.CHAPTER_FIVE_COST, memoPrefix: libraryCfg.CHAPTER_FIVE_MEMO_PREFIX };
+        }
         return null;
     }
 
@@ -772,7 +775,7 @@ var StateEngine = (function() {
     function _collectLibraryUnlockPayments(awards) {
         var payments = {};
         var libraryCfg = cfg.LIBRARY || {};
-        var chapters = ['chapter2', 'chapter3', 'chapter4'];
+        var chapters = ['chapter2', 'chapter3', 'chapter4', 'chapter5'];
         for (var i = 0; i < awards.length; i++) {
             var award = awards[i] || {};
             if (!award.initiator || !isFinite(Number(award.txIndex))) continue;
@@ -807,7 +810,8 @@ var StateEngine = (function() {
         }
         return {
             type: chapter === 'chapter2' ? 'library_chapter_two_unlocked' :
-                chapter === 'chapter3' ? 'library_chapter_three_unlocked' : 'library_chapter_four_unlocked',
+                chapter === 'chapter3' ? 'library_chapter_three_unlocked' :
+                chapter === 'chapter4' ? 'library_chapter_four_unlocked' : 'library_chapter_five_unlocked',
             account: account,
             chapter: chapter,
             day: day,

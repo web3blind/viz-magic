@@ -54,7 +54,9 @@ var VizMagicConfig = (function() {
         CHAPTER_THREE_COST: 1000,            // 10% energy
         CHAPTER_THREE_MEMO_PREFIX: 'viz://vm/library/chapter3/',
         CHAPTER_FOUR_COST: 1000,             // 10% energy
-        CHAPTER_FOUR_MEMO_PREFIX: 'viz://vm/library/chapter4/'
+        CHAPTER_FOUR_MEMO_PREFIX: 'viz://vm/library/chapter4/',
+        CHAPTER_FIVE_COST: 1000,             // 10% energy
+        CHAPTER_FIVE_MEMO_PREFIX: 'viz://vm/library/chapter5/'
     };
 
     /** HP passive regeneration constants */
