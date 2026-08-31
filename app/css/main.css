@@ -1250,6 +1250,7 @@ body[data-icon-motion="sparkle"] .energy-path-shimmer {
 .event-icon { font-size: 1.2rem; }
 .event-name { flex: 1; font-weight: 600; white-space: nowrap; }
 .event-banner-weave_surge .event-name { color: #d8b4ff; text-shadow: 0 0 10px rgba(216, 180, 255, 0.38); }
+.event-banner-minor_rift .event-name { color: #7dd3fc; text-shadow: 0 0 10px rgba(125, 211, 252, 0.36); }
 .event-timer { color: var(--color-primary); font-weight: 600; font-size: 0.85rem; }
 
 /* Season Indicator */
