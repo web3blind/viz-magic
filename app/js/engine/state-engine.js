@@ -707,7 +707,6 @@ var StateEngine = (function() {
 
         if (typeof GameRegions !== 'undefined') {
             if (!GameRegions.getRegion(data.zone)) return [];
-            if (GameRegions.canCharacterEnterRegion && !GameRegions.canCharacterEnterRegion(character, data.zone)) return [];
         }
 
         var previousZone = character.currentZone;

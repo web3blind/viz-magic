@@ -205,11 +205,6 @@ var GameRegions = (function() {
         return region ? region.minLevel : 1;
     }
 
-    function canCharacterEnterRegion(character, id) {
-        if (!character) return false;
-        return (character.level || 1) >= getDisplayLevelMin(id);
-    }
-
     function getHomeRegionForLevel(level) {
         var numericLevel = Math.max(1, Number(level) || 1);
         var fallback = 'void_sanctum';
@@ -243,7 +238,6 @@ var GameRegions = (function() {
         REGION_DISPLAY_LEVEL_RANGES: REGION_DISPLAY_LEVEL_RANGES,
         getDisplayLevelRange: getDisplayLevelRange,
         getDisplayLevelMin: getDisplayLevelMin,
-        canCharacterEnterRegion: canCharacterEnterRegion,
         getHomeRegionForLevel: getHomeRegionForLevel,
         getRegion: getRegion,
         getAll: getAll,

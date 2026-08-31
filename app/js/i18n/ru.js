@@ -599,9 +599,6 @@ var LangRU = {
     map_find_double: 'Удачное путешествие! Находка удвоена: {item}!',
     map_travel_cost: '1 Мана',
     map_traveled: 'Вы прибыли в',
-    map_level_too_low: 'Ваш уровень слишком низок для этой карты.',
-    map_locked_until_level: 'Эта карта откроется с уровня {level}.',
-    map_locked_until_level_short: 'с ур. {level}',
     map_active_sieges: 'Активные осады',
 
     // Siege

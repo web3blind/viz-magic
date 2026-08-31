@@ -110,7 +110,6 @@ var MapScreen = (function() {
             var icon = REGION_ICONS[regionId] || 'map';
             var isCurrent = regionId === currentZone;
             var isHomeRegion = character && GameRegions.getHomeRegionForLevel(character.level) === regionId;
-            var canEnterRegion = character && GameRegions.canCharacterEnterRegion(character, regionId);
             var controllerGuild = territory ? territory.controllerGuild : null;
             var controllerGuildObj = controllerGuild && state.guilds ? state.guilds[controllerGuild] : null;
             var hasSiege = territory && territory.activeSieges;
@@ -196,14 +195,8 @@ var MapScreen = (function() {
                 html += '<div class="region-travel-options">';
                 html += '<button class="btn btn-secondary btn-sm region-travel-btn" ';
                 html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_LOW + '" ';
-                if (!canEnterRegion) {
-                    html += 'disabled aria-disabled="true" ';
-                    html += 'aria-label="' + t('map_level_too_low') + ' ' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_LOW) + '">';
-                    html += Helpers.icon('lock', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_LOW);
-                } else {
-                    html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_LOW) + '">';
-                    html += Helpers.icon('map', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_LOW);
-                }
+                html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_LOW) + '">';
+                html += Helpers.icon('map', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_LOW);
                 html += '</button>';
                 html += '</div>';
                 html += '</div>';
@@ -340,13 +333,6 @@ var MapScreen = (function() {
 
         var region = GameRegions.getRegion(regionId);
         if (!region) return;
-
-        // Check level requirements
-        var character = StateEngine.getCharacter(user);
-        if (character && !GameRegions.canCharacterEnterRegion(character, regionId)) {
-            Toast.error(t('map_level_too_low'));
-            return;
-        }
 
         if (_dailyQuestAlreadyVisitedRegion(user, regionId)) {
             Toast.info(t('map_region_already_visited_today'));

@@ -599,9 +599,6 @@ var LangEN = {
     map_find_double: 'Lucky journey! Find doubled: {item}!',
     map_travel_cost: '1 Mana',
     map_traveled: 'You arrived at',
-    map_level_too_low: 'Your level is too low for this map.',
-    map_locked_until_level: 'This map opens at level {level}.',
-    map_locked_until_level_short: 'lv. {level}',
     map_active_sieges: 'Active Sieges',
 
     // Siege
