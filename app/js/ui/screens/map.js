@@ -198,8 +198,8 @@ var MapScreen = (function() {
                 html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_LOW + '" ';
                 if (!canEnterRegion) {
                     html += 'disabled aria-disabled="true" ';
-                    html += 'aria-label="' + t('map_locked_until_level', { level: GameRegions.getDisplayLevelMin(regionId) }) + '">';
-                    html += Helpers.icon('lock', 'travel-icon') + ' ' + t('map_locked_until_level_short', { level: GameRegions.getDisplayLevelMin(regionId) });
+                    html += 'aria-label="' + t('map_level_too_low') + ' ' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_LOW) + '">';
+                    html += Helpers.icon('lock', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_LOW);
                 } else {
                     html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_LOW) + '">';
                     html += Helpers.icon('map', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_LOW);
