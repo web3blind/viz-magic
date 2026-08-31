@@ -45,6 +45,11 @@ var MapScreen = (function() {
         var state = StateEngine.getState();
         var character = state.characters ? state.characters[user] : null;
         var confirmedZone = character ? character.currentZone : 'commons_first_light';
+        var homeZone = character ? GameRegions.getHomeRegionForLevel(character.level) : confirmedZone;
+        if (character && homeZone && confirmedZone !== homeZone) {
+            character.currentZone = homeZone;
+            confirmedZone = homeZone;
+        }
         if (pendingTravel && pendingTravel.account === user && pendingTravel.to === confirmedZone) {
             pendingTravel = null;
         } else if (pendingTravel && pendingTravel.account === user && pendingTravel.at && (Date.now() - pendingTravel.at) > PENDING_TRAVEL_TTL_MS) {
@@ -124,7 +129,7 @@ var MapScreen = (function() {
 
             var schoolCls = region.school ? Helpers.schoolClass(region.school) : '';
 
-            html += '<section class="region-card region-card-' + regionId + (isCurrent ? ' region-current' : '') + ' ' + schoolCls + '" ';
+            html += '<section class="region-card region-card-' + regionId + (isCurrent ? ' region-current' : '') + (isHomeRegion ? ' region-home-level' : '') + ' ' + schoolCls + '" ';
             html += 'role="listitem" data-region="' + regionId + '" aria-label="' + region.name + (isHomeRegion ? '. ' + t('map_home_card') : '') + '">';
 
             // Region header
