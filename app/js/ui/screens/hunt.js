@@ -60,7 +60,7 @@ var HuntScreen = (function() {
                 var c = creatures[i];
                 html += '<button class="creature-card" data-id="' + c.id + '" role="radio" aria-checked="false" ' +
                     'tabindex="' + (i === 0 ? '0' : '-1') + '" type="button" ' +
-                    'aria-label="' + c.name + '. Level ' + c.minLevel + ' to ' + c.maxLevel + '">' +
+                    'aria-label="' + c.name + '. ' + t('hunt_creature_level_aria', { min: c.minLevel, max: c.maxLevel }) + '">' +
                     '<span class="creature-name">' + c.name + '</span>' +
                     '<span class="creature-level">Lv ' + c.minLevel + '-' + c.maxLevel + '</span>' +
                     (c.minLevel > level ? '<span class="creature-danger-hint">' + t('hunt_danger_hint') + '</span>' : '') +
