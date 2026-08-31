@@ -172,6 +172,56 @@ var GameRegions = (function() {
         }
     };
 
+    var REGION_DISPLAY_LEVEL_RANGES = {
+        commons_first_light: { min: 1, max: 7 },
+        covenant_bazaar: { min: 8, max: 14 },
+        deep_currents: { min: 15, max: 21 },
+        ember_wastes: { min: 22, max: 28 },
+        duel_spires: { min: 29, max: 35 },
+        iron_root: { min: 36, max: 42 },
+        shattered_sky: { min: 43, max: 49 },
+        forklands: { min: 50, max: 56 },
+        the_veil: { min: 57, max: 63 },
+        starfall_vault: { min: 64, max: 70 },
+        emberheart: { min: 71, max: 77 },
+        prismatic_depths: { min: 78, max: 84 },
+        timeless_maze: { min: 85, max: 91 },
+        grandmaster_peak: { min: 92, max: 98 },
+        void_sanctum: { min: 99, max: 105 }
+    };
+
+    function getDisplayLevelRange(id) {
+        var range = REGION_DISPLAY_LEVEL_RANGES[id];
+        if (range) return range.min + '-' + range.max;
+        var region = REGIONS[id];
+        if (!region) return '';
+        return region.minLevel + '-' + region.maxLevel;
+    }
+
+    function getDisplayLevelMin(id) {
+        var range = REGION_DISPLAY_LEVEL_RANGES[id];
+        if (range) return range.min;
+        var region = REGIONS[id];
+        return region ? region.minLevel : 1;
+    }
+
+    function canCharacterEnterRegion(character, id) {
+        if (!character) return false;
+        return (character.level || 1) >= getDisplayLevelMin(id);
+    }
+
+    function getHomeRegionForLevel(level) {
+        var numericLevel = Math.max(1, Number(level) || 1);
+        var fallback = 'void_sanctum';
+        for (var id in REGION_DISPLAY_LEVEL_RANGES) {
+            if (!REGION_DISPLAY_LEVEL_RANGES.hasOwnProperty(id)) continue;
+            var range = REGION_DISPLAY_LEVEL_RANGES[id];
+            if (numericLevel >= range.min && numericLevel <= range.max) return id;
+            if (numericLevel >= range.min) fallback = id;
+        }
+        return fallback;
+    }
+
     function getRegion(id) {
         return REGIONS[id] || null;
     }
@@ -190,6 +240,11 @@ var GameRegions = (function() {
 
     return {
         REGIONS: REGIONS,
+        REGION_DISPLAY_LEVEL_RANGES: REGION_DISPLAY_LEVEL_RANGES,
+        getDisplayLevelRange: getDisplayLevelRange,
+        getDisplayLevelMin: getDisplayLevelMin,
+        canCharacterEnterRegion: canCharacterEnterRegion,
+        getHomeRegionForLevel: getHomeRegionForLevel,
         getRegion: getRegion,
         getAll: getAll,
         getSafeRegions: getSafeRegions

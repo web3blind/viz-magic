@@ -705,6 +705,11 @@ var StateEngine = (function() {
         var character = worldState.characters[sender];
         if (!character) return [];
 
+        if (typeof GameRegions !== 'undefined') {
+            if (!GameRegions.getRegion(data.zone)) return [];
+            if (GameRegions.canCharacterEnterRegion && !GameRegions.canCharacterEnterRegion(character, data.zone)) return [];
+        }
+
         var previousZone = character.currentZone;
         character.currentZone = data.zone;
 

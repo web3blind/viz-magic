@@ -822,6 +822,22 @@ body[data-icon-motion="sparkle"] .energy-path-shimmer {
     border-color: var(--color-primary);
     background: rgba(212,168,67,0.05);
 }
+.region-card.region-home-level {
+    border-left-color: #8be9fd;
+    box-shadow: inset 0 0 0 1px rgba(139, 233, 253, 0.18);
+}
+.region-home-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-start: 0.35em;
+    padding: 2px 7px;
+    border-radius: 999px;
+    border: 1px solid rgba(139, 233, 253, 0.5);
+    background: rgba(139, 233, 253, 0.12);
+    color: #8be9fd;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
 .region-header {
     display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px;
 }

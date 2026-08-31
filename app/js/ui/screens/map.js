@@ -36,30 +36,6 @@ var MapScreen = (function() {
         void_sanctum:        'prophecy'
     };
 
-    var WORLD_MAP_LEVEL_RANGES = {
-        commons_first_light: '1-7',
-        covenant_bazaar: '8-14',
-        deep_currents: '15-21',
-        ember_wastes: '22-28',
-        duel_spires: '29-35',
-        iron_root: '36-42',
-        shattered_sky: '43-49',
-        forklands: '50-56',
-        the_veil: '57-63',
-        starfall_vault: '64-70',
-        emberheart: '71-77',
-        prismatic_depths: '78-84',
-        timeless_maze: '85-91',
-        grandmaster_peak: '92-98',
-        void_sanctum: '99-105'
-    };
-
-    function _regionLevelRange(region) {
-        if (!region) return '';
-        if (WORLD_MAP_LEVEL_RANGES[region.id]) return WORLD_MAP_LEVEL_RANGES[region.id];
-        return region.minLevel + '-' + region.maxLevel;
-    }
-
     /** School colors for territory display */
     function render() {
         var container = Helpers.$('screen-map');
@@ -128,6 +104,8 @@ var MapScreen = (function() {
             var territory = state.territories ? state.territories[regionId] : null;
             var icon = REGION_ICONS[regionId] || 'map';
             var isCurrent = regionId === currentZone;
+            var isHomeRegion = character && GameRegions.getHomeRegionForLevel(character.level) === regionId;
+            var canEnterRegion = character && GameRegions.canCharacterEnterRegion(character, regionId);
             var controllerGuild = territory ? territory.controllerGuild : null;
             var controllerGuildObj = controllerGuild && state.guilds ? state.guilds[controllerGuild] : null;
             var hasSiege = territory && territory.activeSieges;
@@ -147,7 +125,7 @@ var MapScreen = (function() {
             var schoolCls = region.school ? Helpers.schoolClass(region.school) : '';
 
             html += '<section class="region-card region-card-' + regionId + (isCurrent ? ' region-current' : '') + ' ' + schoolCls + '" ';
-            html += 'role="listitem" data-region="' + regionId + '" aria-label="' + region.name + '">';
+            html += 'role="listitem" data-region="' + regionId + '" aria-label="' + region.name + (isHomeRegion ? '. ' + t('map_home_card') : '') + '">';
 
             // Region header
             html += '<div class="region-header">';
@@ -156,7 +134,10 @@ var MapScreen = (function() {
             // v134: region names become active links that open a lore "map" modal
             html += '<button type="button" class="region-name region-lore-link" data-lore-region="' + regionId + '" ';
             html += 'aria-label="' + t('map_view_lore') + ' ' + region.name + '">' + region.name + '</button>';
-            html += '<span class="region-level">' + t('map_level') + ' ' + _regionLevelRange(region) + '</span>';
+            html += '<span class="region-level">' + t('map_level') + ' ' + GameRegions.getDisplayLevelRange(regionId) + '</span>';
+            if (isHomeRegion) {
+                html += ' <span class="region-home-badge">' + t('map_home_card') + '</span>';
+            }
             if (region.school) {
                 html += ' <span class="region-school">' + t('school_' + region.school) + '</span>';
             }
@@ -213,8 +194,14 @@ var MapScreen = (function() {
                 html += '<div class="region-travel-options">';
                 html += '<button class="btn btn-secondary btn-sm region-travel-btn" ';
                 html += 'data-region="' + regionId + '" data-cost="' + TRAVEL_COST_LOW + '" ';
-                html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_LOW) + '">';
-                html += Helpers.icon('map', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_LOW);
+                if (!canEnterRegion) {
+                    html += 'disabled aria-disabled="true" ';
+                    html += 'aria-label="' + t('map_locked_until_level', { level: GameRegions.getDisplayLevelMin(regionId) }) + '">';
+                    html += Helpers.icon('lock', 'travel-icon') + ' ' + t('map_locked_until_level_short', { level: GameRegions.getDisplayLevelMin(regionId) });
+                } else {
+                    html += 'aria-label="' + t('map_travel_to') + ' ' + region.name + ' ' + Helpers.manaCost(TRAVEL_COST_LOW) + '">';
+                    html += Helpers.icon('map', 'travel-icon') + ' ' + Helpers.manaCost(TRAVEL_COST_LOW);
+                }
                 html += '</button>';
                 html += '</div>';
                 html += '</div>';
@@ -296,7 +283,7 @@ var MapScreen = (function() {
         var loreText = t('map_lore_' + regionId);
         var html = '<div class="lore-map-card">';
         html += '<div class="lore-map-title">' + Helpers.icon(icon, 'region-icon vmagic-breathe') + ' ' + region.name + '</div>';
-        html += '<div class="lore-map-level">' + t('map_level') + ' ' + _regionLevelRange(region) + '</div>';
+        html += '<div class="lore-map-level">' + t('map_level') + ' ' + GameRegions.getDisplayLevelRange(regionId) + '</div>';
         // v144: show the current painted-map image with a cache-busting version.
         // Portal guidance is visual inside the artwork; no extra hint text is shown here.
         html += '<div class="lore-map-viewport" id="lore-map-viewport">';
@@ -354,7 +341,7 @@ var MapScreen = (function() {
 
         // Check level requirements
         var character = StateEngine.getCharacter(user);
-        if (character && character.level < region.minLevel) {
+        if (character && !GameRegions.canCharacterEnterRegion(character, regionId)) {
             Toast.error(t('map_level_too_low'));
             return;
         }

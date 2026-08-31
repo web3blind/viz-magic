@@ -583,6 +583,7 @@ var LangEN = {
     map_level: 'Lv.',
     map_pvp: 'PvP',
     map_you_are_here: 'You are here',
+    map_home_card: 'Your map',
     map_controlled_by: 'Controlled by',
     map_home_bonus: 'home bonus',
     map_tax: 'Tax',
@@ -599,7 +600,9 @@ var LangEN = {
     map_find_double: 'Lucky journey! Find doubled: {item}!',
     map_travel_cost: '1 Mana',
     map_traveled: 'You arrived at',
-    map_level_too_low: 'Your level is too low for this region.',
+    map_level_too_low: 'Your level is too low for this map.',
+    map_locked_until_level: 'This map opens at level {level}.',
+    map_locked_until_level_short: 'lv. {level}',
     map_active_sieges: 'Active Sieges',
 
     // Siege
