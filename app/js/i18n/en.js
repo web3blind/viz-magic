@@ -583,7 +583,6 @@ var LangEN = {
     map_level: 'Lv.',
     map_pvp: 'PvP',
     map_you_are_here: 'You are here',
-    map_home_card: 'Your map',
     map_controlled_by: 'Controlled by',
     map_home_bonus: 'home bonus',
     map_tax: 'Tax',

@@ -129,8 +129,8 @@ var MapScreen = (function() {
 
             var schoolCls = region.school ? Helpers.schoolClass(region.school) : '';
 
-            html += '<section class="region-card region-card-' + regionId + (isCurrent ? ' region-current' : '') + (isHomeRegion ? ' region-home-level' : '') + ' ' + schoolCls + '" ';
-            html += 'role="listitem" data-region="' + regionId + '" aria-label="' + region.name + (isHomeRegion ? '. ' + t('map_home_card') : '') + '">';
+            html += '<section class="region-card region-card-' + regionId + (isCurrent ? ' region-current' : '') + ' ' + schoolCls + '" ';
+            html += 'role="listitem" data-region="' + regionId + '" aria-label="' + region.name + '">';
 
             // Region header
             html += '<div class="region-header">';
@@ -140,9 +140,6 @@ var MapScreen = (function() {
             html += '<button type="button" class="region-name region-lore-link" data-lore-region="' + regionId + '" ';
             html += 'aria-label="' + t('map_view_lore') + ' ' + region.name + '">' + region.name + '</button>';
             html += '<span class="region-level">' + t('map_level') + ' ' + GameRegions.getDisplayLevelRange(regionId) + '</span>';
-            if (isHomeRegion) {
-                html += ' <span class="region-home-badge">' + t('map_home_card') + '</span>';
-            }
             if (region.school) {
                 html += ' <span class="region-school">' + t('school_' + region.school) + '</span>';
             }
