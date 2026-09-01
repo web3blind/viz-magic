@@ -334,11 +334,13 @@ var HelpScreen = (function() {
             '<h3 id="help-attraction-library-title" tabindex="-1">' + Helpers.icon('spark', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_attraction_title') + '</h3>' +
             '<p>' + t('help_magic_library_attraction_intro') + '</p>' +
             '<p class="help-library-danger">' + t('help_magic_library_attraction_warning') + '</p>' +
-            '<p id="help-attraction-library-status" class="help-secret-library-status" role="status" aria-live="polite"></p>';
+            '<p id="help-attraction-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (attractionLibraryBusy ? t('help_secret_library_checking') : '') + '</p>';
         if (!unlocked) {
+            var attractionBusyAttrs = attractionLibraryBusy ? ' disabled aria-disabled="true" aria-busy="true"' : '';
+            var attractionButtonText = attractionLibraryBusy ? t('help_secret_library_checking') : t('help_magic_library_attraction_unlock');
             html += '<div class="help-secret-library-lock">' +
                 '<p>' + t('help_magic_library_attraction_locked') + '</p>' +
-                '<button type="button" class="btn btn-primary" id="help-attraction-library-unlock">' + t('help_magic_library_attraction_unlock') + '</button>' +
+                '<button type="button" class="btn btn-primary" id="help-attraction-library-unlock"' + attractionBusyAttrs + '>' + attractionButtonText + '</button>' +
                 '</div>';
         } else {
             html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_attraction_opened') + '</p>' +
@@ -441,9 +443,11 @@ var HelpScreen = (function() {
 
     function _resetAttractionLibraryAction(button) {
         attractionLibraryBusy = false;
+        _setAttractionLibraryStatus('');
         if (button) {
             button.disabled = false;
             button.removeAttribute('aria-busy');
+            button.removeAttribute('aria-disabled');
             button.textContent = button.getAttribute('data-idle-label') || Helpers.t('help_magic_library_attraction_unlock');
         }
     }
@@ -459,9 +463,11 @@ var HelpScreen = (function() {
         var button = Helpers.$('help-attraction-library-unlock');
         var day = StateEngine.getLibraryDay();
         attractionLibraryBusy = true;
+        _setAttractionLibraryStatus(Helpers.t('help_secret_library_checking'));
         if (button) {
             button.setAttribute('data-idle-label', button.textContent);
             button.disabled = true;
+            button.setAttribute('aria-disabled', 'true');
             button.setAttribute('aria-busy', 'true');
             button.textContent = Helpers.t('help_secret_library_checking');
         }
