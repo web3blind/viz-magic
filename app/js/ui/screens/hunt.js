@@ -6,8 +6,15 @@ var HuntScreen = (function() {
 
     var selectedCreature = null;
     var selectedSpell = null;
+    var selectedHuntEnergy = 100;
     var stoneItemId = null;
     var HUNT_HP_DISPLAY_MAX = 5000;
+    var HUNT_POWER_OPTIONS = [
+        { energy: 100, labelKey: 'hunt_power_cautious', descKey: 'hunt_power_cautious_desc' },
+        { energy: 300, labelKey: 'hunt_power_confident', descKey: 'hunt_power_confident_desc' },
+        { energy: 500, labelKey: 'hunt_power_strong', descKey: 'hunt_power_strong_desc' },
+        { energy: 700, labelKey: 'hunt_power_fierce', descKey: 'hunt_power_fierce_desc' }
+    ];
 
     function render() {
         var t = Helpers.t;
@@ -32,6 +39,7 @@ var HuntScreen = (function() {
 
         selectedCreature = null;
         selectedSpell = null;
+        selectedHuntEnergy = 100;
 
         var needsRest = ch && ch.maxHp && ch.hp < ch.maxHp;
         var hpShown = ch && ch.maxHp ? _scaleForDisplay(ch.hp || 0, ch.maxHp, HUNT_HP_DISPLAY_MAX) : 0;
@@ -85,6 +93,22 @@ var HuntScreen = (function() {
                 '<span class="spell-name">' + s.name + '</span>' +
                 '<span class="spell-cost">' + t('hunt_mana_badge', {cost: Helpers.bpToPercent(s.manaCost)}) + '</span>' +
                 (spellTooWeak ? '<span class="spell-warning">' + t('hunt_spell_too_weak') + '</span>' : '') +
+                '</button>';
+        }
+
+        html += '</div>' +
+            '<h2><span class="section-icon vmagic-breathe" aria-hidden="true">⚡</span> ' + t('hunt_choose_power') + '</h2>' +
+            '<p class="quest-desc">' + t('hunt_power_hint') + '</p>' +
+            '<div class="hunt-power-grid" role="radiogroup" aria-label="' + t('hunt_choose_power') + '">';
+
+        for (var pi = 0; pi < HUNT_POWER_OPTIONS.length; pi++) {
+            var power = HUNT_POWER_OPTIONS[pi];
+            html += '<button class="hunt-power-btn" data-energy="' + power.energy + '" role="radio" aria-checked="' + (pi === 0 ? 'true' : 'false') + '" ' +
+                'tabindex="' + (pi === 0 ? '0' : '-1') + '" type="button" ' +
+                'aria-label="' + t(power.labelKey) + '. ' + t('hunt_mana_cost', {cost: Helpers.bpToPercent(power.energy)}) + '. ' + t(power.descKey) + '">' +
+                '<span class="hunt-power-label">' + t(power.labelKey) + '</span>' +
+                '<span class="hunt-power-cost">' + Helpers.bpToPercent(power.energy) + '</span>' +
+                '<span class="hunt-power-desc">' + t(power.descKey) + '</span>' +
                 '</button>';
         }
 
@@ -181,6 +205,13 @@ var HuntScreen = (function() {
         A11y.bindRadioGroup(el.querySelector('.spell-grid[role="radiogroup"]'), '.spell-btn', function(option) {
             selectedSpell = option.getAttribute('data-id');
             SoundManager.play('tap');
+            _syncHuntPowerOptions();
+            _checkReady();
+        });
+
+        A11y.bindRadioGroup(el.querySelector('.hunt-power-grid[role="radiogroup"]'), '.hunt-power-btn', function(option) {
+            selectedHuntEnergy = Number(option.getAttribute('data-energy')) || 100;
+            SoundManager.play('tap');
             _checkReady();
         });
 
@@ -232,7 +263,40 @@ var HuntScreen = (function() {
     }
 
     function _checkReady() {
-        Helpers.$('btn-attack').disabled = !(selectedCreature && selectedSpell);
+        Helpers.$('btn-attack').disabled = !(selectedCreature && selectedSpell && selectedHuntEnergy);
+    }
+
+    function _getSelectedHuntEnergy(spell) {
+        var spellCost = spell && spell.manaCost ? spell.manaCost : VizMagicConfig.ENERGY.MIN_HUNT_COST;
+        var chosen = selectedHuntEnergy || VizMagicConfig.ENERGY.MIN_HUNT_COST;
+        return Math.max(spellCost, chosen);
+    }
+
+    function _syncHuntPowerOptions() {
+        var spell = GameSpells.getSpell(selectedSpell);
+        var minEnergy = spell && spell.manaCost ? spell.manaCost : VizMagicConfig.ENERGY.MIN_HUNT_COST;
+        var buttons = document.querySelectorAll('.hunt-power-btn');
+        var firstEnabled = null;
+        var selectedStillEnabled = false;
+        for (var i = 0; i < buttons.length; i++) {
+            var btn = buttons[i];
+            var energy = Number(btn.getAttribute('data-energy')) || 0;
+            var disabled = energy < minEnergy;
+            btn.disabled = disabled;
+            btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+            if (disabled && btn.getAttribute('aria-checked') === 'true') {
+                btn.setAttribute('aria-checked', 'false');
+                btn.classList.remove('selected');
+            }
+            if (!disabled && !firstEnabled) firstEnabled = btn;
+            if (!disabled && energy === selectedHuntEnergy) selectedStillEnabled = true;
+        }
+        if (!selectedStillEnabled && firstEnabled) {
+            selectedHuntEnergy = Number(firstEnabled.getAttribute('data-energy')) || minEnergy;
+            firstEnabled.setAttribute('aria-checked', 'true');
+            firstEnabled.classList.add('selected');
+            firstEnabled.tabIndex = 0;
+        }
     }
 
     function _doRest() {
@@ -298,19 +362,21 @@ var HuntScreen = (function() {
                 playerEnergy = VizAccount.calculateCurrentEnergy(accountData);
             }
 
+            var huntEnergy = _getSelectedHuntEnergy(spell);
+
             if ((spell.manaCost || 0) < VizMagicConfig.ENERGY.MIN_HUNT_COST) {
                 resultEl.innerHTML = '<p class="error">' + t('hunt_spell_too_weak') + '</p>';
                 btn.disabled = false;
                 return;
             }
 
-            if (playerEnergy < spell.manaCost) {
+            if (playerEnergy < huntEnergy) {
                 resultEl.innerHTML = '<p class="error">' + t('hunt_not_enough_mana') + '</p>';
                 btn.disabled = false;
                 return;
             }
 
-            resultEl.innerHTML = _renderPendingState(t, creature, spell, true);
+            resultEl.innerHTML = _renderPendingState(t, creature, spell, true, huntEnergy);
             SoundManager.play('tap');
             SoundManager.vibrate('light');
 
@@ -318,7 +384,7 @@ var HuntScreen = (function() {
                 selectedCreature,
                 ch.currentZone || 'commons_first_light',
                 selectedSpell,
-                spell.manaCost,
+                huntEnergy,
                 creature.author || '',
                 function(broadcastErr, broadcastResult) {
                     if (broadcastErr) {
@@ -336,7 +402,7 @@ var HuntScreen = (function() {
                         blockNum = broadcastResult.action.block_num || 0;
                     }
 
-                    _resolveHuntFromBlock(blockNum, ch, creature, spell, spell.manaCost, user, resultEl, t);
+                    _resolveHuntFromBlock(blockNum, ch, creature, spell, huntEnergy, user, resultEl, t);
                 }
             );
         });
@@ -587,11 +653,12 @@ var HuntScreen = (function() {
         return html;
     }
 
-    function _renderPendingState(t, creature, spell, showHome) {
+    function _renderPendingState(t, creature, spell, showHome, huntEnergy) {
         var html = '<div class="combat-result pending">' +
             '<h2>' + t('hunt_pending_title') + '</h2>' +
             '<p>' + Helpers.escapeHtml(creature.name) + '</p>' +
             '<p>' + Helpers.escapeHtml(spell.name) + '</p>' +
+            (huntEnergy ? '<p>' + t('hunt_mana_badge', {cost: Helpers.bpToPercent(huntEnergy)}) + '</p>' : '') +
             '<p>' + t('hunt_pending_text') + '</p>';
 
         if (showHome) {

@@ -91,7 +91,7 @@ var CombatSystem = (function() {
         var totalDamageToPlayer = 0;
         var rounds = 0;
         // Economical hunts are slower, not hopeless: low-mana players can win by endurance.
-        var maxRounds = playerEnergy <= 300 ? 45 : 25; // safety cap; 3% must not get fewer rounds than 1%
+        var maxRounds = playerEnergy <= 700 ? 45 : 25; // safety cap; 1%, 3%, 5%, and 7% hunt power options all use patient rounds
 
         while (creatureHpLeft > 0 && playerHpLeft > 0 && rounds < maxRounds) {
             // Player hits creature

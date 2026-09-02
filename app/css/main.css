@@ -304,6 +304,18 @@ body {
 .spell-btn.selected { border-color: var(--color-primary); background: rgba(212,168,67,0.1); }
 .spell-btn:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
 .spell-cost { font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 4px; }
+.hunt-power-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.hunt-power-btn {
+    background: var(--color-surface); border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm); padding: 10px 8px; cursor: pointer;
+    text-align: center; min-height: 72px; transition: all var(--transition);
+}
+.hunt-power-btn.selected { border-color: var(--color-primary); background: rgba(212,168,67,0.12); }
+.hunt-power-btn:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+.hunt-power-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.hunt-power-label { display: block; font-weight: 700; }
+.hunt-power-cost { display: block; color: var(--color-primary); font-size: 0.95rem; margin-top: 2px; }
+.hunt-power-desc { display: block; color: var(--color-text-muted); font-size: 0.72rem; margin-top: 2px; line-height: 1.2; }
 #btn-attack { display: block; width: 100%; margin-top: 20px; }
 
 /* Combat result */
@@ -2711,6 +2723,10 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 
 .ink-drop-icon { color: #102052; filter: saturate(1.9) brightness(0.65); text-shadow: 0 0 8px rgba(22,44,120,0.55); }
 
+
+@media (max-width: 600px) {
+    .hunt-power-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 .spell-btn-disabled,
 .spell-btn:disabled {

@@ -104,8 +104,15 @@ var ActionValidator = (function() {
         if (!spell) {
             return { valid: false, error: 'invalid_spell' };
         }
-        if (data.energy && data.energy !== spell.manaCost) {
-            return { valid: false, error: 'invalid_hunt_energy' };
+        if (data.energy) {
+            var energy = Number(data.energy);
+            if (energy < (spell.manaCost || 0) || energy < cfg.ENERGY.MIN_HUNT_COST || energy > cfg.ENERGY.MAX) {
+                return { valid: false, error: 'invalid_hunt_energy' };
+            }
+            var allowedEnergy = [100, 300, 500, 700, spell.manaCost || 0];
+            if (allowedEnergy.indexOf(energy) === -1) {
+                return { valid: false, error: 'invalid_hunt_energy' };
+            }
         }
 
         return { valid: true, error: null };

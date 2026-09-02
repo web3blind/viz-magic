@@ -473,7 +473,7 @@ var StateEngine = (function() {
         var spell = GameSpells.getSpell(data.spell);
         if (!creature || !spell) return [];
 
-        var combatEnergy = spell.manaCost || cfg.ENERGY.MIN_HUNT_COST;
+        var combatEnergy = data.energy || spell.manaCost || cfg.ENERGY.MIN_HUNT_COST;
 
         // Resolve combat using the Mana actually pledged for this shot, not the player's full account energy.
         var result = CombatSystem.resolveHunt(
