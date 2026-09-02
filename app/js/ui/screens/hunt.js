@@ -10,10 +10,10 @@ var HuntScreen = (function() {
     var stoneItemId = null;
     var HUNT_HP_DISPLAY_MAX = 5000;
     var HUNT_POWER_OPTIONS = [
-        { energy: 100, labelKey: 'hunt_power_cautious' },
-        { energy: 300, labelKey: 'hunt_power_confident' },
-        { energy: 500, labelKey: 'hunt_power_strong' },
-        { energy: 700, labelKey: 'hunt_power_fierce' }
+        { energy: 100, labelKey: 'hunt_power_cautious', descKey: 'hunt_power_cautious_desc' },
+        { energy: 300, labelKey: 'hunt_power_confident', descKey: 'hunt_power_confident_desc' },
+        { energy: 500, labelKey: 'hunt_power_strong', descKey: 'hunt_power_strong_desc' },
+        { energy: 700, labelKey: 'hunt_power_fierce', descKey: 'hunt_power_fierce_desc' }
     ];
 
     function render() {
@@ -86,7 +86,7 @@ var HuntScreen = (function() {
             var power = HUNT_POWER_OPTIONS[pi];
             html += '<button class="hunt-power-btn" data-energy="' + power.energy + '" role="radio" aria-checked="' + (pi === 0 ? 'true' : 'false') + '" ' +
                 'tabindex="' + (pi === 0 ? '0' : '-1') + '" type="button" ' +
-                'aria-label="' + t(power.labelKey) + '. ' + t('hunt_mana_cost', {cost: Helpers.bpToPercent(power.energy)}) + '">' +
+                'aria-label="' + t(power.labelKey) + '. ' + t('hunt_mana_cost', {cost: Helpers.bpToPercent(power.energy)}) + '. ' + t(power.descKey) + '">' +
                 '<span class="hunt-power-label">' + t(power.labelKey) + '</span>' +
                 '<span class="hunt-power-cost">' + Helpers.bpToPercent(power.energy) + '</span>' +
                 '</button>';
