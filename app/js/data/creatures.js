@@ -15,6 +15,7 @@ var GameCreatures = (function() {
         ember_wisp: {
             id: 'ember_wisp',
             name: 'Ember Wisp',
+            icon: '🔥',
             school: 'ignis',
             author: 'denis-skripnik',
             minLevel: 1,
@@ -35,6 +36,7 @@ var GameCreatures = (function() {
         hollow_shade: {
             id: 'hollow_shade',
             name: 'Hollow Shade',
+            icon: '🌑',
             school: 'umbra',
             author: 'denis-skripnik',
             minLevel: 3,
@@ -56,6 +58,7 @@ var GameCreatures = (function() {
         thornvine: {
             id: 'thornvine',
             name: 'Thornvine',
+            icon: '🌿',
             school: 'terra',
             author: 'denis-skripnik',
             minLevel: 5,
@@ -77,6 +80,7 @@ var GameCreatures = (function() {
         echo_guardian: {
            id: 'echo_guardian',
            name: 'Echo Guardian',
+           icon: '🛡️',
            school: 'terra',
            author: 'inov8', 
            minLevel: 5,
@@ -97,6 +101,7 @@ var GameCreatures = (function() {
         cyber_ghoul: {
           id: 'cyber_ghoul',
           name: 'Cyber Ghoul',
+          icon: '👾',
           school: 'umbra', 
           author: 'inov8', 
           minLevel: 7,
@@ -116,6 +121,7 @@ var GameCreatures = (function() {
         rift_marauder: {
           id: 'rift_marauder',
           name: 'Rift Marauder',
+          icon: '🌀',
           school: 'umbra',
           author: 'denis-skripnik',
           minLevel: 9,
@@ -135,6 +141,7 @@ var GameCreatures = (function() {
         mirage_stalker: {
           id: 'mirage_stalker',
           name: 'Mirage Stalker',
+          icon: '👁️',
           school: 'umbra',
           author: 'denis-skripnik',
           minLevel: 11,
@@ -154,6 +161,7 @@ var GameCreatures = (function() {
         rift_colossus: {
           id: 'rift_colossus',
           name: 'Rift Colossus',
+          icon: '🗿',
           school: 'terra',
           author: 'denis-skripnik',
           minLevel: 11,

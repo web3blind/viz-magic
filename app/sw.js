@@ -1,5 +1,5 @@
 // Viz Magic — Service Worker
-var CACHE_NAME = 'viz-magic-v206';
+var CACHE_NAME = 'viz-magic-v207';
 var NAVIGATION_TIMEOUT_MS = 3500;
 var RUNTIME_TIMEOUT_MS = 2500;
 var APP_SHELL_ASSETS = [
