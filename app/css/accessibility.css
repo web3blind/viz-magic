@@ -6,6 +6,7 @@
     .progress-fill { forced-color-adjust: none; }
     .class-card.selected { border: 3px solid Highlight; }
     .creature-card.selected { border: 3px solid Highlight; }
+    .spell-btn.selected { border: 3px solid Highlight; }
 }
 
 .high-contrast,
