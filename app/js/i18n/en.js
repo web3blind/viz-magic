@@ -1512,22 +1512,22 @@ var LangEN = {
     help_hp_text: 'HP is your health. Max HP grows from your level, class, and Resilience: base 100 + level × 10 + RES × 3, then your class multiplier is applied. It does not regenerate automatically to full — passive regen slowly restores up to 30% of your max HP (+1 HP every 100 blocks, ~5 min). <br>Full recovery: open the Hunt screen and press <button type="button" class="help-nav-link" data-help-nav="hunt">Rest at camp</button>, or use a Health Scroll (craftable or dropped by creatures).',
 
     help_section_levels: 'Levels & Experience',
-    help_levels_text: 'Your level grows from accumulated experience — XP. Hunts, Armageddon, completed duels, and quests grant XP.<br>1-2 — 1000 XP<br>2-3 — 1250 XP<br>3-4 — 1750 XP<br>4-5 — 2500 XP<br>5-6 — 3500 XP<br>6-7 — 4750 XP<br>7-8 — 6250 XP<br>8-9 — 8000 XP<br>9-10 — 10000 XP.<br>Current XP progress appears on <button type="button" class="help-nav-link" data-help-nav="home">Home</button> and <button type="button" class="help-nav-link" data-help-nav="character">Character</button>.',
+    help_levels_text: 'Your level grows from accumulated experience — XP. Hunts, Armageddon, completed duels, and quests grant XP.<br>1-2 — 1000 XP<br>2-3 — 1250 XP<br>3-4 — 1750 XP<br>4-5 — 2500 XP<br>5-6 — 3500 XP<br>6-7 — 4750 XP<br>7-8 — 6250 XP<br>8-9 — 8000 XP<br>9-10 — 10000 XP.<br>Current XP progress appears on <button type="button" class="help-nav-link" data-help-nav="home">Home</button> and <button type="button" class="help-nav-link" data-help-nav="character">Character</button>',
 
     help_section_quests: 'Quests & Prophecies',
-    help_quests_text: 'Regular quests are accepted in the <button type="button" class="help-nav-link" data-help-nav="quests">Quests</button> screen. “Traveler” currently means visiting 3 different regions via the <button type="button" class="help-nav-link" data-help-nav="map">World Map</button> — open the map, choose another region, and press “Travel”.<br>The <button type="button" class="help-nav-link" data-help-nav="quests">Daily Prophecy</button> must also be accepted first, then completed. If it tells you to bless others, do that in the <button type="button" class="help-nav-link" data-help-nav="chronicle">Chronicle</button> with the “Bless” button on other mages\' entries. Abandoning a quest after progress only loses that progress; abandoning a quest before the first step pays a small forfeit to the World — 1.00% Mana.',
+    help_quests_text: 'Regular quests are accepted in the <button type="button" class="help-nav-link" data-help-nav="quests">Quests</button> screen “Traveler” currently means visiting 3 different regions via the <button type="button" class="help-nav-link" data-help-nav="map">World Map</button> — open the map, choose another region, and press “Travel”.<br>The <button type="button" class="help-nav-link" data-help-nav="quests">Daily Prophecy</button> must also be accepted first, then completed. If it tells you to bless others, do that in the <button type="button" class="help-nav-link" data-help-nav="chronicle">Chronicle</button> with the “Bless” button on other mages\' entries. Abandoning a quest after progress only loses that progress; abandoning a quest before the first step pays a small forfeit to the World — 1.00% Mana.',
 
     help_section_travel_exploration: 'Travel and Exploration',
-    help_travel_exploration_text: 'Below each map are buttons for travelling and exploring World maps, with different probabilities of random finds for the <button type="button" class="help-nav-link" data-help-nav="crafting">Workshop</button><br><br>0.10% energy: the chance of a Workshop find during travel is 0%.<br>Use this only to complete quests.<br>1% energy — 8.3% chance.<br>3% energy — 26.6% chance.<br>5% energy — 45.0% chance.<br>7% energy — 63.3% chance.<br>9% energy — 81.7% chance.<br>11% energy — 100% chance.<br><br>Linear chance formula:<br>Chance = (energy spent − 0.10%) / (11% − 0.10%) × 100%',
+    help_travel_exploration_text: 'Below each map are buttons for travelling and exploring World maps, with different probabilities of random finds for the <button type="button" class="help-nav-link" data-help-nav="crafting">Workshop</button><br>0.10% energy: the chance of a Workshop find during travel is 0%.<br>Use this only to complete quests.<br>1% energy — 8.3% chance.<br>3% energy — 26.6% chance.<br>5% energy — 45.0% chance.<br>7% energy — 63.3% chance.<br>9% energy — 81.7% chance.<br>11% energy — 100% chance.<br><br>Linear chance formula:<br>Chance = (energy spent − 0.10%) / (11% − 0.10%) × 100%',
 
     help_section_hunt: 'Hunting',
     help_hunt_text: 'In “Choose a creature to hunt”, the names and levels are magical creatures — your hunt targets, not a list of future loot. Choose a creature target and a spell, then attack. Victory earns XP and may drop loot. Defeat gives 25% XP. Loot is volatile — bank it in a safe zone to keep it.',
 
     help_section_armageddon: 'Armageddon',
-    help_armageddon_text: 'Spend 100% mana for 100× the XP of a standard 1% hit. Requires an Armageddon Stone artifact. <br>Drop: Thornvine (Lv5+, 0.5% chance). Craft: Echo Shards ×3 + Shadow Shard ×3 + Fire Dust ×5 at level 10 (costs 5% mana). Confirm the checkbox before launching — mana takes ~5 days to recover.',
+    help_armageddon_text: 'Spend 100% mana for 100× the XP of a standard 1% hit. Requires an Armageddon Stone artifact. <br>Drop: Thornvine (Lv5+, 0.5% chance).<br>Craft: Echo Shards ×3 + Shadow Shard ×3 + Fire Dust ×5 at level 10 (costs 5% mana). Confirm the checkbox before launching — mana takes ~5 days to recover.',
 
     help_section_crafting: 'Crafting',
-    help_crafting_text: 'Open the Crafting screen, pick a recipe and tap Craft. Materials are consumed. Quality depends on your INT stat and block entropy.',
+    help_crafting_text: 'Open the Crafting screen pick a recipe and tap Craft. Materials are consumed. Quality depends on your INT stat and block entropy.',
 
     help_section_marketplace: 'Marketplace',
     help_marketplace_text: 'Marketplace is an elemental trading place.<br>Browse → buy listed items.<br>Sell → list your items for Seals of the World. Trade → direct item transfer to another mage.',
@@ -1536,11 +1536,11 @@ var LangEN = {
     help_leaderboard_text: 'The Rankings screen (trophy tab) shows the top 100 mages by XP. Your current rank is shown at the top. The table updates automatically as you hunt.',
 
     help_section_narrator: 'Battle Narrator',
-    help_narrator_text: 'The Battle Narrator announces all combat events via your screen reader (aria-live). Enable it in Settings. It also plays short audio tones to indicate enemy and player positions. Designed for blind and low-vision players.',
+    help_narrator_text: 'The Battle Narrator announces all combat events via your screen reader (aria-live). Enable it in Settings It also plays short audio tones to indicate enemy and player positions. Designed for blind and low-vision players.',
 
     help_section_classes: 'Classes',
     help_section_magic_ranks: 'Magical ranks',
-    help_magic_ranks_text: 'As you level up, you grow in magical science: 1-10 Seeker, 11-20 Adept, 21-30 Sage, 31-40 Spellcaster, 41-50 Sorcerer, 51-60 Wizard, 61-70 Magister, 71-80 Arcanist, 81-90 Seer, 91-100 Grandmaster, 101+ Mage Beyond Categories.',
+    help_magic_ranks_text: 'As you level up, you grow in magical science:<br>1-10 Seeker,<br>11-20 Adept,<br>21-30 Sage,<br>31-40 Spellcaster,<br>41-50 Sorcerer,<br>51-60 Wizard,<br>61-70 Magister,<br>71-80 Arcanist,<br>81-90 Seer,<br>91-100 Grandmaster,<br>101+ Mage Beyond Categories.',
     magic_rank_seeker: 'Seeker',
     magic_rank_adept: 'Adept',
     magic_rank_knower: 'Sage',
@@ -1555,7 +1555,7 @@ var LangEN = {
     help_classes_text: 'Stonewarden (Terra) — tank. Embercaster (Ignis) — burst DPS.<br>Moonrunner (Umbra) — evasion. Bloomsage (Aqua) — healer.<br>Each class has unique spells and stat growth.',
 
     help_section_duels: 'Duels & Arena',
-    help_duels_text: 'Duels are PvP matches based on prediction. Best version of 3 rounds. Each round you seal one of 4 intents: Strike (beats Mend), Guard (beats Strike), Weave (beats Guard), Mend (beats Weave). <br>Seals are revealed simultaneously — the blockchain determines the outcome.<br>Challenge opponents through the Arena. They have 24 hours to accept. Win: +150 XP. Loss: +50 XP. Future balance rule: declining or missing a confirmed challenge means satisfaction to the challenger or to the World, chosen by the declining mage — 1% Mana.',
+    help_duels_text: 'Duels are PvP matches based on prediction, using the best version of three rounds. Each round you seal one of 4 intents:<br>Strike (beats Mend),<br>Guard (beats Strike),<br>Weave (beats Guard),<br>Mend (beats Weave).<br>Seals are revealed simultaneously — the blockchain determines the outcome.<br>Challenge opponents through the Arena. They have 24 hours to accept. Win: +150 XP. Loss: +50 XP. Future balance rule: declining or missing a confirmed challenge means satisfaction to the challenger or to the World, chosen by the declining mage — 1% Mana.',
 
     help_section_guilds: 'Guilds',
     help_guilds_text: 'Create a guild or join an existing one. Officers can invite members and promote the guild so new players can discover it. The founder cannot leave — transfer leadership first. Patronage (SHARES delegation) empowers guild members via the Magic Core bonus.',
