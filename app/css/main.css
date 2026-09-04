@@ -2879,6 +2879,51 @@ body[data-icon-motion="off"] .action-tile .tile-icon {
 .season-color-spring { color: #58c7ff; font-weight: 700; }
 .tile-avatar-icon { display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 0.35rem; }
 .character-title-line { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+
+/* Approved player-name treatment: a strict bronze-violet rune plaque. */
+.home-summary h1 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.45rem;
+}
+.home-welcome-text {
+    color: #ffe7a3;
+}
+.player-name-rune {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 0.08rem 0.55rem 0.16rem;
+    overflow-wrap: anywhere;
+    border: 1px solid rgba(255, 214, 104, 0.78);
+    border-radius: 12px;
+    color: #ffe7a3;
+    background: linear-gradient(135deg, rgba(93, 61, 29, 0.96), rgba(27, 22, 42, 0.98));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 18px rgba(255, 196, 75, 0.28), 0 8px 18px rgba(0, 0, 0, 0.28);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 900;
+    letter-spacing: 0.035em;
+    line-height: 1.2;
+    text-shadow: 0 1px 0 #000, 0 0 9px rgba(255, 229, 137, 0.55);
+}
+.player-name-rune-text {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.player-name-rune-spark {
+    flex: 0 0 auto;
+    color: #8ee7ff;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 0.78em;
+    line-height: 1;
+    text-shadow: 0 0 8px #58a6ff;
+}
+.character-title-name.player-name-rune { font-weight: 900; }
 .character-title-class-icon { display: inline-block; }
 .spell-item-button { width: 100%; text-align: left; cursor: pointer; }
 .spell-detail-list { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 0.75rem; margin: 0.75rem 0; }

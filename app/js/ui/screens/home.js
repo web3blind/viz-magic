@@ -48,7 +48,7 @@ var HomeScreen = (function() {
                 _renderBossAlert(state, blockNum, t) +
 
                 '<section class="home-summary home-summary-button" role="button" tabindex="0" aria-label="' + t('home_open_character') + '">' +
-                    '<h1>' + t('home_welcome') + ', ' + Helpers.escapeHtml(displayName) + '</h1>' +
+                    '<h1><span class="home-welcome-text">' + t('home_welcome') + ',</span> <span class="player-name-rune"><span class="player-name-rune-spark" aria-hidden="true">✦</span><span class="player-name-rune-text">' + Helpers.escapeHtml(displayName) + '</span><span class="player-name-rune-spark" aria-hidden="true">✦</span></span></h1>' +
                     '<p>' + characterLine + '</p>' +
                     vitalBars +
                     '<button class="help-tip-btn" aria-label="' + t('help_tip_mana') + '" ' +

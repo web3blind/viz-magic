@@ -36,7 +36,7 @@ var CharacterScreen = (function() {
 
         el.innerHTML =
             '<div class="character-sheet">' +
-                '<h1 class="character-title-line">' + _renderAvatarMark(ch, ch.name || user, 'screen-title-icon profile-title-avatar vmagic-breathe') + ' <span class="character-title-name">' + Helpers.escapeHtml(ch.name || user || '') + '</span></h1>' +
+                '<h1 class="character-title-line">' + _renderAvatarMark(ch, ch.name || user, 'screen-title-icon profile-title-avatar vmagic-breathe') + ' <span class="character-title-name player-name-rune"><span class="player-name-rune-spark" aria-hidden="true">✦</span><span class="player-name-rune-text">' + Helpers.escapeHtml(ch.name || user || '') + '</span><span class="player-name-rune-spark" aria-hidden="true">✦</span></span></h1>' +
                 '<div class="char-header">' +
                     '<div><h2><span class="char-icon character-title-class-icon vmagic-breathe" aria-hidden="true">' + Helpers.classIcon(ch.className || 'embercaster') + '</span> ' + _classGuideName(ch.className, t) + ' <span class="title-dot" aria-hidden="true">•</span> <span class="character-title-level">' + t('home_level') + ' ' + ch.level + '</span></h2></div>' +
                 '</div>' +
