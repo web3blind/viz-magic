@@ -803,8 +803,7 @@ var WorldEvents = (function() {
                 nameKey: 'event_weave_surge',
                 icon: '\uD83C\uDF0A',
                 active: true,
-                blocksRemaining: SURGE_DURATION - cyclePos,
-                manaRegenMultiplier: 2
+                blocksRemaining: SURGE_DURATION - cyclePos
             };
         }
         return null;

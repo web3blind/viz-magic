@@ -139,7 +139,7 @@ test('migration clamps malformed XP below the current level floor instead of cre
   assert.strictEqual(context.CharacterSystem.getLevelProgress(character), 1);
 });
 
-test('grimoire round-trip carries progression migration fields', function () {
+test('explicit legacy checkpoint import carries progression migration fields while metadata stays cache-only', function () {
   const context = loadProgression();
   const source = context.CharacterSystem.createCharacter('saved', 'Saved Mage', 'embercaster', 999);
   source.level = 8;
@@ -148,7 +148,8 @@ test('grimoire round-trip carries progression migration fields', function () {
 
   const grimoire = context.CharacterSystem.toGrimoire(source);
   const restored = context.CharacterSystem.createCharacter('saved', 'Saved Mage', 'embercaster', 1001);
-  context.CharacterSystem.restoreProgression(restored, grimoire);
+  assert.strictEqual(grimoire.progression_provenance, 'cache_only_not_authoritative');
+  context.CharacterSystem.restoreProgression(restored, grimoire, { authoritativeLegacyCheckpoint: true });
 
   assert.strictEqual(grimoire.xp, source.xp);
   assert.strictEqual(grimoire.progression_version, 2);

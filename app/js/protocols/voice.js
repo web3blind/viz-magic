@@ -87,12 +87,19 @@ var VoiceProtocol = (function() {
 
         if (!obj) return null;
 
+        var rawEvent = obj.e || obj.action || '';
+        var data = obj.d || null;
+        var eventType = rawEvent;
+        if (rawEvent === 'a' || rawEvent === 'append') eventType = 'enchant';
+        if (rawEvent === 'e' || rawEvent === 'edit') eventType = data && data.op === 'reforge' ? 'reforge' : 'edit';
+        if (rawEvent === 'h' || rawEvent === 'hide') eventType = data && data.op === 'consume' ? 'consume' : 'hide';
+
         return {
             previousBlock: obj.p || 0,
-            eventType: obj.e || '',    // 'h'=hide, 'e'=edit, 'a'=append
+            eventType: eventType,
             targetBlock: obj.b || 0,
             targetAccount: obj.a || '',
-            data: obj.d || null
+            data: data
         };
     }
 

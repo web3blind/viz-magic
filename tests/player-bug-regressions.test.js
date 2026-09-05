@@ -145,10 +145,12 @@ test('consumable and crafting messages explain concrete effects and requirements
   assert.ok(/Helpers\.bpToPercent\(recipe\.manaCost/.test(craftingJs), 'recipe cards should show mana cost when mana blocks crafting');
 });
 
-test('crafting live UI routes through state-engine and checkpoints result', function () {
-  assert.ok(/function processCraftResult/.test(stateEngineJs), 'state engine should expose live craft path');
-  assert.ok(/processCraftResult: processCraftResult/.test(stateEngineJs), 'live craft path should be exported');
-  assert.ok(/StateEngine\.processCraftResult\(user, selectedRecipe, materialIds, character\.currentZone \|\| '', blockHash, blockNum\)/.test(craftingJs), 'crafting screen should process result through state engine');
+test('crafting live UI applies only a confirmed blockchain block through the replay path', function () {
+  assert.ok(/function _confirmedChainEvent/.test(craftingJs), 'crafting screen should expose one confirmed-chain path');
+  assert.ok(/HistorySource\.getBlock\(blockNum/.test(craftingJs), 'crafting should fetch the actual result block');
+  assert.ok(/StateEngine\.processBlock\(BlockProcessor\.processBlock\(block, blockNum\)\)/.test(craftingJs), 'crafting should use the replay state-engine path');
+  assert.ok(!/StateEngine\.processCraftResult\(user/.test(craftingJs), 'crafting UI must not create an optimistic asset');
+  assert.ok(!/Date\.now\(\).*blockHash|sim_/.test(craftingJs), 'crafting asset entropy must not come from local time');
   assert.ok(!/var craftRes = CraftingSystem\.craft\(/.test(craftingJs), 'crafting UI must not mutate inventory directly');
   assert.ok(/StateEngine\.saveCheckpoint\(function/.test(craftingJs), 'craft success should persist a checkpoint');
 });
@@ -401,11 +403,13 @@ test('service worker updates quickly and keeps navigations network-first', funct
 
 
 
-test('map travel updates through state-engine and keeps level ranges informational', function () {
-  assert.ok(/function processMoveResult/.test(stateEngineJs), 'state engine should expose live movement path');
-  assert.ok(/processMoveResult: processMoveResult/.test(stateEngineJs), 'live movement path should be exported');
-  assert.ok(/StateEngine\.processMoveResult\(user, regionId, optimisticBlock\)/.test(mapScreenJs), 'map should update movement immediately through state engine');
-  assert.ok(/homeZone = character \? GameRegions\.getHomeRegionForLevel\(character\.level\)/.test(mapScreenJs) && /character\.currentZone = homeZone/.test(mapScreenJs), 'map screen should place the player on their level-matched current card before rendering current-card buttons');
+test('map travel waits for one paid blockchain transaction and keeps level ranges informational', function () {
+  assert.ok(/VizBroadcast\.travelAction\(regionId, cost/.test(mapScreenJs), 'map should broadcast atomic paid travel');
+  assert.ok(/StateEngine\.processBlock\(BlockProcessor\.processBlock\(block, blockNum\)\)/.test(mapScreenJs), 'map should apply the confirmed replay path');
+  assert.ok(!/processMoveResult\(user, regionId, optimisticBlock\)/.test(mapScreenJs), 'map must not create an optimistic movement or find');
+  assert.ok(!/Math\.random\(\)/.test(mapScreenJs), 'map finds must not use local randomness');
+  assert.ok(/homeZone = character \? GameRegions\.getHomeRegionForLevel\(character\.level\)/.test(mapScreenJs) && /homeZone && !confirmedZone/.test(mapScreenJs), 'map screen should use a level-matched home only when no confirmed location exists');
+  assert.ok(!/confirmedZone !== homeZone/.test(mapScreenJs), 'rendering the map must not undo confirmed travel');
   assert.ok(!/GameRegions\.canCharacterEnterRegion/.test(mapScreenJs + stateEngineJs + regionsJs), 'world-map travel must not be level-gated; levels are informational card ranges only');
   assert.ok(/PENDING_TRAVEL_TTL_MS/.test(mapScreenJs), 'pending travel state should have a stale guard');
   assert.ok(/!\(pendingTravel && pendingTravel\.account === user\)/.test(mapScreenJs), 'pending travel should suppress repeat travel buttons');
@@ -686,13 +690,11 @@ test('character vital explainers are placed immediately after their bars', funct
 
 
 
-test('weave surge banner explains mana multiplier', function () {
-  assert.ok(/Плетение усиливает восстановление/.test(ruJs), 'Russian weave surge copy should explain why mana is doubled');
-  assert.ok(/2× faster/.test(enJs), 'English weave surge copy should explain the 2x mana recovery');
-  assert.ok(/event-effect-badge/.test(homeJs + mainCss), 'weave surge should render a visible mana multiplier badge');
-  assert.ok(/\.event-desc \{[^}]*font-size:\s*0\.82rem;[^}]*\}/.test(mainCss) && /\.event-effect-badge \{[\s\S]*font-size:\s*0\.82rem;/.test(mainCss), 'weave surge badge should match the event description font size');
-  assert.ok(/\.event-effect-badge \{[^}]*font-size:\s*0\.82rem;[^}]*text-shadow/.test(mainCss) && !/\.event-effect-badge \{[^}]*font-weight:\s*(?:700|800|bold)/.test(mainCss), 'weave surge badge should not force bold text');
-  assert.ok(/manaRegenMultiplier/.test(homeJs), 'weave surge badge should use the event multiplier value');
+test('weave surge banner makes no false energy-regeneration promise', function () {
+  assert.ok(/Плетение становится ярче и зовёт к охоте/.test(ruJs), 'Russian weave surge copy should stay atmospheric and truthful');
+  assert.ok(/The Weave grows brighter and calls mages to the hunt/.test(enJs), 'English weave surge copy should stay atmospheric and truthful');
+  assert.ok(!/manaRegenMultiplier/.test(homeJs), 'Home must not show an unimplemented energy multiplier badge');
+  assert.ok(!/восстанавливается в 2 раза быстрее|regenerates 2× faster/.test(ruJs + enJs), 'copy must not promise faster regeneration');
   assert.ok(/\.event-banner-weave_surge \.event-name \{[^}]*color:\s*#d8b4ff;[^}]*text-shadow/.test(mainCss), 'Weave Surge title should have its own soft magical color');
 });
 
@@ -906,7 +908,7 @@ test('reported ux polish issues have explicit fixes', function () {
   assert.ok(/chronicle-author-prefix vmagic-breathe/.test(chronicleJs), 'Chronicle author prefix icons should breathe');
   assert.ok(/chronicle-icon vmagic-breathe/.test(chronicleJs), 'Chronicle main entry icons should breathe too');
   assert.ok(/leaderboard-title-icon/.test(leaderboardScreenJs) && !/screen-title-icon section-icon vmagic-breathe leaderboard-title-icon/.test(leaderboardScreenJs) && /leaderboard-title-icon[\s\S]*vmagic-soft-breathe/.test(mainCss), 'Leaderboard title icon should visibly breathe without jitter classes');
-  assert.ok(/active-key-notice[\s\S]*active-key-icon vmagic-breathe/.test(guildJs) && !/🔐 Для делегирования/.test(ruJs), 'Guild active-key warning should have one breathing lock icon outside the text copy');
+  assert.ok(/active-key-notice\">' \+ t\('guild_active_key_needed'\)/.test(guildJs), 'Guild active-key warning should remain readable without a missing-glyph lock icon');
   assert.ok(!/максимум 5000/.test(ruJs) && !/max 5000/.test(enJs), 'Character HP explainer should not claim a fixed 5000 max');
   assert.ok(/chronicle_ink:\s*'🖋️'/.test(inventoryJs), 'inventory should show a thematic icon for Chronicle Ink');
   assert.ok(/sell-item-name/.test(marketplaceJs) && /color:\s*var\(--color-text\)/.test(mainCss), 'bazaar sell item names should stay readable instead of grey on black');
@@ -1685,7 +1687,7 @@ test('v107 hunt combat uses spell mana cost, not full account energy', function 
   assert.ok(/energy: energy \|\| 0/.test(protocolV107), 'VM hunt action should serialize energy when provided');
   assert.ok(!/cfg\.ENERGY\.MAX \/\/ Use max energy for now/.test(stateV107), 'replay must not resolve hunts as full-energy shots');
   assert.ok(/var combatEnergy = data\.energy \|\| spell\.manaCost/.test(stateV107), 'replay combat should use the on-chain hunt power energy with spell cost as fallback');
-  assert.ok(/_resolveHuntFromBlock\(blockNum, ch, creature, spell, huntEnergy/.test(huntV107) && /processHuntResult\(user, selectedCreature, selectedSpell, fateEntropy, finalBlockNum, playerEnergy\)/.test(huntV107), 'live UI should pass selected hunt power into the single state-engine resolution path');
+  assert.ok(/_resolveHuntFromBlock\(blockNum, ch, creature, spell, huntEnergy/.test(huntV107) && /BlockProcessor\.processBlock\(block, finalBlockNum\)/.test(huntV107), 'live UI should resolve the selected power only through its confirmed blockchain block');
   assert.ok(/allowedEnergy = \[100, 300, 500, 700, spell\.manaCost/.test(validatorV107), 'validator should accept only approved hunt power choices or the spell native cost');
   assert.ok(/invalid_hunt_energy/.test(validatorV107), 'invalid hunt energy should have a specific validation error');
   assert.ok(/playerEnergy <= 700 \? 45 : 25/.test(combatV107), '7% hunt power should not get fewer combat rounds than 1% shots');
@@ -1733,8 +1735,8 @@ test('v105 text quality, season colors, avatar title, and spell modal polish are
   const swV105 = read('app/sw.js');
 
   assert.ok(!/Нажми, чтобы перейти к охоте и потратить этот всплеск/.test(ruJs), 'Weave Surge should not over-explain the Hunt click');
-  assert.ok(/home_weave_hunt_hint: 'на охоте'/.test(ruJs), 'Weave Surge badge should say “на охоте”');
-  assert.ok(/toLowerCase\(\) \+ ' ×'/.test(homeV105), 'Weave badge should render compact lower-case mana x2 text');
+  assert.ok(!/effectBadge/.test(homeV105), 'Weave Surge should not render a misleading mana multiplier badge');
+  assert.ok(!/toLowerCase\(\) \+ ' ×'/.test(homeV105), 'Home should not render an unimplemented mana x2 effect');
   assert.ok(!/Каждый день Мир раскрывает несколько живых страниц/.test(ruJs + homeV105), 'Home should not show the long living-pages intro');
   assert.ok(/Они не требуют действий — просто напоминают, что за кнопками живёт сказка/.test(ruJs), 'Guide should keep the short living-pages fairy-tale sentence');
 
@@ -2104,9 +2106,9 @@ test('The Ember Wastes uses the distinct underground forge map and matching lore
 });
 
 
-test('secret maps room renders fifteen daily paid maps and world map markers', function () {
+test('secret maps room renders fifteen daily voluntary-support maps and world map markers', function () {
   assert.ok(ruJs.includes("help_magic_library_chapter_two_title: 'Тайные Карты Мира\\nкомната вторая'"), 'RU title should preserve Denis wording and line break');
-  assert.ok(ruJs.includes("help_magic_library_chapter_two_intro: 'В бесчисленных тайниках Мира есть множество секретных схронов... Этот первый.'") && ruJs.includes("help_magic_library_chapter_two_warning: 'Просмотр отнимает 10% жизненной энергии!!!'"), 'room should preserve its description and separate red warning');
+  assert.ok(ruJs.includes("help_magic_library_chapter_two_intro: 'В бесчисленных тайниках Мира есть множество секретных схронов... Этот первый.'") && /help_magic_library_chapter_two_warning:\s*'Добровольная поддержка Мира/.test(ruJs), 'room should preserve its description and honest voluntary-support notice');
   assert.ok(/Тайные Карты Мира закроются ровно в полночь! Торопись Путник!/.test(ruJs), 'paid state should show the exact red midnight warning');
   assert.ok(/HELP_SECRET_LIBRARY_MAPS\s*=\s*\[/.test(helpJs), 'Help should define a separate secret-map set');
   assert.ok(/function _renderSecretLibrary/.test(helpJs), 'Help should render the room separately');
@@ -2149,7 +2151,7 @@ test('secret maps room renders fifteen daily paid maps and world map markers', f
 test('unknown maps chapter three keeps the selected ten-map order and a separated fading path', function () {
   assert.ok(ruJs.includes("help_magic_library_chapter_three_title: 'Неизвестные карты Мира\\nглава третья'"), 'chapter three should preserve Denis title and line break');
   assert.ok(/Как эти карты оказались в Магической библиотеке, никто не помнит[\s\S]*Старики шепчут[\s\S]*Маги ухмыляются/.test(ruJs), 'chapter three should preserve Denis lore');
-  assert.ok(/help_magic_library_chapter_three_warning:\s*'Просмотр отнимает 10% жизненной энергии!!!'/.test(ruJs), 'chapter three should preserve the exact danger warning');
+  assert.ok(/help_magic_library_chapter_three_warning:\s*'Добровольная поддержка Мира/.test(ruJs), 'chapter three should show honest voluntary-support wording');
   assert.ok(/help_magic_library_chapter_two_warning/.test(ruJs) && /help-library-danger/.test(helpJs + mainCss), 'chapters two and three should render their danger warning in red');
   var mainUnknownMapSource = helpJs.match(/var HELP_UNKNOWN_LIBRARY_MAPS\s*=\s*\[([\s\S]*?)\];/);
   assert.ok(mainUnknownMapSource, 'the ten-map list should remain explicit');
@@ -2173,7 +2175,7 @@ test('middle world maps begin with the separated Revealing Path card', function 
   assert.ok(/data-middle-library-map=\"' \+ revealingEntry\.id[\s\S]*help-unknown-library-divider[\s\S]*help_middle_library_revealing_path[\s\S]*HELP_MIDDLE_LIBRARY_MAPS/.test(helpJs), 'Revealing Path title should render under the divider after the first card and before the rest of the cards');
   assert.ok(/HELP_MIDDLE_LIBRARY_REVEALING_MAPS\.concat\(HELP_MIDDLE_LIBRARY_MAPS\)/.test(helpJs), 'the modal lookup should include the separated first card');
   assert.ok(/StateEngine\.hasLibraryAccess\(user, 'chapter4', day\)/.test(helpJs), 'middle maps should use an independent daily chapter-four entitlement');
-  assert.ok(/help_magic_library_middle_warning:\s*'Просмотр отнимает 10% жизненной энергии!!!'/.test(ruJs), 'middle maps should preserve the paid red warning');
+  assert.ok(/help_magic_library_middle_warning:\s*'Добровольная поддержка Мира/.test(ruJs), 'middle maps should show honest voluntary-support wording');
   assert.ok(/VizMagicConfig\.LIBRARY\.CHAPTER_FOUR_COST/.test(helpJs) && /libraryUnlockChapterAction\(\s*'chapter4'/.test(helpJs), 'middle maps should charge the canonical 10% chapter-four payment');
   assert.ok(/help-middle-library-unlock/.test(helpJs) && /_unlockMiddleLibrary/.test(helpJs), 'middle maps should expose an accessible paid unlock action');
   assert.ok(/assets\/library-maps-middle\/middle-map-' \+ entry\.id \+ '\.jpg/.test(helpJs), 'chapter four modal should load the accepted middle assets');
@@ -2252,7 +2254,7 @@ test('cross-device replay uses the live hunt entropy and rebuilds stale checkpoi
   assert.ok(/CHECKPOINT_SCHEMA_VERSION/.test(stateEngineJs), 'stale local checkpoints must be versioned');
 });
 
-test('cross-device replay behavior uses previous-block entropy and rejects stale checkpoint schema', function () {
+test('cross-device replay behavior uses previous-block entropy and migrates historical checkpoint schema', function () {
   const blockContext = {
     console: { log: function () {} },
     VizMagicConfig: { PROTOCOLS: { VM: 'VIZMAGIC', V: 'V', VE: 'VE' } },
@@ -2283,7 +2285,8 @@ test('cross-device replay behavior uses previous-block entropy and rejects stale
     return state;
   }
   const stale = initFrom({ state: { checkpointSchemaVersion: 1, headBlock: 999, characters: {}, inventories: {} } });
-  assert.strictEqual(stale.headBlock, 0, 'old divergent checkpoint must rebuild from chain');
+  assert.strictEqual(stale.headBlock, 999, 'old legitimate checkpoint progress must survive schema normalization');
+  assert.strictEqual(stale.checkpointSchemaVersion, 2, 'old checkpoint should migrate in memory');
   const current = initFrom({ state: { checkpointSchemaVersion: 2, headBlock: 999, characters: {}, inventories: {} } });
   assert.strictEqual(current.headBlock, 999, 'current deterministic checkpoint should still load');
 });
@@ -2322,7 +2325,7 @@ test('world attraction maps keep first masquerade card and Growing Up section', 
   assert.deepStrictEqual(Array.from(firstMapSource[1].matchAll(/id:\s*'(\d+)'/g), function (match) { return match[1]; }), ['01'], 'Night Observatory of Masks and Lanterns should remain first');
   assert.deepStrictEqual(Array.from(growingMapSource[1].matchAll(/id:\s*'(\d+)'/g), function (match) { return match[1]; }), ['02', '05', '03', '06', '14', '04', '11', '07', '12', '09', '13', '10', '15', '08'], 'the remaining attraction maps should follow the curated Growing Up order');
   assert.ok(/StateEngine\.hasLibraryAccess\(user, 'chapter5', day\)/.test(helpJs), 'attraction maps should use an independent daily chapter-five entitlement');
-  assert.ok(/help_magic_library_attraction_warning:\s*'Просмотр отнимает 10% жизненной энергии!!!'/.test(ruJs), 'attraction maps should render the updated paid red warning');
+  assert.ok(/help_magic_library_attraction_warning:\s*'Добровольная поддержка Мира/.test(ruJs), 'attraction maps should show honest voluntary-support wording');
   assert.ok(/VizMagicConfig\.LIBRARY\.CHAPTER_FIVE_COST/.test(helpJs) && /libraryUnlockChapterAction\(\s*'chapter5'/.test(helpJs), 'attraction maps should charge the canonical 10% chapter-five payment');
   assert.ok(/help-attraction-library-unlock/.test(helpJs) && /_unlockAttractionLibrary/.test(helpJs), 'attraction maps should expose an accessible paid unlock action');
   assert.ok(/help\.js\?v=20260824c-20260827p-20260828i/.test(indexHtml), 'Help bundle should be cache-busted for attraction payment pending state');

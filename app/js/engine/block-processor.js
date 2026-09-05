@@ -33,16 +33,17 @@ var BlockProcessor = (function() {
             if (!tx.operations) continue;
 
             for (var j = 0; j < tx.operations.length; j++) {
-                var op = tx.operations[j];
+                var op = _normalizeOperation(tx.operations[j]);
+                if (!op) continue;
                 var opType = op[0];
                 var opData = op[1];
 
                 switch (opType) {
                     case 'custom':
-                        _processCustomOp(opData, blockNum, result, block.timestamp || '', i);
+                        _processCustomOp(opData, blockNum, result, block.timestamp || '', i, j);
                         break;
                     case 'award':
-                        _processAwardOp(opData, blockNum, result, i);
+                        _processAwardOp(opData, blockNum, result, i, j);
                         break;
                     // Other operations can be added as needed
                 }
@@ -52,10 +53,20 @@ var BlockProcessor = (function() {
         return result;
     }
 
+    function _normalizeOperation(op) {
+        if (Array.isArray(op) && op.length >= 2) return op;
+        if (!op || typeof op !== 'object') return null;
+        if (Array.isArray(op.op)) return op.op;
+        var type = op.type || op.op_type || '';
+        var data = op.value || op.op_data || op.data || null;
+        if (/_operation$/.test(type)) type = type.replace(/_operation$/, '');
+        return type && data ? [type, data] : null;
+    }
+
     /**
      * Process a custom operation
      */
-    function _processCustomOp(opData, blockNum, result, blockTimestamp, txIndex) {
+    function _processCustomOp(opData, blockNum, result, blockTimestamp, txIndex, opIndex) {
         var sender = '';
         if (opData.required_regular_auths && opData.required_regular_auths.length > 0) {
             sender = opData.required_regular_auths[0];
@@ -71,6 +82,7 @@ var BlockProcessor = (function() {
                     action: action,
                     blockNum: blockNum,
                     txIndex: txIndex,
+                    opIndex: opIndex,
                     raw: opData
                 });
             }
@@ -81,7 +93,9 @@ var BlockProcessor = (function() {
                     sender: sender,
                     message: message,
                     blockNum: blockNum,
-                    blockTime: blockTimestamp || ''
+                    blockTime: blockTimestamp || '',
+                    txIndex: txIndex,
+                    opIndex: opIndex
                 });
             }
         } else if (opData.id === cfg.PROTOCOLS.VE) {
@@ -90,7 +104,9 @@ var BlockProcessor = (function() {
                 result.veEvents.push({
                     sender: sender,
                     event: event,
-                    blockNum: blockNum
+                    blockNum: blockNum,
+                    txIndex: txIndex,
+                    opIndex: opIndex
                 });
             }
         }
@@ -99,7 +115,7 @@ var BlockProcessor = (function() {
     /**
      * Process an award operation
      */
-    function _processAwardOp(opData, blockNum, result, txIndex) {
+    function _processAwardOp(opData, blockNum, result, txIndex, opIndex) {
         result.awards.push({
             initiator: opData.initiator,
             receiver: opData.receiver,
@@ -108,6 +124,7 @@ var BlockProcessor = (function() {
             memo: opData.memo || '',
             beneficiaries: opData.beneficiaries || [],
             txIndex: txIndex,
+            opIndex: opIndex,
             blockNum: blockNum
         });
     }

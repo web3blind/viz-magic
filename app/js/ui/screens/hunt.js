@@ -384,9 +384,7 @@ var HuntScreen = (function() {
                     // Get block_num from broadcast result, then fetch the actual block
                     // to use witness_signature as Fate Entropy (unforgeable, unique per block)
                     var blockNum = 0;
-                    if (broadcastResult && broadcastResult.action) {
-                        blockNum = broadcastResult.action.block_num || 0;
-                    }
+                    if (broadcastResult) blockNum = Number(broadcastResult.block_num || broadcastResult.block || 0);
 
                     _resolveHuntFromBlock(blockNum, ch, creature, spell, huntEnergy, user, resultEl, t);
                 }
@@ -437,9 +435,7 @@ var HuntScreen = (function() {
                     }
 
                     var blockNum = 0;
-                    if (broadcastResult && broadcastResult.action) {
-                        blockNum = broadcastResult.action.block_num || 0;
-                    }
+                    if (broadcastResult) blockNum = Number(broadcastResult.block_num || broadcastResult.block || 0);
 
                     _resolveArmageddonFromBlock(blockNum, ch, creature, playerEnergy, user, stoneId, resultEl, t);
                 }
@@ -448,9 +444,17 @@ var HuntScreen = (function() {
     }
 
     function _resolveArmageddonFromBlock(blockNum, ch, creature, playerEnergy, user, stoneId, resultEl, t) {
-        var _doResolve = function(fateEntropy, finalBlockNum) {
-            // Route through state-engine — single authoritative path (same as hunt)
-            var armaResult = StateEngine.processArmageddonResult(user, selectedCreature, stoneId, finalBlockNum);
+        var _doResolve = function(finalBlockNum, block) {
+            var processed = BlockProcessor.processBlock(block, finalBlockNum);
+            var blockEvents = StateEngine.processBlock(processed);
+            var armaResult = null;
+            for (var eventIndex = 0; eventIndex < blockEvents.length; eventIndex++) {
+                var candidate = blockEvents[eventIndex];
+                if (candidate.type === 'armageddon_used' && candidate.account === user && candidate.creature === selectedCreature) {
+                    armaResult = candidate;
+                    break;
+                }
+            }
             if (!armaResult) {
                 resultEl.innerHTML = '<p class="error">' + t('hunt_armageddon_no_stone') + '</p>';
                 return;
@@ -487,22 +491,16 @@ var HuntScreen = (function() {
             _bindResultActions();
         };
 
-        viz.api.getBlock(blockNum, function(err, block) {
+        if (!blockNum) {
+            resultEl.innerHTML = '<p role="status">' + t('hunt_submitted_text') + '</p>';
+            return;
+        }
+        HistorySource.getBlock(blockNum, function(err, block) {
             if (err || !block) {
-                viz.api.getDynamicGlobalProperties(function(err2, dgp) {
-                    if (err2 || !dgp) {
-                        resultEl.innerHTML = '<p class="error">' + t('error_network') + '</p>';
-                        return;
-                    }
-                    viz.api.getBlock(dgp.head_block_number, function(err3, b) {
-                        var entropy = (!err3 && b) ? (b.witness_signature || b.previous || '') : '';
-                        _doResolve(entropy, dgp.head_block_number);
-                    });
-                });
+                resultEl.innerHTML = '<p role="status">' + t('hunt_submitted_text') + '</p>';
                 return;
             }
-            var entropy = block.witness_signature || block.previous || '';
-            _doResolve(entropy, blockNum);
+            _doResolve(blockNum, block);
         });
     }
 
@@ -513,13 +511,22 @@ var HuntScreen = (function() {
      * If block_num is 0 or fetch fails, falls back to DGP head block.
      */
     function _resolveHuntFromBlock(blockNum, ch, creature, spell, playerEnergy, user, resultEl, t) {
-        var _doResolve = function(fateEntropy, finalBlockNum) {
+        var _doResolve = function(fateEntropy, finalBlockNum, block) {
             console.log('Hunt resolving with canonical Fate Entropy:', fateEntropy.substring(0, 32) + '..., block:', finalBlockNum);
 
-            // Route through state-engine — single authoritative path for all item creation
-            var result = StateEngine.processHuntResult(user, selectedCreature, selectedSpell, fateEntropy, finalBlockNum, playerEnergy);
+            var processed = BlockProcessor.processBlock(block, finalBlockNum);
+            var blockEvents = StateEngine.processBlock(processed);
+            var result = null;
+            for (var eventIndex = 0; eventIndex < blockEvents.length; eventIndex++) {
+                var candidate = blockEvents[eventIndex];
+                if ((candidate.type === 'hunt_victory' || candidate.type === 'hunt_defeat') && candidate.account === user && candidate.creature === selectedCreature) {
+                    result = candidate.result;
+                    break;
+                }
+            }
             if (!result) {
-                resultEl.innerHTML = '<p class="error">' + t('error_network') + '</p>';
+                resultEl.innerHTML = _renderBlockedState(t, creature, spell, new Error('paid_action_proof_missing'));
+                _bindResultActions();
                 return;
             }
 
@@ -583,36 +590,27 @@ var HuntScreen = (function() {
         };
 
         var _fetchBlock = function(num) {
-            viz.api.getBlock(num, function(err, block) {
+            HistorySource.getBlock(num, function(err, block) {
                 if (err || !block) {
-                    console.log('get_block failed, falling back to DGP');
-                    _fallbackDGP();
+                    console.log('Paid hunt proof block unavailable; leaving result pending');
+                    _showSubmitted();
                     return;
                 }
                 // The previous block id is deterministic and preserved by archive mirrors.
                 var entropy = block.previous || block.block_id || '';
-                _doResolve(entropy, num);
+                _doResolve(entropy, num, block);
             });
         };
 
-        var _fallbackDGP = function() {
-            viz.api.getDynamicGlobalProperties(function(err, dgp) {
-                if (err || !dgp) {
-                    // Ultimate fallback — should not happen if connected
-                    console.log('DGP fallback also failed');
-                    resultEl.innerHTML = _renderBlockedState(t, creature, spell, new Error('chain_unavailable'));
-                    _bindResultActions();
-                    return;
-                }
-                var headNum = dgp.head_block_number;
-                _fetchBlock(headNum);
-            });
+        var _showSubmitted = function() {
+            resultEl.innerHTML = _renderSubmittedState(t, creature, spell);
+            _bindResultActions();
         };
 
         if (blockNum > 0) {
             _fetchBlock(blockNum);
         } else {
-            _fallbackDGP();
+            _showSubmitted();
         }
     }
 

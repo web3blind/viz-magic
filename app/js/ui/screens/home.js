@@ -221,7 +221,6 @@ var HomeScreen = (function() {
             var tag = target ? 'button' : 'div';
             var attrs = target ? ' type="button" data-screen="' + target + '" data-event-type="' + evt.type + '"' : '';
             var eventIcon = evt.type === 'weave_surge' ? 'spark' : (evt.type === 'minor_rift' ? 'rift' : 'festival');
-            var effectBadge = evt.type === 'weave_surge' ? '<span class="event-effect-badge">' + Helpers.icon('spark', 'event-effect-icon') + ' ' + t('home_weave_hunt_hint') + ' ' + String(t('home_mana')).toLowerCase() + ' ×' + (evt.manaRegenMultiplier || 2) + '</span>' : '';
             html += '<' + tag + ' class="event-banner-item event-banner-' + evt.type + (target ? ' event-banner-button' : '') + '"' + attrs + ' aria-label="' +
                 t(evt.nameKey) + (desc ? '. ' + desc : '') + ' ' + t('event_time_left', {time: timeStr}) + '">' +
                 Helpers.icon(eventIcon, 'event-icon vmagic-breathe') +
@@ -229,7 +228,6 @@ var HomeScreen = (function() {
                     '<span class="event-name">' + t(evt.nameKey) + '</span>' +
                     (desc ? '<span class="event-desc">' + desc + '</span>' : '') +
                 '</span>' +
-                effectBadge +
                 '<span class="event-timer">' + timeStr + '</span>' +
             '</' + tag + '>';
         }

@@ -57,7 +57,7 @@ var ActionValidator = (function() {
 
     function _validateCharAttune(action, worldState, sender) {
         // Can only attune once
-        if (worldState.characters[sender]) {
+        if (worldState.characters[sender] && worldState.characters[sender].progressionSource !== 'metadata-unverified') {
             return { valid: false, error: 'character_already_exists' };
         }
 

@@ -392,6 +392,29 @@ var CraftingScreen = (function() {
         return icons[category] || '\u2699\uFE0F';
     }
 
+    function _confirmedChainEvent(result, matcher, callback) {
+        var blockNum = result ? Number(result.block_num || result.block || 0) : 0;
+        if (!blockNum) {
+            callback(new Error('confirmation_pending'));
+            return;
+        }
+        HistorySource.getBlock(blockNum, function(err, block) {
+            if (err || !block) {
+                callback(err || new Error('confirmation_pending'));
+                return;
+            }
+            var events = StateEngine.processBlock(BlockProcessor.processBlock(block, blockNum));
+            for (var i = 0; i < events.length; i++) {
+                if (matcher(events[i])) {
+                    StateEngine.saveCheckpoint(function() {});
+                    callback(null, events[i]);
+                    return;
+                }
+            }
+            callback(new Error('confirmed_action_rejected'));
+        });
+    }
+
     /**
      * Bind events
      */
@@ -517,47 +540,41 @@ var CraftingScreen = (function() {
                 return;
             }
 
-            // Apply local craft result through StateEngine so live play and replay share one mutation path.
-            var worldState = StateEngine.getState();
-            var blockNum = (result && result.block_num) || (result && result.action && result.action.block_num) || (worldState.headBlock + 1);
-            var blockHash = (result && (result.block_id || result.id || result.transaction_id)) ||
-                (result && result.action && (result.action.block_id || result.action.id || result.action.transaction_id)) ||
-                ('sim_' + Date.now().toString(16));
+            _confirmedChainEvent(result, function(event) {
+                return event.type === 'item_crafted' && event.account === user;
+            }, function(confirmErr, craftEvent) {
+                if (!confirmErr && craftEvent) {
+                    craftResult = {
+                        item: {
+                            id: craftEvent.itemId,
+                            type: craftEvent.itemType,
+                            rarity: craftEvent.rarity,
+                            stats: (function() {
+                                var inv = StateEngine.getInventory(user);
+                                for (var ii = 0; ii < inv.length; ii++) {
+                                    if (inv[ii].id === craftEvent.itemId) return inv[ii].stats || null;
+                                }
+                                return null;
+                            })()
+                        },
+                        quality: {
+                            rarity: craftEvent.rarity,
+                            rarityName: craftEvent.rarityName
+                        },
+                        consumedIds: craftEvent.consumedIds || []
+                    };
+                    SoundManager.play('victory');
+                    SoundManager.vibrate('loot');
+                } else {
+                    Toast.error(t('craft_error_unknown'));
+                    SoundManager.play('error');
+                }
 
-            var craftEvent = StateEngine.processCraftResult(user, selectedRecipe, materialIds, character.currentZone || '', blockHash, blockNum);
-
-            if (craftEvent) {
-                craftResult = {
-                    item: {
-                        id: craftEvent.itemId,
-                        type: craftEvent.itemType,
-                        rarity: craftEvent.rarity,
-                        stats: (function() {
-                            var inv = StateEngine.getInventory(user);
-                            for (var ii = 0; ii < inv.length; ii++) {
-                                if (inv[ii].id === craftEvent.itemId) return inv[ii].stats || null;
-                            }
-                            return null;
-                        })()
-                    },
-                    quality: {
-                        rarity: craftEvent.rarity,
-                        rarityName: craftEvent.rarityName
-                    },
-                    consumedIds: craftEvent.consumedIds || []
-                };
-                StateEngine.saveCheckpoint(function() {});
-                SoundManager.play('victory');
-                SoundManager.vibrate('loot');
-            } else {
-                Toast.error(t('craft_error_unknown'));
-                SoundManager.play('error');
-            }
-
-            // Delay for dramatic reveal (animation covers block confirmation)
-            setTimeout(function() {
-                render();
-            }, 2500);
+                // Delay for dramatic reveal (animation covers block confirmation)
+                setTimeout(function() {
+                    render();
+                }, 2500);
+            });
         });
     }
 
@@ -593,22 +610,24 @@ var CraftingScreen = (function() {
         }
 
         SoundManager.play('equip');
-        MarketProtocol.broadcastEnchant(itemId, rune.type, runeId, function(err) {
+        MarketProtocol.broadcastEnchant(itemId, rune.type, runeId, function(err, broadcastResult) {
             if (err) {
                 Toast.error(t('enchant_error'));
                 SoundManager.play('error');
             } else {
-                // Apply locally
-                var result = EnchantingSystem.enchantItem(item, rune.type, rune, character);
-                if (result.success) {
-                    Toast.success(t('enchant_success'));
-                    SoundManager.play('success');
-                    SoundManager.vibrate('seal');
-                } else {
-                    Toast.error(t('enchant_error_' + result.error));
-                    SoundManager.play('error');
-                }
-                render();
+                _confirmedChainEvent(broadcastResult, function(event) {
+                    return event.type === 've_enchant' && event.account === user && event.itemId === itemId;
+                }, function(confirmErr) {
+                    if (!confirmErr) {
+                        Toast.success(t('enchant_success'));
+                        SoundManager.play('success');
+                        SoundManager.vibrate('seal');
+                    } else {
+                        Toast.error(t('enchant_error'));
+                        SoundManager.play('error');
+                    }
+                    render();
+                });
             }
         });
     }
@@ -650,24 +669,25 @@ var CraftingScreen = (function() {
                     className: 'btn-primary',
                     action: function() {
                         SoundManager.play('spell_fire');
-                        MarketProtocol.broadcastReforge(itemId, function(err) {
+                        MarketProtocol.broadcastReforge(itemId, function(err, broadcastResult) {
                             if (err) {
                                 Toast.error(t('enchant_reforge_error'));
                                 SoundManager.play('error');
                             } else {
-                                var blockHash = 'rf_' + Date.now().toString(16);
-                                var blockNum = StateEngine.getState().headBlock + 1;
-                                var result = EnchantingSystem.reforgeItem(item, character, blockHash, blockNum, user);
-                                if (result.success) {
-                                    var msg = result.rarityChanged ? t('enchant_reforge_upgrade') : t('enchant_reforge_success');
-                                    Toast.success(msg);
-                                    SoundManager.play('levelup');
-                                    SoundManager.vibrate('loot');
-                                } else {
-                                    Toast.error(t('enchant_reforge_error'));
-                                    SoundManager.play('error');
-                                }
-                                render();
+                                _confirmedChainEvent(broadcastResult, function(event) {
+                                    return event.type === 've_reforge' && event.account === user && event.itemId === itemId;
+                                }, function(confirmErr, reforgeEvent) {
+                                    if (!confirmErr) {
+                                        var msg = reforgeEvent.result.rarityChanged ? t('enchant_reforge_upgrade') : t('enchant_reforge_success');
+                                        Toast.success(msg);
+                                        SoundManager.play('levelup');
+                                        SoundManager.vibrate('loot');
+                                    } else {
+                                        Toast.error(t('enchant_reforge_error'));
+                                        SoundManager.play('error');
+                                    }
+                                    render();
+                                });
                             }
                         });
                     }
@@ -712,18 +732,24 @@ var CraftingScreen = (function() {
         if (!item) return;
 
         SoundManager.play('tap');
-        MarketProtocol.broadcastConsume(itemId, function(err) {
+        MarketProtocol.broadcastConsume(itemId, function(err, broadcastResult) {
             if (err) {
                 Toast.error(t('consume_error'));
                 SoundManager.play('error');
             } else {
-                var result = EnchantingSystem.consumeItem(item, character);
-                if (result.success) {
-                    Toast.success(_consumeSuccessMessage(t, result, character));
-                    SoundManager.play('success');
-                    SoundManager.vibrate('light');
-                }
-                render();
+                _confirmedChainEvent(broadcastResult, function(event) {
+                    return event.type === 've_consume' && event.account === user && event.itemId === itemId;
+                }, function(confirmErr, consumeEvent) {
+                    if (!confirmErr) {
+                        Toast.success(_consumeSuccessMessage(t, consumeEvent.result, character));
+                        SoundManager.play('success');
+                        SoundManager.vibrate('light');
+                    } else {
+                        Toast.error(t('consume_error'));
+                        SoundManager.play('error');
+                    }
+                    render();
+                });
             }
         });
     }

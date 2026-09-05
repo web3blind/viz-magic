@@ -108,6 +108,7 @@ var CharacterSystem = (function() {
             school: classDef.school,
             level: 1,
             xp: 0,
+            progressionSource: 'chain-replay',
             progressionVersion: progressionVersionForBlock(blockNum),
             progressionMigratedAtBlock: 0,
             hp: classDef.baseHp,
@@ -199,11 +200,16 @@ var CharacterSystem = (function() {
         if (targetVersion > character.progressionVersion) {
             _migrateToV2(character, blockNum);
         }
+        xpGain = Number(xpGain);
+        if (!Number.isFinite(xpGain) || xpGain <= 0) {
+            return { character: character, leveled: false, newLevel: character.level, levelsGained: 0 };
+        }
         character.xp += xpGain;
+        character.progressionSource = 'chain-replay';
         var leveled = false;
         var startLevel = character.level;
 
-        while (canLevelUp(character) && character.level < cfg.LEVELING.SOFT_CAP + 10) {
+        while (canLevelUp(character)) {
             levelUp(character);
             leveled = true;
         }
@@ -226,13 +232,19 @@ var CharacterSystem = (function() {
         return GameFormulas.xpForLevel((character.level || 1) + 1, version);
     }
 
-    function restoreProgression(character, grimoire) {
+    function restoreProgression(character, grimoire, options) {
         grimoire = grimoire || {};
+        options = options || {};
+        if (!options.authoritativeLegacyCheckpoint) {
+            character.progressionSource = 'metadata-unverified';
+            return character;
+        }
         character.level = Math.max(1, Number(grimoire.level) || character.level || 1);
         character.xp = Math.max(0, Number(grimoire.xp) || 0);
         character.progressionVersion = Number(grimoire.progression_version) ||
             ((cfg.PROGRESSION && cfg.PROGRESSION.LEGACY_VERSION) || 1);
         character.progressionMigratedAtBlock = Math.max(0, Number(grimoire.progression_migrated_at_block) || 0);
+        character.progressionSource = 'legacy-checkpoint';
         return character;
     }
 
@@ -296,6 +308,7 @@ var CharacterSystem = (function() {
             class: character.className,
             level: character.level,
             xp: character.xp || 0,
+            progression_provenance: 'cache_only_not_authoritative',
             progression_version: character.progressionVersion || ((cfg.PROGRESSION && cfg.PROGRESSION.LEGACY_VERSION) || 1),
             progression_migrated_at_block: character.progressionMigratedAtBlock || 0,
             title: character.title || '',

@@ -14,8 +14,6 @@ var MapScreen = (function() {
     var TRAVEL_COST_HIGH = 100;  // 1%
     var TRAVEL_COST_BURST = 300; // 3%
     var EXPLORATION_COSTS = [100, 300, 500, 700, 900, 1100];
-    var TRAVEL_TREASURY = 'denis-skripnik'; // travel fee receiver (game account), same award pattern as hunt->author
-    var TRAVEL_FIND_TYPES = ['shadow_shard', 'thorn_essence', 'ancient_shard', 'altar_spark', 'data_core'];
 
     /** Region emoji icons */
     var REGION_ICONS = {
@@ -46,7 +44,7 @@ var MapScreen = (function() {
         var character = state.characters ? state.characters[user] : null;
         var confirmedZone = character ? character.currentZone : 'commons_first_light';
         var homeZone = character ? GameRegions.getHomeRegionForLevel(character.level) : confirmedZone;
-        if (character && homeZone && confirmedZone !== homeZone) {
+        if (character && homeZone && !confirmedZone) {
             character.currentZone = homeZone;
             confirmedZone = homeZone;
         }
@@ -349,82 +347,48 @@ var MapScreen = (function() {
                 return;
             }
 
-            // Broadcast move action
-            var moveAction = {
-                t: VizMagicConfig.ACTION_TYPES.MOVE,
-                d: { zone: regionId }
-            };
+            var character = StateEngine.getCharacter(user);
             var previousZone = character ? character.currentZone : '';
 
-            VizBroadcast.gameAction(moveAction, function(err2) {
+            VizBroadcast.travelAction(regionId, cost, function(err2, broadcastResult) {
                 if (err2) {
                     Toast.error(t('error_network'));
                     return;
                 }
-
-                var stateAfterMove = StateEngine.getState();
-                var optimisticBlock = (stateAfterMove.headBlock || 0) + 1;
-                StateEngine.processMoveResult(user, regionId, optimisticBlock);
-                stateAfterMove.headBlock = Math.max(stateAfterMove.headBlock || 0, optimisticBlock);
+                var blockNum = broadcastResult ? Number(broadcastResult.block_num || broadcastResult.block || 0) : 0;
                 pendingTravel = { account: user, from: previousZone, to: regionId, at: Date.now() };
-                Toast.success(t('map_traveled') + ' ' + region.name);
-                SoundManager.play('transition');
-                try {
-                    CheckpointSystem.saveCheckpoint('global', stateAfterMove.headBlock || optimisticBlock, stateAfterMove, function() {});
-                } catch (e) {}
-
-                // Pay travel fee: energy goes to the game account (like hunt->author award).
-                if (cost > 0) {
-                    VizBroadcast.award(TRAVEL_TREASURY, cost, 0, 'viz://vm/travel/ ' + regionId, [], function(awardErr) {
-                        if (awardErr) {
-                            Toast.info(t('map_travel_fee_failed'));
-                        }
-                    });
+                if (!blockNum) {
+                    Toast.info(t('map_pending_travel_to') + ' ' + region.name);
+                    render();
+                    return;
                 }
-
-                // Higher energy investment -> chance of a travelling find.
-                _grantTravelFind(user, cost, optimisticBlock);
-
-                render();
+                HistorySource.getBlock(blockNum, function(blockErr, block) {
+                    if (blockErr || !block) {
+                        Toast.info(t('map_pending_travel_to') + ' ' + region.name);
+                        render();
+                        return;
+                    }
+                    var events = StateEngine.processBlock(BlockProcessor.processBlock(block, blockNum));
+                    var moved = null;
+                    for (var eventIndex = 0; eventIndex < events.length; eventIndex++) {
+                        if (events[eventIndex].type === 'character_moved' && events[eventIndex].account === user && events[eventIndex].zone === regionId) {
+                            moved = events[eventIndex];
+                            break;
+                        }
+                    }
+                    if (!moved) {
+                        Toast.error(t('error_network'));
+                        return;
+                    }
+                    pendingTravel = null;
+                    Toast.success(t('map_traveled') + ' ' + region.name);
+                    if (moved.finds && moved.finds.length) Toast.success(t('map_find_confirmed'));
+                    SoundManager.play('transition');
+                    StateEngine.saveCheckpoint(function() {});
+                    render();
+                });
             });
         });
-    }
-
-        function _rollTravelFind(cost) {
-        var t = Helpers.t;
-        if (cost >= 300) {
-            if (Math.random() >= 0.7) return null;
-            var doubled = Math.random() < 0.3;
-            var type = TRAVEL_FIND_TYPES[Math.floor(Math.random() * TRAVEL_FIND_TYPES.length)];
-            var name = Helpers.t('item_' + type) || type;
-            if (doubled) return { type: type, rarity: 2, msg: t('map_find_double', { item: name }) };
-            return { type: type, rarity: 1, msg: t('map_find_item', { item: name }) };
-        }
-        if (cost >= 100) {
-            if (Math.random() >= 0.35) return null;
-            var type2 = TRAVEL_FIND_TYPES[Math.floor(Math.random() * TRAVEL_FIND_TYPES.length)];
-            return { type: type2, rarity: 1, msg: t('map_find_item', { item: Helpers.t('item_' + type2) || type2 }) };
-        }
-        return null;
-    }
-
-    function _grantTravelFind(user, cost, blockNum) {
-        var t = Helpers.t;
-        var find = _rollTravelFind(cost);
-        if (!find || !user) return;
-        var state = StateEngine.getState();
-        var inv = state.inventories && state.inventories[user];
-        if (!inv) {
-            inv = [];
-            if (!state.inventories) state.inventories = {};
-            state.inventories[user] = inv;
-        }
-        var item = ItemSystem.createItem(find.type, user, find.rarity, blockNum || 0, '', true);
-        inv.push(item);
-        try {
-            CheckpointSystem.saveCheckpoint('global', state.headBlock || blockNum || 0, state, function() {});
-        } catch (e) {}
-        Toast.success(find.msg);
     }
 
     function _dailyQuestAlreadyVisitedRegion(user, regionId) {

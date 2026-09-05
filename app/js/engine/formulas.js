@@ -57,7 +57,9 @@ var GameFormulas = (function() {
         // Convert from micro-SHARES (6 decimals) to whole SHARES
         var wholeShares = Math.floor(effectiveShares / 1000000);
         if (wholeShares <= 0) return 0;
-        return intPow(wholeShares, 300); // 0.3 = 300/1000
+        // Delegation remains useful, but very large balances cannot turn this
+        // optional bonus into a whale-only progression path.
+        return Math.min(5, intPow(wholeShares, 300)); // 0.3 = 300/1000
     }
 
     function xpForLevelLegacy(level) {
@@ -102,7 +104,8 @@ var GameFormulas = (function() {
     function levelFromXp(totalXp, progressionVersion) {
         var level = 1;
         var cumulative = 0;
-        while (level < 100) {
+        totalXp = Math.max(0, Number(totalXp) || 0);
+        while (Number.isFinite(cumulative)) {
             var needed = xpForLevel(level + 1, progressionVersion);
             if (cumulative + needed > totalXp) break;
             cumulative += needed;

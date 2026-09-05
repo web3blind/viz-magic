@@ -205,11 +205,62 @@ var VizBroadcast = (function() {
         return libraryUnlockChapterAction('chapter2', energy, day, callback);
     }
 
+    function _paidGameAction(actionData, callback) {
+        var wif = VizAccount.getRegularKey();
+        var user = VizAccount.getCurrentUser();
+        if (!wif || !user) {
+            callback(new Error('not_logged_in'));
+            return;
+        }
+        var parsedAction = { type: actionData.t, version: 2, data: actionData.d || {} };
+        var requirement = typeof ActionProof !== 'undefined' ? ActionProof.getRequirement(parsedAction) : null;
+        if (!requirement) {
+            callback(new Error('paid_action_requirement_invalid'));
+            return;
+        }
+        VizAccount.getAccountProtocol(user, cfg.PROTOCOLS.VM, function(err, response) {
+            if (err || !response) {
+                callback(err || new Error('protocol_history_unavailable'));
+                return;
+            }
+            var action = {
+                p: cfg.PROTOCOLS.VM,
+                v: 2,
+                b: response.custom_sequence_block_num || 0,
+                t: parsedAction.type,
+                d: parsedAction.data
+            };
+            var transaction = {
+                extensions: [],
+                operations: [
+                    ['award', {
+                        initiator: user,
+                        receiver: requirement.receiver,
+                        energy: requirement.energy,
+                        custom_sequence: 0,
+                        memo: requirement.memo,
+                        beneficiaries: []
+                    }],
+                    ['custom', {
+                        required_active_auths: [],
+                        required_regular_auths: [user],
+                        id: cfg.PROTOCOLS.VM,
+                        json: JSON.stringify(action)
+                    }]
+                ]
+            };
+            viz.broadcast.send(transaction, { regular: wif }, function(sendErr, result) {
+                if (sendErr) console.log('Paid game action broadcast error:', sendErr);
+                callback(sendErr, result);
+            });
+        });
+    }
+
     /**
      * Send a hunt action — records hunt on chain + awards mana to the creature's author.
      * Each creature has an `author` field — the VIZ account of the developer who created it.
      * When a player hunts, an award operation is sent to that author as a reward for their
-     * contribution. If no author is set, the hunt is still recorded but no mana is spent.
+     * contribution. The award and action must both succeed in one atomic transaction.
      * @param {string} creatureId - creature identifier
      * @param {string} zone - zone identifier
      * @param {string} spellId - spell used
@@ -228,26 +279,14 @@ var VizBroadcast = (function() {
             }
         };
 
-        // Broadcast the game action (VM custom op — records hunt on chain)
-        gameAction(actionData, function(err, result) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // Send award to creature author — this is how developers earn from their content.
-            // Hunt succeeds regardless of award result — the VM action is the proof of the hunt.
-            if (authorAccount) {
-                award(authorAccount, manaCost, 0, '', [], function(awardErr, awardResult) {
-                    if (awardErr) {
-                        console.log('Hunt award to author failed (hunt action still recorded):', awardErr);
-                    }
-                    callback(null, { action: result, award: awardResult || null });
-                });
-            } else {
-                callback(null, { action: result, award: null });
-            }
-        });
+        var requirement = typeof ActionProof !== 'undefined'
+            ? ActionProof.getRequirement({ type: actionData.t, version: 2, data: actionData.d })
+            : null;
+        if (!requirement || requirement.receiver !== authorAccount) {
+            callback(new Error('hunt_requires_chain_target'));
+            return;
+        }
+        _paidGameAction(actionData, callback);
     }
 
     /**
@@ -262,26 +301,22 @@ var VizBroadcast = (function() {
      */
     function armageddonAction(creatureId, zone, stoneId, manaCost, authorAccount, callback) {
         var actionData = VMProtocol.createArmageddonAction(creatureId, zone, stoneId || '');
+        actionData.d.energy = Number(manaCost);
+        var requirement = typeof ActionProof !== 'undefined'
+            ? ActionProof.getRequirement({ type: actionData.t, version: 2, data: actionData.d })
+            : null;
+        if (!requirement || requirement.receiver !== authorAccount || Number(manaCost) !== 10000) {
+            callback(new Error('hunt_requires_chain_target'));
+            return;
+        }
+        _paidGameAction(actionData, callback);
+    }
 
-        // Broadcast the game action (VM custom op — records armageddon on chain)
-        gameAction(actionData, function(err, result) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // Send award to creature author (full mana spend)
-            if (authorAccount) {
-                award(authorAccount, manaCost, 0, '', [], function(awardErr, awardResult) {
-                    if (awardErr) {
-                        console.log('Armageddon award to author failed (action still recorded):', awardErr);
-                    }
-                    callback(null, { action: result, award: awardResult || null });
-                });
-            } else {
-                callback(null, { action: result, award: null });
-            }
-        });
+    function travelAction(zone, energy, callback) {
+        _paidGameAction({
+            t: cfg.ACTION_TYPES.MOVE,
+            d: { zone: zone, energy: Number(energy) }
+        }, callback);
     }
 
 
@@ -432,6 +467,7 @@ var VizBroadcast = (function() {
         libraryUnlockChapterAction: libraryUnlockChapterAction,
         huntAction: huntAction,
         armageddonAction: armageddonAction,
+        travelAction: travelAction,
         templeOffering: templeOffering,
         questAction: questAction,
         restAction: restAction,

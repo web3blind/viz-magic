@@ -10,17 +10,34 @@ var VizAccount = (function() {
     var prefix = cfg.STORAGE_PREFIX;
     var currentUser = '';
     var users = {};
+    var SESSION_SCHEMA_VERSION = 2;
 
     /**
      * Initialize — restore session from localStorage
      */
     function init() {
-        var saved = localStorage.getItem(prefix + 'session');
+        var saved = null;
+        try {
+            saved = localStorage.getItem(prefix + 'session');
+        } catch (storageReadError) {
+            console.log('Failed to read saved session:', storageReadError);
+        }
         if (saved) {
             try {
                 var session = JSON.parse(saved);
                 currentUser = session.currentUser || '';
                 users = session.users || {};
+                var needsSanitizing = Number(session.schemaVersion || 1) < SESSION_SCHEMA_VERSION;
+                for (var account in users) {
+                    if (!users.hasOwnProperty(account) || !users[account]) continue;
+                    if (users[account].active_key && users[account].active_key_persist !== true) {
+                        // Keep a legacy key available only for this page lifetime,
+                        // then rewrite storage without treating old persistence as consent.
+                        users[account].active_key_persist = false;
+                        needsSanitizing = true;
+                    }
+                }
+                if (needsSanitizing) _saveSession();
             } catch(e) {
                 console.log('Failed to parse saved session:', e);
                 currentUser = '';
@@ -153,7 +170,12 @@ var VizAccount = (function() {
      * @param {string} activeKey - WIF private active key
      * @param {Function} callback - (err)
      */
-    function saveActiveKey(activeKey, callback) {
+    function saveActiveKey(activeKey, persist, callback) {
+        if (typeof persist === 'function') {
+            callback = persist;
+            persist = false;
+        }
+        callback = callback || function() {};
         if (!currentUser || !users[currentUser]) {
             callback(new Error('not_logged_in'));
             return;
@@ -194,6 +216,7 @@ var VizAccount = (function() {
             }
 
             users[currentUser].active_key = activeKey;
+            users[currentUser].active_key_persist = persist === true;
             _saveSession();
             callback(null);
         });
@@ -205,7 +228,12 @@ var VizAccount = (function() {
     function clearActiveKey() {
         if (!currentUser || !users[currentUser]) return;
         delete users[currentUser].active_key;
+        users[currentUser].active_key_persist = false;
         _saveSession();
+    }
+
+    function isActiveKeyPersistenceEnabled() {
+        return !!(currentUser && users[currentUser] && users[currentUser].active_key_persist === true);
     }
 
     /**
@@ -384,23 +412,42 @@ var VizAccount = (function() {
     /**
      * Calculate effective shares (own + received - delegated)
      * @param {Object} account
-     * @returns {number} effective shares in SHARES units
+     * @returns {number} effective shares in integer micro-SHARES
      */
     function getEffectiveShares(account) {
         var own = parseFloat(account.vesting_shares) || 0;
         var received = parseFloat(account.received_vesting_shares) || 0;
         var delegated = parseFloat(account.delegated_vesting_shares) || 0;
-        return own + received - delegated;
+        return Math.max(0, Math.round((own + received - delegated) * 1000000));
     }
 
     /**
      * Save session to localStorage
      */
     function _saveSession() {
-        localStorage.setItem(prefix + 'session', JSON.stringify({
-            currentUser: currentUser,
-            users: users
-        }));
+        var persistedUsers = {};
+        for (var account in users) {
+            if (!users.hasOwnProperty(account) || !users[account]) continue;
+            persistedUsers[account] = { regular_key: users[account].regular_key };
+            if (users[account].active_key && users[account].active_key_persist === true) {
+                persistedUsers[account].active_key = users[account].active_key;
+                persistedUsers[account].active_key_persist = true;
+            }
+        }
+        try {
+            localStorage.setItem(prefix + 'session', JSON.stringify({
+                schemaVersion: SESSION_SCHEMA_VERSION,
+                currentUser: currentUser,
+                users: persistedUsers
+            }));
+            return true;
+        } catch (storageWriteError) {
+            // A legacy active key must never remain persisted merely because
+            // migration failed. Current in-memory keys remain usable.
+            try { localStorage.removeItem(prefix + 'session'); } catch (removeError) {}
+            console.log('Failed to save session safely:', storageWriteError);
+            return false;
+        }
     }
 
     return {
@@ -422,6 +469,7 @@ var VizAccount = (function() {
         getEffectiveShares: getEffectiveShares,
         getActiveKey: getActiveKey,
         hasActiveKey: hasActiveKey,
+        isActiveKeyPersistenceEnabled: isActiveKeyPersistenceEnabled,
         saveActiveKey: saveActiveKey,
         clearActiveKey: clearActiveKey
     };

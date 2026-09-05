@@ -59,6 +59,16 @@ var VizMagicConfig = (function() {
         CHAPTER_FIVE_MEMO_PREFIX: 'viz://vm/library/chapter5/'
     };
 
+    /**
+     * Paid-action proof v2. Before the activation block, historical v1 hunt,
+     * Armageddon and travel records remain replayable because some old awards
+     * had empty memos and were not retained by the archive event index.
+     */
+    var PAID_ACTIONS = {
+        V2_ACTIVATION_BLOCK: 83500000,
+        TRAVEL_RECEIVER: 'denis-skripnik'
+    };
+
     /** HP passive regeneration constants */
     var HP_REGEN = {
         HP_REGEN_RATE: 100,      // blocks per +1 HP (~5 min)
@@ -246,6 +256,7 @@ var VizMagicConfig = (function() {
         STORAGE_PREFIX: STORAGE_PREFIX,
         ENERGY: ENERGY,
         LIBRARY: LIBRARY,
+        PAID_ACTIONS: PAID_ACTIONS,
         HP_REGEN: HP_REGEN,
         BLOCK: BLOCK,
         CLASSES: CLASSES,

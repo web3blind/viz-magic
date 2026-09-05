@@ -25,6 +25,7 @@ var StateEngine = (function() {
             guilds: {},
             territories: {},
             libraryAccess: {}, // account → chapter → {day, blockNum}
+            processedVeEvents: {},
             marketplace: null,
             recentActions: [],
             social: {
@@ -55,6 +56,7 @@ var StateEngine = (function() {
         state.guilds = state.guilds || {};
         state.territories = state.territories || {};
         state.libraryAccess = state.libraryAccess || {};
+        state.processedVeEvents = state.processedVeEvents || {};
         state.recentActions = state.recentActions || [];
         state.social = state.social || { knownAccounts: [] };
         state.social.knownAccounts = state.social.knownAccounts || [];
@@ -79,8 +81,17 @@ var StateEngine = (function() {
             }
 
             CheckpointSystem.loadLatestCheckpoint('global', function(err, checkpoint) {
-                if (checkpoint && checkpoint.state && checkpoint.state.checkpointSchemaVersion === CHECKPOINT_SCHEMA_VERSION) {
+                var checkpointSchema = checkpoint && checkpoint.state
+                    ? Number(checkpoint.state.checkpointSchemaVersion || 1)
+                    : 0;
+                if (checkpoint && checkpoint.state && checkpointSchema <= CHECKPOINT_SCHEMA_VERSION) {
                     worldState = _normalizeWorldState(checkpoint.state);
+                    worldState.checkpointSchemaVersion = CHECKPOINT_SCHEMA_VERSION;
+                    for (var account in worldState.characters) {
+                        if (worldState.characters.hasOwnProperty(account) && !worldState.characters[account].progressionSource) {
+                            worldState.characters[account].progressionSource = 'legacy-checkpoint';
+                        }
+                    }
                     console.log('StateEngine: Loaded checkpoint at block', worldState.headBlock);
                 } else {
                     console.log(checkpoint && checkpoint.state ? 'StateEngine: Stale checkpoint schema, rebuilding from chain' : 'StateEngine: No checkpoint found, starting fresh');
@@ -104,10 +115,16 @@ var StateEngine = (function() {
         _ensureSocialState();
 
         var libraryPayments = _collectLibraryUnlockPayments(processedBlock.awards || []);
+        var paidActionVerifier = typeof ActionProof !== 'undefined'
+            ? ActionProof.createVerifier(processedBlock.awards || [], blockNum)
+            : null;
 
         // Process VM game actions
         for (var i = 0; i < processedBlock.vmActions.length; i++) {
             var vmAction = processedBlock.vmActions[i];
+            var paidProof = paidActionVerifier && ActionProof.isPaidAction(vmAction.action)
+                ? paidActionVerifier.verify(vmAction.sender, vmAction.txIndex, vmAction.action)
+                : null;
             var actionEvents = _processGameAction(
                 vmAction.sender,
                 vmAction.action,
@@ -119,9 +136,16 @@ var StateEngine = (function() {
                     vmAction.txIndex,
                     vmAction.action && vmAction.action.data && vmAction.action.data.chapter,
                     vmAction.action && vmAction.action.data && vmAction.action.data.day
-                )]
+                )],
+                paidProof,
+                vmAction.txIndex,
+                vmAction.opIndex
             );
             events = events.concat(actionEvents);
+        }
+
+        for (var ve = 0; ve < (processedBlock.veEvents || []).length; ve++) {
+            events = events.concat(_processVEEvent(processedBlock.veEvents[ve], blockNum, huntEntropy));
         }
 
         // Process Voice / Chronicle posts
@@ -242,7 +266,7 @@ var StateEngine = (function() {
         }
 
         // Update head block
-        worldState.headBlock = blockNum;
+        worldState.headBlock = Math.max(worldState.headBlock || 0, blockNum);
 
         // Keep recent actions trimmed
         while (worldState.recentActions.length > 200) {
@@ -255,7 +279,7 @@ var StateEngine = (function() {
     /**
      * Process a single game action
      */
-    function _processGameAction(sender, action, blockNum, blockHash, huntEntropy, libraryPaymentVerified) {
+    function _processGameAction(sender, action, blockNum, blockHash, huntEntropy, libraryPaymentVerified, paidProof, txIndex, opIndex) {
         var events = [];
 
         // Validate the action
@@ -266,6 +290,11 @@ var StateEngine = (function() {
                 error: validation.error,
                 data: action.data || {}
             });
+            return events;
+        }
+
+        if (typeof ActionProof !== 'undefined' && ActionProof.isPaidAction(action) && (!paidProof || !paidProof.valid)) {
+            console.log('StateEngine: Paid action proof rejected for', sender, action.type);
             return events;
         }
 
@@ -293,7 +322,7 @@ var StateEngine = (function() {
                 events = events.concat(_handleRest(sender, blockNum));
                 break;
             case AT.MOVE:
-                events = events.concat(_handleMove(sender, action.data, blockNum));
+                events = events.concat(_handleMove(sender, action.data, blockNum, huntEntropy || blockHash, txIndex, opIndex));
                 break;
             case AT.LIBRARY_UNLOCK:
                 if (libraryPaymentVerified && action.data && _isLibraryChapter(action.data.chapter) && _isLibraryDay(action.data.day)) {
@@ -433,6 +462,65 @@ var StateEngine = (function() {
         });
     }
 
+    function _findOwnedInventoryItem(sender, itemRef, targetBlock) {
+        var inventory = worldState.inventories[sender] || [];
+        var blockPrefix = targetBlock ? String(targetBlock) + '_' : '';
+        for (var i = 0; i < inventory.length; i++) {
+            var item = inventory[i];
+            if (!item || item.owner !== sender) continue;
+            if (itemRef && item.id === itemRef) return item;
+            if (!itemRef && blockPrefix && String(item.id || '').indexOf(blockPrefix) === 0) return item;
+        }
+        return null;
+    }
+
+    function _processVEEvent(veRecord, blockNum, entropy) {
+        var sender = veRecord && veRecord.sender;
+        var event = veRecord && veRecord.event;
+        var data = event && event.data ? event.data : {};
+        if (!sender || !event || !event.eventType) return [];
+
+        var eventId = [blockNum, veRecord.txIndex || 0, veRecord.opIndex || 0, sender].join(':');
+        if (worldState.processedVeEvents[eventId]) return [];
+
+        var item = _findOwnedInventoryItem(sender, data.item_ref, event.targetBlock);
+        var character = worldState.characters[sender];
+        if (!item || !character || item.consumed) return [];
+
+        // VIZ account energy is external chain state, not checkpoint state. The
+        // VE record authorizes the item transition; a temporary value only
+        // bypasses the obsolete local-character mana gate in the item helper.
+        var operationCharacter = {};
+        for (var key in character) {
+            if (character.hasOwnProperty(key)) operationCharacter[key] = character[key];
+        }
+        operationCharacter.mana = cfg.ENERGY.MAX;
+
+        var result = null;
+        if (event.eventType === 'enchant') {
+            var rune = _findOwnedInventoryItem(sender, data.rune_ref, 0);
+            if (!rune || rune.consumed) return [];
+            result = EnchantingSystem.enchantItem(item, data.rune_type || data.enchant, rune, operationCharacter);
+        } else if (event.eventType === 'reforge') {
+            result = EnchantingSystem.reforgeItem(item, operationCharacter, entropy, blockNum, sender);
+        } else if (event.eventType === 'consume') {
+            result = EnchantingSystem.consumeItem(item, operationCharacter);
+            if (result && result.success && result.effect && result.effect.type === 'hp_restore') {
+                character.hp = operationCharacter.hp;
+            }
+        }
+
+        if (!result || !result.success) return [];
+        worldState.processedVeEvents[eventId] = true;
+        return [{
+            type: 've_' + event.eventType,
+            account: sender,
+            itemId: item.id,
+            blockNum: blockNum,
+            result: result
+        }];
+    }
+
     /**
      * Handle character attunement (creation)
      */
@@ -542,16 +630,20 @@ var StateEngine = (function() {
         var character = worldState.characters[sender];
         var inventory = worldState.inventories[sender];
         if (!character || !inventory) return [];
+        if (CharacterSystem.isFallen(character, blockNum)) return [];
+        if (!data.stone) return [];
 
         var creature = GameCreatures.getCreature(data.creature);
         if (!creature) return [];
+        if (data.zone && character.currentZone && data.zone !== character.currentZone) return [];
+        if (creature.zone && character.currentZone && creature.zone !== character.currentZone) return [];
 
         // Verify armageddon_stone exists and is not consumed
         var stoneIndex = -1;
         for (var i = 0; i < inventory.length; i++) {
             if (inventory[i] && inventory[i].type === 'armageddon_stone' && !inventory[i].consumed) {
                 // Prefer matching by id if provided
-                if (!data.stone || inventory[i].id === data.stone) {
+                if (inventory[i].id === data.stone) {
                     stoneIndex = i;
                     break;
                 }
@@ -701,9 +793,12 @@ var StateEngine = (function() {
     /**
      * Handle move action
      */
-    function _handleMove(sender, data, blockNum) {
+    function _handleMove(sender, data, blockNum, entropy, txIndex, opIndex) {
         var character = worldState.characters[sender];
         if (!character) return [];
+
+        var actionId = [blockNum, sender, Number(txIndex || 0), Number(opIndex || 0)].join(':');
+        if (character.lastMoveAction === actionId) return [];
 
         if (typeof GameRegions !== 'undefined') {
             if (!GameRegions.getRegion(data.zone)) return [];
@@ -711,17 +806,33 @@ var StateEngine = (function() {
 
         var previousZone = character.currentZone;
         character.currentZone = data.zone;
+        character.lastMoveAction = actionId;
 
         if (typeof QuestSystem !== 'undefined' && data.zone && data.zone !== previousZone) {
             _ensureQuests(sender);
             QuestSystem.updateQuestProgress(worldState.quests[sender], 'explore', { target: data.zone, uniqueKey: data.zone, count: 1 });
         }
 
-        return [{
+        var movedEvent = {
             type: 'character_moved',
             account: sender,
             zone: data.zone
-        }];
+        };
+
+        var find = typeof DeterministicActions !== 'undefined'
+            ? DeterministicActions.travelFind(entropy, blockNum, sender, data.zone, data.energy)
+            : null;
+        if (find) {
+            if (!worldState.inventories[sender]) worldState.inventories[sender] = [];
+            movedEvent.finds = [];
+            for (var findIndex = 0; findIndex < find.quantity; findIndex++) {
+                var foundItem = ItemSystem.createItem(find.type, sender, find.rarity, blockNum, '', true);
+                foundItem.id = [blockNum, 'travel', txIndex || 0, opIndex || 0, findIndex, find.type].join('_');
+                worldState.inventories[sender].push(foundItem);
+                movedEvent.finds.push(foundItem.id);
+            }
+        }
+        return [movedEvent];
     }
 
     function _isLibraryDay(day) {
