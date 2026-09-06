@@ -196,12 +196,12 @@ function mintBlock(number, hash, sender, intent, amountMilli, withProof) {
     assert.strictEqual(processed.proofSource, undefined);
 }());
 
-(function ordinaryAwardWaitsForCompleteVirtualHistoryThenFailsWithoutExactVizAllocation() {
+(function ordinaryAwardUsesCanonicalSharesPolicyAfterCompleteVirtualHistory() {
     var award = P.createAwardMintAction('award-pending', 100);
     var block = {
         blockNum: activation + 21, blockHash: 'award-pending-block', virtualReceiptsComplete: false,
-        vtActions: [vtEntry('alice', award, 0, 1)], transfers: [], fixedAwards: [],
-        awards: [{ initiator: 'alice', receiver: 'null', energy: 100, customSequence: 0, memo: P.mintMemo('award-pending'), beneficiaries: [], txId: 'tx-0', txIndex: 0, opIndex: 0 }],
+        vtActions: [vtEntry('alice', award, 0, 1), vtEntry('alice', award, 0, 2)], transfers: [], fixedAwards: [],
+        awards: [{ initiator: 'alice', receiver: 'null', energy: 100, customSequence: 0, memo: P.mintMemo('award-pending'), beneficiaries: [], blockNum: activation + 21, txId: 'tx-0', txIndex: 0, opIndex: 0 }],
         awardReceipts: []
     };
     var state = L.createState({ supplyMilli: 0, balances: {}, finalizedBlock: activation + 20 });
@@ -211,12 +211,129 @@ function mintBlock(number, hash, sender, intent, amountMilli, withProof) {
     assert.ok(state.pendingBlocks[block.blockNum], 'missing virtual history must remain hydratable');
 
     block.virtualReceiptsComplete = true;
-    block.awardReceipts = [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('award-pending'), shares: '1.000000 SHARES', sharesMicro: 1000000, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }];
+    block.awardReceipts = [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('award-pending'), shares: '1.234567 SHARES', sharesMicro: 1234567, blockNum: activation + 21, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }];
     L.ingestBlock(state, block);
     L.finalizeThrough(state, block.blockNum, context(block.blockNum));
-    assert.strictEqual(L.getBalance(state, 'alice'), 0, 'SHARES receipt must not be treated as a VIZ amount');
-    assert.strictEqual(state.pendingBlocks[block.blockNum], undefined, 'complete but insufficient evidence must reject without freezing later economy');
+    assert.strictEqual(L.getBalance(state, 'alice'), 1234, 'game policy mints floor(receive_award microSHARES / 1000) milliMAGIC');
+    assert.strictEqual(state.supplyMilli, 1234);
+    assert.strictEqual(state.history[0].method, 'award');
+    assert.strictEqual(state.history[0].sharesMicro, 1234567);
+    assert.strictEqual(state.history[0].discardedMicroShares, 567);
+    assert.strictEqual(state.pendingBlocks[block.blockNum], undefined);
     assert.strictEqual(state.finalizedBlock, block.blockNum);
+
+    var reloaded = L.createState(JSON.parse(JSON.stringify(state)));
+    L.ingestBlock(reloaded, block);
+    L.finalizeThrough(reloaded, block.blockNum, context(block.blockNum));
+    assert.strictEqual(reloaded.supplyMilli, 1234, 'checkpoint reload and same proof replay cannot mint twice');
+
+    var replayed = L.createState({ finalizedBlock: activation + 20 });
+    L.ingestBlock(replayed, block);
+    L.finalizeThrough(replayed, block.blockNum, context(block.blockNum));
+    assert.strictEqual(JSON.stringify(replayed.balances), JSON.stringify(state.balances), 'hydrated processing and canonical full replay must agree');
+    assert.strictEqual(JSON.stringify(replayed.history), JSON.stringify(state.history));
+}());
+
+(function ordinaryAwardSubMilliReceiptResolvesToARecordedZeroMint() {
+    var blockNum = activation + 23;
+    var intent = 'award-sub-milli';
+    var state = L.createState({ finalizedBlock: blockNum - 1 });
+    var block = {
+        blockNum: blockNum, blockHash: 'award-sub-milli-block', sourceOperationsComplete: true, virtualReceiptsComplete: true,
+        vtActions: [vtEntry('alice', P.createAwardMintAction(intent, 50), 0, 1)], transfers: [], fixedAwards: [],
+        awards: [{ initiator: 'alice', receiver: 'null', energy: 50, customSequence: 0, memo: P.mintMemo(intent), beneficiaries: [], blockNum: blockNum, txId: 'tx-0', txIndex: 0, opIndex: 0 }],
+        awardReceipts: [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo(intent), shares: '0.000999 SHARES', sharesMicro: 999, blockNum: blockNum, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }]
+    };
+    L.ingestBlock(state, block);
+    L.finalizeThrough(state, blockNum, { activationBlock: activation, completeFrom: blockNum, completeThrough: blockNum });
+    assert.strictEqual(state.supplyMilli, 0);
+    assert.strictEqual(L.getBalance(state, 'alice'), 0);
+    assert.strictEqual(state.history[0].amountMilli, 0, 'sub-milli output must be explicit rather than rounded up');
+    assert.strictEqual(state.history[0].discardedMicroShares, 999);
+    assert.strictEqual(state.mintIntents['alice:' + intent], blockNum, 'zero output still resolves the canonical intent');
+    assert.strictEqual(state.pendingBlocks[blockNum], undefined);
+}());
+
+(function ordinaryAwardRejectsAmbiguousMalformedAndCrossMethodProofReuseWithoutFreezing() {
+    function awardFixture(blockNum, intent, receipts, sourceOverrides) {
+        var source = Object.assign({ initiator: 'alice', receiver: 'null', energy: 75, customSequence: 0, memo: P.mintMemo(intent), beneficiaries: [], blockNum: blockNum, txId: 'tx-0', txIndex: 0, opIndex: 0 }, sourceOverrides || {});
+        return {
+            blockNum: blockNum, blockHash: 'award-invalid-' + blockNum, sourceOperationsComplete: true, virtualReceiptsComplete: true,
+            vtActions: [vtEntry('alice', P.createAwardMintAction(intent, 75), 0, 1)], transfers: [], fixedAwards: [],
+            awards: [source],
+            awardReceipts: receipts.map(function(receipt) { return Object.assign({ blockNum: blockNum }, receipt); })
+        };
+    }
+    var cases = [
+        [
+            { initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('ambiguous'), shares: '1.000000 SHARES', sharesMicro: 1000000, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 },
+            { initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('ambiguous'), shares: '1.000000 SHARES', sharesMicro: 1000000, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 2 }
+        ],
+        [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('bad-denomination'), shares: '1.000000 VIZ', sharesMicro: 1000000, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }],
+        [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('bad-position'), shares: '1.000000 SHARES', sharesMicro: 1000000, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 0 }],
+        [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('overflow'), shares: '9007199254.740992 SHARES', sharesMicro: Number.MAX_SAFE_INTEGER + 1, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }],
+        [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('wrong-tx'), shares: '1.000000 SHARES', sharesMicro: 1000000, txId: 'other-tx', txIndex: 0, opIndex: 0, virtualOp: 1 }],
+        [{ initiator: 'mallory', receiver: 'null', customSequence: 0, memo: P.mintMemo('wrong-initiator'), shares: '1.000000 SHARES', sharesMicro: 1000000, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }],
+        [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('mismatched-micro'), shares: '1.000000 SHARES', sharesMicro: 999999, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }],
+        [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('wrong-energy'), shares: '1.000000 SHARES', sharesMicro: 1000000, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }],
+        [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('beneficiaries'), shares: '1.000000 SHARES', sharesMicro: 1000000, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }],
+        [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('wrong-receiver'), shares: '1.000000 SHARES', sharesMicro: 1000000, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }],
+        [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('wrong-memo'), shares: '1.000000 SHARES', sharesMicro: 1000000, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }]
+    ];
+    var intents = ['ambiguous', 'bad-denomination', 'bad-position', 'overflow', 'wrong-tx', 'wrong-initiator', 'mismatched-micro', 'wrong-energy', 'beneficiaries', 'wrong-receiver', 'wrong-memo'];
+    var sourceOverrides = [{}, {}, {}, {}, {}, {}, {}, { energy: 76 }, { beneficiaries: [{ account: 'mallory', weight: 1 }] }, { receiver: 'bob' }, { memo: P.mintMemo('other-intent') }];
+    var state = L.createState({ finalizedBlock: activation + 29 });
+    intents.forEach(function(intent, index) {
+        var blockNum = activation + 30 + index;
+        L.ingestBlock(state, awardFixture(blockNum, intent, cases[index], sourceOverrides[index]));
+        L.finalizeThrough(state, blockNum, { activationBlock: activation, completeFrom: blockNum, completeThrough: blockNum });
+        assert.strictEqual(state.finalizedBlock, blockNum, intent + ' must become final no-mint with complete evidence');
+        assert.strictEqual(state.supplyMilli, 0);
+    });
+
+    var crossBlockNum = activation + 41;
+    var transferIntent = 'cross-transfer';
+    var awardIntent = 'cross-award';
+    L.ingestBlock(state, {
+        blockNum: crossBlockNum, blockHash: 'cross-method-proof', sourceOperationsComplete: true, virtualReceiptsComplete: true,
+        vtActions: [vtEntry('alice', P.createMintAction(transferIntent, 'transfer', '1.000'), 0, 1), vtEntry('alice', P.createAwardMintAction(awardIntent, 75), 0, 2)],
+        transfers: [{ from: 'alice', to: 'null', amountMilli: 1000, symbol: 'VIZ', memo: P.mintMemo(transferIntent), txId: 'tx-0', txIndex: 0, opIndex: 0 }],
+        fixedAwards: [], awards: [{ initiator: 'alice', receiver: 'null', energy: 75, customSequence: 0, memo: P.mintMemo(awardIntent), beneficiaries: [], blockNum: crossBlockNum, txId: 'tx-0', txIndex: 0, opIndex: 0 }],
+        awardReceipts: [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo(awardIntent), shares: '1.000000 SHARES', sharesMicro: 1000000, blockNum: crossBlockNum, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }]
+    });
+    L.finalizeThrough(state, crossBlockNum, { activationBlock: activation, completeFrom: crossBlockNum, completeThrough: crossBlockNum });
+    assert.strictEqual(state.supplyMilli, 1000, 'one impossible cross-method source position may be consumed only once');
+}());
+
+(function completeNoRewardOrdinaryAwardDoesNotFreezeLaterMintAndSupplyOverflowFailsClosed() {
+    var noRewardBlock = activation + 40;
+    var laterBlock = noRewardBlock + 1;
+    var state = L.createState({ finalizedBlock: noRewardBlock - 1 });
+    L.ingestBlock(state, {
+        blockNum: noRewardBlock, blockHash: 'ordinary-no-reward', sourceOperationsComplete: true, virtualReceiptsComplete: true,
+        vtActions: [vtEntry('alice', P.createAwardMintAction('ordinary-no-reward', 100), 0, 1)], transfers: [], fixedAwards: [],
+        awards: [{ initiator: 'alice', receiver: 'null', energy: 100, customSequence: 0, memo: P.mintMemo('ordinary-no-reward'), beneficiaries: [], blockNum: noRewardBlock, txId: 'tx-0', txIndex: 0, opIndex: 0 }], awardReceipts: []
+    });
+    L.ingestBlock(state, {
+        blockNum: laterBlock, blockHash: 'mint-after-no-reward', sourceOperationsComplete: true, virtualReceiptsComplete: true,
+        vtActions: [vtEntry('alice', P.createMintAction('after-no-reward', 'fixed_award', '1.000', { maxEnergy: 100 }), 0, 1)], transfers: [], awards: [], awardReceipts: [],
+        fixedAwards: [{ initiator: 'alice', receiver: 'null', requestedMilli: 1000, symbol: 'VIZ', maxEnergy: 100, customSequence: 0, memo: P.mintMemo('after-no-reward'), beneficiaries: [], txId: 'tx-0', txIndex: 0, opIndex: 0 }]
+    });
+    L.finalizeThrough(state, laterBlock, { activationBlock: activation, completeFrom: noRewardBlock, completeThrough: laterBlock });
+    assert.strictEqual(state.finalizedBlock, laterBlock);
+    assert.strictEqual(state.supplyMilli, 1000, 'complete no-reward receipt set must not freeze a later canonical mint');
+
+    var overflowBlock = activation + 50;
+    var overflowState = L.createState({ supplyMilli: Number.MAX_SAFE_INTEGER - 500, balances: { alice: Number.MAX_SAFE_INTEGER - 500 }, finalizedBlock: overflowBlock - 1 });
+    L.ingestBlock(overflowState, {
+        blockNum: overflowBlock, blockHash: 'ordinary-supply-overflow', sourceOperationsComplete: true, virtualReceiptsComplete: true,
+        vtActions: [vtEntry('alice', P.createAwardMintAction('ordinary-supply-overflow', 100), 0, 1)], transfers: [], fixedAwards: [],
+        awards: [{ initiator: 'alice', receiver: 'null', energy: 100, customSequence: 0, memo: P.mintMemo('ordinary-supply-overflow'), beneficiaries: [], blockNum: overflowBlock, txId: 'tx-0', txIndex: 0, opIndex: 0 }],
+        awardReceipts: [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('ordinary-supply-overflow'), shares: '1.000000 SHARES', sharesMicro: 1000000, blockNum: overflowBlock, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }]
+    });
+    L.finalizeThrough(overflowState, overflowBlock, { activationBlock: activation, completeFrom: overflowBlock, completeThrough: overflowBlock });
+    assert.strictEqual(overflowState.supplyMilli, Number.MAX_SAFE_INTEGER - 500, 'unsafe supply addition must fail closed');
+    assert.strictEqual(overflowState.finalizedBlock, overflowBlock);
 }());
 
 (function completeArchiveMakesFailedOrInsufficientEnergyMintFinalInsteadOfAReplayDos() {

@@ -13,10 +13,34 @@ var WalletScreen = (function() {
 
     function _historyText(entry, account) {
         var amount = VTProtocol.formatAmount(entry.amountMilli || 0) + ' MAGIC';
+        if (entry.type === 'mint' && entry.method === 'award') {
+            var rounding = Number(entry.discardedMicroShares || 0) > 0
+                ? '; отброшено ' + _formatMicroShares(entry.discardedMicroShares) + ' SHARES ниже точности MAGIC'
+                : '';
+            return 'Получено ' + amount + ' по игровой конверсии подтверждённого receive_award' + rounding;
+        }
         if (entry.type === 'mint') return 'Получено ' + amount + ' за подтверждённое направление VIZ аккаунту null';
         if (entry.type === 'transfer') return entry.from === account ? 'Отправлено ' + amount + ' → ' + entry.to : 'Получено ' + amount + ' ← ' + entry.from;
         if (entry.type === 'trade') return entry.buyer === account ? 'Покупка: −' + amount : 'Продажа: +' + amount;
         return 'Операция MAGIC ' + amount;
+    }
+
+    function _formatMicroShares(micro) {
+        if (!Number.isSafeInteger(micro) || micro < 0) return '0.000000';
+        var whole = Math.floor(micro / 1000000);
+        var fraction = String(micro % 1000000);
+        while (fraction.length < 6) fraction = '0' + fraction;
+        return String(whole) + '.' + fraction;
+    }
+
+    function _pendingMintText(pending) {
+        if (!pending) return '';
+        if (pending.method === 'award') {
+            return 'Предыдущий ordinary award с энергией ' + Number(pending.energy) +
+                ' ещё ожидает подтверждённый receive_award. Точный выпуск пока неизвестен. Не повторяйте операцию.';
+        }
+        return 'Предыдущая операция ' + Helpers.escapeHtml(pending.amount) +
+            ' VIZ ещё ожидает подтверждённой истории. Не повторяйте её.';
     }
 
     function render() {
@@ -54,9 +78,15 @@ var WalletScreen = (function() {
             '<p id="magic-fixed-help">Fixed award подписывается regular key. Указанная сумма — точная номинальная аллокация; такой же выпуск MAGIC появится только после необратимого подтверждения.</p>' +
             '<label class="checkbox-label"><input id="magic-fixed-consent" type="checkbox" required> Я понимаю, что VIZ будут необратимо направлены аккаунту null</label>' +
             '<button class="btn btn-primary" type="submit"' + (!pendingMint ? '' : ' disabled aria-disabled="true"') + '>Направить VIZ и получить MAGIC</button></form>' +
-            (pendingMint ? '<p role="alert">Предыдущая операция ' + Helpers.escapeHtml(pendingMint.amount) + ' VIZ ещё ожидает подтверждённой истории. Не повторяйте её.</p>' : '') +
-            '<details><summary>Обычный award — статус доказательства</summary><p>Обычный award разрешён правилами VT, но пока недоступен для отправки: подтверждение <code>receive_award</code> содержит SHARES, а не точную историческую сумму VIZ. Кошелёк не показывает оценку как обещанный выпуск.</p>' +
-            '<button type="button" class="btn btn-secondary" disabled aria-disabled="true">Обычный award: точная сумма VIZ недоступна</button></details>' +
+            (pendingMint ? '<p role="alert">' + _pendingMintText(pendingMint) + '</p>' : '') +
+            '<details><summary>Обычный award — regular key</summary>' +
+            '<p>Игровая конверсия VT: 1 canonical received SHARES = 1 MAGIC. Это правило выпуска в игре и не означает равенство нативных активов SHARES и VIZ.</p>' +
+            '<p>Точный выпуск неизвестен до receive_award в необратимой истории. Результат округляется вниз до 0.001 MAGIC; остаток microSHARES отбрасывается. Если подтверждено меньше 0.001000 SHARES, выпуск будет 0.000 MAGIC.</p>' +
+            '<form id="magic-mint-award-form"><label for="magic-award-energy">Энергия award, 1–10000</label>' +
+            '<input id="magic-award-energy" name="energy" type="number" min="1" max="10000" step="1" value="100" required aria-describedby="magic-award-help">' +
+            '<p id="magic-award-help">Award подписывается regular key и направляется аккаунту null. До canonical receive_award кошелёк не показывает оценку будущего выпуска.</p>' +
+            '<label class="checkbox-label"><input id="magic-award-consent" type="checkbox" required> Я понимаю необратимость award и неизвестный заранее выпуск MAGIC</label>' +
+            '<button type="submit" class="btn btn-secondary"' + (!pendingMint ? '' : ' disabled aria-disabled="true"') + '>Отправить ordinary award</button></form></details>' +
             '<details><summary>Жидкий перевод VIZ — active key</summary>' +
             '<form id="magic-mint-transfer-form"><label for="magic-mint-amount">Сумма VIZ</label>' +
             '<input id="magic-mint-amount" name="amount" inputmode="decimal" autocomplete="off" placeholder="1.000" required aria-describedby="magic-mint-help">' +
@@ -88,7 +118,12 @@ var WalletScreen = (function() {
         var pending = null;
         var storageKey = PENDING_MINT_KEY + user;
         try { pending = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch (_) { pending = null; }
-        if (!pending || !VTProtocol.validIntent(pending.intent) || VTProtocol.parseAmount(pending.amount) === null) return null;
+        if (!pending || !VTProtocol.validIntent(pending.intent)) return null;
+        if (pending.method === 'award') {
+            if (!Number.isInteger(pending.energy) || pending.energy <= 0 || pending.energy > 10000) return null;
+        } else if (VTProtocol.parseAmount(pending.amount) === null) {
+            return null;
+        }
         for (var i = 0; i < history.length; i++) {
             if (history[i].type === 'mint' && history[i].intent === pending.intent) {
                 localStorage.removeItem(storageKey);
@@ -124,6 +159,28 @@ var WalletScreen = (function() {
                     });
                 } }
             ] });
+        });
+
+        var awardForm = Helpers.$('magic-mint-award-form');
+        if (awardForm) awardForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            var energy = Number(Helpers.$('magic-award-energy').value);
+            if (!Number.isInteger(energy) || energy <= 0 || energy > 10000 || !Helpers.$('magic-award-consent').checked) {
+                Toast.show('Укажите целую энергию 1–10000 и подтвердите необратимость.', 'error');
+                return;
+            }
+            Modal.show({
+                title: 'Направить ordinary award аккаунту null?',
+                text: 'Энергия: ' + energy + '. Точный выпуск MAGIC неизвестен до canonical receive_award. Игровое правило: 1 SHARES = 1 MAGIC — это не равенство нативных активов. Выпуск округляется вниз до 0.001 MAGIC; остаток microSHARES отбрасывается, поэтому очень малый award может дать 0.000 MAGIC. Операция необратима и подписывается regular key.',
+                buttons: [{ text: 'Подтвердить award', className: 'btn-danger', action: function() {
+                    var intent = _id('mint-award');
+                    localStorage.setItem(PENDING_MINT_KEY + user, JSON.stringify({ intent: intent, account: user, method: 'award', energy: energy }));
+                    VizBroadcast.mintMagicAward(intent, energy, function(err) {
+                        Toast.show(err ? 'Статус award неизвестен. Не повторяйте операцию до проверки истории: ' + (err.message || err) : 'Award отправлен. Точный выпуск появится только после необратимого receive_award.', err ? 'error' : 'success');
+                        render();
+                    });
+                } }]
+            });
         });
 
         var mintForm = Helpers.$('magic-mint-transfer-form');

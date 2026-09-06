@@ -241,9 +241,17 @@ function block(number, id, operations) {
     assert.strictEqual(sent.tx.operations[1][1].required_regular_auths[0], 'alice');
     sent = null;
     c.VizBroadcast.mintMagicAward('award-fixture', 250, function(err) {
-        assert.strictEqual(err && err.message, 'ordinary_award_allocation_unavailable');
+        assert.ifError(err);
     });
-    assert.strictEqual(sent, null, 'ordinary award is not broadcast until an exact historical VIZ allocation source exists');
+    assert.strictEqual(sent.tx.operations[0][0], 'award');
+    assert.strictEqual(JSON.stringify(sent.tx.operations[0][1]), JSON.stringify({
+        initiator: 'alice', receiver: 'null', energy: 250, custom_sequence: 0,
+        memo: c.VTProtocol.mintMemo('award-fixture'), beneficiaries: []
+    }));
+    assert.strictEqual(sent.tx.operations[1][0], 'custom');
+    assert.strictEqual(sent.tx.operations[1][1].required_regular_auths[0], 'alice');
+    assert.strictEqual(sent.tx.operations[1][1].required_active_auths.length, 0);
+    assert.strictEqual(JSON.stringify(sent.keys), JSON.stringify({ regular: 'regular-fixture' }));
 }());
 
 console.log('PASS VT/MAGIC protocol, proof, ledger and Bazaar invariants');

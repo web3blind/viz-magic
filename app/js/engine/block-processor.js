@@ -162,7 +162,7 @@ var BlockProcessor = (function() {
             energy: opData.energy,
             customSequence: opData.custom_sequence,
             memo: opData.memo || '',
-            beneficiaries: opData.beneficiaries || [],
+            beneficiaries: opData.beneficiaries,
             txId: txId || '',
             txIndex: txIndex,
             opIndex: opIndex,
@@ -192,7 +192,7 @@ var BlockProcessor = (function() {
             initiator: opData.initiator || '', receiver: opData.receiver || '',
             requestedMilli: asset.amountMilli, symbol: asset.symbol,
             maxEnergy: opData.max_energy, customSequence: opData.custom_sequence,
-            memo: opData.memo || '', beneficiaries: opData.beneficiaries || [],
+            memo: opData.memo || '', beneficiaries: opData.beneficiaries,
             blockNum: blockNum, txId: txId || '', txIndex: txIndex, opIndex: opIndex, raw: opData
         });
     }

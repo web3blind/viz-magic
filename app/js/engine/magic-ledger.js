@@ -192,8 +192,15 @@ var MagicLedger = (function() {
             (!entry.txId || !proof.txId || String(entry.txId) === String(proof.txId));
     }
 
+    function _sameCanonicalTransaction(entry, proof) {
+        return Number.isInteger(entry.txIndex) && entry.txIndex >= 0 &&
+            Number.isInteger(proof.txIndex) && proof.txIndex === entry.txIndex &&
+            typeof entry.txId === 'string' && entry.txId.length > 0 &&
+            typeof proof.txId === 'string' && proof.txId === entry.txId;
+    }
+
     function _emptyBeneficiaries(value) {
-        return !value || (Array.isArray(value) && value.length === 0);
+        return Array.isArray(value) && value.length === 0;
     }
 
     function _findTransferProof(block, entry, sender, data) {
@@ -222,29 +229,51 @@ var MagicLedger = (function() {
     }
 
     function _findAwardEvidence(block, entry, sender, data) {
-        var source = null;
+        var matchingSources = [];
         var awards = block.awards || [];
         for (var i = 0; i < awards.length; i++) {
             var candidate = awards[i];
-            if (_sameTransaction(entry, candidate) && candidate.initiator === sender && candidate.receiver === 'null' &&
-                    Number(candidate.energy) === data.energy && candidate.memo === VTProtocol.mintMemo(data.intent) &&
+            if (Number(candidate.blockNum) === Number(block.blockNum) && _sameCanonicalTransaction(entry, candidate) && Number.isInteger(entry.opIndex) &&
+                    Number.isInteger(candidate.opIndex) && candidate.opIndex >= 0 &&
+                    candidate.opIndex < entry.opIndex && candidate.initiator === sender && candidate.receiver === 'null' &&
+                    Number.isInteger(candidate.energy) && candidate.energy === data.energy &&
+                    Number.isInteger(candidate.customSequence) && candidate.memo === VTProtocol.mintMemo(data.intent) &&
                     _emptyBeneficiaries(candidate.beneficiaries)) {
-                source = candidate;
-                break;
+                matchingSources.push(candidate);
             }
         }
-        if (!source) return { source: null, receipt: null };
+        if (matchingSources.length !== 1) return { source: null, receipt: null, ambiguous: matchingSources.length > 1 };
+        var source = matchingSources[0];
+        var matchingReceipts = [];
         var receipts = block.awardReceipts || [];
         for (var r = 0; r < receipts.length; r++) {
             var receipt = receipts[r];
-            if (_sameTransaction(entry, receipt) && Number(receipt.opIndex) === Number(source.opIndex) &&
+            var parsedSharesMicro = _parseSharesMicro(receipt.shares);
+            if (Number(receipt.blockNum) === Number(block.blockNum) && _sameCanonicalTransaction(entry, receipt) && Number.isInteger(receipt.opIndex) && receipt.opIndex === source.opIndex &&
+                    Number.isInteger(receipt.virtualOp) && receipt.virtualOp > 0 &&
                     receipt.initiator === sender && receipt.receiver === 'null' &&
-                    Number(receipt.customSequence || 0) === Number(source.customSequence || 0) &&
-                    receipt.memo === source.memo && Number.isSafeInteger(receipt.sharesMicro) && receipt.sharesMicro > 0) {
-                return { source: source, receipt: receipt };
+                    Number.isInteger(receipt.customSequence) && receipt.customSequence === source.customSequence &&
+                    receipt.memo === source.memo && parsedSharesMicro !== null && receipt.sharesMicro === parsedSharesMicro) {
+                matchingReceipts.push(receipt);
             }
         }
-        return { source: source, receipt: null };
+        if (matchingReceipts.length !== 1) return { source: source, receipt: null, ambiguous: matchingReceipts.length > 1 };
+        var matchedReceipt = matchingReceipts[0];
+        return {
+            source: source,
+            receipt: matchedReceipt,
+            mintMilli: Math.floor(matchedReceipt.sharesMicro / 1000),
+            discardedMicroShares: matchedReceipt.sharesMicro % 1000
+        };
+    }
+
+    function _parseSharesMicro(value) {
+        if (typeof value !== 'string') return null;
+        var match = value.match(/^((?:0|[1-9][0-9]*)\.([0-9]{6})) SHARES$/);
+        if (!match) return null;
+        var parts = match[1].split('.');
+        var micro = Number(parts[0]) * 1000000 + Number(parts[1]);
+        return Number.isSafeInteger(micro) && micro > 0 ? micro : null;
     }
 
     function _findMintProof(block, entry) {
@@ -320,8 +349,29 @@ var MagicLedger = (function() {
                 _rememberPendingMint(state, block, entry, 'receive_award_receipt_missing');
                 return { applied: false, final: false };
             }
+            if (!awardEvidence.source || !awardEvidence.receipt) {
+                delete state.pendingMints[intentKey];
+                return { applied: false, final: true };
+            }
+            var awardProofId = [block.blockHash, awardEvidence.source.txIndex, awardEvidence.source.opIndex].join(':');
+            if (state.usedProofs[awardProofId]) return { applied: false, final: true };
+            var awardSupply = state.supplyMilli + awardEvidence.mintMilli;
+            if (!Number.isSafeInteger(awardSupply) ||
+                    (awardEvidence.mintMilli > 0 && !_credit(state, sender, awardEvidence.mintMilli))) {
+                delete state.pendingMints[intentKey];
+                return { applied: false, final: true };
+            }
+            state.supplyMilli = awardSupply;
+            state.mintIntents[intentKey] = Number(block.blockNum);
+            state.usedProofs[awardProofId] = Number(block.blockNum);
             delete state.pendingMints[intentKey];
-            return { applied: false, final: true };
+            _history(state, {
+                type: 'mint', account: sender, amountMilli: awardEvidence.mintMilli,
+                intent: data.intent, method: data.method, blockNum: block.blockNum,
+                sharesMicro: awardEvidence.receipt.sharesMicro,
+                discardedMicroShares: awardEvidence.discardedMicroShares
+            });
+            return { applied: true, final: true };
         }
         var proof = _findMintProof(block, entry);
         if (!proof) {

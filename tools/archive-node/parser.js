@@ -96,7 +96,7 @@ function normalizeAward(block, blockNum, txIndex, opIndex, opData) {
             energy: opData && opData.energy,
             custom_sequence: opData && opData.custom_sequence,
             memo: opData && opData.memo || '',
-            beneficiaries: opData && opData.beneficiaries || []
+            beneficiaries: opData && opData.beneficiaries
         },
         raw: opData
     };
@@ -135,6 +135,7 @@ function bindOperationHistory(block, blockNum, rows) {
         var txIndex = Number(row.trx_in_block);
         var opIndex = Number(row.op_in_trx);
         if (!Number.isInteger(txIndex) || txIndex < 0 || !Number.isInteger(opIndex) || opIndex < 0) continue;
+        if (sourceByPosition[txIndex + ':' + opIndex]) throw new Error('duplicate operation history source');
         sourceByPosition[txIndex + ':' + opIndex] = row;
         if (block.transactions[txIndex]) {
             var existingId = block.transactions[txIndex].transaction_id || block.transactions[txIndex].id || '';
@@ -166,11 +167,14 @@ function extractVirtualEvents(block, blockNum, rows) {
     var events = [];
     if (!Array.isArray(rows)) return events;
     var sources = {};
+    var ambiguousSources = {};
     for (var i = 0; i < rows.length; i += 1) {
         var sourceRow = rows[i] || {};
         if (Number(sourceRow.block) === Number(blockNum) && Number(sourceRow.virtual_op || 0) === 0 &&
                 sourceRow.op && sourceRow.op[0] === 'award') {
-            sources[Number(sourceRow.trx_in_block) + ':' + Number(sourceRow.op_in_trx)] = sourceRow;
+            var sourceKey = Number(sourceRow.trx_in_block) + ':' + Number(sourceRow.op_in_trx);
+            if (sources[sourceKey]) ambiguousSources[sourceKey] = true;
+            else sources[sourceKey] = sourceRow;
         }
     }
     for (var r = 0; r < rows.length; r += 1) {
@@ -180,9 +184,12 @@ function extractVirtualEvents(block, blockNum, rows) {
         var opIndex = Number(row.op_in_trx);
         var virtualOp = Number(row.virtual_op || 0);
         var sharesMicro = row.op && row.op[0] === 'receive_award' ? parseSharesMicro(data.shares) : null;
-        var source = sources[txIndex + ':' + opIndex];
+        var receiptSourceKey = txIndex + ':' + opIndex;
+        var source = ambiguousSources[receiptSourceKey] ? null : sources[receiptSourceKey];
         var sourceData = source && source.op && source.op[1] || {};
-        if (Number(row.block) !== Number(blockNum) || virtualOp <= 0 || !sharesMicro || !source ||
+        if (Number(row.block) !== Number(blockNum) || !Number.isInteger(txIndex) || txIndex < 0 ||
+                !Number.isInteger(opIndex) || opIndex < 0 || !Number.isInteger(virtualOp) || virtualOp <= 0 ||
+                !sharesMicro || !source ||
                 !row.trx_id || row.trx_id !== source.trx_id ||
                 sourceData.receiver !== 'null' || !isVtMemo(sourceData) || !isVtMemo(data) ||
                 sourceData.initiator !== data.initiator || sourceData.receiver !== data.receiver ||
@@ -193,7 +200,7 @@ function extractVirtualEvents(block, blockNum, rows) {
             txIndex: txIndex, opIndex: opIndex, virtualOp: virtualOp, txId: row.trx_id || '',
             opType: 'receive_award', protocol: 'VT', type: 'mint.award.receipt',
             sender: data.initiator || '', account: data.initiator || '', accounts: [data.initiator || '', 'null'].filter(Boolean),
-            payload: { initiator: data.initiator || '', receiver: data.receiver || '', custom_sequence: data.custom_sequence || 0, memo: data.memo || '', shares: data.shares, shares_micro: sharesMicro },
+            payload: { initiator: data.initiator || '', receiver: data.receiver || '', custom_sequence: data.custom_sequence, memo: data.memo || '', shares: data.shares, shares_micro: sharesMicro },
             raw: data
         });
     }

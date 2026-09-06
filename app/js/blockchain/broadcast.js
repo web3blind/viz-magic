@@ -100,9 +100,23 @@ var VizBroadcast = (function() {
     }
 
     function mintMagicAward(intent, energy, callback) {
+        var wif = VizAccount.getRegularKey();
+        var user = VizAccount.getCurrentUser();
         var action = typeof VTProtocol !== 'undefined' ? VTProtocol.createAwardMintAction(intent, energy) : null;
+        if (!wif || !user) return callback(new Error('not_logged_in'));
         if (!action) return callback(new Error('invalid_mint_request'));
-        callback(new Error('ordinary_award_allocation_unavailable'));
+        var transaction = { extensions: [], operations: [
+            ['award', {
+                initiator: user, receiver: cfg.TOKEN.NULL_ACCOUNT,
+                energy: energy, custom_sequence: 0,
+                memo: VTProtocol.mintMemo(intent), beneficiaries: []
+            }],
+            ['custom', {
+                required_active_auths: [], required_regular_auths: [user], id: cfg.PROTOCOLS.VT,
+                json: JSON.stringify(action)
+            }]
+        ] };
+        viz.broadcast.send(transaction, { regular: wif }, callback);
     }
 
     function mintMagicTransfer(intent, amount, callback) {
