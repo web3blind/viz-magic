@@ -423,7 +423,7 @@ async function evaluate(cdp, expression) {
       var protocolRequested = '';
       var rangeCalls = 0;
       var archiveHead = blockNum - 1;
-      HistorySource.getAllEventsRange = function(_options, callback) { rangeCalls++; callback(null, [customEvent]); };
+      HistorySource.getAllEventsRange = function(_options, callback) { rangeCalls++; callback(null, [customEvent], { sourceOperationsComplete: true, virtualReceiptsComplete: true }); };
       HistorySource.getBlock = function(_number, callback) { callback(new Error('fixture proof unavailable')); };
       HistorySource.getProofBlock = function(_number, callback) { callback(new Error('fixture proof unavailable')); };
       HistorySource.getArchiveHead = function(callback) { callback(null, archiveHead); };
@@ -432,7 +432,7 @@ async function evaluate(cdp, expression) {
         archiveHead = blockNum;
         App.processArchiveEventBatch(blockNum, blockNum, blockNum, function(firstUsed) {
           var afterMissing = { used: firstUsed, head: StateEngine.getState().headBlock, xp: StateEngine.getCharacter('alice').xp };
-          HistorySource.getAllEventsRange = function(options, callback) { protocolRequested = options.protocol; callback(null, [veEvent, customEvent, awardEvent]); };
+          HistorySource.getAllEventsRange = function(options, callback) { protocolRequested = options.protocol; callback(null, [veEvent, customEvent, awardEvent], { sourceOperationsComplete: true, virtualReceiptsComplete: true }); };
           App.processArchiveEventBatch(blockNum, blockNum, blockNum, function(secondUsed) {
             var afterRetry = { used: secondUsed, head: StateEngine.getState().headBlock, xp: StateEngine.getCharacter('alice').xp, enchanted: archiveWand.enchantments && archiveWand.enchantments.length === 1 };
             HistorySource.getAllEventsRange = originalRange;
@@ -455,6 +455,7 @@ async function evaluate(cdp, expression) {
     const uiRace = await evaluate(cdp, `(function() {
       var cfg = VizMagicConfig;
       var blockNum = cfg.PAID_ACTIONS.V2_ACTIVATION_BLOCK + 70;
+      localStorage.removeItem(cfg.STORAGE_PREFIX + 'pending_hunt_alice');
       StateEngine.reset();
       var state = StateEngine.getState();
       var ch = CharacterSystem.createCharacter('alice', 'Alice', 'embercaster', blockNum); ch.currentZone = 'commons_first_light'; ch.pot = 1000; ch.res = 1000; ch.hp = ch.maxHp = 10000;
@@ -480,7 +481,10 @@ async function evaluate(cdp, expression) {
       VizBroadcast = Object.assign({}, originalBroadcast, {
         huntAction: function(_creature, _zone, _spell, _energy, _author, callback) { callback(null, { block_num: blockNum }); }
       });
-      HistorySource = Object.assign({}, originalHistory, { getBlock: function(_number, callback) { callback(null, raw); } });
+      HistorySource = Object.assign({}, originalHistory, {
+        getBlock: function(_number, callback) { callback(null, raw); },
+        getProofBlock: function(_number, callback) { callback(null, raw); }
+      });
       Helpers.setLang('en');
       HuntScreen.render();
       document.querySelector('.creature-card[data-id="ember_wisp"]').click();
@@ -491,6 +495,7 @@ async function evaluate(cdp, expression) {
       var pollingFirst = { before: xpBeforeClick, after: xpAfterClick, text: resultText, head: StateEngine.getState().headBlock };
 
       StateEngine.reset();
+      localStorage.removeItem(cfg.STORAGE_PREFIX + 'pending_hunt_alice');
       state = StateEngine.getState();
       ch = CharacterSystem.createCharacter('alice', 'Alice', 'embercaster', blockNum + 1); ch.currentZone = 'commons_first_light'; ch.pot = 1000; ch.res = 1000; ch.hp = ch.maxHp = 10000;
       state.characters.alice = ch; state.inventories.alice = [];
@@ -525,6 +530,95 @@ async function evaluate(cdp, expression) {
     assert.strictEqual(uiRace.uiFirst.xpAfterPoll, 25, 'later polling must not double-apply an operation first seen by the UI');
     assert.strictEqual(uiRace.uiFirst.headAfterPoll, 83500071);
     assert.ok(uiRace.uiFirst.text && !/blocked|pending/i.test(uiRace.uiFirst.text));
+
+    const submittedHuntRecovery = await evaluate(cdp, `(new Promise(function(resolve) {
+      var cfg = VizMagicConfig;
+      var blockNum = cfg.PAID_ACTIONS.V2_ACTIVATION_BLOCK + 90;
+      StateEngine.reset();
+      var state = StateEngine.getState();
+      var ch = CharacterSystem.createCharacter('alice', 'Alice', 'embercaster', blockNum); ch.currentZone = 'commons_first_light'; ch.pot = 1000; ch.res = 1000; ch.hp = ch.maxHp = 10000;
+      state.characters.alice = ch; state.inventories.alice = [];
+      var payload = { p: cfg.PROTOCOLS.VM, v: 2, t: cfg.ACTION_TYPES.HUNT, d: { creature: 'ember_wisp', zone: 'commons_first_light', spell: 'firebolt', energy: 100 } };
+      var req = ActionProof.getRequirement({ version: 2, type: payload.t, data: payload.d });
+      var raw = { block_id: 'submitted-recovery', previous: 'submitted-recovery-entropy', timestamp: '2026-09-06T17:00:00', transactions: [{ transaction_id: 'submitted-recovery-tx', operations: [
+        ['award', { initiator: 'alice', receiver: req.receiver, energy: req.energy, memo: req.memo, beneficiaries: [] }],
+        ['custom', { id: cfg.PROTOCOLS.VM, required_regular_auths: ['alice'], required_active_auths: [], json: JSON.stringify(payload) }]
+      ] }] };
+      var originalAccount = VizAccount;
+      var originalBroadcast = VizBroadcast;
+      var originalHistory = HistorySource;
+      var originalConnection = VizConnection;
+      var submitted = false;
+      var broadcastCalls = 0;
+      var proofCalls = 0;
+      var oldCandidateRejected = false;
+      localStorage.removeItem(cfg.STORAGE_PREFIX + 'pending_hunt_alice');
+      VizAccount = Object.assign({}, originalAccount, {
+        getCurrentUser: function() { return 'alice'; },
+        getAccount: function(_user, callback) { callback(null, {}); },
+        calculateCurrentEnergy: function() { return 10000; },
+        updateGrimoire: function(_data, callback) { if (callback) callback(null, {}); }
+      });
+      VizBroadcast = Object.assign({}, originalBroadcast, {
+        huntAction: function(_creature, _zone, _spell, _energy, _author, callback) { broadcastCalls++; submitted = true; callback(null, {}); }
+      });
+      VizConnection = Object.assign({}, originalConnection, {
+        getDGP: function() { return { head_block_number: blockNum - 1, last_irreversible_block_num: blockNum - 2 }; }
+      });
+      HistorySource = Object.assign({}, originalHistory, {
+        findAccountAction: function(_account, _protocol, _type, callback, matcher) {
+          if (!submitted) { callback(null, null); return; }
+          var oldCandidate = { blockNum: blockNum - 2, txId: 'old-hunt-tx', txIndex: 0, opIndex: 1, sender: 'alice', payload: payload };
+          oldCandidateRejected = !!matcher && !matcher(oldCandidate);
+          var candidate = { blockNum: blockNum, txId: 'submitted-recovery-tx', txIndex: 0, opIndex: 1, sender: 'alice', payload: payload };
+          callback(null, !matcher || matcher(candidate) ? candidate : null);
+        },
+        getProofBlock: function(_number, callback) {
+          proofCalls++;
+          if (proofCalls === 1) { callback(new Error('proof temporarily unavailable')); return; }
+          callback(null, raw);
+        },
+        getBlock: function(_number, callback) { callback(null, raw); }
+      });
+      Helpers.setLang('en');
+      HuntScreen.render();
+      document.querySelector('.creature-card[data-id="ember_wisp"]').click();
+      document.querySelector('.hunt-power-btn[data-energy="100"]').click();
+      document.getElementById('btn-attack').click();
+      setTimeout(function() {
+        var retry = document.getElementById('btn-hunt-retry');
+        if (retry) retry.click();
+      }, 10);
+      setTimeout(function() {
+        var saved = null;
+        try { saved = JSON.parse(localStorage.getItem(cfg.STORAGE_PREFIX + 'pending_hunt_alice') || 'null'); } catch (_) {}
+        var firstXp = StateEngine.getCharacter('alice').xp;
+        var firstText = document.getElementById('hunt-result').textContent;
+        HuntScreen.render();
+        setTimeout(function() {
+          var result = {
+            xp: firstXp,
+            text: firstText,
+            reloadXp: StateEngine.getCharacter('alice').xp,
+            reloadText: document.getElementById('hunt-result').textContent,
+            broadcasts: broadcastCalls,
+            proofCalls: proofCalls,
+            oldCandidateRejected: oldCandidateRejected,
+            pending: saved
+          };
+          VizAccount = originalAccount; VizBroadcast = originalBroadcast; HistorySource = originalHistory; VizConnection = originalConnection;
+          resolve(result);
+        }, 20);
+      }, 80);
+    }))`);
+    assert.strictEqual(submittedHuntRecovery.broadcasts, 1, 'recovery must not send a second hunt');
+    assert.ok(submittedHuntRecovery.proofCalls >= 2, 'a missing proof block must remain retryable without rebroadcast');
+    assert.strictEqual(submittedHuntRecovery.oldCandidateRejected, true, 'a fresh submission must not resolve from an older matching hunt');
+    assert.strictEqual(submittedHuntRecovery.xp, 25, 'a submitted hunt with no broadcast block number must recover through canonical history');
+    assert.ok(submittedHuntRecovery.text && !/submitted|pending/i.test(submittedHuntRecovery.text), 'the recovered canonical outcome must replace submitted status');
+    assert.strictEqual(submittedHuntRecovery.pending && submittedHuntRecovery.pending.status, 'confirmed', 'canonical recovery identity must survive reload');
+    assert.strictEqual(submittedHuntRecovery.reloadXp, 25, 'reloading a confirmed pending hunt must not apply XP twice');
+    assert.ok(submittedHuntRecovery.reloadText && !/submitted|pending/i.test(submittedHuntRecovery.reloadText), 'a reload must re-display the stored canonical outcome');
 
     const keyUi = await evaluate(cdp, `(function() {
       var sessionKey = VizMagicConfig.STORAGE_PREFIX + 'session';

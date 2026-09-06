@@ -1365,10 +1365,10 @@ test('living pages use an existing daily page helper', function () {
 });
 
 
-test('background sync never shows the sync chip over an active game screen', function () {
-  const appJsV100 = read('app/js/ui/app.js');
+test('background sync exposes compact accessible progress on active game screens', function () {
   const indexV100 = read('app/index.html');
-  assert.ok(/if \(currentScreen && currentScreen !== 'landing'\) \{[\s\S]*statusEl\.classList\.remove\('show'\);[\s\S]*return;[\s\S]*\}/.test(appJsV100), 'active game screens should hide the sync status while background recovery runs');
+  assert.ok(/id="connection-status" role="status" aria-live="polite"/.test(indexV100), 'sync progress should use the existing accessible status surface');
+  assert.ok(/sync_progress/.test(ruJs) && /sync_progress/.test(enJs), 'processed and target block progress should be translated');
   assert.ok(/js\/ui\/app\.js\?v=20260822l/.test(indexV100), 'app controller should be cache-busted for non-blocking sync status');
 });
 

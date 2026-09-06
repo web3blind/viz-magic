@@ -180,6 +180,111 @@ var HistorySource = (function() {
         }
     }
 
+    function _requestRpc(node, api, method, params, timeoutMs, callback) {
+        if (typeof XMLHttpRequest === 'undefined' || !node) {
+            callback(_makeError('VIZ account history RPC is unavailable'));
+            return;
+        }
+        var xhr = new XMLHttpRequest();
+        var completed = false;
+        var timer = setTimeout(function() {
+            if (completed) return;
+            completed = true;
+            try { xhr.abort(); } catch (e) {}
+            callback(_makeError('VIZ account history RPC timeout'));
+        }, timeoutMs || 6000);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4 || completed) return;
+            completed = true;
+            clearTimeout(timer);
+            if (xhr.status < 200 || xhr.status >= 300) {
+                callback(_makeError('VIZ account history RPC HTTP ' + xhr.status));
+                return;
+            }
+            try {
+                var payload = JSON.parse(xhr.responseText || xhr.response || 'null');
+                if (!payload || payload.error || !Array.isArray(payload.result)) {
+                    callback(_makeError('VIZ account history RPC returned invalid data'));
+                    return;
+                }
+                callback(null, payload.result);
+            } catch (parseErr) {
+                callback(parseErr);
+            }
+        };
+        try {
+            xhr.open('POST', node, true);
+            xhr.setRequestHeader('accept', 'application/json');
+            xhr.setRequestHeader('content-type', 'application/json');
+            xhr.send(JSON.stringify({
+                id: 1,
+                method: 'call',
+                jsonrpc: '2.0',
+                params: [api, method, params]
+            }));
+        } catch (err) {
+            if (completed) return;
+            completed = true;
+            clearTimeout(timer);
+            callback(err);
+        }
+    }
+
+    function _findAccountHistoryAction(account, protocol, actionType, matcher, callback) {
+        var nodes = typeof VizMagicConfig !== 'undefined' && VizMagicConfig.NODES || [];
+        var nodeIndex = 0;
+        function nextNode() {
+            if (nodeIndex >= nodes.length) {
+                callback(null, null);
+                return;
+            }
+            var node = nodes[nodeIndex++];
+            if (!/^https?:\/\//i.test(String(node || ''))) {
+                nextNode();
+                return;
+            }
+            _requestRpc(node, 'account_history', 'get_account_history', [account, -1, 1000], 8000, function(err, rows) {
+                if (err) {
+                    nextNode();
+                    return;
+                }
+                for (var i = rows.length - 1; i >= 0; i--) {
+                    var row = rows[i];
+                    var record = Array.isArray(row) ? row[1] : null;
+                    var op = record && record.op;
+                    var raw = Array.isArray(op) && op[0] === 'custom' ? op[1] : null;
+                    if (!record || Number(record.virtual_op || 0) !== 0 || !raw || raw.id !== protocol ||
+                            !Array.isArray(raw.required_regular_auths) || raw.required_regular_auths.indexOf(account) === -1) {
+                        continue;
+                    }
+                    var payload;
+                    try { payload = JSON.parse(raw.json || 'null'); } catch (parseErr) { payload = null; }
+                    if (!payload || (payload.t || payload.type) !== actionType) continue;
+                    var candidate = {
+                        blockNum: Number(record.block || 0),
+                        txId: String(record.trx_id || ''),
+                        txIndex: Number(record.trx_in_block || 0),
+                        opIndex: Number(record.op_in_trx || 0),
+                        type: actionType,
+                        sender: account,
+                        payload: payload,
+                        accountHistorySequence: Number(Array.isArray(row) ? row[0] : 0)
+                    };
+                    var accepted = true;
+                    if (matcher) {
+                        try { accepted = !!matcher(candidate); } catch (matchErr) { callback(matchErr); return; }
+                    }
+                    if (accepted) {
+                        callback(null, candidate);
+                        return;
+                    }
+                }
+                nextNode();
+            });
+        }
+        nextNode();
+    }
+
     function _getBlockEventsFromMirrors(blockNum, index, callback) {
         var mirrors = _archiveMirrors();
         if (!mirrors.length || index >= mirrors.length) {
@@ -297,11 +402,7 @@ var HistorySource = (function() {
             });
             return;
         }
-        viz.api.getBlock(blockNum, function(err, block) {
-            if (!err && block) {
-                callback(null, block);
-                return;
-            }
+        var archiveFallback = function() {
             _getBlockEventsFromMirrors(blockNum, 0, function(eventsErr, eventsBlock) {
                 if (!eventsErr && eventsBlock) {
                     callback(null, eventsBlock);
@@ -309,7 +410,18 @@ var HistorySource = (function() {
                 }
                 _getBlockFromMirrors(blockNum, 0, callback);
             });
-        });
+        };
+        try {
+            viz.api.getBlock(blockNum, function(err, block) {
+                if (!err && block) {
+                    callback(null, block);
+                    return;
+                }
+                archiveFallback();
+            });
+        } catch (rpcErr) {
+            archiveFallback();
+        }
     }
 
     // Proof-sensitive callers must not accept an arbitrary thin block as
@@ -327,13 +439,17 @@ var HistorySource = (function() {
             _getProofEventsFromMirrors(blockNum, 0, callback);
             return;
         }
-        viz.api.getBlock(blockNum, function(err, block) {
-            if (!err && block) {
-                callback(null, block);
-                return;
-            }
+        try {
+            viz.api.getBlock(blockNum, function(err, block) {
+                if (!err && block) {
+                    callback(null, block);
+                    return;
+                }
+                _getProofEventsFromMirrors(blockNum, 0, callback);
+            });
+        } catch (rpcErr) {
             _getProofEventsFromMirrors(blockNum, 0, callback);
-        });
+        }
     }
 
     function getAccountProtocol(account, protocol, callback) {
@@ -557,6 +673,7 @@ var HistorySource = (function() {
         var sourceOperationsComplete = true;
         var virtualReceiptsComplete = true;
         var virtualReceiptStartBlock = 0;
+        var indexedThrough = 0;
 
         function finish() {
             var all = [];
@@ -570,7 +687,10 @@ var HistorySource = (function() {
             callback(null, all, {
                 sourceOperationsComplete: sourceOperationsComplete,
                 virtualReceiptsComplete: virtualReceiptsComplete,
-                virtualReceiptStartBlock: virtualReceiptStartBlock
+                virtualReceiptStartBlock: virtualReceiptStartBlock,
+                requestedStart: start,
+                requestedEnd: originalEnd,
+                indexedThrough: indexedThrough
             });
         }
 
@@ -600,9 +720,17 @@ var HistorySource = (function() {
                     callback(err);
                     return;
                 }
+                var wrongStart = payload && typeof payload.requestedStart !== 'undefined' && Number(payload.requestedStart) !== start;
+                var wrongEnd = payload && typeof payload.requestedEnd !== 'undefined' && Number(payload.requestedEnd) !== nextEnd;
+                if (wrongStart || wrongEnd) {
+                    callback(_makeError('Archive range response boundaries do not match the request'));
+                    return;
+                }
                 sourceOperationsComplete = sourceOperationsComplete && !!(payload && payload.complete);
                 virtualReceiptsComplete = virtualReceiptsComplete && !!(payload && payload.virtualReceiptsComplete);
                 virtualReceiptStartBlock = Math.max(virtualReceiptStartBlock, Number(payload && payload.virtualReceiptStartBlock || 0));
+                var pageIndexedThrough = Number(payload && payload.indexedThrough || 0);
+                if (pageIndexedThrough > 0 && (!indexedThrough || pageIndexedThrough < indexedThrough)) indexedThrough = pageIndexedThrough;
                 events = events || [];
                 var oldest = null;
                 for (var i = 0; i < events.length; i++) {
@@ -708,6 +836,20 @@ var HistorySource = (function() {
             });
         }
 
+        function scanCanonicalAccountHistory() {
+            _findAccountHistoryAction(account, protocol, actionType, matcher, function(historyErr, candidate) {
+                if (historyErr) {
+                    callback(historyErr);
+                    return;
+                }
+                if (candidate) {
+                    callback(null, candidate);
+                    return;
+                }
+                scanRecentChain();
+            });
+        }
+
         function loadPage() {
             getEventsRange({
                 account: account,
@@ -717,7 +859,7 @@ var HistorySource = (function() {
                 limit: pageLimit
             }, function(err, events) {
                 if (err) {
-                    callback(err);
+                    scanCanonicalAccountHistory();
                     return;
                 }
                 events = events || [];
@@ -744,7 +886,7 @@ var HistorySource = (function() {
                         return;
                     }
                 }
-                scanRecentChain();
+                scanCanonicalAccountHistory();
             });
         }
         loadPage();

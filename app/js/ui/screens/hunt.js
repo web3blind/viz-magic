@@ -8,6 +8,10 @@ var HuntScreen = (function() {
     var selectedSpell = null;
     var selectedHuntEnergy = 100;
     var stoneItemId = null;
+    var recoveryGeneration = 0;
+    var recoveryTimer = null;
+    var MAX_AUTOMATIC_RECOVERY_RETRIES = 6;
+    var RECOVERY_RETRY_MS = 3000;
     var HUNT_HP_DISPLAY_MAX = 5000;
     var HUNT_POWER_OPTIONS = [
         { energy: 100, labelKey: 'hunt_power_cautious' },
@@ -16,7 +20,51 @@ var HuntScreen = (function() {
         { energy: 700, labelKey: 'hunt_power_fierce' }
     ];
 
+    function _pendingHuntKey(account) {
+        return VizMagicConfig.STORAGE_PREFIX + 'pending_hunt_' + String(account || '').toLowerCase();
+    }
+
+    function _loadPendingHunt(account) {
+        if (!account) return null;
+        try {
+            var pending = JSON.parse(localStorage.getItem(_pendingHuntKey(account)) || 'null');
+            if (!pending || pending.version !== 1 || pending.account !== account ||
+                    !pending.creature || !pending.spell || !Number.isSafeInteger(Number(pending.energy)) || Number(pending.energy) <= 0) {
+                return null;
+            }
+            pending.blockNum = Number(pending.blockNum || 0);
+            pending.submittedAfterBlock = Number(pending.submittedAfterBlock || 0);
+            return pending;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _savePendingHunt(pending) {
+        if (!pending || !pending.account) return;
+        try { localStorage.setItem(_pendingHuntKey(pending.account), JSON.stringify(pending)); } catch (e) {}
+    }
+
+    function _clearPendingHunt(account) {
+        if (!account) return;
+        try { localStorage.removeItem(_pendingHuntKey(account)); } catch (e) {}
+    }
+
+    function _cancelRecovery() {
+        recoveryGeneration++;
+        if (recoveryTimer) clearTimeout(recoveryTimer);
+        recoveryTimer = null;
+    }
+
+    function _currentObservedBlock() {
+        var stateBlock = Number(StateEngine.getState().headBlock || 0);
+        var dgp = typeof VizConnection !== 'undefined' && VizConnection.getDGP ? VizConnection.getDGP() : null;
+        var chainBlock = Number(dgp && (dgp.head_block_number || dgp.last_irreversible_block_num) || 0);
+        return Math.max(stateBlock, chainBlock);
+    }
+
     function render() {
+        _cancelRecovery();
         var t = Helpers.t;
         var el = Helpers.$('screen-hunt');
         if (!el) return;
@@ -136,6 +184,7 @@ var HuntScreen = (function() {
 
         el.innerHTML = html;
         _bindEvents(el);
+        _resumePendingOrRecentHunt(user, ch);
     }
 
     function _scaleForDisplay(value, max, displayMax) {
@@ -320,6 +369,7 @@ var HuntScreen = (function() {
 
     function _doHunt() {
         if (!selectedCreature || !selectedSpell) return;
+        _cancelRecovery();
         var t = Helpers.t;
         var resultEl = Helpers.$('hunt-result');
         var btn = Helpers.$('btn-attack');
@@ -365,6 +415,7 @@ var HuntScreen = (function() {
             resultEl.innerHTML = _renderPendingState(t, creature, spell, true, huntEnergy);
             SoundManager.play('tap');
             SoundManager.vibrate('light');
+            var submittedAfterBlock = _currentObservedBlock();
 
             VizBroadcast.huntAction(
                 selectedCreature,
@@ -385,10 +436,71 @@ var HuntScreen = (function() {
                     // to use witness_signature as Fate Entropy (unforgeable, unique per block)
                     var blockNum = 0;
                     if (broadcastResult) blockNum = Number(broadcastResult.block_num || broadcastResult.block || 0);
-
-                    _resolveHuntFromBlock(blockNum, ch, creature, spell, huntEnergy, user, resultEl, t);
+                    var pendingHunt = {
+                        version: 1,
+                        status: 'submitted',
+                        account: user,
+                        creature: creature.id,
+                        spell: spell.id,
+                        energy: huntEnergy,
+                        blockNum: blockNum,
+                        submittedAfterBlock: submittedAfterBlock,
+                        txId: String(broadcastResult && (broadcastResult.id || broadcastResult.trx_id || broadcastResult.transaction_id) || '')
+                    };
+                    _savePendingHunt(pendingHunt);
+                    _resolveHuntFromBlock(blockNum, ch, creature, spell, huntEnergy, user, resultEl, t, pendingHunt);
                 }
             );
+        });
+    }
+
+    function _huntCandidateData(candidate) {
+        var payload = candidate && candidate.payload || {};
+        return payload.d || payload.data || payload;
+    }
+
+    function _resumePendingOrRecentHunt(user, ch) {
+        if (!user || !ch || typeof HistorySource === 'undefined' || !HistorySource.findAccountAction) return;
+        var generation = recoveryGeneration;
+        var pending = _loadPendingHunt(user);
+        if (pending) {
+            var pendingCreature = GameCreatures.getCreature(pending.creature);
+            var pendingSpell = GameSpells.getSpell(pending.spell);
+            var pendingResultEl = Helpers.$('hunt-result');
+            if (!pendingCreature || !pendingSpell || !pendingResultEl) return;
+            pendingResultEl.innerHTML = _renderSubmittedState(Helpers.t, pendingCreature, pendingSpell);
+            _resolveHuntFromBlock(pending.blockNum, ch, pendingCreature, pendingSpell, pending.energy, user, pendingResultEl, Helpers.t, pending);
+            return;
+        }
+
+        var lastAppliedHunt = Number(ch.lastHuntBlock || 0);
+        var recovery = StateEngine.getState().recovery && StateEngine.getState().recovery[user];
+        var allowLatestApplied = !!(recovery && recovery.status === 'pending');
+        HistorySource.findAccountAction(user, VizMagicConfig.PROTOCOLS.VM, VizMagicConfig.ACTION_TYPES.HUNT, function(err, candidate) {
+            var candidateBlock = Number(candidate && candidate.blockNum || 0);
+            if (generation !== recoveryGeneration || err || !candidate || candidateBlock < lastAppliedHunt ||
+                    (candidateBlock === lastAppliedHunt && !allowLatestApplied)) return;
+            var data = _huntCandidateData(candidate);
+            var creature = GameCreatures.getCreature(data.creature);
+            var spell = GameSpells.getSpell(data.spell);
+            var energy = Number(data.energy || 0);
+            var resultEl = Helpers.$('hunt-result');
+            if (!creature || !spell || !energy || !resultEl) return;
+            var recoveredPending = {
+                version: 1,
+                status: 'submitted',
+                account: user,
+                creature: creature.id,
+                spell: spell.id,
+                energy: energy,
+                blockNum: Number(candidate.blockNum || 0),
+                txId: String(candidate.txId || '')
+            };
+            _savePendingHunt(recoveredPending);
+            _resolveHuntFromBlock(recoveredPending.blockNum, ch, creature, spell, energy, user, resultEl, Helpers.t, recoveredPending);
+        }, function(candidate) {
+            var candidateBlock = Number(candidate && candidate.blockNum || 0);
+            return candidateBlock > lastAppliedHunt || (allowLatestApplied && candidateBlock === lastAppliedHunt);
         });
     }
 
@@ -516,38 +628,60 @@ var HuntScreen = (function() {
      * then resolve combat deterministically.
      * If block_num is 0 or fetch fails, falls back to DGP head block.
      */
-    function _resolveHuntFromBlock(blockNum, ch, creature, spell, playerEnergy, user, resultEl, t) {
+    function _resolveHuntFromBlock(blockNum, ch, creature, spell, playerEnergy, user, resultEl, t, pendingHunt) {
+        _cancelRecovery();
+        var generation = recoveryGeneration;
+        var retryCount = 0;
+        pendingHunt = pendingHunt || _loadPendingHunt(user) || {
+            version: 1, status: 'submitted', account: user, creature: creature.id,
+            spell: spell.id, energy: playerEnergy, blockNum: Number(blockNum || 0), txId: ''
+        };
+        var _matchesHuntRecord = function(record) {
+            var data = record.action && record.action.data || {};
+            if (record.sender !== user || !record.action || record.action.type !== VizMagicConfig.ACTION_TYPES.HUNT ||
+                    data.creature !== creature.id || data.spell !== spell.id || Number(data.energy || 0) !== Number(playerEnergy || 0)) {
+                return false;
+            }
+            return !(pendingHunt.txId && record.txId && pendingHunt.txId !== record.txId);
+        };
         var _doResolve = function(fateEntropy, finalBlockNum, block) {
+            if (generation !== recoveryGeneration) return;
             console.log('Hunt resolving with canonical Fate Entropy:', fateEntropy.substring(0, 32) + '..., block:', finalBlockNum);
 
             var processed = BlockProcessor.processBlock(block, finalBlockNum);
-            var blockEvents = StateEngine.processBlock(processed, { advanceHead: false, runMaintenance: false });
-            if (!blockEvents.length && StateEngine.getProcessedActionOutcome) {
-                blockEvents = StateEngine.getProcessedActionOutcome(processed, 'vm', function(record) {
-                    var data = record.action && record.action.data || {};
-                    return record.sender === user && record.action && record.action.type === VizMagicConfig.ACTION_TYPES.HUNT &&
-                        data.creature === creature.id && data.spell === spell.id;
-                });
-            }
+            var priorOutcome = StateEngine.getProcessedActionOutcome
+                ? StateEngine.getProcessedActionOutcome(processed, 'vm', _matchesHuntRecord)
+                : [];
+            var allBlockEvents = StateEngine.processBlock(processed, { advanceHead: false, runMaintenance: false });
+            var blockEvents = StateEngine.getProcessedActionOutcome
+                ? StateEngine.getProcessedActionOutcome(processed, 'vm', _matchesHuntRecord)
+                : allBlockEvents;
+            var newlyApplied = priorOutcome.length === 0 && blockEvents.length > 0;
             var result = null;
             for (var eventIndex = 0; eventIndex < blockEvents.length; eventIndex++) {
                 var candidate = blockEvents[eventIndex];
-                if ((candidate.type === 'hunt_victory' || candidate.type === 'hunt_defeat') && candidate.account === user && candidate.creature === selectedCreature) {
+                if ((candidate.type === 'hunt_victory' || candidate.type === 'hunt_defeat') && candidate.account === user && candidate.creature === creature.id) {
                     result = candidate.result;
                     break;
                 }
             }
             if (!result) {
                 resultEl.innerHTML = _renderBlockedState(t, creature, spell, new Error('paid_action_proof_missing'));
-                _bindResultActions();
+                _bindResultActions(function() { _attemptRecovery(0); });
                 return;
             }
+
+            if (recoveryTimer) clearTimeout(recoveryTimer);
+            recoveryTimer = null;
+            pendingHunt.status = 'confirmed';
+            pendingHunt.blockNum = finalBlockNum;
+            _savePendingHunt(pendingHunt);
 
             // ch is a reference to the same object in worldState — already updated by processHuntResult
             var state = StateEngine.getState();
 
             // Record armageddon_stone drops on-chain for verifiability
-            if (result.victory && result.loot) {
+            if (newlyApplied && result.victory && result.loot) {
                 for (var li = 0; li < result.loot.length; li++) {
                     if (result.loot[li].type === 'armageddon_stone') {
                         (function(lootItem) {
@@ -580,13 +714,15 @@ var HuntScreen = (function() {
             });
 
             // Update Grimoire on chain (cache hint for level/xp)
-            VizAccount.updateGrimoire(CharacterSystem.toGrimoire(ch), function(grimErr) {
-                if (grimErr) {
-                    console.log('Grimoire update error (non-fatal):', grimErr);
-                } else {
-                    console.log('Grimoire updated on chain: Lv', ch.level, 'XP', ch.xp);
-                }
-            });
+            if (newlyApplied) {
+                VizAccount.updateGrimoire(CharacterSystem.toGrimoire(ch), function(grimErr) {
+                    if (grimErr) {
+                        console.log('Grimoire update error (non-fatal):', grimErr);
+                    } else {
+                        console.log('Grimoire updated on chain: Lv', ch.level, 'XP', ch.xp);
+                    }
+                });
+            }
 
             SoundManager.play(result.victory ? 'victory' : 'defeat');
             SoundManager.vibrate(result.victory ? 'medium' : 'triple');
@@ -599,29 +735,73 @@ var HuntScreen = (function() {
             _bindResultActions();
         };
 
-        var _fetchBlock = function(num) {
-            HistorySource.getBlock(num, function(err, block) {
+        var _scheduleRetry = function(attempt) {
+            if (attempt >= MAX_AUTOMATIC_RECOVERY_RETRIES || generation !== recoveryGeneration) return;
+            if (recoveryTimer) clearTimeout(recoveryTimer);
+            recoveryTimer = setTimeout(function() {
+                recoveryTimer = null;
+                if (generation !== recoveryGeneration || !resultEl || !resultEl.isConnected) return;
+                _attemptRecovery(attempt + 1);
+            }, RECOVERY_RETRY_MS);
+        };
+
+        var _showSubmitted = function(attempt) {
+            if (generation !== recoveryGeneration) return;
+            resultEl.innerHTML = _renderSubmittedState(t, creature, spell);
+            _bindResultActions(function() { _attemptRecovery(0); });
+            _scheduleRetry(attempt || 0);
+        };
+
+        var _fetchBlock = function(num, attempt) {
+            var loader = HistorySource.getProofBlock || HistorySource.getBlock;
+            loader.call(HistorySource, num, function(err, block) {
+                if (generation !== recoveryGeneration) return;
                 if (err || !block) {
                     console.log('Paid hunt proof block unavailable; leaving result pending');
-                    _showSubmitted();
+                    _showSubmitted(attempt);
                     return;
                 }
+                pendingHunt.blockNum = num;
+                _savePendingHunt(pendingHunt);
                 // The previous block id is deterministic and preserved by archive mirrors.
                 var entropy = block.previous || block.block_id || '';
                 _doResolve(entropy, num, block);
             });
         };
 
-        var _showSubmitted = function() {
-            resultEl.innerHTML = _renderSubmittedState(t, creature, spell);
-            _bindResultActions();
+        var _attemptRecovery = function(attempt) {
+            retryCount = attempt || 0;
+            if (generation !== recoveryGeneration) return;
+            if (Number(pendingHunt.blockNum || blockNum || 0) > 0) {
+                _fetchBlock(Number(pendingHunt.blockNum || blockNum), retryCount);
+                return;
+            }
+            HistorySource.findAccountAction(user, VizMagicConfig.PROTOCOLS.VM, VizMagicConfig.ACTION_TYPES.HUNT, function(err, candidate) {
+                if (generation !== recoveryGeneration) return;
+                if (err || !candidate) {
+                    _showSubmitted(retryCount);
+                    return;
+                }
+                pendingHunt.blockNum = Number(candidate.blockNum || 0);
+                pendingHunt.txId = String(candidate.txId || pendingHunt.txId || '');
+                if (!pendingHunt.blockNum) {
+                    _showSubmitted(retryCount);
+                    return;
+                }
+                _savePendingHunt(pendingHunt);
+                _fetchBlock(pendingHunt.blockNum, retryCount);
+            }, function(candidate) {
+                var data = _huntCandidateData(candidate);
+                if (candidate.sender !== user || data.creature !== creature.id || data.spell !== spell.id ||
+                        Number(data.energy || 0) !== Number(playerEnergy || 0)) return false;
+                if (pendingHunt.submittedAfterBlock && Number(candidate.blockNum || 0) <= Number(pendingHunt.submittedAfterBlock)) return false;
+                if (pendingHunt.txId && candidate.txId && pendingHunt.txId !== candidate.txId) return false;
+                return true;
+            });
         };
 
-        if (blockNum > 0) {
-            _fetchBlock(blockNum);
-        } else {
-            _showSubmitted();
-        }
+        _showSubmitted(0);
+        _attemptRecovery(0);
     }
 
     function _renderCombatResult(t, result, creature) {
@@ -669,7 +849,7 @@ var HuntScreen = (function() {
             '<p>' + Helpers.escapeHtml(creature.name) + '</p>' +
             '<p>' + Helpers.escapeHtml(spell.name) + '</p>' +
             '<p>' + t('hunt_submitted_text') + '</p>' +
-            '<button class="btn btn-primary" id="btn-hunt-again">' + t('hunt_again') + '</button>' +
+            '<button class="btn btn-primary" id="btn-hunt-retry">' + t('hunt_retry_result') + '</button>' +
             '<button class="btn btn-secondary" id="btn-hunt-home">' + t('hunt_home') + '</button>' +
             '</div>';
     }
@@ -692,15 +872,25 @@ var HuntScreen = (function() {
             '</div>';
     }
 
-    function _bindResultActions() {
+    function _bindResultActions(retryCallback) {
         var againBtn = Helpers.$('btn-hunt-again');
+        var retryBtn = Helpers.$('btn-hunt-retry');
         var homeBtn = Helpers.$('btn-hunt-home');
 
         if (againBtn) {
-            againBtn.addEventListener('click', function() { render(); });
+            againBtn.addEventListener('click', function() {
+                _clearPendingHunt(VizAccount.getCurrentUser());
+                render();
+            });
+        }
+        if (retryBtn && retryCallback) {
+            retryBtn.addEventListener('click', retryCallback);
         }
         if (homeBtn) {
-            homeBtn.addEventListener('click', function() { Helpers.EventBus.emit('navigate', 'home'); });
+            homeBtn.addEventListener('click', function() {
+                _cancelRecovery();
+                Helpers.EventBus.emit('navigate', 'home');
+            });
         }
     }
 

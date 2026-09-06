@@ -436,6 +436,7 @@ var LangEN = {
     hunt_pending_text: 'Checking mana and submitting the action to blockchain. Outcome is no longer resolved locally.',
     hunt_submitted_title: 'Hunt Submitted',
     hunt_submitted_text: 'The action was sent. Outcome, XP, and loot must appear only after chain confirmation and deterministic processing.',
+    hunt_retry_result: 'Check result again',
     hunt_blocked_title: 'Hunt Blocked',
     hunt_blocked_text: 'The hunt will not display a fake result without a provable chain-backed settlement path.',
     hunt_blocked_no_chain_target: 'This hunt has no auditable chain target, so mana spending and rewards cannot be honestly verified. Local battle resolution is disabled.',
@@ -445,6 +446,9 @@ var LangEN = {
     conn_connected: 'Connection to the World restored!',
     conn_disconnected: 'Connection to the World slumbers. Some actions unavailable.',
     conn_history_limited: 'This VIZ node only provides recent history. Older character and world recovery may need an archive mirror.',
+    sync_progress: 'Syncing with the World: processed block {processed} of {target} ({percent}%).',
+    sync_retry: 'Sync paused at block {processed} of {target}. Safely retrying history verification.',
+    sync_history_gap: 'Sync stopped at block {processed} of {target}: earlier history is not available yet. Confirmed personal actions are recovered separately; retry is automatic.',
 
     // Navigation (new)
     nav_map: 'Map',

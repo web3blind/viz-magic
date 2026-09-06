@@ -14,6 +14,9 @@ var App = (function() {
     var _syncStartBlock = 0;
     var _syncVisible = false;
     var _lastSyncPercent = -1;
+    var _gapAccountRecoveryBusy = false;
+    var _lastGapAccountRecoveryAt = 0;
+    var GAP_ACCOUNT_RETRY_MS = 30000;
     var _deferredInstallPrompt = null;
     var _installPromptListenerBound = false;
     var INSTALL_ACK_KEY = VizMagicConfig.STORAGE_PREFIX + 'install_shortcut_ack';
@@ -280,34 +283,34 @@ var App = (function() {
         _updateSyncStatus(0, true);
     }
 
-    function _updateSyncStatus(percent, forceShow) {
+    function _updateSyncStatus(percent, forceShow, processedBlock, targetBlock, reason) {
         var statusEl = Helpers.$('connection-status');
         if (!statusEl) return;
 
         percent = Math.max(0, Math.min(100, Math.ceil(percent || 0)));
+        processedBlock = Number(processedBlock || 0);
+        targetBlock = Number(targetBlock || 0);
+        var text = 'Синхронизация с Миром... ' + percent + '%';
+        if (reason === 'history_gap') {
+            text = Helpers.t('sync_history_gap', { processed: processedBlock, target: targetBlock });
+        } else if (reason === 'retry') {
+            text = Helpers.t('sync_retry', { processed: processedBlock, target: targetBlock });
+        } else if (processedBlock > 0 && targetBlock >= processedBlock) {
+            text = Helpers.t('sync_progress', { processed: processedBlock, target: targetBlock, percent: percent });
+        }
 
-        // Chain catch-up must never block an already usable game screen. A saved/PWA
-        // session should open Home first; sync continues in console/background.
-        if (currentScreen && currentScreen !== 'landing') {
+        if (!forceShow && percent >= 100 && !reason) {
             _syncVisible = false;
             _lastSyncPercent = percent;
             statusEl.classList.remove('show');
-            statusEl.textContent = 'Синхронизация с Миром... ' + percent + '%';
             return;
         }
 
-        if (!forceShow && percent >= 100) {
-            _syncVisible = false;
-            _lastSyncPercent = percent;
-            statusEl.classList.remove('show');
+        if (_syncVisible && _lastSyncPercent === percent && statusEl.textContent === text) {
             return;
         }
 
-        if (_syncVisible && _lastSyncPercent === percent) {
-            return;
-        }
-
-        statusEl.textContent = 'Синхронизация с Миром... ' + percent + '%';
+        statusEl.textContent = text;
         statusEl.classList.add('show');
         _syncVisible = true;
         _lastSyncPercent = percent;
@@ -408,6 +411,83 @@ var App = (function() {
     var _chainRecoveryBusy = false;
     /** Set of block numbers already processed during recovery to prevent duplicates */
     var _recoveryProcessedBlocks = {};
+
+    function _recoverAccountActionsAcrossGap(startBlock, endBlock, callback) {
+        callback = callback || function() {};
+        var user = VizAccount.getCurrentUser();
+        if (!user || typeof HistorySource === 'undefined' || !HistorySource.getAllEventsRange ||
+                !(HistorySource.getProofBlock || HistorySource.getBlock)) {
+            callback(new Error('account_history_recovery_unavailable'));
+            return;
+        }
+        HistorySource.getAllEventsRange({
+            account: user,
+            protocol: VizMagicConfig.PROTOCOLS.VM,
+            start: startBlock,
+            end: endBlock,
+            limit: 5000
+        }, function(rangeErr, events, rangeMeta) {
+            if (rangeErr || !events) {
+                callback(rangeErr || new Error('account_history_recovery_unavailable'));
+                return;
+            }
+            var blocks = [];
+            var seen = {};
+            for (var i = 0; i < events.length; i++) {
+                var event = events[i] || {};
+                var blockNum = Number(event.blockNum || event.block_num || 0);
+                var sender = event.sender || '';
+                var protocol = event.protocol || '';
+                var opType = event.opType || event.op_type || '';
+                if (!Number.isSafeInteger(blockNum) || blockNum < startBlock || blockNum > endBlock ||
+                        sender !== user || protocol !== VizMagicConfig.PROTOCOLS.VM || opType !== 'custom' || seen[blockNum]) {
+                    continue;
+                }
+                seen[blockNum] = true;
+                blocks.push(blockNum);
+            }
+            blocks.sort(function(a, b) { return a - b; });
+            var loader = HistorySource.getProofBlock || HistorySource.getBlock;
+            var index = 0;
+            var collected = [];
+
+            function next() {
+                if (index >= blocks.length) {
+                    callback(null, {
+                        processedBlocks: blocks.length,
+                        targetBlock: endBlock,
+                        historyComplete: !!(rangeMeta && rangeMeta.sourceOperationsComplete),
+                        events: collected
+                    });
+                    return;
+                }
+                var blockNum = blocks[index++];
+                loader.call(HistorySource, blockNum, function(blockErr, block) {
+                    if (blockErr || !block) {
+                        callback(blockErr || new Error('account_action_proof_block_missing_' + blockNum));
+                        return;
+                    }
+                    var processed = BlockProcessor.processBlock(block, blockNum);
+                    var matched = false;
+                    for (var m = 0; m < (processed.vmActions || []).length; m++) {
+                        if (processed.vmActions[m] && processed.vmActions[m].sender === user) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (!matched || _archiveBlockNeedsHydration(processed)) {
+                        callback(new Error('account_action_proof_incomplete_' + blockNum));
+                        return;
+                    }
+                    processed.irreversible = true;
+                    var stateEvents = StateEngine.processBlock(processed, { advanceHead: false, runMaintenance: false });
+                    for (var e = 0; e < stateEvents.length; e++) collected.push(stateEvents[e]);
+                    next();
+                });
+            }
+            next();
+        });
+    }
 
     function _setRecoveryPending(user, reason) {
         StateEngine.setRecoveryStatus(user, 'pending', reason || 'history_incomplete');
@@ -734,7 +814,7 @@ var App = (function() {
                     _syncStartBlock = _lastPolledBlock;
                 }
 
-                _updateSyncStatus(_calculateSyncPercent(_lastPolledBlock, headBlock));
+                _updateSyncStatus(_calculateSyncPercent(_lastPolledBlock, headBlock), false, _lastPolledBlock, headBlock);
 
                 var startBlock = _lastPolledBlock + 1;
                 var endBlock = _nextCatchupBatchEnd(startBlock, headBlock);
@@ -751,7 +831,7 @@ var App = (function() {
      */
     function _nextCatchupBatchEnd(startBlock, chainHead) {
         var remaining = Math.max(0, chainHead - startBlock + 1);
-        var maxBatch = remaining > 1000 ? 200 : remaining > 100 ? 50 : 10;
+        var maxBatch = remaining > 10000 ? 5000 : remaining > 1000 ? 1000 : remaining > 100 ? 100 : 10;
         return Math.min(chainHead, startBlock + maxBatch - 1);
     }
 
@@ -760,15 +840,15 @@ var App = (function() {
      */
     function _processBlockBatch(startBlock, endBlock, chainHead) {
         if (_shouldUseArchiveEventBatch(startBlock, endBlock, chainHead)) {
-            _processArchiveEventBatch(startBlock, endBlock, chainHead, function(usedArchive) {
+            _processArchiveEventBatch(startBlock, endBlock, chainHead, function(usedArchive, archiveFailure) {
                 if (!usedArchive) {
                     var tokenActivation = Number(VizMagicConfig.TOKEN && VizMagicConfig.TOKEN.ACTIVATION_BLOCK || 0);
                     if (tokenActivation > 0 && endBlock >= tokenActivation) {
                         console.log('App: authoritative VT archive unavailable; monetary replay remains pending');
-                        _pollBusy = false;
+                        _handleCatchupFailure(startBlock, endBlock, chainHead, archiveFailure || { reason: 'archive_unavailable' });
                         return;
                     }
-                    _processBlockBatchFromRpc(startBlock, endBlock, chainHead);
+                    _processBlockBatchFromRpc(startBlock, endBlock, chainHead, archiveFailure);
                 }
             });
             return;
@@ -807,7 +887,16 @@ var App = (function() {
             limit: 5000
         }, function(err, events, rangeMeta) {
             if (err || !events) {
-                done(false);
+                done(false, { reason: 'archive_unavailable', error: err || null });
+                return;
+            }
+            if (!rangeMeta || rangeMeta.sourceOperationsComplete !== true) {
+                done(false, {
+                    reason: 'history_gap',
+                    startBlock: startBlock,
+                    endBlock: endBlock,
+                    indexedThrough: Number(rangeMeta && rangeMeta.indexedThrough || 0)
+                });
                 return;
             }
 
@@ -935,7 +1024,7 @@ var App = (function() {
         return false;
     }
 
-    function _processBlockBatchFromRpc(startBlock, endBlock, chainHead) {
+    function _processBlockBatchFromRpc(startBlock, endBlock, chainHead, archiveFailure) {
         var eventsCollected = [];
 
         BlockProcessor.processBlockRange(startBlock, endBlock, function(processed, blockNum) {
@@ -948,11 +1037,47 @@ var App = (function() {
         }, function(err) {
             if (err) {
                 console.log('App: Block batch incomplete; will retry from the last contiguous head:', err);
-                _pollBusy = false;
+                _handleCatchupFailure(startBlock, endBlock, chainHead, archiveFailure || { reason: 'retry' });
                 return;
             }
             StateEngine.advanceHead(endBlock);
             _finishProcessedBatch(endBlock, chainHead, eventsCollected);
+        });
+    }
+
+    function _handleCatchupFailure(startBlock, endBlock, chainHead, failure) {
+        var state = StateEngine.getState();
+        var user = VizAccount.getCurrentUser();
+        var reason = failure && failure.reason === 'history_gap' ? 'history_gap' : 'retry';
+        if (user) {
+            _setRecoveryPending(user, reason + '_' + startBlock + '_' + endBlock);
+            state.recovery[user].processedBlock = Number(state.headBlock || 0);
+            state.recovery[user].targetBlock = Number(chainHead || 0);
+            state.recovery[user].blockedStart = Number(startBlock || 0);
+            state.recovery[user].blockedEnd = Number(endBlock || 0);
+        }
+        _updateSyncStatus(_calculateSyncPercent(state.headBlock || 0, chainHead), true, state.headBlock || 0, chainHead, reason);
+
+        if (reason !== 'history_gap' || _gapAccountRecoveryBusy || Date.now() - _lastGapAccountRecoveryAt < GAP_ACCOUNT_RETRY_MS) {
+            _pollBusy = false;
+            return;
+        }
+        _gapAccountRecoveryBusy = true;
+        _lastGapAccountRecoveryAt = Date.now();
+        _recoverAccountActionsAcrossGap(startBlock, chainHead, function(accountErr, accountRecovery) {
+            _gapAccountRecoveryBusy = false;
+            if (user && state.recovery[user]) {
+                state.recovery[user].partialAccountRecovery = accountErr ? 'retry' : 'verified_actions_only';
+                state.recovery[user].partialActionBlocks = accountRecovery ? Number(accountRecovery.processedBlocks || 0) : 0;
+            }
+            StateEngine.saveCheckpoint(function() {
+                var recoveredEvents = accountRecovery && accountRecovery.events || [];
+                for (var i = 0; i < recoveredEvents.length; i++) {
+                    if (recoveredEvents[i].type) Helpers.EventBus.emit(recoveredEvents[i].type, recoveredEvents[i]);
+                }
+                _refreshActiveScreenAfterSync(recoveredEvents);
+                _pollBusy = false;
+            });
         });
     }
 
@@ -973,7 +1098,7 @@ var App = (function() {
                 console.log('App: Checkpoint save error:', cpErr);
             }
 
-            _updateSyncStatus(_calculateSyncPercent(endBlock, chainHead));
+            _updateSyncStatus(_calculateSyncPercent(endBlock, chainHead), false, endBlock, chainHead);
             _refreshActiveScreenAfterSync(eventsCollected);
 
             // If there are more blocks to process, continue immediately
@@ -1011,6 +1136,7 @@ var App = (function() {
             guild: true,
             arena: true,
             marketplace: true,
+            hunt: true,
             leaderboard: true,
             'world-boss': true
         };
@@ -1045,7 +1171,11 @@ var App = (function() {
         installShortcut: installShortcut,
         getCurrentScreen: getCurrentScreen,
         hydrateAccountHints: _hydrateAccountHints,
-        processArchiveEventBatch: _processArchiveEventBatch
+        processArchiveEventBatch: _processArchiveEventBatch,
+        recoverAccountActionsAcrossGap: _recoverAccountActionsAcrossGap,
+        handleCatchupFailure: _handleCatchupFailure,
+        nextCatchupBatchEnd: _nextCatchupBatchEnd,
+        updateSyncStatus: _updateSyncStatus
     };
 })();
 

@@ -76,6 +76,67 @@ test('archive thin blocks preserve source completeness and receive_award virtual
   assert.strictEqual(block.virtual_operations[0].op[0], 'receive_award');
 });
 
+test('paginated range metadata preserves the exact requested coverage boundary', function () {
+  function FakeXHR() { this.readyState = 0; this.status = 0; this.responseText = ''; }
+  FakeXHR.prototype.open = function(_method, url) { this.url = url; };
+  FakeXHR.prototype.send = function() {
+    this.status = 200;
+    this.readyState = 4;
+    this.responseText = JSON.stringify({
+      events: [], count: 0, complete: false, virtualReceiptsComplete: true,
+      requestedStart: 101, requestedEnd: 120, indexedThrough: 200, virtualReceiptStartBlock: 83500000
+    });
+    this.onreadystatechange();
+  };
+  FakeXHR.prototype.abort = function() {};
+  const context = {
+    console: { log: function() {} }, setTimeout: function() { return 1; }, clearTimeout: function() {}, XMLHttpRequest: FakeXHR,
+    VizMagicConfig: { HISTORY_ARCHIVE_MIRRORS: [{ apiBase: 'https://archive.example' }], PROTOCOLS: { VM: 'VM' } }
+  };
+  vm.createContext(context);
+  vm.runInContext(historySourceJs, context, { filename: 'history-source.js' });
+  let meta = null;
+  context.HistorySource.getAllEventsRange({ start: 101, end: 120, protocol: 'VM', limit: 5000 }, function(err, _events, rangeMeta) {
+    assert.ifError(err);
+    meta = rangeMeta;
+  });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(meta)), {
+    sourceOperationsComplete: false,
+    virtualReceiptsComplete: true,
+    virtualReceiptStartBlock: 83500000,
+    requestedStart: 101,
+    requestedEnd: 120,
+    indexedThrough: 200
+  });
+});
+
+test('proof lookup falls back to the archive when live RPC throws before its callback', function () {
+  function FakeXHR() { this.readyState = 0; this.status = 0; this.responseText = ''; }
+  FakeXHR.prototype.open = function() {};
+  FakeXHR.prototype.send = function() {
+    this.status = 200;
+    this.readyState = 4;
+    this.responseText = JSON.stringify({ blockNum: 150, blockId: 'archive-150', previous: 'archive-149', timestamp: '2026-09-06T17:00:00', complete: true, count: 0, eventCount: 0, events: [] });
+    this.onreadystatechange();
+  };
+  FakeXHR.prototype.abort = function() {};
+  const context = {
+    console: { log: function() {} }, setTimeout: function() { return 1; }, clearTimeout: function() {}, XMLHttpRequest: FakeXHR,
+    viz: { api: { getBlock: function() { throw new Error('unknown transport'); } } },
+    VizMagicConfig: { HISTORY_ARCHIVE_MIRRORS: [{ apiBase: 'https://archive.example' }], PROTOCOLS: { VM: 'VM' } }
+  };
+  vm.createContext(context);
+  vm.runInContext(historySourceJs, context, { filename: 'history-source.js' });
+  let result = null;
+  assert.doesNotThrow(function() {
+    context.HistorySource.getProofBlock(150, function(err, block) {
+      assert.ifError(err);
+      result = block;
+    });
+  });
+  assert.strictEqual(result && result.block_id, 'archive-150');
+});
+
 test('MAGIC readiness requires healthy SQLite archive and complete virtual history through LIB', function () {
   const replies = [
     { ok: true, stale: false, readOnly: true, storage: 'sqlite', lastIndexedBlock: 110, lastIrreversibleBlock: 110, virtualReceiptStartBlock: 100 },
@@ -178,7 +239,48 @@ test('archive account action lookup paginates beyond the latest 5000 actions', f
   assert.ok(/event.type === actionType/.test(historySourceJs), 'lookup should match the requested action type');
   assert.ok(/VMProtocol\.traverseChain\(account, 100/.test(historySourceJs), 'lookup should cover recent actions that the archive indexer has not stored yet');
   assert.ok(/getAccountProtocol\(account, protocol/.test(historySourceJs) && /if \(pointerErr\)/.test(historySourceJs), 'recent-history preflight should fail closed when the live protocol pointer cannot be checked');
-  assert.ok(/history-source\.js\?v=20260823b/.test(indexHtml), 'targeted history lookup should be cache-busted');
+  assert.ok(/history-source\.js\?v=20260823b-20260905d-20260906d/.test(indexHtml), 'targeted history lookup should be cache-busted');
+});
+
+test('account-history RPC recovers a recent canonical action when archive retention is incomplete', function () {
+  const requests = [];
+  function FakeXHR() { this.readyState = 0; this.status = 0; this.responseText = ''; this.response = ''; }
+  FakeXHR.prototype.open = function(method, url) { this.method = method; this.url = url; };
+  FakeXHR.prototype.setRequestHeader = function() {};
+  FakeXHR.prototype.send = function(body) {
+    requests.push({ method: this.method, url: this.url, body: body || '' });
+    this.status = 200;
+    this.readyState = 4;
+    if (this.method === 'POST') {
+      this.responseText = JSON.stringify({ result: [[8, {
+        trx_id: 'canonical-hunt-tx', block: 83186016, trx_in_block: 0, op_in_trx: 1, virtual_op: 0,
+        op: ['custom', { id: 'VM', required_active_auths: [], required_regular_auths: ['alice'], json: JSON.stringify({ p: 'VM', v: 2, t: 'hunt', d: { creature: 'hollow_shade', spell: 'stone_wall', energy: 100 } }) }]
+      }]] });
+    } else {
+      this.responseText = JSON.stringify({ events: [], count: 0, complete: false, requestedStart: 1, requestedEnd: 2147483647, indexedThrough: 83186040 });
+    }
+    this.response = this.responseText;
+    this.onreadystatechange();
+  };
+  FakeXHR.prototype.abort = function() {};
+  const context = {
+    console: { log: function() {} }, setTimeout: function() { return 1; }, clearTimeout: function() {}, XMLHttpRequest: FakeXHR,
+    VizMagicConfig: { NODES: ['https://api.example/'], HISTORY_ARCHIVE_MIRRORS: [{ apiBase: 'https://archive.example' }], PROTOCOLS: { VM: 'VM' } },
+    VizAccount: { getAccountProtocol: function(_account, _protocol, callback) { callback(null, null); } },
+    VMProtocol: { traverseChain: function() { throw new Error('metadata traversal must not replace canonical account history'); } }
+  };
+  vm.createContext(context);
+  vm.runInContext(historySourceJs, context, { filename: 'history-source.js' });
+  let found = null;
+  context.HistorySource.findAccountAction('alice', 'VM', 'hunt', function(err, event) {
+    assert.ifError(err);
+    found = event;
+  }, function(event) {
+    return event && event.payload && event.payload.d && event.payload.d.creature === 'hollow_shade';
+  });
+  assert.strictEqual(found && found.txId, 'canonical-hunt-tx');
+  assert.strictEqual(found && found.blockNum, 83186016);
+  assert.ok(requests.some(function(request) { return request.method === 'POST' && /get_account_history/.test(request.body); }));
 });
 
 test('archive account lookup behavior finds an unlock on an older page', function () {
