@@ -10,6 +10,45 @@ var CraftingScreen = (function() {
     var craftingInProgress = false;
     var craftResult = null;
 
+    function _reforgeConfig() {
+        var config = VizMagicConfig.VE_ACTIONS || {};
+        return {
+            materialType: config.REFORGE_MATERIAL_TYPE || 'fire_dust',
+            quantity: Number(config.REFORGE_MATERIAL_QUANTITY || 2)
+        };
+    }
+
+    function _getReforgeMaterials(inventory, user) {
+        var config = _reforgeConfig();
+        var matches = [];
+        for (var i = 0; i < inventory.length; i++) {
+            var item = inventory[i];
+            if (!item || item.owner !== user || item.type !== config.materialType ||
+                    item.consumed || item.equipped) continue;
+            matches.push(item);
+            if (matches.length >= config.quantity) break;
+        }
+        return matches;
+    }
+
+    function _reforgeCostText(t, materials, includeIds) {
+        var config = _reforgeConfig();
+        var materialName = t('item_' + config.materialType) || config.materialType.replace(/_/g, ' ');
+        var cost = config.quantity + ' × ' + materialName;
+        if (includeIds && materials.length === config.quantity) {
+            cost += ' (#' + materials.map(function(item) { return item.id; }).join(', #') + ')';
+        }
+        return cost;
+    }
+
+    function _sameIds(actual, expected) {
+        if (!Array.isArray(actual) || actual.length !== expected.length) return false;
+        for (var i = 0; i < expected.length; i++) {
+            if (actual[i] !== expected[i]) return false;
+        }
+        return true;
+    }
+
     /**
      * Render the crafting screen
      */
@@ -260,6 +299,8 @@ var CraftingScreen = (function() {
         // Enchantable items (equipped or in bag, with slots available)
         var enchantableItems = [];
         var runeItems = [];
+        var reforgeMaterials = _getReforgeMaterials(inventory, user);
+        var reforgeConfig = _reforgeConfig();
 
         for (var i = 0; i < inventory.length; i++) {
             var item = inventory[i];
@@ -293,7 +334,13 @@ var CraftingScreen = (function() {
         }
         html += '</select>';
         html += '<button class="btn btn-secondary reforge-btn" id="btn-reforge" disabled aria-disabled="true">' + t('enchant_reforge') + '</button>';
-        html += '<p class="quest-desc">' + t('enchant_reforge_economy_pending') + '</p>';
+        html += '<p class="quest-desc reforge-cost">' + t('enchant_reforge_cost', { cost: _reforgeCostText(t, reforgeMaterials, false) }) + '</p>';
+        if (reforgeMaterials.length < reforgeConfig.quantity) {
+            html += '<p class="quest-desc reforge-material-missing" role="status">' + t('enchant_reforge_material_missing', {
+                cost: _reforgeCostText(t, reforgeMaterials, false),
+                owned: reforgeMaterials.length
+            }) + '</p>';
+        }
         html += '</div>';
 
         // Item selection
@@ -490,6 +537,15 @@ var CraftingScreen = (function() {
         if (reforgeBtn) {
             reforgeBtn.addEventListener('click', _executeReforge);
         }
+        var reforgeSelect = container.querySelector('#reforge-item-select');
+        if (reforgeSelect && reforgeBtn) {
+            reforgeSelect.addEventListener('change', function() {
+                var user = VizAccount.getCurrentUser();
+                var enoughMaterials = _getReforgeMaterials(StateEngine.getInventory(user), user).length === _reforgeConfig().quantity;
+                reforgeBtn.disabled = !this.value || !enoughMaterials;
+                reforgeBtn.setAttribute('aria-disabled', reforgeBtn.disabled ? 'true' : 'false');
+            });
+        }
 
         // Consume buttons
         var consumeBtns = container.querySelectorAll('.consume-btn');
@@ -668,22 +724,35 @@ var CraftingScreen = (function() {
             return;
         }
 
+        var materials = _getReforgeMaterials(inventory, user);
+        var reforgeConfig = _reforgeConfig();
+        if (materials.length !== reforgeConfig.quantity) {
+            Toast.error(t('enchant_reforge_material_missing', {
+                cost: _reforgeCostText(t, materials, false),
+                owned: materials.length
+            }));
+            SoundManager.play('error');
+            return;
+        }
+        var materialIds = materials.map(function(material) { return material.id; });
+
         Modal.show({
             title: t('enchant_reforge'),
-            text: t('enchant_reforge_confirm', { cost: 500 }),
+            text: t('enchant_reforge_confirm', { cost: _reforgeCostText(t, materials, true) }),
             buttons: [
                 {
                     text: t('confirm'),
                     className: 'btn-primary',
                     action: function() {
                         SoundManager.play('spell_fire');
-                        MarketProtocol.broadcastReforge(itemId, function(err, broadcastResult) {
+                        MarketProtocol.broadcastReforge(itemId, materialIds, function(err, broadcastResult) {
                             if (err) {
                                 Toast.error(t('enchant_reforge_error'));
                                 SoundManager.play('error');
                             } else {
                                 _confirmedChainEvent(broadcastResult, function(event) {
-                                    return event.type === 've_reforge' && event.account === user && event.itemId === itemId;
+                                    return event.type === 've_reforge' && event.account === user && event.itemId === itemId &&
+                                        event.result && _sameIds(event.result.consumedIds, materialIds);
                                 }, function(confirmErr, reforgeEvent) {
                                     if (!confirmErr) {
                                         var msg = reforgeEvent.result.rarityChanged ? t('enchant_reforge_upgrade') : t('enchant_reforge_success');

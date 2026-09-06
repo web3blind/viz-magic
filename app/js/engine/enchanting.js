@@ -161,9 +161,10 @@ var EnchantingSystem = (function() {
      * @param {string} blockHash - for deterministic RNG
      * @param {number} blockNum - block number
      * @param {string} account - owner account
-     * @returns {Object} {success, error, oldStats, newStats, rarityChanged}
+     * @param {Array} materialItems - exact material items consumed by v2 reforge
+     * @returns {Object} {success, error, oldStats, newStats, rarityChanged, consumedIds}
      */
-    function reforgeItem(item, character, blockHash, blockNum, account) {
+    function reforgeItem(item, character, blockHash, blockNum, account, materialItems) {
         if (!item) {
             return { success: false, error: 'invalid_item' };
         }
@@ -214,13 +215,20 @@ var EnchantingSystem = (function() {
             }
         }
 
+        var consumedIds = [];
+        materialItems = materialItems || [];
+        for (var mi = 0; mi < materialItems.length; mi++) {
+            materialItems[mi].consumed = true;
+            consumedIds.push(materialItems[mi].id);
+        }
 
         return {
             success: true,
             oldStats: oldStats,
             newStats: item.stats,
             rarityChanged: rarityChanged,
-            newRarity: newRarity
+            newRarity: newRarity,
+            consumedIds: consumedIds
         };
     }
 

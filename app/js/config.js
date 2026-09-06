@@ -69,6 +69,14 @@ var VizMagicConfig = (function() {
         TRAVEL_RECEIVER: 'denis-skripnik'
     };
 
+    /** Versioned VE rules. Existing v1 history before activation remains replayable. */
+    var VE_ACTIONS = {
+        V2_ACTIVATION_BLOCK: PAID_ACTIONS.V2_ACTIVATION_BLOCK,
+        REFORGE_MATERIAL_TYPE: 'fire_dust',
+        REFORGE_MATERIAL_QUANTITY: 2,
+        MANA_POTION_ITEM_TYPE: 'mana_potion'
+    };
+
     /** HP passive regeneration constants */
     var HP_REGEN = {
         HP_REGEN_RATE: 100,      // blocks per +1 HP (~5 min)
@@ -257,6 +265,7 @@ var VizMagicConfig = (function() {
         ENERGY: ENERGY,
         LIBRARY: LIBRARY,
         PAID_ACTIONS: PAID_ACTIONS,
+        VE_ACTIONS: VE_ACTIONS,
         HP_REGEN: HP_REGEN,
         BLOCK: BLOCK,
         CLASSES: CLASSES,

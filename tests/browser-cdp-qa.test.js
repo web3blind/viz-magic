@@ -71,7 +71,7 @@ async function evaluate(cdp, expression) {
     await cdp.send('Network.setCacheDisabled', { cacheDisabled: true });
     await cdp.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     await cdp.send('Network.setBlockedURLs', {
-      urls: ['*://api.viz.world/*', '*://node.viz.cx/*', '*://viz-node.dpos.space/*', '*://fonts.googleapis.com/*', '*://fonts.gstatic.com/*']
+      urls: ['*://api.viz.world/*', '*://node.viz.cx/*', '*://viz-node.dpos.space/*', '*://vizmagic.web3blind.xyz/archive-mirror/*', '*://fonts.googleapis.com/*', '*://fonts.gstatic.com/*']
     });
     await cdp.send('Page.addScriptToEvaluateOnNewDocument', {
       source: "if ('serviceWorker' in navigator) { Object.defineProperty(Object.getPrototypeOf(navigator.serviceWorker), 'register', { configurable: true, value: function() { return Promise.resolve({}); } }); }"
@@ -176,12 +176,14 @@ async function evaluate(cdp, expression) {
       item.id = 'wand-1';
       var rune = ItemSystem.createItem('fire_rune', 'alice', 0, activation - 9, '', false);
       rune.id = 'rune-1';
-      state.inventories.alice.push(item, rune);
+      var reforgeDustOne = ItemSystem.createItem('fire_dust', 'alice', 0, activation - 8, '', false); reforgeDustOne.id = 'reforge-dust-1';
+      var reforgeDustTwo = ItemSystem.createItem('fire_dust', 'alice', 0, activation - 7, '', false); reforgeDustTwo.id = 'reforge-dust-2';
+      state.inventories.alice.push(item, rune, reforgeDustOne, reforgeDustTwo);
       var ve = { v: 1, e: 'enchant', d: { item_ref: item.id, rune_type: 'fire_rune', rune_ref: rune.id } };
       var veBlock = blockWith([custom(cfg.PROTOCOLS.VE, ve)], activation + 3, 've');
       var veEvents1 = StateEngine.processBlock(veBlock);
       var veApplied = veEvents1.some(function(e) { return e.type === 've_enchant'; });
-      var reforge = { v: 1, action: 'edit', d: { item_ref: item.id, op: 'reforge' } };
+      var reforge = { v: 2, action: 'edit', d: { item_ref: item.id, op: 'reforge', material_refs: [reforgeDustOne.id, reforgeDustTwo.id] } };
       var reforgeBlock = blockWith([custom(cfg.PROTOCOLS.VE, reforge)], activation + 4, 'reforge');
       var reforgeEvents = StateEngine.processBlock(reforgeBlock);
       var reforgeApplied = reforgeEvents.some(function(e) { return e.type === 've_reforge'; });
@@ -195,7 +197,9 @@ async function evaluate(cdp, expression) {
       itemReplay.id = 'wand-1';
       var runeReplay = ItemSystem.createItem('fire_rune', 'alice', 0, activation - 9, '', false);
       runeReplay.id = 'rune-1';
-      state.inventories.alice.push(itemReplay, runeReplay);
+      var reforgeDustOneReplay = ItemSystem.createItem('fire_dust', 'alice', 0, activation - 8, '', false); reforgeDustOneReplay.id = 'reforge-dust-1';
+      var reforgeDustTwoReplay = ItemSystem.createItem('fire_dust', 'alice', 0, activation - 7, '', false); reforgeDustTwoReplay.id = 'reforge-dust-2';
+      state.inventories.alice.push(itemReplay, runeReplay, reforgeDustOneReplay, reforgeDustTwoReplay);
       StateEngine.processBlock(veBlock);
       StateEngine.processBlock(reforgeBlock);
       var replaySnapshot = JSON.stringify({ character: StateEngine.getCharacter('alice'), inventory: StateEngine.getInventory('alice') });
@@ -619,32 +623,70 @@ async function evaluate(cdp, expression) {
       var ch = CharacterSystem.createCharacter('alice', 'Alice', 'embercaster', blockNum); ch.mana = 0;
       var wand = ItemSystem.createItem('oak_wand', 'alice', 1, blockNum, '', false); wand.id = 'ui-wand';
       var rune = ItemSystem.createItem('fire_rune', 'alice', 0, blockNum, '', false); rune.id = 'ui-rune';
+      var dustOne = ItemSystem.createItem('fire_dust', 'alice', 0, blockNum, '', false); dustOne.id = 'ui-dust-1';
+      var dustTwo = ItemSystem.createItem('fire_dust', 'alice', 0, blockNum, '', false); dustTwo.id = 'ui-dust-2';
       var potion = { id: 'ui-mana-potion', type: 'mana_potion', name: 'Mana Potion', rarity: 0, consumed: false };
-      state.characters.alice = ch; state.inventories.alice = [wand, rune, potion];
+      state.characters.alice = ch; state.inventories.alice = [wand, rune, dustOne, dustTwo, potion];
       var vePayload = { v: 1, e: 'enchant', d: { item_ref: wand.id, rune_type: rune.type, rune_ref: rune.id } };
-      var raw = { block_id: 've-ui', previous: 've-ui-entropy', timestamp: '2026-09-05T12:00:00', transactions: [{ operations: [
-        ['custom', { id: VizMagicConfig.PROTOCOLS.VE, required_regular_auths: ['alice'], json: JSON.stringify(vePayload) }]
-      ] }] };
+      var reforgePayload = MarketProtocol.createReforgeAction(wand.id, [dustOne.id, dustTwo.id]);
+      function rawBlock(payload, suffix) {
+        return { block_id: 've-ui-' + suffix, previous: 've-ui-entropy-' + suffix, timestamp: '2026-09-06T08:00:00', transactions: [{ operations: [
+          ['custom', { id: VizMagicConfig.PROTOCOLS.VE, required_regular_auths: ['alice'], json: JSON.stringify(payload) }]
+        ] }] };
+      }
       var originalAccount = VizAccount;
       var originalMarket = MarketProtocol;
       var originalHistory = HistorySource;
+      var broadcastMaterialIds = null;
       VizAccount = Object.assign({}, originalAccount, { getCurrentUser: function() { return 'alice'; } });
-      MarketProtocol = Object.assign({}, originalMarket, { broadcastEnchant: function(_item, _type, _rune, callback) { callback(null, { block_num: blockNum }); } });
-      HistorySource = Object.assign({}, originalHistory, { getBlock: function(_block, callback) { callback(null, raw); } });
+      MarketProtocol = Object.assign({}, originalMarket, {
+        broadcastEnchant: function(_item, _type, _rune, callback) { callback(null, { block_num: blockNum }); },
+        broadcastReforge: function(_item, materialIds, callback) {
+          broadcastMaterialIds = materialIds.slice();
+          callback(null, { block_num: blockNum + 1 });
+        }
+      });
+      HistorySource = Object.assign({}, originalHistory, { getBlock: function(requestedBlock, callback) {
+        callback(null, requestedBlock === blockNum ? rawBlock(vePayload, 'enchant') : rawBlock(reforgePayload, 'reforge'));
+      } });
       Helpers.setLang('en');
       CraftingScreen.render();
       document.querySelector('.craft-tab[data-tab="enchant"]').click();
-      var reforgeDisabled = document.getElementById('btn-reforge').disabled;
-      var potionButton = document.getElementById('screen-crafting').querySelector('.consumable-list .btn[disabled]');
-      var potionDisabled = !!potionButton && potionButton.disabled && potionButton.getAttribute('aria-disabled') === 'true';
       document.getElementById('enchant-item-select').value = wand.id;
       document.getElementById('enchant-rune-select').value = rune.id;
       document.getElementById('btn-enchant-apply').click();
-      var output = { reforgeDisabled: reforgeDisabled, potionDisabled: potionDisabled, potionText: potionButton ? potionButton.textContent : '', enchanted: wand.enchantments.length === 1, runeConsumed: rune.consumed === true, mana: ch.mana };
+      var reforgeSelect = document.getElementById('reforge-item-select');
+      reforgeSelect.value = wand.id;
+      reforgeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      var reforgeButton = document.getElementById('btn-reforge');
+      var reforgeEnabled = !reforgeButton.disabled && reforgeButton.getAttribute('aria-disabled') === 'false';
+      reforgeButton.click();
+      var confirmationText = document.querySelector('#modal-container .modal-content p').textContent;
+      document.querySelector('#modal-container .btn-primary').click();
+      var potionButton = document.getElementById('screen-crafting').querySelector('.consumable-list .btn[disabled]');
+      var potionDisabled = !!potionButton && potionButton.disabled && potionButton.getAttribute('aria-disabled') === 'true';
+      var potionText = potionButton ? potionButton.textContent : '';
+      document.querySelector('.craft-tab[data-tab="recipes"]').click();
+      var potionRecipeOffered = !!document.querySelector('.recipe-card[data-recipe="mana_potion"]');
+      var output = {
+        reforgeEnabled: reforgeEnabled,
+        confirmationText: confirmationText,
+        broadcastMaterialIds: broadcastMaterialIds,
+        reforgeApplied: dustOne.consumed === true && dustTwo.consumed === true,
+        potionDisabled: potionDisabled,
+        potionText: potionText,
+        potionRecipeOffered: potionRecipeOffered,
+        potionRetained: potion.consumed !== true && state.inventories.alice.indexOf(potion) !== -1,
+        enchanted: wand.enchantments.length === 1,
+        runeConsumed: rune.consumed === true,
+        mana: ch.mana
+      };
       VizAccount = originalAccount; MarketProtocol = originalMarket; HistorySource = originalHistory;
       return output;
     })()`);
-    assert.deepStrictEqual({ reforgeDisabled: veUi.reforgeDisabled, potionDisabled: veUi.potionDisabled, enchanted: veUi.enchanted, runeConsumed: veUi.runeConsumed, mana: veUi.mana }, { reforgeDisabled: true, potionDisabled: true, enchanted: true, runeConsumed: true, mana: 0 }, 'actual Workshop clicks must apply rune-backed VE without fake mana and contain unsupported reforge/potion controls');
+    assert.deepStrictEqual({ reforgeEnabled: veUi.reforgeEnabled, reforgeApplied: veUi.reforgeApplied, potionDisabled: veUi.potionDisabled, potionRecipeOffered: veUi.potionRecipeOffered, potionRetained: veUi.potionRetained, enchanted: veUi.enchanted, runeConsumed: veUi.runeConsumed, mana: veUi.mana }, { reforgeEnabled: true, reforgeApplied: true, potionDisabled: true, potionRecipeOffered: false, potionRetained: true, enchanted: true, runeConsumed: true, mana: 0 }, 'actual Workshop clicks must consume exact reforge material, preserve unavailable potion items, and avoid fake mana');
+    assert.deepStrictEqual(veUi.broadcastMaterialIds, ['ui-dust-1', 'ui-dust-2'], 'real reforge click must bind exact selected material identities');
+    assert.ok(/2 × Fire Dust/.test(veUi.confirmationText) && /ui-dust-1/.test(veUi.confirmationText) && /ui-dust-2/.test(veUi.confirmationText), 'reforge confirmation must show exact material cost and identities');
     assert.ok(/VIZ energy|chain energy|unavailable|cannot be verified|энерги|недоступ/i.test(veUi.potionText), 'disabled mana potion control must not promise VIZ energy restoration');
 
     const checkpointRoundTrip = await evaluate(cdp, `(new Promise(function(resolve, reject) {

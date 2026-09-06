@@ -612,6 +612,41 @@ var StateEngine = (function() {
         return null;
     }
 
+    function _veV2ActivationBlock() {
+        var value = cfg.VE_ACTIONS && Number(cfg.VE_ACTIONS.V2_ACTIVATION_BLOCK);
+        return Number.isInteger(value) && value > 0 ? value : Infinity;
+    }
+
+    function _manaPotionType() {
+        return cfg.VE_ACTIONS && cfg.VE_ACTIONS.MANA_POTION_ITEM_TYPE || 'mana_potion';
+    }
+
+    function _getReforgeMaterials(sender, item, materialRefs) {
+        var veConfig = cfg.VE_ACTIONS || {};
+        var materialType = veConfig.REFORGE_MATERIAL_TYPE;
+        var quantity = Number(veConfig.REFORGE_MATERIAL_QUANTITY || 0);
+        if (!materialType || !Number.isInteger(quantity) || quantity <= 0 ||
+                !Array.isArray(materialRefs) || materialRefs.length !== quantity) {
+            return null;
+        }
+        var seen = {};
+        var materials = [];
+        for (var i = 0; i < materialRefs.length; i++) {
+            var materialRef = materialRefs[i];
+            if (typeof materialRef !== 'string' || !materialRef || seen[materialRef] ||
+                    materialRef === item.id) {
+                return null;
+            }
+            var material = _findOwnedInventoryItem(sender, materialRef, 0);
+            if (!material || material.type !== materialType || material.consumed || material.equipped) {
+                return null;
+            }
+            seen[materialRef] = true;
+            materials.push(material);
+        }
+        return materials;
+    }
+
     function _processVEEvent(veRecord, blockNum, entropy) {
         var sender = veRecord && veRecord.sender;
         var event = veRecord && veRecord.event;
@@ -640,8 +675,16 @@ var StateEngine = (function() {
             if (!rune || rune.consumed) return [];
             result = EnchantingSystem.enchantItem(item, data.rune_type || data.enchant, rune, operationCharacter);
         } else if (event.eventType === 'reforge') {
-            result = EnchantingSystem.reforgeItem(item, operationCharacter, entropy, blockNum, sender);
+            var reforgeMaterials = [];
+            if (Number(event.version || 1) >= 2) {
+                reforgeMaterials = _getReforgeMaterials(sender, item, data.material_refs);
+                if (!reforgeMaterials) return [];
+            } else if (blockNum >= _veV2ActivationBlock()) {
+                return [];
+            }
+            result = EnchantingSystem.reforgeItem(item, operationCharacter, entropy, blockNum, sender, reforgeMaterials);
         } else if (event.eventType === 'consume') {
+            if (item.type === _manaPotionType() && blockNum >= _veV2ActivationBlock()) return [];
             result = EnchantingSystem.consumeItem(item, operationCharacter);
             if (result && result.success && result.effect && result.effect.type === 'hp_restore') {
                 character.hp = operationCharacter.hp;
@@ -1369,6 +1412,7 @@ var StateEngine = (function() {
         var character = worldState.characters[sender];
         var inventory = worldState.inventories[sender];
         if (!character || !inventory) return [];
+        if (data.recipe === _manaPotionType() && blockNum >= _veV2ActivationBlock()) return [];
 
         var result;
         if (typeof CraftingSystem.craftWithMaterialIds === 'function') {

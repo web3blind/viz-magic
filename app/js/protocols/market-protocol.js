@@ -113,15 +113,18 @@ var MarketProtocol = (function() {
     /**
      * Create a reforge action (via VE protocol)
      * @param {string} itemRef - item to reforge
+     * @param {Array} materialRefs - exact Fire Dust item references consumed
      * @returns {Object} VE protocol data
      */
-    function createReforgeAction(itemRef) {
+    function createReforgeAction(itemRef, materialRefs) {
         return {
+            v: 2,
             protocol: cfg.PROTOCOLS.VE,
             action: 'edit',
             d: {
                 item_ref: itemRef,
-                op: 'reforge'
+                op: 'reforge',
+                material_refs: materialRefs || []
             }
         };
     }
@@ -213,10 +216,11 @@ var MarketProtocol = (function() {
     /**
      * Broadcast a reforge action (VE protocol)
      * @param {string} itemRef
+     * @param {Array} materialRefs
      * @param {Function} callback
      */
-    function broadcastReforge(itemRef, callback) {
-        var veData = createReforgeAction(itemRef);
+    function broadcastReforge(itemRef, materialRefs, callback) {
+        var veData = createReforgeAction(itemRef, materialRefs);
         VizBroadcast.custom(cfg.PROTOCOLS.VE, veData, callback);
     }
 

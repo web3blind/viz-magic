@@ -781,11 +781,12 @@ var LangEN = {
     enchant_error_wrong_rune: 'Wrong rune type.',
 
     enchant_reforge_title: 'Reforge',
-    enchant_reforge_desc: 'Stat re-rolls remain reproducible for old confirmed events.',
-    enchant_reforge_economy_pending: 'New reforges are temporarily unavailable: an honest on-chain cost has not been defined yet.',
+    enchant_reforge_desc: 'Reforging recalculates item stats from the confirmed block. Quality never decreases.',
     enchant_reforge: 'Reforge',
     enchant_reforge_item: 'Item to reforge',
-    enchant_reforge_confirm: 'New reforging is unavailable until a verifiable cost is defined.',
+    enchant_reforge_cost: 'Reforge cost: {cost}.',
+    enchant_reforge_material_missing: 'Not enough material. Required: {cost}; owned: {owned}.',
+    enchant_reforge_confirm: 'Confirm reforge. This will consume {cost}. This action cannot be undone.',
     enchant_reforge_success: 'Reforge complete!',
     enchant_reforge_upgrade: 'Reforge improved the item quality!',
     enchant_reforge_error: 'Reforge failed.',
@@ -1535,7 +1536,7 @@ var LangEN = {
     help_armageddon_text: 'Spend 100% mana for 100× the XP of a standard 1% hit. Requires an Armageddon Stone artifact. <br>Drop: Thornvine (Lv5+, 0.5% chance).<br>Craft: Echo Shards ×3 + Shadow Shard ×3 + Fire Dust ×5 at level 10 (costs 5% mana). Confirm the checkbox before launching — mana takes ~5 days to recover.',
 
     help_section_crafting: 'Crafting',
-    help_crafting_text: 'Open the Crafting screen pick a recipe and tap Craft. Materials are consumed. Quality depends on your INT stat and block entropy.',
+    help_crafting_text: 'Open the Crafting screen, pick a recipe, and tap Craft. Materials are consumed. Quality depends on your INT stat and block entropy.<br>Reforging costs 2 Fire Dust items: their exact identities are recorded in the confirmed operation, and the new stats replay from block evidence.<br>Crafting and using Mana Potions is temporarily unavailable. Potions already owned remain in inventory.',
 
     help_section_marketplace: 'Marketplace',
     help_marketplace_text: 'Marketplace is an elemental trading place.<br>Browse → buy listed items.<br>Sell → list your items for Seals of the World. Trade → direct item transfer to another mage.',

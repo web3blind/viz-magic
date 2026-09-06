@@ -301,10 +301,12 @@ var CraftingSystem = (function() {
     function getAvailableRecipes(character, inventory, location) {
         var allRecipes = GameRecipes.getAll();
         var result = [];
+        var disabledRecipe = cfg.VE_ACTIONS && cfg.VE_ACTIONS.MANA_POTION_ITEM_TYPE;
 
         for (var id in allRecipes) {
             if (!allRecipes.hasOwnProperty(id)) continue;
             var recipe = allRecipes[id];
+            if (disabledRecipe && recipe.id === disabledRecipe) continue;
 
             // Check class requirement
             if (recipe.classReq && recipe.classReq !== character.className) {

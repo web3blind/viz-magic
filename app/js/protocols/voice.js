@@ -95,6 +95,7 @@ var VoiceProtocol = (function() {
         if (rawEvent === 'h' || rawEvent === 'hide') eventType = data && data.op === 'consume' ? 'consume' : 'hide';
 
         return {
+            version: Number(obj.v || 1),
             previousBlock: obj.p || 0,
             eventType: eventType,
             targetBlock: obj.b || 0,
