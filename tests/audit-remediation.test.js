@@ -290,7 +290,7 @@ test('repository exposes one real npm test gate', function() {
 });
 
 test('remediation bundles publish through a fresh service-worker cache', function() {
-  assert.ok(/var CACHE_NAME = 'viz-magic-v216'/.test(read('app/sw.js')));
+  assert.ok(/var CACHE_NAME = 'viz-magic-v217'/.test(read('app/sw.js')));
   assert.ok(read('app/index.html').includes('20260905'));
 });
 

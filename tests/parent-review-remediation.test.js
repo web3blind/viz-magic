@@ -22,6 +22,77 @@ function test(name, fn) {
   }
 }
 
+function loadPaidReplayState(checkpointRef) {
+  checkpointRef = checkpointRef || { state: null };
+  const context = {
+    console: { log: function() {}, error: console.error },
+    VizMagicConfig: {
+      ACTION_TYPES: { HUNT: 'hunt' },
+      PAID_ACTIONS: { V2_ACTIVATION_BLOCK: 83500000 },
+      ENERGY: { MIN_HUNT_COST: 100 },
+      BLOCK: { FALLEN_DURATION: 100 },
+      HP_REGEN: { HP_REGEN_RATE: 500, HP_REGEN_CAP_PCT: 30 },
+      LIBRARY: {}
+    },
+    CheckpointSystem: {
+      init: function(callback) { callback(null); },
+      loadLatestCheckpoint: function(_scope, callback) {
+        callback(null, checkpointRef.state ? { state: JSON.parse(JSON.stringify(checkpointRef.state)) } : null);
+      },
+      saveCheckpoint: function(_scope, _blockNum, state, callback) {
+        checkpointRef.state = JSON.parse(JSON.stringify(state));
+        callback(null);
+      }
+    },
+    ActionValidator: { validate: function() { return { valid: true }; } },
+    GameCreatures: { getCreature: function(id) { return id === 'ember_wisp' ? { id: id, author: 'creator', zone: 'commons_first_light', baseXp: 25 } : null; } },
+    GameSpells: { getSpell: function(id) { return id === 'firebolt' ? { id: id, manaCost: 100 } : null; } },
+    CombatSystem: { resolveHunt: function(character) { return { victory: true, xpGained: 25, loot: [], hpRemaining: character.hp, creatureLevel: 1 }; } },
+    CharacterSystem: { addXp: function(character, amount) { character.xp += amount; return { levelsGained: 0 }; } },
+    ItemSystem: { createItem: function() { throw new Error('unexpected loot'); } },
+    GameFormulas: { huntXp: function() { return 25; } }
+  };
+  load(context, 'app/js/engine/action-proof.js');
+  load(context, 'app/js/engine/state-engine.js');
+  context.StateEngine.init(function(error) { assert.ifError(error); });
+  if (!context.StateEngine.getState().characters.alice) {
+    context.StateEngine.getState().characters.alice = {
+      name: 'Alice', class: 'embercaster', level: 1, xp: 0,
+      currentZone: 'commons_first_light', hp: 1000, maxHp: 1000
+    };
+    context.StateEngine.getState().inventories.alice = [];
+  }
+  return context;
+}
+
+function paidHuntBlock(context, blockNum, awardCount, label) {
+  const action = {
+    version: 2,
+    type: 'hunt',
+    data: { creature: 'ember_wisp', zone: 'commons_first_light', spell: 'firebolt', energy: 100 }
+  };
+  const requirement = context.ActionProof.getRequirement(action);
+  const awards = [];
+  for (let i = 0; i < awardCount; i++) {
+    awards.push({
+      initiator: 'alice', receiver: requirement.receiver, energy: requirement.energy,
+      memo: requirement.memo, txIndex: 0, opIndex: i === 0 ? 0 : 3, blockNum: blockNum
+    });
+  }
+  return {
+    blockNum: blockNum,
+    blockHash: 'block-' + label,
+    huntEntropy: 'entropy-' + label,
+    timestamp: '2026-09-06T00:00:00',
+    awards: awards,
+    vmActions: [
+      { sender: 'alice', action: JSON.parse(JSON.stringify(action)), txIndex: 0, opIndex: 1, blockNum: blockNum },
+      { sender: 'alice', action: JSON.parse(JSON.stringify(action)), txIndex: 0, opIndex: 2, blockNum: blockNum }
+    ],
+    veEvents: [], voicePosts: []
+  };
+}
+
 test('legacy paid actions enter compatibility before v2 proof requirements', function () {
   const context = {
     console,
@@ -206,6 +277,135 @@ test('HistorySource paginates and de-duplicates the complete archive range', fun
     archiveHead = head;
   });
   assert.strictEqual(archiveHead, 4);
+});
+
+test('StateEngine reserves one-use awards across repeat processing and checkpoint reload', function () {
+  const checkpoint = { state: null };
+  let context = loadPaidReplayState(checkpoint);
+  const blockNum = 83500001;
+  const oneAward = paidHuntBlock(context, blockNum, 1, 'one-award');
+
+  const first = context.StateEngine.processBlock(oneAward, { advanceHead: false, runMaintenance: false });
+  assert.strictEqual(first.filter(function(event) { return event.type === 'hunt_victory'; }).length, 1);
+  assert.strictEqual(context.StateEngine.getCharacter('alice').xp, 25);
+
+  const repeated = context.StateEngine.processBlock(oneAward, { advanceHead: false, runMaintenance: false });
+  assert.strictEqual(repeated.length, 0, 'the unproved second action must not steal the first action award on repeat');
+  assert.strictEqual(context.StateEngine.getCharacter('alice').xp, 25);
+
+  context.StateEngine.saveCheckpoint(function(error) { assert.ifError(error); });
+  context = loadPaidReplayState(checkpoint);
+  const afterReload = context.StateEngine.processBlock(paidHuntBlock(context, blockNum, 1, 'one-award'), { advanceHead: false, runMaintenance: false });
+  assert.strictEqual(afterReload.length, 0, 'checkpoint reload must preserve the prior award allocation');
+  assert.strictEqual(context.StateEngine.getCharacter('alice').xp, 25);
+
+  const hydrated = context.StateEngine.processBlock(paidHuntBlock(context, blockNum, 2, 'one-award'), { advanceHead: false, runMaintenance: false });
+  assert.strictEqual(hydrated.filter(function(event) { return event.type === 'hunt_victory'; }).length, 1, 'a later complete proof must keep the missing-proof action retryable');
+  assert.strictEqual(context.StateEngine.getCharacter('alice').xp, 50);
+
+  context.StateEngine.reset();
+  const state = context.StateEngine.getState();
+  state.characters.alice = { name: 'Alice', class: 'embercaster', level: 1, xp: 0, currentZone: 'commons_first_light', hp: 1000, maxHp: 1000 };
+  state.inventories.alice = [];
+  const twoAwards = context.StateEngine.processBlock(paidHuntBlock(context, blockNum + 1, 2, 'two-awards'), { advanceHead: false, runMaintenance: false });
+  assert.strictEqual(twoAwards.filter(function(event) { return event.type === 'hunt_victory'; }).length, 2);
+  assert.strictEqual(context.StateEngine.getCharacter('alice').xp, 50);
+});
+
+test('StateEngine authoritative floor blocks evicted paid replay while fresh advanceHead:false recovery remains valid', function () {
+  const checkpoint = { state: null };
+  let context = loadPaidReplayState(checkpoint);
+  const paidBlockNum = 83500001;
+  const paidBlock = paidHuntBlock(context, paidBlockNum, 2, 'floor-paid');
+  context.StateEngine.processBlock(paidBlock, { advanceHead: false, runMaintenance: false });
+  assert.strictEqual(context.StateEngine.getCharacter('alice').xp, 50);
+
+  context.StateEngine.advanceHead(paidBlockNum + 2001);
+  assert.strictEqual(Object.keys(context.StateEngine.getState().processedOperations).length, 0, 'old operation identities should be pruned from the bounded map');
+  const evictedReplay = context.StateEngine.processBlock(paidBlock, { advanceHead: false, runMaintenance: false });
+  assert.strictEqual(evictedReplay.length, 0, 'an evicted paid block below the authoritative floor must not mint again');
+  assert.strictEqual(context.StateEngine.getCharacter('alice').xp, 50);
+
+  context.StateEngine.saveCheckpoint(function(error) { assert.ifError(error); });
+  context = loadPaidReplayState(checkpoint);
+  const replayAfterReload = context.StateEngine.processBlock(paidBlock, { advanceHead: false, runMaintenance: false });
+  assert.strictEqual(replayAfterReload.length, 0, 'the authoritative floor must survive checkpoint reload');
+  assert.strictEqual(context.StateEngine.getCharacter('alice').xp, 50);
+
+  const schemaTwoCheckpoint = { state: {
+    checkpointSchemaVersion: 2,
+    headBlock: paidBlockNum + 2001,
+    checkpointBlock: paidBlockNum + 2001,
+    characters: { alice: { name: 'Alice', class: 'embercaster', level: 1, xp: 50, currentZone: 'commons_first_light', hp: 1000, maxHp: 1000 } },
+    inventories: { alice: [] },
+    processedOperations: {}, processedMaintenanceBlocks: {}, actionOutcomes: {}
+  } };
+  const migratedContext = loadPaidReplayState(schemaTwoCheckpoint);
+  const migratedReplay = migratedContext.StateEngine.processBlock(paidHuntBlock(migratedContext, paidBlockNum, 2, 'schema-two-floor'), { advanceHead: false, runMaintenance: false });
+  assert.strictEqual(migratedReplay.length, 0, 'schema-v2 checkpoints must derive the bounded authoritative floor from their contiguous head');
+  assert.strictEqual(migratedContext.StateEngine.getCharacter('alice').xp, 50);
+
+  const recoveryContext = loadPaidReplayState({ state: null });
+  const historicalBlock = paidHuntBlock(recoveryContext, paidBlockNum - 1, 1, 'historical-recovery');
+  historicalBlock.vmActions = historicalBlock.vmActions.slice(0, 1);
+  const recovered = recoveryContext.StateEngine.processBlock(historicalBlock, { advanceHead: false, runMaintenance: false });
+  assert.strictEqual(recovered.filter(function(event) { return event.type === 'hunt_victory'; }).length, 1, 'advanceHead:false recovery must still ingest old history before an authoritative floor exists');
+  assert.strictEqual(recoveryContext.StateEngine.getCharacter('alice').xp, 25);
+  assert.strictEqual(recoveryContext.StateEngine.getState().headBlock, 0, 'historical recovery must not claim a contiguous ingestion head');
+});
+
+test('HistorySource proof fallback rejects incomplete thin mirrors and accepts complete indexed events', function () {
+  const responses = [];
+  function FakeXHR() {}
+  FakeXHR.prototype.open = function(_method, url) { this.url = url; };
+  FakeXHR.prototype.send = function() {
+    const response = responses.shift();
+    this.readyState = 4;
+    this.status = response.status;
+    this.responseText = JSON.stringify(response.body);
+    this.onreadystatechange();
+  };
+  FakeXHR.prototype.abort = function() {};
+  const context = {
+    console,
+    setTimeout: function() { return 1; }, clearTimeout: function() {},
+    VizMagicConfig: { HISTORY_ARCHIVE_MIRRORS: [{ apiBase: 'https://archive.invalid', url: 'https://archive.invalid/v1/block/{block}.json' }] },
+    XMLHttpRequest: FakeXHR
+  };
+  load(context, 'app/js/blockchain/history-source.js');
+
+  responses.push({ status: 200, body: { block: { previous: 'p', timestamp: 't', transactions: [] } } });
+  let proofError = null;
+  context.HistorySource.getProofBlock(12, function(error) { proofError = error; });
+  assert.ok(proofError, 'an unmarked thin block must not authoritatively prove that a payment is absent');
+
+  responses.push({ status: 200, body: { blockNum: 12, block_id: 'b12', previous: 'p12', eventCount: 0, count: 0, events: [] } });
+  let proofBlock = null;
+  context.HistorySource.getProofBlock(12, function(error, block) { assert.ifError(error); proofBlock = block; });
+  assert.ok(proofBlock && Array.isArray(proofBlock.transactions), 'a complete indexed game-event set is authoritative for paid proof');
+
+  responses.push({ status: 200, body: {
+    blockNum: 12, block_id: 'b12', previous: 'p12', eventCount: 2, count: 2,
+    events: [
+      { blockNum: 12, txIndex: 0, opIndex: 0, opType: 'award', raw: { memo: 'viz://vm/hunt/v2/ember_wisp/100' } },
+      { blockNum: 12, txIndex: 0, opIndex: 0, opType: 'custom', raw: { id: 'VM' } }
+    ]
+  } });
+  proofError = null;
+  context.HistorySource.getProofBlock(12, function(error) { proofError = error; });
+  assert.ok(proofError, 'duplicate archive operation positions must not become authoritative proof');
+
+  responses.push({ status: 200, body: {
+    blockNum: 12, block_id: 'b12', previous: 'p12', eventCount: 3, count: 3,
+    events: [
+      { blockNum: 12, txIndex: 0, opIndex: 0, opType: 'award', raw: { memo: 'viz://vm/hunt/v2/ember_wisp/100' } },
+      { blockNum: 12, txIndex: 0, opIndex: 1, opType: 'custom', raw: { id: 'VM' } },
+      { blockNum: 12, txIndex: 0, opIndex: 2, opType: 'custom', raw: { id: 'VM' } }
+    ]
+  } });
+  proofBlock = null;
+  context.HistorySource.getProofBlock(12, function(error, block) { assert.ifError(error); proofBlock = block; });
+  assert.deepStrictEqual(Array.from(proofBlock.transactions[0].operations, function(operation) { return operation && operation[0]; }), ['award', 'custom', 'custom']);
 });
 
 if (process.exitCode) process.exit(process.exitCode);

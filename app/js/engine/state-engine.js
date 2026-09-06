@@ -7,7 +7,7 @@ var StateEngine = (function() {
 
     var cfg = VizMagicConfig;
     var AT = cfg.ACTION_TYPES;
-    var CHECKPOINT_SCHEMA_VERSION = 2;
+    var CHECKPOINT_SCHEMA_VERSION = 3;
 
     /** Current world state */
     var worldState = _createEmptyState();
@@ -29,6 +29,7 @@ var StateEngine = (function() {
             processedOperations: {},
             processedMaintenanceBlocks: {},
             actionOutcomes: {},
+            authoritativeOperationFloor: 0,
             recovery: {},
             accountHints: {},
             marketplace: null,
@@ -65,6 +66,10 @@ var StateEngine = (function() {
         state.processedOperations = state.processedOperations || {};
         state.processedMaintenanceBlocks = state.processedMaintenanceBlocks || {};
         state.actionOutcomes = state.actionOutcomes || {};
+        state.authoritativeOperationFloor = Math.max(
+            Number(state.authoritativeOperationFloor || 0),
+            Math.max(0, state.headBlock - 2000)
+        );
         state.recovery = state.recovery || {};
         state.accountHints = state.accountHints || {};
         state.recentActions = state.recentActions || [];
@@ -183,6 +188,10 @@ var StateEngine = (function() {
         worldState.headBlock = Math.max(worldState.headBlock || 0, Number(blockNum || 0));
         var floor = worldState.headBlock - 2000;
         if (floor <= 0) return;
+        worldState.authoritativeOperationFloor = Math.max(
+            Number(worldState.authoritativeOperationFloor || 0),
+            floor
+        );
         var maps = [worldState.processedOperations, worldState.processedMaintenanceBlocks, worldState.actionOutcomes];
         for (var m = 0; m < maps.length; m++) {
             for (var key in maps[m]) {
@@ -202,7 +211,11 @@ var StateEngine = (function() {
     function processBlock(processedBlock, options) {
         options = options || {};
         var events = [];
-        var blockNum = processedBlock.blockNum;
+        var blockNum = Number(processedBlock.blockNum || 0);
+        if (Number(worldState.authoritativeOperationFloor || 0) > 0 &&
+                blockNum < Number(worldState.authoritativeOperationFloor)) {
+            return events;
+        }
         var blockHash = processedBlock.blockHash;
         var huntEntropy = processedBlock.huntEntropy || blockHash;
 
@@ -217,7 +230,17 @@ var StateEngine = (function() {
         for (var i = 0; i < orderedOperations.length; i++) {
             var entry = orderedOperations[i];
             var operationKey = _operationKey(entry.kind, blockNum, entry.record, entry.index);
-            if (worldState.processedOperations[operationKey]) continue;
+            if (worldState.processedOperations[operationKey]) {
+                // Recreate the same deterministic award allocation on every pass.
+                // Otherwise a later unproved paid action in this transaction could
+                // steal the award already used by this processed operation.
+                if (entry.kind === 'vm' && paidActionVerifier &&
+                        typeof ActionProof !== 'undefined' &&
+                        ActionProof.isPaidAction(entry.record && entry.record.action)) {
+                    paidActionVerifier.verify(entry.record.sender, entry.record.txIndex, entry.record.action);
+                }
+                continue;
+            }
             var operationEvents = [];
             var shouldRemember = true;
 

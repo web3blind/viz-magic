@@ -332,6 +332,15 @@ async function evaluate(cdp, expression) {
           var beforeOneUse = reloaded.characters.alice.xp;
           var oneUseEvents = StateEngine.processBlock(oneUse, { advanceHead: false });
           var afterOneUse = reloaded.characters.alice.xp;
+          var repeatedOneUseEvents = StateEngine.processBlock(oneUse, { advanceHead: false });
+          var afterRepeatedOneUse = reloaded.characters.alice.xp;
+
+          var twoAwards = BlockProcessor.processBlock(rawBlock(activation + 14, [
+            rawAward(huntRequirement), rawCustom(cfg.PROTOCOLS.VM, huntPayload), rawCustom(cfg.PROTOCOLS.VM, huntPayload), rawAward(huntRequirement)
+          ], 'two-awards'), activation + 14);
+          var beforeTwoAwards = reloaded.characters.alice.xp;
+          var twoAwardEvents = StateEngine.processBlock(twoAwards, { advanceHead: false });
+          var afterTwoAwards = reloaded.characters.alice.xp;
 
           var badPayload = { p: cfg.PROTOCOLS.VM, v: 2, t: cfg.ACTION_TYPES.HUNT, d: { creature: creature.id, zone: 'nonexistent-zone', spell: 'firebolt', energy: 100 } };
           var badReq = ActionProof.getRequirement({ version: 2, type: badPayload.t, data: badPayload.d });
@@ -352,7 +361,14 @@ async function evaluate(cdp, expression) {
             xp: [xpA, xpB, xpAAgain, xpDuplicate],
             duplicateEvents: duplicateEvents.length,
             retry: { missingEvents: missingEvents.length, before: beforeRetry, after: afterRetry, retryEvents: retryEvents.length },
-            oneUse: { before: beforeOneUse, after: afterOneUse, events: oneUseEvents.filter(function(e) { return e.type === 'hunt_victory' || e.type === 'hunt_defeat'; }).length },
+            oneUse: {
+              before: beforeOneUse,
+              after: afterOneUse,
+              events: oneUseEvents.filter(function(e) { return e.type === 'hunt_victory' || e.type === 'hunt_defeat'; }).length,
+              repeatEvents: repeatedOneUseEvents.length,
+              afterRepeat: afterRepeatedOneUse
+            },
+            twoAwards: { before: beforeTwoAwards, after: afterTwoAwards, events: twoAwardEvents.filter(function(e) { return e.type === 'hunt_victory' || e.type === 'hunt_defeat'; }).length },
             badZone: { events: badEvents.length, before: beforeBad, after: reloaded.characters.alice.xp },
             orderedTypes: orderedEvents.map(function(event) { return event.type; }),
             storedOutcome: StateEngine.getProcessedBlockOutcomes(aAgain).length,
@@ -370,6 +386,10 @@ async function evaluate(cdp, expression) {
     assert.strictEqual(parentReplay.retry.after - parentReplay.retry.before, 25, 'same operation must remain retryable when its exact award later becomes available');
     assert.strictEqual(parentReplay.oneUse.events, 1, 'one exact award must authorize only one paid action');
     assert.strictEqual(parentReplay.oneUse.after - parentReplay.oneUse.before, 25);
+    assert.strictEqual(parentReplay.oneUse.repeatEvents, 0, 'reprocessing the one-award block must not transfer its used proof to the second action');
+    assert.strictEqual(parentReplay.oneUse.afterRepeat, parentReplay.oneUse.after);
+    assert.strictEqual(parentReplay.twoAwards.events, 2, 'two exact same-transaction awards must authorize two paid actions');
+    assert.strictEqual(parentReplay.twoAwards.after - parentReplay.twoAwards.before, 50);
     assert.strictEqual(parentReplay.badZone.events, 0, 'an exact award must not bypass action conditions');
     assert.strictEqual(parentReplay.badZone.after, parentReplay.badZone.before);
     assert.deepStrictEqual(parentReplay.orderedTypes.slice(0, 2), ['ve_enchant', 'rest_complete'], 'VM and VE operations in one block must follow tx/op chronology');

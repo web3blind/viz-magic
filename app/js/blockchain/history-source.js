@@ -183,6 +183,61 @@ var HistorySource = (function() {
         });
     }
 
+    function _completeProofEventsToBlock(payload, blockNum) {
+        if (!payload || !Array.isArray(payload.events)) return null;
+        var payloadBlockNum = Number(payload.blockNum || payload.block_num || 0);
+        var eventCount = Number(payload.eventCount);
+        var count = Number(payload.count);
+        if (payloadBlockNum !== Number(blockNum) ||
+                !Number.isInteger(eventCount) || eventCount < 0 ||
+                !Number.isInteger(count) || count < 0 ||
+                eventCount !== payload.events.length || count !== payload.events.length ||
+                !String(payload.block_id || payload.blockId || '') ||
+                !String(payload.previous || '')) {
+            return null;
+        }
+        var seenPositions = {};
+        for (var i = 0; i < payload.events.length; i++) {
+            var event = payload.events[i] || {};
+            var eventBlockNum = Number(event.blockNum || event.block_num || 0);
+            var txIndex = Number(typeof event.txIndex !== 'undefined' ? event.txIndex : event.tx_index);
+            var opIndex = Number(typeof event.opIndex !== 'undefined' ? event.opIndex : event.op_index);
+            var opType = event.opType || event.op_type || '';
+            var positionKey = txIndex + ':' + opIndex;
+            if (eventBlockNum !== Number(blockNum) ||
+                    !Number.isInteger(txIndex) || txIndex < 0 ||
+                    !Number.isInteger(opIndex) || opIndex < 0 ||
+                    (opType !== 'custom' && opType !== 'award') ||
+                    seenPositions[positionKey]) {
+                return null;
+            }
+            seenPositions[positionKey] = true;
+        }
+        return _eventsPayloadToThinBlock(payload);
+    }
+
+    function _getProofEventsFromMirrors(blockNum, index, callback) {
+        var mirrors = _archiveMirrors();
+        if (!mirrors.length || index >= mirrors.length) {
+            callback(_makeError('Complete paid-proof evidence unavailable from archive mirrors'));
+            return;
+        }
+        var mirror = _normalizeMirror(mirrors[index]);
+        var eventsUrl = _eventsUrl(mirror, blockNum);
+        if (!eventsUrl) {
+            _getProofEventsFromMirrors(blockNum, index + 1, callback);
+            return;
+        }
+        _requestJson(eventsUrl, mirror.timeoutMs || 6000, function(err, payload) {
+            var proofBlock = err ? null : _completeProofEventsToBlock(payload, blockNum);
+            if (proofBlock) {
+                callback(null, proofBlock);
+                return;
+            }
+            _getProofEventsFromMirrors(blockNum, index + 1, callback);
+        });
+    }
+
     function _getBlockFromMirrors(blockNum, index, callback) {
         var mirrors = _archiveMirrors();
         if (!mirrors.length || index >= mirrors.length) {
@@ -236,9 +291,11 @@ var HistorySource = (function() {
         });
     }
 
-    // Proof-sensitive callers must not accept a thin event-index response as
-    // evidence that an award was absent. This path uses only full RPC/archive
-    // blocks, whose transaction operation lists are authoritative.
+    // Proof-sensitive callers must not accept an arbitrary thin block as
+    // evidence that an award was absent. VIZ RPC returns a full block. Archive
+    // fallback is accepted only when its per-block event response proves that
+    // the complete indexed game-operation set was returned. That thin set is
+    // sufficient because paid awards are game-marked and indexed with VM ops.
     function getProofBlock(blockNum, callback) {
         callback = callback || function() {};
         if (!blockNum || blockNum <= 0) {
@@ -246,7 +303,7 @@ var HistorySource = (function() {
             return;
         }
         if (typeof viz === 'undefined' || !viz.api || !viz.api.getBlock) {
-            _getBlockFromMirrors(blockNum, 0, callback);
+            _getProofEventsFromMirrors(blockNum, 0, callback);
             return;
         }
         viz.api.getBlock(blockNum, function(err, block) {
@@ -254,7 +311,7 @@ var HistorySource = (function() {
                 callback(null, block);
                 return;
             }
-            _getBlockFromMirrors(blockNum, 0, callback);
+            _getProofEventsFromMirrors(blockNum, 0, callback);
         });
     }
 
