@@ -190,15 +190,6 @@ var StateEngine = (function() {
 
     function advanceHead(blockNum) {
         worldState.headBlock = Math.max(worldState.headBlock || 0, Number(blockNum || 0));
-        if (typeof MagicLedger !== 'undefined' && worldState.magic) {
-            _ensureMarketplace();
-            MagicLedger.finalizeThrough(worldState.magic, Math.max(0, worldState.headBlock - Number(cfg.TOKEN && cfg.TOKEN.IRREVERSIBLE_DEPTH || 20)), {
-                worldState: worldState,
-                marketplace: typeof MarketplaceEngine !== 'undefined' ? MarketplaceEngine : null,
-                activationBlock: Number(cfg.TOKEN && cfg.TOKEN.ACTIVATION_BLOCK || 0)
-            });
-            _syncMarketplaceState();
-        }
         var floor = worldState.headBlock - 2000;
         if (floor <= 0) return;
         worldState.authoritativeOperationFloor = Math.max(
@@ -246,9 +237,11 @@ var StateEngine = (function() {
             magicContext = {
                 activationBlock: Number(cfg.TOKEN && cfg.TOKEN.ACTIVATION_BLOCK || 0),
                 worldState: worldState,
-                marketplace: typeof MarketplaceEngine !== 'undefined' ? MarketplaceEngine : null
+                marketplace: typeof MarketplaceEngine !== 'undefined' ? MarketplaceEngine : null,
+                completeFrom: processedBlock.irreversible === true ? blockNum : null,
+                completeThrough: processedBlock.irreversible === true ? blockNum : null
             };
-            MagicLedger.ingestBlock(worldState.magic, processedBlock, magicContext);
+            if (processedBlock.irreversible === true) MagicLedger.ingestBlock(worldState.magic, processedBlock, magicContext);
         }
 
         var orderedOperations = _orderedOperations(processedBlock);
@@ -305,7 +298,7 @@ var StateEngine = (function() {
             } else if (entry.kind === 'award') {
                 _processAward(entry.record, blockNum);
             } else if (entry.kind === 'vt') {
-                if (magicContext && blockNum >= magicContext.activationBlock && MagicLedger.reserveEntry) {
+                if (processedBlock.irreversible === true && magicContext && blockNum >= magicContext.activationBlock && MagicLedger.reserveEntry) {
                     MagicLedger.reserveEntry(worldState.magic, processedBlock, entry.record, magicContext);
                 }
                 shouldRemember = false;
@@ -319,10 +312,7 @@ var StateEngine = (function() {
         }
 
         if (typeof MagicLedger !== 'undefined') {
-            var irreversibleThrough = processedBlock.irreversible === true
-                ? blockNum
-                : Math.max(0, blockNum - Number(cfg.TOKEN && cfg.TOKEN.IRREVERSIBLE_DEPTH || 20));
-            MagicLedger.finalizeThrough(worldState.magic, irreversibleThrough, magicContext || {});
+            if (processedBlock.irreversible === true) MagicLedger.finalizeThrough(worldState.magic, blockNum, magicContext || {});
             _syncMarketplaceState();
         }
 

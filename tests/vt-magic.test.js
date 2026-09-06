@@ -39,7 +39,7 @@ function block(number, id, operations) {
 }());
 
 (function proofAndLedgerTests() {
-    var cfg = { PROTOCOLS: { VM: 'VM', V: 'V', VE: 'VE', VT: 'VT' }, TOKEN: { ACTIVATION_BLOCK: 100, IRREVERSIBLE_DEPTH: 2 } };
+    var cfg = { PROTOCOLS: { VM: 'VM', V: 'V', VE: 'VE', VT: 'VT' }, TOKEN: { ACTIVATION_BLOCK: 100, IRREVERSIBLE_DEPTH: 2, FIXED_AWARD_EVIDENCE: true } };
     var c = load([
         'app/js/protocols/vt-protocol.js',
         'app/js/engine/magic-ledger.js',
@@ -47,6 +47,9 @@ function block(number, id, operations) {
     ], { VizMagicConfig: cfg, VMProtocol: { parseAction: function() { return null; } }, VoiceProtocol: { parseMessage: function() { return null; }, parseEvent: function() { return null; } } });
     var p = c.VTProtocol;
     var ledger = c.MagicLedger.createState();
+    function finalize(height) {
+        return c.MagicLedger.finalizeThrough(ledger, height, { activationBlock: 100, completeFrom: 100, completeThrough: height });
+    }
     var mint = p.createMintAction('intent-a', 'transfer', '3.000');
     var b = block(101, 'block-a', [
         op('transfer', { from: 'alice', to: 'null', amount: '3.000 VIZ', memo: p.mintMemo('intent-a') }),
@@ -56,12 +59,12 @@ function block(number, id, operations) {
     assert.strictEqual(processed.transfers.length, 1);
     assert.strictEqual(processed.vtActions.length, 1);
     c.MagicLedger.ingestBlock(ledger, processed);
-    assert.strictEqual(c.MagicLedger.finalizeThrough(ledger, 101, null), 1);
+    assert.strictEqual(finalize(101), 1);
     assert.strictEqual(c.MagicLedger.getBalance(ledger, 'alice'), 3000);
     assert.strictEqual(ledger.supplyMilli, 3000);
 
     c.MagicLedger.ingestBlock(ledger, processed);
-    c.MagicLedger.finalizeThrough(ledger, 101, null);
+    finalize(101);
     assert.strictEqual(c.MagicLedger.getBalance(ledger, 'alice'), 3000, 'same canonical op must be idempotent');
 
     var transfer = p.createTransferAction('bob', '1.250', 'nonce-a');
@@ -69,7 +72,7 @@ function block(number, id, operations) {
     var another = c.BlockProcessor.processBlock(block(103, 'block-a2', [custom('alice', p.createTransferAction('bob', '0.250', 'nonce-b'))]), 103);
     c.MagicLedger.ingestBlock(ledger, middle);
     c.MagicLedger.ingestBlock(ledger, another);
-    c.MagicLedger.finalizeThrough(ledger, 103, null);
+    finalize(103);
     assert.strictEqual(c.MagicLedger.getBalance(ledger, 'alice'), 1500);
     assert.strictEqual(c.MagicLedger.getBalance(ledger, 'bob'), 1500);
     assert.strictEqual(ledger.supplyMilli, 3000, 'transfers conserve supply');
@@ -77,7 +80,7 @@ function block(number, id, operations) {
     var beforeDuplicate = JSON.stringify(ledger.balances);
     var duplicate = c.BlockProcessor.processBlock(block(104, 'block-duplicate', [custom('alice', p.createTransferAction('bob', '0.100', 'nonce-a'))]), 104);
     c.MagicLedger.ingestBlock(ledger, duplicate);
-    c.MagicLedger.finalizeThrough(ledger, 104, null);
+    finalize(104);
     assert.strictEqual(JSON.stringify(ledger.balances), beforeDuplicate, 'duplicate sender nonce cannot create A-B-A replay transfer');
 
     var reloaded = c.MagicLedger.createState(JSON.parse(JSON.stringify(ledger)));
@@ -93,12 +96,13 @@ function block(number, id, operations) {
         custom('bob', fixed)
     ]), 105);
     c.MagicLedger.ingestBlock(ledger, fixedBlock);
-    c.MagicLedger.finalizeThrough(ledger, 105, null);
+    finalize(105);
     assert.strictEqual(c.MagicLedger.getBalance(ledger, 'bob'), 1500, 'requested fixed award is not actual burn proof');
     assert.strictEqual(ledger.pendingMints['bob:intent-fixed'].reason, 'actual_burn_evidence_missing');
     fixedBlock.burnProofs = [{ txIndex: 0, opIndex: 0, sourceOpIndex: 0, initiator: 'bob', receiver: 'null', intent: 'intent-fixed', actualBurnMilli: 997, canonical: true }];
+    fixedBlock.proofSource = 'trusted_archive_v1';
     c.MagicLedger.ingestBlock(ledger, fixedBlock);
-    c.MagicLedger.finalizeThrough(ledger, 105, null);
+    finalize(105);
     assert.strictEqual(c.MagicLedger.getBalance(ledger, 'bob'), 2497, 'fixed award mints actual proven burn, not requested amount');
     assert.strictEqual(ledger.supplyMilli, 3997);
     assert.strictEqual(ledger.pendingMints['bob:intent-fixed'], undefined);
@@ -108,7 +112,7 @@ function block(number, id, operations) {
         custom('mallory', p.createMintAction('bad', 'transfer', '1.000'))
     ]), 106);
     c.MagicLedger.ingestBlock(ledger, bad);
-    c.MagicLedger.finalizeThrough(ledger, 106, null);
+    finalize(106);
     assert.strictEqual(c.MagicLedger.getBalance(ledger, 'mallory'), 0, 'proof sender must equal signed VT sender');
 }());
 

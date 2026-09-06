@@ -55,9 +55,6 @@ var BlockProcessor = (function() {
                     case 'fixed_award':
                         _processFixedAwardOp(opData, blockNum, result, i, j, tx.transaction_id || tx.id || '');
                         break;
-                    case 'vt_burn_proof':
-                        _processBurnProofOp(opData, blockNum, result, i, j, tx.transaction_id || tx.id || '');
-                        break;
                     // Other operations can be added as needed
                 }
             }
@@ -184,14 +181,6 @@ var BlockProcessor = (function() {
         });
     }
 
-    function _processBurnProofOp(opData, blockNum, result, txIndex, opIndex, txId) {
-        if (!opData || opData.canonical !== true || !Number.isSafeInteger(opData.actualBurnMilli)) return;
-        result.burnProofs.push({
-            initiator: opData.initiator || '', receiver: opData.receiver || '', intent: opData.intent || '',
-            actualBurnMilli: opData.actualBurnMilli, sourceOpIndex: opData.sourceOpIndex, canonical: true,
-            blockNum: blockNum, txId: txId || '', txIndex: txIndex, opIndex: opIndex
-        });
-    }
 
     /**
      * Fetch and process a range of blocks

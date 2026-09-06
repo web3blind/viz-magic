@@ -437,6 +437,9 @@ var App = (function() {
         if (_recoveryProcessedBlocks[blockNum]) return;
         _recoveryProcessedBlocks[blockNum] = true;
         var processed = BlockProcessor.processBlock(block, blockNum);
+        if (blockNum < Number(VizMagicConfig.TOKEN && VizMagicConfig.TOKEN.ACTIVATION_BLOCK || 0)) {
+            processed.irreversible = true;
+        }
         StateEngine.processBlock(processed, { advanceHead: false, runMaintenance: false });
     }
 
@@ -683,7 +686,12 @@ var App = (function() {
                     return;
                 }
 
-                var headBlock = dgp.head_block_number;
+                var headBlock = Number(dgp.last_irreversible_block_num || 0);
+                if (!Number.isSafeInteger(headBlock) || headBlock <= 0) {
+                    console.log('App: Authoritative irreversible head unavailable; economic replay remains paused');
+                    _pollBusy = false;
+                    return;
+                }
 
                 // If we have no lastPolledBlock, start from recent history.
                 // Use a wide recovery window so guild state, duel flows, and
@@ -702,6 +710,12 @@ var App = (function() {
                         return;
                     }
                     _lastPolledBlock = Math.max(1, headBlock - 28800);
+                }
+
+                var requiredTokenStart = Number(VizMagicConfig.TOKEN && VizMagicConfig.TOKEN.ACTIVATION_BLOCK || 0);
+                var savedMagic = StateEngine.getState && StateEngine.getState().magic;
+                if (typeof MagicLedger !== 'undefined' && MagicLedger.getReplayStart) {
+                    _lastPolledBlock = MagicLedger.getReplayStart(savedMagic, _lastPolledBlock, headBlock, requiredTokenStart);
                 }
 
                 if (headBlock <= _lastPolledBlock) {
@@ -815,6 +829,7 @@ var App = (function() {
                 var groupedBlockNum = order[g];
                 var thinBlock = HistorySource.eventsToThinBlock(groupedEvents[groupedBlockNum], groupedMeta[groupedBlockNum]);
                 grouped[groupedBlockNum] = BlockProcessor.processBlock(thinBlock, groupedBlockNum);
+                grouped[groupedBlockNum].irreversible = true;
             }
 
             function finishArchiveBatch() {
@@ -825,10 +840,15 @@ var App = (function() {
                         blockHash: '',
                         huntEntropy: '',
                         timestamp: '',
+                        irreversible: true,
                         vmActions: [],
                         veEvents: [],
                         voicePosts: [],
-                        awards: []
+                        awards: [],
+                        vtActions: [],
+                        transfers: [],
+                        fixedAwards: [],
+                        burnProofs: []
                     };
                     var stateEvents = StateEngine.processBlock(processed, { advanceHead: false });
                     for (var k = 0; k < stateEvents.length; k++) {
@@ -863,6 +883,7 @@ var App = (function() {
                         return;
                     }
                     grouped[proofBlockNum] = BlockProcessor.processBlock(fullBlock, proofBlockNum);
+                    grouped[proofBlockNum].irreversible = true;
                     hydrateNextLibraryProof();
                 });
             }
@@ -908,6 +929,7 @@ var App = (function() {
 
         BlockProcessor.processBlockRange(startBlock, endBlock, function(processed, blockNum) {
             // Feed each processed block into StateEngine
+            processed.irreversible = true;
             var events = StateEngine.processBlock(processed, { advanceHead: false });
             for (var i = 0; i < events.length; i++) {
                 eventsCollected.push(events[i]);

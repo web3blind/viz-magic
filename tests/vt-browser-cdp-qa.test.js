@@ -82,14 +82,15 @@ async function click(cdp, selector) {
         await evalValue(cdp, `(function(){
             StateEngine.reset();
             var s=StateEngine.getState();
-            s.magic.balances.alice=2000;s.magic.supplyMilli=2000;
+            s.magic.balances.alice=2000;s.magic.supplyMilli=2000;s.magic.finalizedBlock=83500001;
             s.inventories.alice=[];s.inventories.seller=[{id:'qa-item',type:'oak_wand',rarity:0,stats:{},owner:'seller',listed:true,equipped:false,consumed:false}];
             s.marketplace={listings:{qa_listing:{ref:'qa_listing',itemRef:'qa-item',itemType:'oak_wand',itemRarity:0,itemStats:{},seller:'seller',price:1250,priceMilli:1250,revision:1,payment:'magic',listedBlock:83500001,expiresBlock:0,state:'active',buyer:null,soldBlock:0}},history:[],priceHistory:{}};
             MarketplaceEngine.setMarketState(s.marketplace);
             VizAccount.getCurrentUser=function(){return 'alice';};
             VizAccount.isLoggedIn=function(){return true;};
             VizAccount.hasActiveKey=function(){return false;};
-            VizAccount.getAccount=function(name,cb){cb(new Error('fixture-not-found'));};
+            VizAccount.getAccount=function(name,cb){name==='bob'?cb(null,{name:'bob'}):cb(new Error('fixture-not-found'));};
+            VizBroadcast.tokenAction=function(action,cb){window.__vtSend=action;cb(null,{});};
             App.navigateTo('home');NavComponent.render();return true;
         })()`);
 
@@ -101,6 +102,12 @@ async function click(cdp, selector) {
         await click(cdp, '#magic-send-form button[type="submit"]');
         var invalidShown = await evalValue(cdp, "document.body.textContent.indexOf('Проверьте аккаунт, точную сумму и баланс MAGIC.')>=0");
         assert.strictEqual(invalidShown, true, 'invalid account must fail visibly without broadcast');
+
+        await evalValue(cdp, `(function(){document.querySelector('#magic-send-to').value='bob';document.querySelector('#magic-send-amount').value='0.500';return true;})()`);
+        await click(cdp, '#magic-send-form button[type="submit"]');
+        await click(cdp, '#modal-container [data-action="0"]');
+        var sent = await evalValue(cdp, `(function(){var before={alice:StateEngine.getMagicBalance('alice'),bob:StateEngine.getMagicBalance('bob')};var parsed=VTProtocol.parseAction(window.__vtSend);var processed={blockNum:83500002,blockHash:'qa-transfer-block',irreversible:true,awards:[],veEvents:[],voicePosts:[],vmActions:[],transfers:[],fixedAwards:[],burnProofs:[],vtActions:[{sender:'alice',txId:'qa-transfer-tx',txIndex:0,opIndex:0,regularAuths:['alice'],activeAuths:[],action:parsed}]};StateEngine.processBlock(processed);return{before:before,action:{to:parsed.data.to,amount:parsed.data.amount_milli},after:{alice:StateEngine.getMagicBalance('alice'),bob:StateEngine.getMagicBalance('bob')},history:StateEngine.getMagicHistory('alice',0,10).map(function(x){return x.type;})};})()`);
+        assert.deepStrictEqual(sent, { before: { alice: 2000, bob: 0 }, action: { to: 'bob', amount: 500 }, after: { alice: 1500, bob: 500 }, history: ['transfer'] });
 
         await evalValue(cdp, `(function(){
             var toast=document.getElementById('toast-container');if(toast)toast.remove();
@@ -118,14 +125,16 @@ async function click(cdp, selector) {
         await click(cdp, '.market-buy-btn');
         await click(cdp, '#modal-container [data-action="0"]');
         var purchase = await evalValue(cdp, `(function(){var s=StateEngine.getState();return{call:window.__vtBuy,buyer:s.magic.balances.alice,seller:s.magic.balances.seller||0,owner:s.inventories.seller[0].owner,screen:App.getCurrentScreen()};})()`);
-        assert.deepStrictEqual(purchase, { call: { ref: '83500001_qa-item', rev: 1, price: 1250 }, buyer: 2000, seller: 0, owner: 'seller', screen: 'marketplace' });
+        assert.deepStrictEqual(purchase, { call: { ref: '83500001_qa-item', rev: 1, price: 1250 }, buyer: 1500, seller: 0, owner: 'seller', screen: 'marketplace' });
+        var settled = await evalValue(cdp, `(function(){var parsed=VTProtocol.parseAction(VTProtocol.createBazaarBuyAction(window.__listingRef,1,1250));StateEngine.processBlock({blockNum:83500003,blockHash:'qa-buy-block',irreversible:true,awards:[],veEvents:[],voicePosts:[],vmActions:[],transfers:[],fixedAwards:[],burnProofs:[],vtActions:[{sender:'alice',txId:'qa-buy-tx',txIndex:0,opIndex:0,regularAuths:['alice'],activeAuths:[],action:parsed}]});var s=StateEngine.getState();var bought=(s.inventories.alice||[]).filter(function(x){return x.id==='qa-item';})[0];return{alice:StateEngine.getMagicBalance('alice'),bob:StateEngine.getMagicBalance('bob'),seller:StateEngine.getMagicBalance('seller'),owner:bought&&bought.owner,supply:s.magic.supplyMilli,listing:MarketplaceEngine.getMarketState().listings[window.__listingRef].state,history:StateEngine.getMagicHistory('alice',0,10).map(function(x){return x.type;})};})()`);
+        assert.deepStrictEqual(settled, { alice: 250, bob: 500, seller: 1250, owner: 'alice', supply: 2000, listing: 'sold', history: ['trade', 'transfer'] });
         var serious = cdp.events.filter(function(event) {
             return event.method === 'Runtime.exceptionThrown' ||
                 (event.method === 'Runtime.consoleAPICalled' && event.params && event.params.type === 'error') ||
                 (event.method === 'Log.entryAdded' && event.params && event.params.entry && event.params.entry.level === 'error');
         });
         assert.deepStrictEqual(serious, [], 'wallet/Bazaar click flow must not emit uncaught or console errors');
-        console.log('PASS Chromium CDP wallet navigation, validation and exact non-optimistic Bazaar purchase flow');
+        console.log('PASS Chromium CDP two-account MAGIC transfer and atomic Bazaar handler flow');
     } finally {
         try { cdp.ws.close(); } catch (_) {}
         try { await request('GET', CDP + '/json/close/' + encodeURIComponent(cdp.target.id)); } catch (_) {}

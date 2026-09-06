@@ -51,7 +51,9 @@ async function getChainHeads(cfg) {
             var dgp = await rpcCall(cfg.sourceNodes[i], 'get_dynamic_global_properties', [], cfg.timeoutMs);
             var head = Number(dgp.head_block_number || 0);
             var irreversible = Number(dgp.last_irreversible_block_num || 0);
-            if (!irreversible) irreversible = Math.max(0, head - Number(cfg.irreversibleDepth || 20));
+            if (!Number.isSafeInteger(head) || head <= 0 || !Number.isSafeInteger(irreversible) || irreversible <= 0 || irreversible > head) {
+                throw new Error('authoritative last_irreversible_block_num unavailable');
+            }
             return { head: head, irreversible: irreversible };
         } catch (err) {
             lastErr = err;
