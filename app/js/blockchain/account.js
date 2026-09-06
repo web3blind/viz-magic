@@ -11,6 +11,12 @@ var VizAccount = (function() {
     var currentUser = '';
     var users = {};
     var SESSION_SCHEMA_VERSION = 2;
+    var progressionRecoveryPending = {};
+    var lastStorageError = '';
+
+    function _sessionStorage() {
+        try { return typeof sessionStorage !== 'undefined' ? sessionStorage : null; } catch (e) { return null; }
+    }
 
     /**
      * Initialize — restore session from localStorage
@@ -21,6 +27,10 @@ var VizAccount = (function() {
             saved = localStorage.getItem(prefix + 'session');
         } catch (storageReadError) {
             console.log('Failed to read saved session:', storageReadError);
+        }
+        if (!saved) {
+            var fallbackStorage = _sessionStorage();
+            try { saved = fallbackStorage ? fallbackStorage.getItem(prefix + 'session_safe') : null; } catch (fallbackReadError) {}
         }
         if (saved) {
             try {
@@ -217,7 +227,11 @@ var VizAccount = (function() {
 
             users[currentUser].active_key = activeKey;
             users[currentUser].active_key_persist = persist === true;
-            _saveSession();
+            if (!_saveSession()) {
+                users[currentUser].active_key_persist = false;
+                callback(new Error('storage_write_failed'));
+                return;
+            }
             callback(null);
         });
     }
@@ -234,6 +248,15 @@ var VizAccount = (function() {
 
     function isActiveKeyPersistenceEnabled() {
         return !!(currentUser && users[currentUser] && users[currentUser].active_key_persist === true);
+    }
+
+    function getLastStorageError() {
+        return lastStorageError;
+    }
+
+    function setProgressionRecoveryPending(account, pending) {
+        if (!account) return;
+        progressionRecoveryPending[account] = pending === true;
     }
 
     /**
@@ -356,8 +379,13 @@ var VizAccount = (function() {
      * @param {Function} callback - (err, result)
      */
     function updateGrimoire(grimoireData, callback) {
+        callback = callback || function() {};
         if (!isLoggedIn()) {
             callback(new Error('not_logged_in'));
+            return;
+        }
+        if (progressionRecoveryPending[currentUser]) {
+            callback(new Error('progression_recovery_pending'));
             return;
         }
 
@@ -426,25 +454,42 @@ var VizAccount = (function() {
      */
     function _saveSession() {
         var persistedUsers = {};
+        var safeUsers = {};
         for (var account in users) {
             if (!users.hasOwnProperty(account) || !users[account]) continue;
             persistedUsers[account] = { regular_key: users[account].regular_key };
+            safeUsers[account] = { regular_key: users[account].regular_key };
             if (users[account].active_key && users[account].active_key_persist === true) {
                 persistedUsers[account].active_key = users[account].active_key;
                 persistedUsers[account].active_key_persist = true;
             }
         }
+        var payload = JSON.stringify({
+            schemaVersion: SESSION_SCHEMA_VERSION,
+            currentUser: currentUser,
+            users: persistedUsers
+        });
+        var safePayload = JSON.stringify({
+            schemaVersion: SESSION_SCHEMA_VERSION,
+            currentUser: currentUser,
+            users: safeUsers
+        });
         try {
-            localStorage.setItem(prefix + 'session', JSON.stringify({
-                schemaVersion: SESSION_SCHEMA_VERSION,
-                currentUser: currentUser,
-                users: persistedUsers
-            }));
+            localStorage.setItem(prefix + 'session', payload);
+            var fallbackStorage = _sessionStorage();
+            if (fallbackStorage) fallbackStorage.removeItem(prefix + 'session_safe');
+            lastStorageError = '';
             return true;
         } catch (storageWriteError) {
             // A legacy active key must never remain persisted merely because
-            // migration failed. Current in-memory keys remain usable.
+            // migration failed. Preserve the regular login for this tab/reload
+            // in sessionStorage, but never copy an active key into the fallback.
             try { localStorage.removeItem(prefix + 'session'); } catch (removeError) {}
+            try {
+                var safeStorage = _sessionStorage();
+                if (safeStorage) safeStorage.setItem(prefix + 'session_safe', safePayload);
+            } catch (fallbackWriteError) {}
+            lastStorageError = 'storage_write_failed';
             console.log('Failed to save session safely:', storageWriteError);
             return false;
         }
@@ -470,6 +515,8 @@ var VizAccount = (function() {
         getActiveKey: getActiveKey,
         hasActiveKey: hasActiveKey,
         isActiveKeyPersistenceEnabled: isActiveKeyPersistenceEnabled,
+        getLastStorageError: getLastStorageError,
+        setProgressionRecoveryPending: setProgressionRecoveryPending,
         saveActiveKey: saveActiveKey,
         clearActiveKey: clearActiveKey
     };

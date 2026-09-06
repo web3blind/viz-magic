@@ -39,6 +39,51 @@ var App = (function() {
 
     _bindInstallPromptListener();
 
+    function _hydrateAccountHints(user, callback, suppliedAccountData) {
+        callback = callback || function() {};
+        function applyAccountData(accErr, accountData) {
+            if (accErr || !accountData) {
+                console.log('Could not fetch account hints:', accErr);
+                callback(accErr || new Error('account_not_found'));
+                return;
+            }
+            var grimoire = VizAccount.parseGrimoire(accountData);
+            var state = StateEngine.getState();
+            state.accountHints = state.accountHints || {};
+            state.accountHints[user] = {
+                provenance: 'metadata-unverified',
+                grimoire: grimoire || {},
+                avatarUrl: VizAccount.getProfileAvatar ? VizAccount.getProfileAvatar(accountData) : '',
+                effectiveShares: VizAccount.getEffectiveShares(accountData)
+            };
+            var ch = state.characters[user];
+            if (ch) {
+                CharacterSystem.updateCoreBonus(ch, state.accountHints[user].effectiveShares);
+                ch.avatarUrl = state.accountHints[user].avatarUrl;
+            }
+            console.log('Account hints loaded; authoritative character source:', ch ? 'checkpoint' : 'chain recovery pending');
+            if (currentScreen === 'home' || currentScreen === 'character') _renderScreen(currentScreen);
+            callback(null, state.accountHints[user]);
+        }
+        if (suppliedAccountData) applyAccountData(null, suppliedAccountData);
+        else VizAccount.getAccount(user, applyAccountData);
+    }
+
+    function _activateLoggedInAccount(user, accountData) {
+        if (!user) return;
+        var state = StateEngine.getState();
+        var hasCheckpointCharacter = !!(state.characters && state.characters[user]);
+        StateEngine.setRecoveryStatus(user, hasCheckpointCharacter ? 'complete' : 'pending', hasCheckpointCharacter ? 'checkpoint' : 'history_not_checked');
+        VizAccount.setProgressionRecoveryPending(user, !hasCheckpointCharacter);
+        _chainRecoveryDone = hasCheckpointCharacter;
+        _recoveryProcessedBlocks = {};
+        _syncStartBlock = 0;
+        _updateSyncStatus(100);
+        navigateTo('home');
+        _hydrateAccountHints(user, function() {}, accountData);
+        setTimeout(function() { _startBlockPolling(); }, 250);
+    }
+
     /**
      * Initialize the application
      */
@@ -67,6 +112,10 @@ var App = (function() {
 
         // Register navigation handler IMMEDIATELY (before async init)
         Helpers.EventBus.on('navigate', navigateTo);
+        Helpers.EventBus.on('account_login_complete', function(payload) {
+            payload = payload || {};
+            _activateLoggedInAccount(payload.user || VizAccount.getCurrentUser(), payload.accountData || null);
+        });
 
         // Route immediately from local session state. Network and IndexedDB must not
         // decide whether the user sees a playable screen.
@@ -94,70 +143,8 @@ var App = (function() {
                 // Hydrate the already-routed startup screen. Do not start heavy chain catch-up on
                 // the public landing/login path: fresh PWA/shortcut sessions must remain usable.
                 if (VizAccount.isLoggedIn()) {
-                    // Saved sessions must become usable immediately. Render Home first,
-                    // then hydrate account/grimoire and run chain catch-up in the background.
                     var user = VizAccount.getCurrentUser();
-                    _syncStartBlock = 0;
-                    _updateSyncStatus(100);
-                    navigateTo('home');
-                    setTimeout(function() { _startBlockPolling(); }, 250);
-
-                    // Restore character from blockchain grimoire without blocking startup.
-                    VizAccount.getAccount(user, function(accErr, accountData) {
-                        if (accErr) {
-                            console.log('Could not fetch account on startup:', accErr);
-                            return;
-                        }
-                        var grimoire = VizAccount.parseGrimoire(accountData);
-                        if (grimoire && grimoire.class && grimoire.name) {
-                            // Recreate character in StateEngine from on-chain data
-                            var state = StateEngine.getState();
-                            // If checkpoint already has this character (from IndexedDB), keep it
-                            if (!state.characters[user]) {
-                                var character = CharacterSystem.createCharacter(user, grimoire.name, grimoire.class);
-                                if (character) {
-                                    // Restore versioned progression from Grimoire cache hint.
-                                    CharacterSystem.restoreProgression(character, grimoire);
-                                    if (character.level > 1) {
-                                        character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
-                                        character.maxHp = character.hp;
-                                    }
-
-                                    // Sync Magic Core from on-chain SHARES with heavy compression.
-                                    // This keeps SHARES meaningful but prevents whales from becoming unbeatable.
-                                    var effectiveShares = VizAccount.getEffectiveShares(accountData);
-                                    var cappedShares = Math.min(effectiveShares, 1000000000000); // cap at 1,000,000 SHARES (6 decimals)
-                                    CharacterSystem.updateCoreBonus(character, cappedShares);
-
-                                    state.characters[user] = character;
-                                }
-                            } else {
-                                console.log('Character already in state from checkpoint, keeping checkpoint data');
-                            }
-                            state.inventories[user] = state.inventories[user] || [];
-                            if (!state.quests) state.quests = {};
-                            if (!state.quests[user]) {
-                                state.quests[user] = (typeof QuestSystem !== 'undefined')
-                                    ? QuestSystem.createPlayerQuestState()
-                                    : { active: [], completed: [], dailyProphecyDay: 0 };
-                            }
-                            var ch = state.characters[user];
-                            if (ch && VizAccount.getProfileAvatar) {
-                                ch.avatarUrl = VizAccount.getProfileAvatar(accountData);
-                            }
-                            console.log('Character restored: ' + (ch ? ch.name + ' Lv' + ch.level + ' XP:' + ch.xp : 'none'));
-                            if (currentScreen === 'home' || currentScreen === 'character') {
-                                _renderScreen(currentScreen);
-                            }
-                        } else {
-                            // No grimoire on chain — send to onboarding only if local state has no usable character.
-                            console.log('No grimoire found for', user, '— checking local state');
-                            var localState = StateEngine.getState ? StateEngine.getState() : null;
-                            if (!localState || !localState.characters || !localState.characters[user]) {
-                                navigateTo('onboarding');
-                            }
-                        }
-                    });
+                    _activateLoggedInAccount(user, null);
                 } else {
                     _syncStartBlock = 0;
                     _updateSyncStatus(100);
@@ -421,6 +408,25 @@ var App = (function() {
     /** Set of block numbers already processed during recovery to prevent duplicates */
     var _recoveryProcessedBlocks = {};
 
+    function _setRecoveryPending(user, reason) {
+        StateEngine.setRecoveryStatus(user, 'pending', reason || 'history_incomplete');
+        VizAccount.setProgressionRecoveryPending(user, true);
+    }
+
+    function _completeRecovery(user) {
+        if (!user) return;
+        var state = StateEngine.getState();
+        StateEngine.setRecoveryStatus(user, 'complete', 'chain_replay');
+        VizAccount.setProgressionRecoveryPending(user, false);
+        var hint = state.accountHints && state.accountHints[user];
+        var character = state.characters && state.characters[user];
+        if (character && hint) {
+            CharacterSystem.updateCoreBonus(character, hint.effectiveShares || 0);
+            character.avatarUrl = hint.avatarUrl || '';
+        }
+        if (!character && currentScreen !== 'onboarding') navigateTo('onboarding');
+    }
+
     /**
      * Process a single block during recovery, skipping if already seen.
      * Prevents duplicate items/XP when the same block appears in
@@ -430,7 +436,7 @@ var App = (function() {
         if (_recoveryProcessedBlocks[blockNum]) return;
         _recoveryProcessedBlocks[blockNum] = true;
         var processed = BlockProcessor.processBlock(block, blockNum);
-        StateEngine.processBlock(processed);
+        StateEngine.processBlock(processed, { advanceHead: false, runMaintenance: false });
     }
 
     function _getHistoryBlock(blockNum, callback) {
@@ -489,8 +495,15 @@ var App = (function() {
 
         // Traverse the full backward chain (up to 5000 actions)
         VMProtocol.traverseChain(user, 5000, function(err, actions) {
-            if (err || !actions || actions.length === 0) {
-                console.log('App: No chain history found, falling back to 24h window');
+            if (err) {
+                console.log('App: Chain history incomplete; progression recovery remains pending:', err);
+                _setRecoveryPending(user, err.message || 'history_incomplete');
+                _chainRecoveryBusy = false;
+                callback();
+                return;
+            }
+            if (!actions || actions.length === 0) {
+                console.log('App: No linked VM history found; verifying the recent block window');
                 _chainRecoveryDone = true;
                 _chainRecoveryBusy = false;
                 callback();
@@ -528,14 +541,8 @@ var App = (function() {
                 if (idx >= historicalBlocks.length) {
                     // After user's own chain is recovered, discover other players
                     _recoverKnownAccountsChains(recentWindowStart, headBlock, function() {
-                        // Set headBlock to current chain head so checkpoint is up-to-date.
-                        // Without this, worldState.headBlock would point to the last
-                        // historical block and a crash+restart would trigger a huge catch-up.
-                        var state = StateEngine.getState();
-                        state.headBlock = headBlock;
-
                         StateEngine.saveCheckpoint(function() {
-                            console.log('App: Chain history recovery complete,', historicalBlocks.length, 'blocks processed');
+                            console.log('App: Historical chain segment recovered; recent contiguous window is still pending');
                             _chainRecoveryDone = true;
                             _chainRecoveryBusy = false;
                             _recoveryProcessedBlocks = {}; // free memory
@@ -551,9 +558,10 @@ var App = (function() {
                 var blockNum = historicalBlocks[idx];
                 _getHistoryBlock(blockNum, function(bErr, block) {
                     if (bErr || !block) {
-                        console.log('App: Could not fetch historical block', blockNum);
-                        idx++;
-                        processNext();
+                        console.log('App: Could not fetch historical block', blockNum, '— recovery remains pending');
+                        _setRecoveryPending(user, 'history_block_missing_' + blockNum);
+                        _chainRecoveryBusy = false;
+                        callback();
                         return;
                     }
 
@@ -750,85 +758,91 @@ var App = (function() {
 
     function _shouldUseArchiveEventBatch(startBlock, endBlock, chainHead) {
         return typeof HistorySource !== 'undefined' &&
-            HistorySource.getEventsRange &&
+            (HistorySource.getAllEventsRange || HistorySource.getEventsRange) &&
             chainHead - startBlock > 1000;
     }
 
     function _processArchiveEventBatch(startBlock, endBlock, chainHead, done) {
-        HistorySource.getEventsRange({
-            protocol: VizMagicConfig.PROTOCOLS.VM,
+        if (!HistorySource.getArchiveHead) {
+            done(false);
+            return;
+        }
+        HistorySource.getArchiveHead(function(headErr, archiveHead) {
+            if (headErr || Number(archiveHead || 0) < endBlock) {
+                done(false);
+                return;
+            }
+            _loadArchiveEventBatch(startBlock, endBlock, chainHead, done);
+        });
+    }
+
+    function _loadArchiveEventBatch(startBlock, endBlock, chainHead, done) {
+        var rangeLoader = HistorySource.getAllEventsRange || HistorySource.getEventsRange;
+        rangeLoader.call(HistorySource, {
+            protocol: [VizMagicConfig.PROTOCOLS.VM, VizMagicConfig.PROTOCOLS.V, VizMagicConfig.PROTOCOLS.VE, 'award'].join(','),
             start: startBlock,
             end: endBlock,
-            limit: 1000
+            limit: 5000
         }, function(err, events) {
             if (err || !events) {
                 done(false);
                 return;
             }
 
-            events = events || [];
-            events.sort(function(a, b) {
-                if ((a.blockNum || 0) !== (b.blockNum || 0)) return (a.blockNum || 0) - (b.blockNum || 0);
-                if ((a.txIndex || 0) !== (b.txIndex || 0)) return (a.txIndex || 0) - (b.txIndex || 0);
-                return (a.opIndex || 0) - (b.opIndex || 0);
-            });
-
-            var grouped = {};
+            var groupedEvents = {};
+            var groupedMeta = {};
             var order = [];
-            var libraryProofBlocks = {};
             for (var i = 0; i < events.length; i++) {
                 var ev = events[i];
-                var blockNum = ev.blockNum || 0;
+                var blockNum = Number(ev.blockNum || ev.block_num || 0);
                 if (!blockNum) continue;
-                if (!grouped[blockNum]) {
-                    grouped[blockNum] = {
-                        vmActions: [],
-                        voicePosts: [],
-                        veEvents: [],
-                        awards: [],
-                        blockHash: ev.block_id || ev.previous || '',
-                        huntEntropy: ev.previous || ev.block_id || '',
-                        blockNum: blockNum,
+                if (!groupedEvents[blockNum]) {
+                    groupedEvents[blockNum] = [];
+                    groupedMeta[blockNum] = {
+                        block_id: ev.block_id || ev.blockId || '',
+                        previous: ev.previous || '',
                         timestamp: ev.timestamp || ''
                     };
                     order.push(blockNum);
                 }
-                var parsedAction = VMProtocol.parseAction(ev.raw && ev.raw.json ? ev.raw.json : JSON.stringify(ev.payload || {}));
-                if (parsedAction) {
-                    grouped[blockNum].vmActions.push({
-                        sender: ev.sender || '',
-                        action: parsedAction,
-                        blockNum: blockNum,
-                        txIndex: ev.txIndex || ev.tx_index || 0,
-                        raw: ev.raw || {}
-                    });
-                    if (parsedAction.type === VizMagicConfig.ACTION_TYPES.LIBRARY_UNLOCK) {
-                        libraryProofBlocks[blockNum] = true;
-                    }
-                }
+                groupedEvents[blockNum].push(ev);
+            }
+            order.sort(function(a, b) { return a - b; });
+
+            var grouped = {};
+            for (var g = 0; g < order.length; g++) {
+                var groupedBlockNum = order[g];
+                var thinBlock = HistorySource.eventsToThinBlock(groupedEvents[groupedBlockNum], groupedMeta[groupedBlockNum]);
+                grouped[groupedBlockNum] = BlockProcessor.processBlock(thinBlock, groupedBlockNum);
             }
 
             function finishArchiveBatch() {
                 var eventsCollected = [];
-                for (var j = 0; j < order.length; j++) {
-                    var processed = grouped[order[j]];
-                    var stateEvents = StateEngine.processBlock(processed);
+                for (var archiveBlockNum = startBlock; archiveBlockNum <= endBlock; archiveBlockNum++) {
+                    var processed = grouped[archiveBlockNum] || {
+                        blockNum: archiveBlockNum,
+                        blockHash: '',
+                        huntEntropy: '',
+                        timestamp: '',
+                        vmActions: [],
+                        veEvents: [],
+                        voicePosts: [],
+                        awards: []
+                    };
+                    var stateEvents = StateEngine.processBlock(processed, { advanceHead: false });
                     for (var k = 0; k < stateEvents.length; k++) {
                         eventsCollected.push(stateEvents[k]);
                     }
                 }
-
-                // Archive mode intentionally skips empty blocks. Advance the head so
-                // stale checkpoints can catch up without replaying empty RPC blocks.
-                var state = StateEngine.getState();
-                state.headBlock = endBlock;
+                StateEngine.advanceHead(endBlock);
                 _finishProcessedBatch(endBlock, chainHead, eventsCollected);
                 done(true);
             }
 
-            var proofBlockNums = Object.keys(libraryProofBlocks).map(function(value) {
-                return Number(value);
-            });
+            var proofBlockNums = [];
+            for (var p = 0; p < order.length; p++) {
+                if (_archiveBlockNeedsHydration(grouped[order[p]])) proofBlockNums.push(order[p]);
+            }
             if (!proofBlockNums.length) {
                 finishArchiveBatch();
                 return;
@@ -841,10 +855,13 @@ var App = (function() {
                     return;
                 }
                 var proofBlockNum = proofBlockNums[proofIndex++];
-                HistorySource.getBlock(proofBlockNum, function(blockErr, fullBlock) {
-                    if (!blockErr && fullBlock) {
-                        grouped[proofBlockNum] = BlockProcessor.processBlock(fullBlock, proofBlockNum);
+                var proofBlockLoader = HistorySource.getProofBlock || HistorySource.getBlock;
+                proofBlockLoader.call(HistorySource, proofBlockNum, function(blockErr, fullBlock) {
+                    if (blockErr || !fullBlock) {
+                        done(false);
+                        return;
                     }
+                    grouped[proofBlockNum] = BlockProcessor.processBlock(fullBlock, proofBlockNum);
                     hydrateNextLibraryProof();
                 });
             }
@@ -852,16 +869,55 @@ var App = (function() {
         });
     }
 
+    function _archiveBlockNeedsHydration(processed) {
+        if (!processed) return true;
+        var verifier = typeof ActionProof !== 'undefined'
+            ? ActionProof.createVerifier(processed.awards || [], processed.blockNum)
+            : null;
+        for (var i = 0; i < (processed.vmActions || []).length; i++) {
+            var vmAction = processed.vmActions[i];
+            if (vmAction.action && vmAction.action.type === VizMagicConfig.ACTION_TYPES.LIBRARY_UNLOCK &&
+                !_hasArchiveLibraryProof(processed.awards || [], vmAction)) return true;
+            if (verifier && ActionProof.isPaidAction(vmAction.action)) {
+                var proof = verifier.verify(vmAction.sender, vmAction.txIndex, vmAction.action);
+                if (!proof.valid) return true;
+            }
+        }
+        return false;
+    }
+
+    function _hasArchiveLibraryProof(awards, vmAction) {
+        var data = vmAction.action && vmAction.action.data || {};
+        var library = VizMagicConfig.LIBRARY || {};
+        var chapterNumber = String(data.chapter || '').replace('chapter', '').toUpperCase();
+        var prefix = library['CHAPTER_' + ({ '2': 'TWO', '3': 'THREE', '4': 'FOUR', '5': 'FIVE' }[chapterNumber] || '') + '_MEMO_PREFIX'];
+        var cost = library['CHAPTER_' + ({ '2': 'TWO', '3': 'THREE', '4': 'FOUR', '5': 'FIVE' }[chapterNumber] || '') + '_COST'];
+        if (!prefix || !cost || !data.day) return false;
+        for (var i = 0; i < awards.length; i++) {
+            var award = awards[i] || {};
+            if (award.initiator === vmAction.sender && Number(award.txIndex) === Number(vmAction.txIndex) &&
+                award.receiver === library.TREASURY && Number(award.energy) === Number(cost) &&
+                String(award.memo || '') === String(prefix) + String(data.day)) return true;
+        }
+        return false;
+    }
+
     function _processBlockBatchFromRpc(startBlock, endBlock, chainHead) {
         var eventsCollected = [];
 
         BlockProcessor.processBlockRange(startBlock, endBlock, function(processed, blockNum) {
             // Feed each processed block into StateEngine
-            var events = StateEngine.processBlock(processed);
+            var events = StateEngine.processBlock(processed, { advanceHead: false });
             for (var i = 0; i < events.length; i++) {
                 eventsCollected.push(events[i]);
             }
         }, function(err) {
+            if (err) {
+                console.log('App: Block batch incomplete; will retry from the last contiguous head:', err);
+                _pollBusy = false;
+                return;
+            }
+            StateEngine.advanceHead(endBlock);
             _finishProcessedBatch(endBlock, chainHead, eventsCollected);
         });
     }
@@ -894,6 +950,7 @@ var App = (function() {
             } else {
                 _syncStartBlock = 0;
                 _updateSyncStatus(100);
+                _completeRecovery(VizAccount.getCurrentUser());
                 _pollBusy = false;
             }
         });
@@ -952,7 +1009,9 @@ var App = (function() {
         init: init,
         navigateTo: navigateTo,
         installShortcut: installShortcut,
-        getCurrentScreen: getCurrentScreen
+        getCurrentScreen: getCurrentScreen,
+        hydrateAccountHints: _hydrateAccountHints,
+        processArchiveEventBatch: _processArchiveEventBatch
     };
 })();
 

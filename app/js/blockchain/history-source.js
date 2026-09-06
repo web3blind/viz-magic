@@ -71,6 +71,13 @@ var HistorySource = (function() {
         return pattern + (pattern.indexOf('?') === -1 ? '?' : '&') + params.join('&');
     }
 
+    function _healthUrl(mirror) {
+        if (!mirror) return '';
+        if (mirror.healthUrl) return mirror.healthUrl;
+        if (mirror.apiBase) return String(mirror.apiBase).replace(/\/$/, '') + '/health';
+        return '';
+    }
+
     function _eventsPayloadToThinBlock(payload) {
         if (!payload || !payload.events) return null;
         var events = payload.events || [];
@@ -80,21 +87,30 @@ var HistorySource = (function() {
             block_id: payload.block_id || payload.blockId || '',
             transactions: []
         };
-        var byTx = {};
         for (var i = 0; i < events.length; i++) {
             var ev = events[i] || {};
-            var txIndex = ev.txIndex || ev.tx_index || 0;
-            if (!byTx[txIndex]) {
-                byTx[txIndex] = { operations: [] };
-                block.transactions.push(byTx[txIndex]);
-            }
+            var txIndex = Number(typeof ev.txIndex !== 'undefined' ? ev.txIndex : ev.tx_index) || 0;
+            var opIndex = Number(typeof ev.opIndex !== 'undefined' ? ev.opIndex : ev.op_index) || 0;
+            while (block.transactions.length <= txIndex) block.transactions.push({ operations: [] });
+            var operations = block.transactions[txIndex].operations;
+            while (operations.length <= opIndex) operations.push(null);
             if (ev.opType === 'custom' || ev.op_type === 'custom') {
-                byTx[txIndex].operations.push(['custom', ev.raw || {}]);
+                operations[opIndex] = ['custom', ev.raw || {}];
             } else if (ev.opType === 'award' || ev.op_type === 'award') {
-                byTx[txIndex].operations.push(['award', ev.raw || {}]);
+                operations[opIndex] = ['award', ev.raw || ev.payload || {}];
             }
         }
         return block;
+    }
+
+    function eventsToThinBlock(events, metadata) {
+        metadata = metadata || {};
+        return _eventsPayloadToThinBlock({
+            events: events || [],
+            previous: metadata.previous || '',
+            timestamp: metadata.timestamp || '',
+            block_id: metadata.block_id || metadata.blockId || ''
+        });
     }
 
     function _extractBlockFromMirrorPayload(payload) {
@@ -220,6 +236,28 @@ var HistorySource = (function() {
         });
     }
 
+    // Proof-sensitive callers must not accept a thin event-index response as
+    // evidence that an award was absent. This path uses only full RPC/archive
+    // blocks, whose transaction operation lists are authoritative.
+    function getProofBlock(blockNum, callback) {
+        callback = callback || function() {};
+        if (!blockNum || blockNum <= 0) {
+            callback(_makeError('Invalid block number'));
+            return;
+        }
+        if (typeof viz === 'undefined' || !viz.api || !viz.api.getBlock) {
+            _getBlockFromMirrors(blockNum, 0, callback);
+            return;
+        }
+        viz.api.getBlock(blockNum, function(err, block) {
+            if (!err && block) {
+                callback(null, block);
+                return;
+            }
+            _getBlockFromMirrors(blockNum, 0, callback);
+        });
+    }
+
     function getAccountProtocol(account, protocol, callback) {
         callback = callback || function() {};
         if (!account || !protocol) {
@@ -315,6 +353,155 @@ var HistorySource = (function() {
             });
         }
         next(0);
+    }
+
+    function getArchiveHead(callback) {
+        callback = callback || function() {};
+        var mirrors = _archiveMirrors();
+        function next(index) {
+            if (!mirrors.length || index >= mirrors.length) {
+                callback(_makeError('Archive health unavailable'));
+                return;
+            }
+            var mirror = _normalizeMirror(mirrors[index]);
+            var url = _healthUrl(mirror);
+            if (!url) {
+                next(index + 1);
+                return;
+            }
+            _requestJson(url, mirror.timeoutMs || 6000, function(err, payload) {
+                var head = payload && Number(payload.lastIndexedBlock || payload.last_indexed_block || 0);
+                if (!err && Number.isInteger(head) && head > 0) {
+                    callback(null, head);
+                    return;
+                }
+                next(index + 1);
+            });
+        }
+        next(0);
+    }
+
+    function getEventsForBlock(blockNum, options, callback) {
+        if (typeof options === 'function') {
+            callback = options;
+            options = {};
+        }
+        options = options || {};
+        callback = callback || function() {};
+        var mirrors = _archiveMirrors();
+        function next(index) {
+            if (!mirrors.length || index >= mirrors.length) {
+                callback(_makeError('Block events unavailable from archive mirrors'));
+                return;
+            }
+            var mirror = _normalizeMirror(mirrors[index]);
+            var url = _eventsUrl(mirror, blockNum);
+            if (!url) {
+                next(index + 1);
+                return;
+            }
+            if (options.protocol) {
+                url += (url.indexOf('?') === -1 ? '?' : '&') + 'protocol=' + encodeURIComponent(String(options.protocol));
+            }
+            _requestJson(url, mirror.timeoutMs || 6000, function(err, payload) {
+                if (!err && payload && payload.events) {
+                    callback(null, payload.events, payload);
+                    return;
+                }
+                next(index + 1);
+            });
+        }
+        next(0);
+    }
+
+    function getAllEventsRange(options, callback) {
+        callback = callback || function() {};
+        options = options || {};
+        var start = Number(options.start || options.from || 0);
+        var originalEnd = Number(options.end || options.to || 2147483647);
+        var pageLimit = Math.max(1, Math.min(Number(options.limit || 5000), 5000));
+        var nextEnd = originalEnd;
+        var pages = [];
+        var seen = {};
+
+        function finish() {
+            var all = [];
+            for (var p = 0; p < pages.length; p++) all = all.concat(pages[p]);
+            all.sort(function(a, b) {
+                if (Number(a.blockNum || 0) !== Number(b.blockNum || 0)) return Number(a.blockNum || 0) - Number(b.blockNum || 0);
+                if (Number(a.txIndex || 0) !== Number(b.txIndex || 0)) return Number(a.txIndex || 0) - Number(b.txIndex || 0);
+                return Number(a.opIndex || 0) - Number(b.opIndex || 0);
+            });
+            callback(null, all);
+        }
+
+        function addPage(events) {
+            var page = [];
+            for (var i = 0; i < events.length; i++) {
+                var event = events[i] || {};
+                var identity = event.id || [event.blockNum, event.txIndex, event.opIndex, event.protocol, event.type].join(':');
+                if (!seen[identity]) {
+                    seen[identity] = true;
+                    page.push(event);
+                }
+            }
+            pages.unshift(page);
+        }
+
+        function loadPage() {
+            var request = {};
+            for (var key in options) {
+                if (options.hasOwnProperty(key)) request[key] = options[key];
+            }
+            request.start = start;
+            request.end = nextEnd;
+            request.limit = pageLimit;
+            getEventsRange(request, function(err, events) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                events = events || [];
+                var oldest = null;
+                for (var i = 0; i < events.length; i++) {
+                    var event = events[i] || {};
+                    var blockNum = Number(event.blockNum || 0);
+                    if (blockNum && (oldest === null || blockNum < oldest)) oldest = blockNum;
+                }
+                if (events.length < pageLimit || oldest === null) {
+                    addPage(events);
+                    finish();
+                    return;
+                }
+                // A full range page may split the oldest boundary block. Hydrate that
+                // block through the block endpoint before moving the cursor behind it.
+                getEventsForBlock(oldest, { protocol: options.protocol || '' }, function(blockErr, boundaryEvents) {
+                    if (blockErr) {
+                        callback(blockErr);
+                        return;
+                    }
+                    var completePage = [];
+                    for (var e = 0; e < events.length; e++) {
+                        if (Number(events[e] && events[e].blockNum || 0) > oldest) completePage.push(events[e]);
+                    }
+                    completePage = (boundaryEvents || []).concat(completePage);
+                    addPage(completePage);
+                    if (oldest <= start) {
+                        finish();
+                        return;
+                    }
+                    var candidateEnd = oldest - 1;
+                    if (candidateEnd >= nextEnd) {
+                        callback(_makeError('Archive range pagination made no progress'));
+                        return;
+                    }
+                    nextEnd = candidateEnd;
+                    loadPage();
+                });
+            });
+        }
+
+        loadPage();
     }
 
     function findAccountAction(account, protocol, actionType, callback) {
@@ -423,11 +610,16 @@ var HistorySource = (function() {
 
     return {
         getBlock: getBlock,
+        getProofBlock: getProofBlock,
         getAccountProtocol: getAccountProtocol,
         getAccountActions: getAccountActions,
         getCapabilities: getCapabilities,
         getGuildDirectory: getGuildDirectory,
         getEventsRange: getEventsRange,
+        getArchiveHead: getArchiveHead,
+        getEventsForBlock: getEventsForBlock,
+        getAllEventsRange: getAllEventsRange,
+        eventsToThinBlock: eventsToThinBlock,
         findAccountAction: findAccountAction
     };
 })();

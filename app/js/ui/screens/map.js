@@ -368,7 +368,14 @@ var MapScreen = (function() {
                         render();
                         return;
                     }
-                    var events = StateEngine.processBlock(BlockProcessor.processBlock(block, blockNum));
+                    var processed = BlockProcessor.processBlock(block, blockNum);
+                    var events = StateEngine.processBlock(processed, { advanceHead: false, runMaintenance: false });
+                    if (!events.length && StateEngine.getProcessedActionOutcome) {
+                        events = StateEngine.getProcessedActionOutcome(processed, 'vm', function(record) {
+                            var data = record.action && record.action.data || {};
+                            return record.sender === user && record.action && record.action.type === VizMagicConfig.ACTION_TYPES.MOVE && data.zone === regionId;
+                        });
+                    }
                     var moved = null;
                     for (var eventIndex = 0; eventIndex < events.length; eventIndex++) {
                         if (events[eventIndex].type === 'character_moved' && events[eventIndex].account === user && events[eventIndex].zone === regionId) {

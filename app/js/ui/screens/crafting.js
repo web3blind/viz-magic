@@ -292,7 +292,8 @@ var CraftingScreen = (function() {
             html += '<option value="' + fItem.id + '">' + fName + '</option>';
         }
         html += '</select>';
-        html += '<button class="btn btn-secondary reforge-btn" id="btn-reforge">' + t('enchant_reforge') + '</button>';
+        html += '<button class="btn btn-secondary reforge-btn" id="btn-reforge" disabled aria-disabled="true">' + t('enchant_reforge') + '</button>';
+        html += '<p class="quest-desc">' + t('enchant_reforge_economy_pending') + '</p>';
         html += '</div>';
 
         // Item selection
@@ -330,7 +331,7 @@ var CraftingScreen = (function() {
             var cItem = inventory[ci];
             if (cItem.consumed) continue;
             var cTemplate = ItemSystem.getItemTemplate(cItem.type);
-            if (cTemplate && (cTemplate.category === 'scroll' || cTemplate.consumeEffect)) {
+            if (cItem.type === 'mana_potion' || (cTemplate && (cTemplate.category === 'scroll' || cTemplate.consumeEffect))) {
                 consumables.push(cItem);
             }
         }
@@ -346,8 +347,11 @@ var CraftingScreen = (function() {
                 var conRarityName = t('rarity_' + conRarity.name);
                 html += '<div class="consumable-item" role="listitem">';
                 html += '<span>' + conRarity.symbol + ' ' + Helpers.escapeHtml(conName) + ' — ' + Helpers.escapeHtml(conRarityName) + ' — #' + Helpers.escapeHtml(conItem.id) + '</span>';
-                html += '<button class="btn btn-sm btn-primary consume-btn" data-item="' + conItem.id + '">' +
-                        t('inv_use') + '</button>';
+                if (conItem.type === 'mana_potion') {
+                    html += '<button class="btn btn-sm btn-secondary" disabled aria-disabled="true">' + t('consume_chain_energy_unavailable') + '</button>';
+                } else {
+                    html += '<button class="btn btn-sm btn-primary consume-btn" data-item="' + conItem.id + '">' + t('inv_use') + '</button>';
+                }
                 html += '</div>';
             }
             html += '</div></div>';
@@ -403,7 +407,11 @@ var CraftingScreen = (function() {
                 callback(err || new Error('confirmation_pending'));
                 return;
             }
-            var events = StateEngine.processBlock(BlockProcessor.processBlock(block, blockNum));
+            var processed = BlockProcessor.processBlock(block, blockNum);
+            var events = StateEngine.processBlock(processed, { advanceHead: false, runMaintenance: false });
+            if (!events.length && StateEngine.getProcessedBlockOutcomes) {
+                events = StateEngine.getProcessedBlockOutcomes(processed);
+            }
             for (var i = 0; i < events.length; i++) {
                 if (matcher(events[i])) {
                     StateEngine.saveCheckpoint(function() {});
@@ -706,11 +714,8 @@ var CraftingScreen = (function() {
                 max: character.maxHp || 0
             });
         }
-        if (effect && effect.type === 'mana_restore') {
-            return t('consume_success_mana', {
-                amount: Helpers.bpToPercent(effect.amount || 0),
-                current: Helpers.bpToPercent(character.mana || 0)
-            });
+        if (effect && effect.type === 'chain_energy_unverified') {
+            return t('consume_success_mana');
         }
         return t('consume_success');
     }
@@ -730,6 +735,10 @@ var CraftingScreen = (function() {
         }
 
         if (!item) return;
+        if (item.type === 'mana_potion') {
+            Toast.info(t('consume_chain_energy_unavailable'));
+            return;
+        }
 
         SoundManager.play('tap');
         MarketProtocol.broadcastConsume(itemId, function(err, broadcastResult) {

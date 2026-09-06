@@ -480,8 +480,7 @@ var QuestsScreen = (function() {
                 return;
             }
 
-            StateEngine.getState().headBlock = finalBlockNum;
-            CheckpointSystem.saveCheckpoint('global', finalBlockNum, StateEngine.getState(), function() {});
+            CheckpointSystem.saveCheckpoint('global', StateEngine.getState().headBlock || 0, StateEngine.getState(), function() {});
             if (kind === 'complete') {
                 SoundManager.play('quest_complete');
                 Toast.success(Helpers.t('quest_completed'));

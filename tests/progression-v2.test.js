@@ -178,15 +178,15 @@ test('all deterministic XP sources provide their event block to progression', fu
   assert.ok(/CharacterSystem\.addXp\(character, xp, processed\.blockNum\)/.test(dailyLeaderboard));
 });
 
-test('UI restores and displays versioned progression rather than legacy totals', function () {
-  const restoreFiles = [
+test('UI displays versioned progression without accepting account metadata as proof', function () {
+  const metadataReaders = [
     'app/js/ui/app.js',
     'app/js/ui/screens/login.js',
     'app/js/ui/screens/duel.js',
     'app/js/engine/daily-leaderboard.js'
   ];
-  restoreFiles.forEach(function (file) {
-    assert.ok(/CharacterSystem\.restoreProgression\(character, grimoire\)/.test(read(file)), file + ' must restore progression fields');
+  metadataReaders.forEach(function (file) {
+    assert.ok(!/CharacterSystem\.restoreProgression\(character, grimoire\)/.test(read(file)), file + ' must not accept metadata progression as authoritative');
   });
   assert.ok(/CharacterSystem\.getLevelProgress\(character\)/.test(read('app/js/ui/screens/home.js')));
   assert.ok(/CharacterSystem\.getXpForNextLevel\(character\)/.test(read('app/js/ui/screens/home.js')));
@@ -202,7 +202,8 @@ test('character creation paths preserve the activation block boundary', function
   assert.ok(/CharacterSystem\.createCharacter\(sender, data\.name, data\.class, blockNum\)/.test(stateEngine));
   assert.ok(/_primeCharactersForActions\(ctx, vmActions, processed\.blockNum, function\(\)/.test(leaderboard));
   assert.ok(/_handleCharAttune\(ctx, sender, action\.data \|\| \{\}, processed\.blockNum\)/.test(leaderboard));
-  assert.ok(/CharacterSystem\.createCharacter\(user, displayName, selectedClass, state\.headBlock\)/.test(onboarding));
+  assert.ok(/StateEngine\.processBlock\(processed, \{ advanceHead: false, runMaintenance: false \}\)/.test(onboarding));
+  assert.ok(!/CharacterSystem\.createCharacter\(user, displayName, selectedClass/.test(onboarding));
 });
 
 test('all changed progression bundles carry the v2 cache suffix', function () {
@@ -217,5 +218,5 @@ test('all changed progression bundles carry the v2 cache suffix', function () {
     const escaped = asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     assert.ok(new RegExp(escaped + '\\?v=[^" ]*20260827p').test(index), asset + ' must carry the v2 cache suffix');
   });
-  assert.ok(/viz-magic-v213/.test(read('app/sw.js')));
+  assert.ok(/viz-magic-v216/.test(read('app/sw.js')));
 });

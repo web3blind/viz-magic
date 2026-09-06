@@ -152,7 +152,8 @@ var VMProtocol = (function() {
             d: {
                 creature: creatureId,
                 zone: zone,
-                stone: stoneItemId
+                stone: stoneItemId,
+                energy: 10000
             }
         };
     }
@@ -298,7 +299,11 @@ var VMProtocol = (function() {
 
         // Get the latest block reference for this account+protocol
         VizAccount.getAccountProtocol(account, cfg.PROTOCOLS.VM, function(err, response) {
-            if (err || !response || !response.custom_sequence_block_num) {
+            if (err) {
+                callback(err, actions);
+                return;
+            }
+            if (!response || !response.custom_sequence_block_num) {
                 callback(null, actions);
                 return;
             }
@@ -312,14 +317,18 @@ var VMProtocol = (function() {
      * Recursively fetch actions by following block references
      */
     function _fetchAction(blockNum, account, actions, remaining, callback, source) {
-        if (!blockNum || blockNum <= 0 || remaining <= 0) {
+        if (!blockNum || blockNum <= 0) {
             callback(null, actions);
+            return;
+        }
+        if (remaining <= 0) {
+            callback(new Error('history_limit_reached'), actions);
             return;
         }
 
         source.getBlock(blockNum, function(err, block) {
             if (err || !block) {
-                callback(null, actions);
+                callback(err || new Error('history_block_missing_' + blockNum), actions);
                 return;
             }
 

@@ -760,14 +760,14 @@ var GuildScreen = (function() {
         } else {
             html += '<div class="active-key-status active-key-missing">';
             html += '<p class="active-key-notice">' + t('guild_active_key_needed') + '</p>';
-            html += '<label class="input-label" for="input-active-key">' + t('guild_active_key_label') + '</label>';
-            html += '<input type="password" class="input-field" id="input-active-key" placeholder="5J..." autocomplete="off" aria-label="' + t('guild_active_key_label') + '">';
-            html += '<label class="input-label" for="guild-active-key-persist">';
-            html += '<input type="checkbox" id="guild-active-key-persist"> ' + t('guild_active_key_persist') + '</label>';
-            html += '<p class="quest-desc">' + t('guild_active_key_security') + '</p>';
-            html += '<button class="btn btn-primary btn-sm" id="btn-save-active-key">' + t('guild_active_key_save') + '</button>';
             html += '</div>';
         }
+        html += '<label class="input-label" for="input-active-key">' + t('guild_active_key_label') + '</label>';
+        html += '<input type="password" class="input-field" id="input-active-key" placeholder="5J..." autocomplete="off" aria-label="' + t('guild_active_key_label') + '">';
+        html += '<label class="input-label" for="guild-active-key-persist">';
+        html += '<input type="checkbox" id="guild-active-key-persist"' + (VizAccount.isActiveKeyPersistenceEnabled() ? ' checked' : '') + '> ' + t('guild_active_key_persist') + '</label>';
+        html += '<p class="quest-desc">' + t('guild_active_key_security') + '</p>';
+        html += '<button class="btn btn-primary btn-sm" id="btn-save-active-key">' + t('guild_active_key_save') + '</button>';
         html += '</section>';
         return html;
     }
@@ -782,12 +782,16 @@ var GuildScreen = (function() {
                 var input = container.querySelector('#input-active-key');
                 var persistInput = container.querySelector('#guild-active-key-persist');
                 var key = input ? input.value.trim() : '';
+                if (!key && VizAccount.hasActiveKey()) key = VizAccount.getActiveKey();
                 if (!key) return;
                 saveBtn.disabled = true;
                 VizAccount.saveActiveKey(key, !!(persistInput && persistInput.checked), function(err) {
                     saveBtn.disabled = false;
                     if (err) {
-                        Toast.error(t('guild_active_key_invalid'));
+                        Toast.error(err.message === 'storage_write_failed'
+                            ? t('guild_active_key_storage_failed')
+                            : t('guild_active_key_invalid'));
+                        render();
                     } else {
                         Toast.success(t('guild_active_key_saved'));
                         SoundManager.play('success');

@@ -23,7 +23,9 @@ var DeterministicActions = (function() {
     function travelFind(entropy, blockNum, account, zone, energy) {
         energy = Number(energy || 0);
         if (energy < 100) return null;
-        var chance = Math.min(0.95, energy / 1200);
+        // Preserve the shipped travel economy while replacing browser RNG:
+        // 100 energy = 35%; 300 energy = 30%, with 30% doubled burst finds.
+        var chance = energy >= 300 ? 0.30 : 0.35;
         var seed = [entropy || '', blockNum || 0, account || '', zone || '', energy].join('|');
         if (_fraction(seed, 'travel-hit') >= chance) return null;
         var typeIndex = Math.floor(_fraction(seed, 'travel-type') * TRAVEL_FIND_TYPES.length);

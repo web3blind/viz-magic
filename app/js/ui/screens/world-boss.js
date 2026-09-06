@@ -12,7 +12,7 @@ var WorldBossScreen = (function() {
 
         var user = VizAccount.getCurrentUser();
         var state = StateEngine.getState();
-        var blockNum = state.headBlock || 0;
+        var blockNum = Math.max(state.headBlock || 0, state.observedHeadBlock || 0);
         var bossState = state.worldBoss || null;
         if (typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) {
             var bossEvent = WorldEvents.checkWorldBossWindow(blockNum);
@@ -105,7 +105,7 @@ var WorldBossScreen = (function() {
             if (!order.length) return;
             var emitted = [];
             for (var j = 0; j < order.length; j++) {
-                var evts = StateEngine.processBlock(grouped[order[j]]) || [];
+                var evts = StateEngine.processBlock(grouped[order[j]], { advanceHead: false, runMaintenance: false }) || [];
                 emitted = emitted.concat(evts);
             }
             for (var k = 0; k < emitted.length; k++) {
@@ -387,10 +387,10 @@ var WorldBossScreen = (function() {
             var freshHead = dgp.head_block_number;
             var state = StateEngine.getState();
             if (!state) return;
-            var localHead = state.headBlock || 0;
+            var localHead = Math.max(state.headBlock || 0, state.observedHeadBlock || 0);
             // Only re-render when the fresh head is ahead; keeps DOM stable.
             if (freshHead > localHead) {
-                state.headBlock = freshHead;
+                state.observedHeadBlock = freshHead;
                 render();
             }
         });

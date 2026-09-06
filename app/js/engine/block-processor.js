@@ -30,7 +30,7 @@ var BlockProcessor = (function() {
 
         for (var i = 0; i < block.transactions.length; i++) {
             var tx = block.transactions[i];
-            if (!tx.operations) continue;
+            if (!tx || !tx.operations) continue;
 
             for (var j = 0; j < tx.operations.length; j++) {
                 var op = _normalizeOperation(tx.operations[j]);
@@ -148,11 +148,17 @@ var BlockProcessor = (function() {
                 return;
             }
 
-            viz.api.getBlock(current, function(err, block) {
+            var fetchBlock = (typeof HistorySource !== 'undefined' && HistorySource.getBlock)
+                ? HistorySource.getBlock
+                : ((typeof VizAccount !== 'undefined' && VizAccount.getBlock) ? VizAccount.getBlock : null);
+            if (!fetchBlock) {
+                onComplete(new Error('block_fetch_unavailable'), current);
+                return;
+            }
+            fetchBlock(current, function(err, block) {
                 if (err || !block) {
                     console.log('Block fetch error at', current, err);
-                    current++;
-                    setTimeout(nextBlock, 100);
+                    onComplete(err || new Error('block_missing_' + current), current);
                     return;
                 }
 
@@ -161,7 +167,7 @@ var BlockProcessor = (function() {
                 current++;
 
                 // Skip delay for empty blocks during catch-up; short delay otherwise
-                var hasContent = processed.vmActions.length > 0 || processed.voicePosts.length > 0 || processed.awards.length > 0;
+                var hasContent = processed.vmActions.length > 0 || processed.veEvents.length > 0 || processed.voicePosts.length > 0 || processed.awards.length > 0;
                 if (isCatchUp && !hasContent) {
                     nextBlock();
                 } else {

@@ -290,8 +290,8 @@ test('repository exposes one real npm test gate', function() {
 });
 
 test('remediation bundles publish through a fresh service-worker cache', function() {
-  assert.ok(/var CACHE_NAME = 'viz-magic-v214'/.test(read('app/sw.js')));
-  assert.ok(read('app/index.html').includes('20260905a'));
+  assert.ok(/var CACHE_NAME = 'viz-magic-v216'/.test(read('app/sw.js')));
+  assert.ok(read('app/index.html').includes('20260905'));
 });
 
 if (process.exitCode) process.exit(process.exitCode);

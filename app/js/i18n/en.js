@@ -65,6 +65,8 @@ var LangEN = {
     onboarding_path_portrait_title: 'Path Portrait',
     onboarding_path_portrait_empty: 'Choose a class to see its image and story.',
     onboarding_next: 'Next',
+    onboarding_recovery_pending: 'Wait until character history recovery is complete first.',
+    onboarding_confirmation_pending: 'Creation was submitted, but the confirmed action is not available in its block yet. State was not changed.',
     onboarding_back: 'Back',
 
     // Classes
@@ -544,6 +546,7 @@ var LangEN = {
     guild_active_key_persist: 'Save - unsafe',
     guild_active_key_security: 'A saved key is readable by page code and browser extensions. Local storage does not protect it from XSS or malicious extensions.',
     guild_active_key_invalid: 'Invalid active key.',
+    guild_active_key_storage_failed: 'The key remains in this tab only: the storage preference could not be written safely.',
     guild_active_key_clear: 'Remove',
 
     // Ranks
@@ -776,12 +779,13 @@ var LangEN = {
     enchant_error_duplicate_enchant: 'This enchantment is already applied.',
     enchant_error_not_enchantable: 'Item cannot be enchanted.',
     enchant_error_wrong_rune: 'Wrong rune type.',
-    enchant_error_not_enough_mana: 'Not enough mana.',
+
     enchant_reforge_title: 'Reforge',
-    enchant_reforge_desc: 'Re-roll item stats. Quality can only go up. Costs 500 mana.',
+    enchant_reforge_desc: 'Stat re-rolls remain reproducible for old confirmed events.',
+    enchant_reforge_economy_pending: 'New reforges are temporarily unavailable: an honest on-chain cost has not been defined yet.',
     enchant_reforge: 'Reforge',
     enchant_reforge_item: 'Item to reforge',
-    enchant_reforge_confirm: 'Reforge item for {cost} mana? Quality can only improve.',
+    enchant_reforge_confirm: 'New reforging is unavailable until a verifiable cost is defined.',
     enchant_reforge_success: 'Reforge complete!',
     enchant_reforge_upgrade: 'Reforge improved the item quality!',
     enchant_reforge_error: 'Reforge failed.',
@@ -789,7 +793,8 @@ var LangEN = {
     enchant_consumables: 'Consumables',
     consume_success: 'Item consumed!',
     consume_success_hp: 'Item consumed: health +{amount} HP. Now {current}/{max} HP.',
-    consume_success_mana: 'Item consumed: Mana +{amount}. Now {current}.',
+    consume_success_mana: 'A VE record does not prove restoration of VIZ account energy.',
+    consume_chain_energy_unavailable: 'VIZ energy restoration cannot be verified',
     consume_error: 'Failed to consume item.',
 
     // Enchantment types

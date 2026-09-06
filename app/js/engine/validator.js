@@ -29,6 +29,8 @@ var ActionValidator = (function() {
                 return _validateCharAttune(action, worldState, sender);
             case AT.HUNT:
                 return _validateHunt(action, worldState, sender, blockNum);
+            case AT.HUNT_ARMAGEDDON:
+                return _validateArmageddon(action, worldState, sender, blockNum);
             case AT.CHALLENGE:
                 return _validateDuelChallenge(action, worldState, sender, blockNum);
             case AT.ACCEPT:
@@ -78,43 +80,68 @@ var ActionValidator = (function() {
 
     function _validateHunt(action, worldState, sender, blockNum) {
         var character = worldState.characters[sender];
-        if (!character) {
-            return { valid: false, error: 'no_character' };
-        }
-
-        // Check if fallen
-        if (CharacterSystem.isFallen(character, blockNum)) {
-            return { valid: false, error: 'character_fallen' };
-        }
+        if (!character) return { valid: false, error: 'no_character' };
+        if (CharacterSystem.isFallen(character, blockNum)) return { valid: false, error: 'character_fallen' };
 
         var data = action.data || {};
-        if (!data.creature) {
-            return { valid: false, error: 'missing_creature' };
-        }
-        if (!data.spell) {
-            return { valid: false, error: 'missing_spell' };
-        }
-
-        // Verify spell is learned
-        if (character.spells.indexOf(data.spell) === -1) {
-            return { valid: false, error: 'spell_not_learned' };
-        }
+        if (!data.creature) return { valid: false, error: 'missing_creature' };
+        if (!data.spell) return { valid: false, error: 'missing_spell' };
+        if (character.spells.indexOf(data.spell) === -1) return { valid: false, error: 'spell_not_learned' };
 
         var spell = GameSpells.getSpell(data.spell);
-        if (!spell) {
-            return { valid: false, error: 'invalid_spell' };
-        }
-        if (data.energy) {
+        if (!spell) return { valid: false, error: 'invalid_spell' };
+
+        if (Number(action.version || 1) >= 2) {
+            if (!data.zone || typeof GameRegions === 'undefined' || !GameRegions.getRegion(data.zone)) {
+                return { valid: false, error: 'invalid_hunt_zone' };
+            }
+            if (character.currentZone && data.zone !== character.currentZone) {
+                return { valid: false, error: 'hunt_zone_mismatch' };
+            }
+            var creature = typeof GameCreatures !== 'undefined' && GameCreatures.getCreature
+                ? GameCreatures.getCreature(data.creature)
+                : null;
+            if (!creature) return { valid: false, error: 'invalid_creature' };
+            if (creature.zone && creature.zone !== data.zone) {
+                return { valid: false, error: 'creature_zone_mismatch' };
+            }
             var energy = Number(data.energy);
-            if (energy < (spell.manaCost || 0) || energy < cfg.ENERGY.MIN_HUNT_COST || energy > cfg.ENERGY.MAX) {
+            var allowedEnergy = [100, 300, 500, 700, spell.manaCost || 0];
+            if (!Number.isFinite(energy) || energy < (spell.manaCost || 0) ||
+                energy < cfg.ENERGY.MIN_HUNT_COST || energy > cfg.ENERGY.MAX ||
+                allowedEnergy.indexOf(energy) === -1) {
                 return { valid: false, error: 'invalid_hunt_energy' };
             }
-            var allowedEnergy = [100, 300, 500, 700, spell.manaCost || 0];
-            if (allowedEnergy.indexOf(energy) === -1) {
+        } else if (data.energy) {
+            var legacyEnergy = Number(data.energy);
+            if (!Number.isFinite(legacyEnergy) || legacyEnergy < (spell.manaCost || 0) ||
+                legacyEnergy < cfg.ENERGY.MIN_HUNT_COST || legacyEnergy > cfg.ENERGY.MAX) {
                 return { valid: false, error: 'invalid_hunt_energy' };
             }
         }
 
+        return { valid: true, error: null };
+    }
+
+    function _validateArmageddon(action, worldState, sender, blockNum) {
+        var character = worldState.characters[sender];
+        if (!character) return { valid: false, error: 'no_character' };
+        var data = action.data || {};
+        if (!data.creature) return { valid: false, error: 'missing_creature' };
+        if (Number(action.version || 1) < 2) return { valid: true, error: null };
+        if (CharacterSystem.isFallen(character, blockNum)) return { valid: false, error: 'character_fallen' };
+        if (!data.stone) return { valid: false, error: 'missing_armageddon_stone' };
+        if (!data.zone || typeof GameRegions === 'undefined' || !GameRegions.getRegion(data.zone)) {
+            return { valid: false, error: 'invalid_hunt_zone' };
+        }
+        if (character.currentZone && data.zone !== character.currentZone) {
+            return { valid: false, error: 'hunt_zone_mismatch' };
+        }
+        var creature = typeof GameCreatures !== 'undefined' && GameCreatures.getCreature
+            ? GameCreatures.getCreature(data.creature)
+            : null;
+        if (!creature) return { valid: false, error: 'invalid_creature' };
+        if (creature.zone && creature.zone !== data.zone) return { valid: false, error: 'creature_zone_mismatch' };
         return { valid: true, error: null };
     }
 
@@ -304,6 +331,16 @@ var ActionValidator = (function() {
         var data = action.data || {};
         if (!data.zone) {
             return { valid: false, error: 'missing_zone' };
+        }
+
+        if (typeof GameRegions !== 'undefined' && !GameRegions.getRegion(data.zone)) {
+            return { valid: false, error: 'invalid_zone' };
+        }
+        if (Number(action.version || 1) >= 2) {
+            var energy = Number(data.energy);
+            if (!Number.isFinite(energy) || [10, 100, 300].indexOf(energy) === -1) {
+                return { valid: false, error: 'invalid_travel_energy' };
+            }
         }
 
         return { valid: true, error: null };

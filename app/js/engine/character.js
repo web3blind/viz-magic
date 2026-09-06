@@ -201,18 +201,17 @@ var CharacterSystem = (function() {
             _migrateToV2(character, blockNum);
         }
         xpGain = Number(xpGain);
-        if (!Number.isFinite(xpGain) || xpGain <= 0) {
+        if (!Number.isSafeInteger(xpGain) || xpGain <= 0 ||
+            !Number.isSafeInteger(character.xp || 0) ||
+            (character.xp || 0) > Number.MAX_SAFE_INTEGER - xpGain) {
             return { character: character, leveled: false, newLevel: character.level, levelsGained: 0 };
         }
         character.xp += xpGain;
         character.progressionSource = 'chain-replay';
-        var leveled = false;
         var startLevel = character.level;
-
-        while (canLevelUp(character)) {
-            levelUp(character);
-            leveled = true;
-        }
+        var targetLevel = GameFormulas.levelFromXp(character.xp, character.progressionVersion);
+        _applyLevelRange(character, targetLevel);
+        var leveled = character.level > startLevel;
 
         return {
             character: character,
@@ -220,6 +219,39 @@ var CharacterSystem = (function() {
             newLevel: character.level,
             levelsGained: character.level - startLevel
         };
+    }
+
+    function _countMultiplesBetween(startExclusive, endInclusive, divisor) {
+        return Math.max(0, Math.floor(endInclusive / divisor) - Math.floor(startExclusive / divisor));
+    }
+
+    function _applyLevelRange(character, targetLevel) {
+        targetLevel = Math.max(character.level || 1, Math.floor(Number(targetLevel) || 1));
+        var start = character.level || 1;
+        var gained = targetLevel - start;
+        if (gained <= 0) return character;
+        var thirds = _countMultiplesBetween(start, targetLevel, 3);
+        var fifths = _countMultiplesBetween(start, targetLevel, 5);
+        if (character.className === 'stonewarden') {
+            character.res += gained * 2 + fifths;
+            character.pot += gained + thirds;
+        } else if (character.className === 'embercaster') {
+            character.pot += gained * 2;
+            character.swf += gained;
+            character.int += thirds;
+            character.for_ += fifths;
+        } else if (character.className === 'moonrunner') {
+            character.swf += gained * 2;
+            character.pot += gained + fifths;
+            character.for_ += thirds;
+        } else if (character.className === 'bloomsage') {
+            character.int += gained * 2 + fifths;
+            character.res += gained + thirds;
+        }
+        character.level = targetLevel;
+        character.maxHp = GameFormulas.calculateMaxHp(character.className, character.level, character.res + character.coreBonus);
+        character.hp = character.maxHp;
+        return character;
     }
 
     function getLevelProgress(character) {

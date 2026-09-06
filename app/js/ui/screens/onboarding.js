@@ -95,30 +95,50 @@ var OnboardingScreen = (function() {
             return;
         }
 
-        var displayName = mageName || user;
-        var state = StateEngine.getState();
-        var character = CharacterSystem.createCharacter(user, displayName, selectedClass, state.headBlock);
-        if (character) {
-            state.characters[user] = character;
-            state.inventories[user] = state.inventories[user] || [];
-            state.quests[user] = state.quests[user] || (typeof QuestSystem !== 'undefined' ? QuestSystem.createPlayerQuestState() : {});
+        var recovery = StateEngine.getRecoveryStatus ? StateEngine.getRecoveryStatus(user) : { status: 'pending' };
+        if (recovery.status !== 'complete') {
+            Toast.info(Helpers.t('onboarding_recovery_pending'));
+            return;
         }
 
+        var displayName = mageName || user;
         var actionData = VMProtocol.createCharAttuneAction(selectedClass, displayName);
-        VizBroadcast.gameAction(actionData, function(err2) {
+        VizBroadcast.gameAction(actionData, function(err2, broadcastResult) {
             if (err2) {
-                console.log('Char attune broadcast error (may already exist):', err2);
+                console.log('Char attune broadcast error:', err2);
+                Toast.info(Helpers.t('onboarding_confirmation_pending'));
+                return;
             }
-        });
-
-        VizAccount.updateGrimoire(CharacterSystem.toGrimoire(character), function(err3) {
-            if (err3) {
-                console.log('Grimoire save error:', err3);
+            var blockNum = broadcastResult && broadcastResult.action && Number(broadcastResult.action.block_num || 0);
+            if (!blockNum || typeof HistorySource === 'undefined' || !HistorySource.getBlock) {
+                Toast.info(Helpers.t('onboarding_confirmation_pending'));
+                return;
             }
+            HistorySource.getBlock(blockNum, function(blockErr, block) {
+                if (blockErr || !block) {
+                    Toast.info(Helpers.t('onboarding_confirmation_pending'));
+                    return;
+                }
+                var processed = BlockProcessor.processBlock(block, blockNum);
+                var events = StateEngine.processBlock(processed, { advanceHead: false, runMaintenance: false });
+                if (!events.length && StateEngine.getProcessedBlockOutcomes) events = StateEngine.getProcessedBlockOutcomes(processed);
+                var created = null;
+                for (var i = 0; i < events.length; i++) {
+                    if (events[i].type === 'character_created' && events[i].account === user) created = events[i];
+                }
+                var character = StateEngine.getCharacter(user);
+                if (!created || !character) {
+                    Toast.info(Helpers.t('onboarding_confirmation_pending'));
+                    return;
+                }
+                StateEngine.saveCheckpoint(function() {});
+                VizAccount.updateGrimoire(CharacterSystem.toGrimoire(character), function(metaErr) {
+                    if (metaErr) console.log('Grimoire cache save error:', metaErr);
+                });
+                SoundManager.play('success');
+                Helpers.EventBus.emit('navigate', 'home');
+            });
         });
-
-        SoundManager.play('success');
-        Helpers.EventBus.emit('navigate', 'home');
     }
 
     return { render: render, startForAccount: startForAccount };

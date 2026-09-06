@@ -272,7 +272,7 @@ var GameRecipes = (function() {
             category: 'scroll',
             slot: null,
             baseStats: {},
-            consumeEffect: 'mana_restore'
+            consumeEffect: 'chain_energy_unverified'
         },
         fire_rune: {
             category: 'glyph',

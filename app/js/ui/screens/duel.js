@@ -896,46 +896,9 @@ var DuelScreen = (function() {
 
     function _ensureCharacterHydrated(account) {
         if (!account || StateEngine.getCharacter(account) || _hydratingAccounts[account]) return;
-        if (typeof VizAccount === 'undefined' || typeof VizAccount.getAccount !== 'function') return;
-        if (typeof CharacterSystem === 'undefined' || typeof CharacterSystem.createCharacter !== 'function') return;
-
+        // Public account metadata is not authoritative character state. Keep the
+        // duel pending until App's VM history recovery has rebuilt this account.
         _hydratingAccounts[account] = true;
-        VizAccount.getAccount(account, function(err, accountData) {
-            delete _hydratingAccounts[account];
-            if (err || !accountData || StateEngine.getCharacter(account)) return;
-
-            var grimoire = VizAccount.parseGrimoire(accountData);
-            if (!grimoire || !grimoire.class) return;
-
-            var state = StateEngine.getState();
-            var character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class);
-            if (!character) return;
-
-            CharacterSystem.restoreProgression(character, grimoire);
-            if (character.level > 1) {
-                if (typeof GameFormulas !== 'undefined' && GameFormulas.calculateMaxHp && CharacterSystem.getTotalStat) {
-                    character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
-                    character.maxHp = character.hp;
-                }
-            }
-
-            if (VizAccount.getEffectiveShares && CharacterSystem.updateCoreBonus) {
-                var effectiveShares = VizAccount.getEffectiveShares(accountData);
-                var cappedShares = Math.min(effectiveShares, 1000000000000);
-                CharacterSystem.updateCoreBonus(character, cappedShares);
-            }
-
-            if (VizAccount.getProfileAvatar) {
-                character.avatarUrl = VizAccount.getProfileAvatar(accountData);
-            }
-            state.characters[account] = character;
-            state.inventories[account] = state.inventories[account] || [];
-            state.quests[account] = state.quests[account] || (typeof QuestSystem !== 'undefined' && QuestSystem.createPlayerQuestState
-                ? QuestSystem.createPlayerQuestState()
-                : {});
-
-            if (App.getCurrentScreen() === 'duel') render();
-        });
     }
 
     function _findRelatedDuel(state, opponent) {

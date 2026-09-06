@@ -114,11 +114,6 @@ var EnchantingSystem = (function() {
             return { success: false, error: 'wrong_rune' };
         }
 
-        // Check mana
-        var manaCost = enchantType.manaCost || 0;
-        if (manaCost > 0 && (character.mana || 0) < manaCost) {
-            return { success: false, error: 'not_enough_mana' };
-        }
 
         // Check for duplicate enchantment type
         var enchantments = item.enchantments || [];
@@ -151,10 +146,6 @@ var EnchantingSystem = (function() {
         // Consume the rune
         runeItem.consumed = true;
 
-        // Consume mana
-        if (manaCost > 0 && character.mana !== undefined) {
-            character.mana = Math.max(0, character.mana - manaCost);
-        }
 
         return {
             success: true,
@@ -182,11 +173,6 @@ var EnchantingSystem = (function() {
             return { success: false, error: 'not_reforgeable' };
         }
 
-        // Reforge costs 500 mana
-        var manaCost = 500;
-        if ((character.mana || 0) < manaCost) {
-            return { success: false, error: 'not_enough_mana' };
-        }
 
         // Save old stats
         var oldStats = {};
@@ -228,8 +214,6 @@ var EnchantingSystem = (function() {
             }
         }
 
-        // Consume mana
-        character.mana = Math.max(0, character.mana - manaCost);
 
         return {
             success: true,
@@ -290,9 +274,10 @@ var EnchantingSystem = (function() {
     function _applyConsumableEffect(itemType, character) {
         switch (itemType) {
             case 'mana_potion':
-                var manaRestored = 2000; // 20% of max
-                character.mana = Math.min(cfg.ENERGY.MAX, (character.mana || 0) + manaRestored);
-                return { type: 'mana_restore', amount: manaRestored };
+                // VE is a custom-op provenance record, not proof of a VIZ energy
+                // transfer. Preserve the consumed item history without fabricating
+                // a restoration of chain account energy.
+                return { type: 'chain_energy_unverified', amount: 0 };
 
             case 'health_scroll':
                 var hpRestored = Math.floor((character.maxHp || 100) * 500 / 1000); // 50%

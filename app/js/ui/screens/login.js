@@ -128,39 +128,10 @@ var LoginScreen = (function() {
             SoundManager.play('success');
             SoundManager.play('tap');
 
-            // Check if character exists (has Grimoire)
-            var grimoire = VizAccount.parseGrimoire(accountData);
-            if (grimoire && grimoire.class) {
-                _restoreCharacterFromGrimoire(account, accountData, grimoire);
-                Helpers.EventBus.emit('navigate', 'home');
-            } else {
-                OnboardingScreen.startForAccount(account);
-                Helpers.EventBus.emit('navigate', 'onboarding');
-            }
+            // Account metadata is a display/cache hint only. App rebuilds
+            // authoritative progression before deciding on onboarding.
+            Helpers.EventBus.emit('account_login_complete', { user: account, accountData: accountData });
         });
-    }
-
-    function _restoreCharacterFromGrimoire(account, accountData, grimoire) {
-        var state = StateEngine.getState();
-        if (!state.characters[account]) {
-            var character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class);
-            if (character) {
-                CharacterSystem.restoreProgression(character, grimoire);
-                if (character.level > 1) {
-                    character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
-                    character.maxHp = character.hp;
-                }
-                var effectiveShares = VizAccount.getEffectiveShares(accountData);
-                var cappedShares = Math.min(effectiveShares, 1000000000000);
-                CharacterSystem.updateCoreBonus(character, cappedShares);
-                state.characters[account] = character;
-            }
-        }
-        if (state.characters[account] && VizAccount.getProfileAvatar) {
-            state.characters[account].avatarUrl = VizAccount.getProfileAvatar(accountData);
-        }
-        state.inventories[account] = state.inventories[account] || [];
-        state.quests[account] = state.quests[account] || (typeof QuestSystem !== 'undefined' ? QuestSystem.createPlayerQuestState() : {});
     }
 
     return { render: render };

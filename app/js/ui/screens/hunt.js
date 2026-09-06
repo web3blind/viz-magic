@@ -446,7 +446,14 @@ var HuntScreen = (function() {
     function _resolveArmageddonFromBlock(blockNum, ch, creature, playerEnergy, user, stoneId, resultEl, t) {
         var _doResolve = function(finalBlockNum, block) {
             var processed = BlockProcessor.processBlock(block, finalBlockNum);
-            var blockEvents = StateEngine.processBlock(processed);
+            var blockEvents = StateEngine.processBlock(processed, { advanceHead: false, runMaintenance: false });
+            if (!blockEvents.length && StateEngine.getProcessedActionOutcome) {
+                blockEvents = StateEngine.getProcessedActionOutcome(processed, 'vm', function(record) {
+                    var data = record.action && record.action.data || {};
+                    return record.sender === user && record.action && record.action.type === VizMagicConfig.ACTION_TYPES.HUNT_ARMAGEDDON &&
+                        data.creature === creature.id && String(data.stone || data.stone_ref || '') === String(stoneId || '');
+                });
+            }
             var armaResult = null;
             for (var eventIndex = 0; eventIndex < blockEvents.length; eventIndex++) {
                 var candidate = blockEvents[eventIndex];
@@ -464,9 +471,8 @@ var HuntScreen = (function() {
 
             var state = StateEngine.getState();
 
-            // Save checkpoint
-            state.headBlock = finalBlockNum;
-            CheckpointSystem.saveCheckpoint('global', finalBlockNum, state, function() {});
+            // Persist the confirmed outcome without advancing the contiguous polling cursor.
+            CheckpointSystem.saveCheckpoint('global', state.headBlock || 0, state, function() {});
 
             // Update Grimoire
             VizAccount.updateGrimoire(CharacterSystem.toGrimoire(ch), function() {});
@@ -515,7 +521,14 @@ var HuntScreen = (function() {
             console.log('Hunt resolving with canonical Fate Entropy:', fateEntropy.substring(0, 32) + '..., block:', finalBlockNum);
 
             var processed = BlockProcessor.processBlock(block, finalBlockNum);
-            var blockEvents = StateEngine.processBlock(processed);
+            var blockEvents = StateEngine.processBlock(processed, { advanceHead: false, runMaintenance: false });
+            if (!blockEvents.length && StateEngine.getProcessedActionOutcome) {
+                blockEvents = StateEngine.getProcessedActionOutcome(processed, 'vm', function(record) {
+                    var data = record.action && record.action.data || {};
+                    return record.sender === user && record.action && record.action.type === VizMagicConfig.ACTION_TYPES.HUNT &&
+                        data.creature === creature.id && data.spell === spell.id;
+                });
+            }
             var result = null;
             for (var eventIndex = 0; eventIndex < blockEvents.length; eventIndex++) {
                 var candidate = blockEvents[eventIndex];
@@ -557,15 +570,12 @@ var HuntScreen = (function() {
                 }
             }
 
-            // Update head block in state
-            state.headBlock = finalBlockNum;
-
-            // Persist to IndexedDB checkpoint (survives page reload)
-            CheckpointSystem.saveCheckpoint('global', finalBlockNum, state, function(saveErr) {
+            // Persist the confirmed outcome without advancing over unseen history.
+            CheckpointSystem.saveCheckpoint('global', state.headBlock || 0, state, function(saveErr) {
                 if (saveErr) {
                     console.log('Checkpoint save error:', saveErr);
                 } else {
-                    console.log('State checkpointed at block', finalBlockNum, '— XP:', ch.xp, 'Lv:', ch.level);
+                    console.log('State checkpointed after confirmed block', finalBlockNum, '— XP:', ch.xp, 'Lv:', ch.level);
                 }
             });
 

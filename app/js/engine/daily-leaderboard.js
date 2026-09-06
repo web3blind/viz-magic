@@ -372,71 +372,23 @@ var DailyLeaderboard = (function() {
 
     function _primeCharactersForActions(ctx, vmActions, blockNum, callback) {
         callback = callback || function() {};
-
-        var accountsToFetch = [];
-        var seen = {};
-
         for (var i = 0; i < vmActions.length; i++) {
             var sender = vmActions[i].sender;
             var action = vmActions[i].action;
-            if (!sender || ctx.characters[sender] || seen[sender]) continue;
+            if (!sender || ctx.characters[sender]) continue;
 
-            if (action && action.type === VizMagicConfig.ACTION_TYPES.CHAR_ATTUNE && action.data && action.data.class) {
-                _handleCharAttune(ctx, sender, action.data, blockNum);
+            var authoritative = typeof StateEngine !== 'undefined' && StateEngine.getCharacter
+                ? StateEngine.getCharacter(sender)
+                : null;
+            if (authoritative) {
+                ctx.characters[sender] = _cloneObject(authoritative);
                 continue;
             }
-
-            seen[sender] = true;
-            accountsToFetch.push(sender);
-        }
-
-        if (!accountsToFetch.length) {
-            callback();
-            return;
-        }
-
-        viz.api.getAccounts(accountsToFetch, function(err, response) {
-            var byName = {};
-            var i;
-            if (!err && response && response.length) {
-                for (i = 0; i < response.length; i++) {
-                    if (response[i] && response[i].name) {
-                        byName[response[i].name] = response[i];
-                    }
-                }
-            }
-
-            for (i = 0; i < accountsToFetch.length; i++) {
-                _hydrateCharacter(ctx, accountsToFetch[i], byName[accountsToFetch[i]] || null, blockNum);
-            }
-
-            callback();
-        });
-    }
-
-    function _hydrateCharacter(ctx, account, accountData, blockNum) {
-        if (!account || ctx.characters[account]) return;
-
-        var character = null;
-        if (accountData) {
-            var avatarUrl = VizAccount.getProfileAvatar ? VizAccount.getProfileAvatar(accountData) : '';
-            var grimoire = VizAccount.parseGrimoire(accountData);
-            if (grimoire && grimoire.class) {
-                character = CharacterSystem.createCharacter(account, grimoire.name || account, grimoire.class, blockNum);
-                if (character) {
-                    CharacterSystem.restoreProgression(character, grimoire);
-                    character.hp = GameFormulas.calculateMaxHp(character.className, character.level, CharacterSystem.getTotalStat(character, 'res'));
-                    character.maxHp = character.hp;
-                }
+            if (action && action.type === VizMagicConfig.ACTION_TYPES.CHAR_ATTUNE && action.data && action.data.class) {
+                _handleCharAttune(ctx, sender, action.data, blockNum);
             }
         }
-
-        if (!character) {
-            character = CharacterSystem.createCharacter(account, account, 'embercaster', blockNum);
-        }
-
-        if (avatarUrl) character.avatarUrl = avatarUrl;
-        ctx.characters[account] = character;
+        callback();
     }
 
     function _handleCharAttune(ctx, account, data, blockNum) {

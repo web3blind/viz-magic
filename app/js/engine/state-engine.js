@@ -26,6 +26,11 @@ var StateEngine = (function() {
             territories: {},
             libraryAccess: {}, // account → chapter → {day, blockNum}
             processedVeEvents: {},
+            processedOperations: {},
+            processedMaintenanceBlocks: {},
+            actionOutcomes: {},
+            recovery: {},
+            accountHints: {},
             marketplace: null,
             recentActions: [],
             social: {
@@ -57,6 +62,11 @@ var StateEngine = (function() {
         state.territories = state.territories || {};
         state.libraryAccess = state.libraryAccess || {};
         state.processedVeEvents = state.processedVeEvents || {};
+        state.processedOperations = state.processedOperations || {};
+        state.processedMaintenanceBlocks = state.processedMaintenanceBlocks || {};
+        state.actionOutcomes = state.actionOutcomes || {};
+        state.recovery = state.recovery || {};
+        state.accountHints = state.accountHints || {};
         state.recentActions = state.recentActions || [];
         state.social = state.social || { knownAccounts: [] };
         state.social.knownAccounts = state.social.knownAccounts || [];
@@ -101,12 +111,96 @@ var StateEngine = (function() {
         });
     }
 
+    function _operationKey(kind, blockNum, record, fallbackIndex) {
+        record = record || {};
+        var txIndex = Number(record.txIndex);
+        var opIndex = Number(record.opIndex);
+        if (!Number.isInteger(txIndex) || txIndex < 0) txIndex = 0;
+        if (!Number.isInteger(opIndex) || opIndex < 0) opIndex = Number(fallbackIndex || 0);
+        return [kind, Number(blockNum || 0), txIndex, opIndex].join(':');
+    }
+
+    function _orderedOperations(processedBlock) {
+        var ordered = [];
+        var sources = [
+            { kind: 'vm', records: processedBlock.vmActions || [] },
+            { kind: 've', records: processedBlock.veEvents || [] },
+            { kind: 'voice', records: processedBlock.voicePosts || [] },
+            { kind: 'award', records: processedBlock.awards || [] }
+        ];
+        for (var s = 0; s < sources.length; s++) {
+            for (var i = 0; i < sources[s].records.length; i++) {
+                ordered.push({ kind: sources[s].kind, record: sources[s].records[i], index: i, sourceOrder: s });
+            }
+        }
+        ordered.sort(function(a, b) {
+            var atx = Number(a.record && a.record.txIndex || 0);
+            var btx = Number(b.record && b.record.txIndex || 0);
+            if (atx !== btx) return atx - btx;
+            var aop = Number(a.record && a.record.opIndex);
+            var bop = Number(b.record && b.record.opIndex);
+            if (!Number.isInteger(aop)) aop = a.index;
+            if (!Number.isInteger(bop)) bop = b.index;
+            if (aop !== bop) return aop - bop;
+            return a.sourceOrder - b.sourceOrder;
+        });
+        return ordered;
+    }
+
+    function getOperationOutcome(kind, blockNum, txIndex, opIndex) {
+        return worldState.actionOutcomes[_operationKey(kind, blockNum, {
+            txIndex: txIndex,
+            opIndex: opIndex
+        }, 0)] || [];
+    }
+
+    function getProcessedActionOutcome(processedBlock, kind, matcher) {
+        var records = kind === 've' ? (processedBlock.veEvents || []) : (processedBlock.vmActions || []);
+        for (var i = 0; i < records.length; i++) {
+            if (!matcher || matcher(records[i])) {
+                var outcome = getOperationOutcome(kind, processedBlock.blockNum, records[i].txIndex, records[i].opIndex);
+                if (outcome.length) return outcome;
+            }
+        }
+        return [];
+    }
+
+    function getProcessedBlockOutcomes(processedBlock) {
+        var outcomes = [];
+        var kinds = ['vm', 've'];
+        for (var k = 0; k < kinds.length; k++) {
+            var records = kinds[k] === 've' ? (processedBlock.veEvents || []) : (processedBlock.vmActions || []);
+            for (var i = 0; i < records.length; i++) {
+                outcomes = outcomes.concat(getOperationOutcome(
+                    kinds[k], processedBlock.blockNum, records[i].txIndex, records[i].opIndex
+                ));
+            }
+        }
+        return outcomes;
+    }
+
+    function advanceHead(blockNum) {
+        worldState.headBlock = Math.max(worldState.headBlock || 0, Number(blockNum || 0));
+        var floor = worldState.headBlock - 2000;
+        if (floor <= 0) return;
+        var maps = [worldState.processedOperations, worldState.processedMaintenanceBlocks, worldState.actionOutcomes];
+        for (var m = 0; m < maps.length; m++) {
+            for (var key in maps[m]) {
+                if (!maps[m].hasOwnProperty(key)) continue;
+                var parts = String(key).split(':');
+                var keyBlock = Number(parts.length === 1 ? parts[0] : parts[1]);
+                if (keyBlock > 0 && keyBlock < floor) delete maps[m][key];
+            }
+        }
+    }
+
     /**
      * Process a single processed block (output from BlockProcessor)
      * @param {Object} processedBlock - from BlockProcessor.processBlock
      * @returns {Array} list of game events generated
      */
-    function processBlock(processedBlock) {
+    function processBlock(processedBlock, options) {
+        options = options || {};
         var events = [];
         var blockNum = processedBlock.blockNum;
         var blockHash = processedBlock.blockHash;
@@ -119,45 +213,66 @@ var StateEngine = (function() {
             ? ActionProof.createVerifier(processedBlock.awards || [], blockNum)
             : null;
 
-        // Process VM game actions
-        for (var i = 0; i < processedBlock.vmActions.length; i++) {
-            var vmAction = processedBlock.vmActions[i];
-            var paidProof = paidActionVerifier && ActionProof.isPaidAction(vmAction.action)
-                ? paidActionVerifier.verify(vmAction.sender, vmAction.txIndex, vmAction.action)
-                : null;
-            var actionEvents = _processGameAction(
-                vmAction.sender,
-                vmAction.action,
-                blockNum,
-                blockHash,
-                huntEntropy,
-                !!libraryPayments[_libraryPaymentKey(
-                    vmAction.sender,
-                    vmAction.txIndex,
-                    vmAction.action && vmAction.action.data && vmAction.action.data.chapter,
-                    vmAction.action && vmAction.action.data && vmAction.action.data.day
-                )],
-                paidProof,
-                vmAction.txIndex,
-                vmAction.opIndex
-            );
-            events = events.concat(actionEvents);
+        var orderedOperations = _orderedOperations(processedBlock);
+        for (var i = 0; i < orderedOperations.length; i++) {
+            var entry = orderedOperations[i];
+            var operationKey = _operationKey(entry.kind, blockNum, entry.record, entry.index);
+            if (worldState.processedOperations[operationKey]) continue;
+            var operationEvents = [];
+            var shouldRemember = true;
+
+            if (entry.kind === 'vm') {
+                var vmAction = entry.record;
+                var isPaid = typeof ActionProof !== 'undefined' && ActionProof.isPaidAction(vmAction.action);
+                var paidProof = paidActionVerifier && isPaid
+                    ? paidActionVerifier.verify(vmAction.sender, vmAction.txIndex, vmAction.action)
+                    : null;
+                if (isPaid && paidProof && paidProof.error === 'paid_action_proof_missing') {
+                    // An archive/RPC response may be incomplete. Do not consume the
+                    // action identity, so the exact same operation can succeed on retry.
+                    shouldRemember = false;
+                } else {
+                    operationEvents = _processGameAction(
+                        vmAction.sender,
+                        vmAction.action,
+                        blockNum,
+                        blockHash,
+                        huntEntropy,
+                        !!libraryPayments[_libraryPaymentKey(
+                            vmAction.sender,
+                            vmAction.txIndex,
+                            vmAction.action && vmAction.action.data && vmAction.action.data.chapter,
+                            vmAction.action && vmAction.action.data && vmAction.action.data.day
+                        )],
+                        paidProof,
+                        vmAction.txIndex,
+                        vmAction.opIndex
+                    );
+                }
+            } else if (entry.kind === 've') {
+                operationEvents = _processVEEvent(entry.record, blockNum, huntEntropy);
+                shouldRemember = operationEvents.length > 0;
+            } else if (entry.kind === 'voice') {
+                _processVoicePost(entry.record, blockNum);
+            } else if (entry.kind === 'award') {
+                _processAward(entry.record, blockNum);
+            }
+
+            if (shouldRemember) {
+                worldState.processedOperations[operationKey] = true;
+                worldState.actionOutcomes[operationKey] = operationEvents;
+            }
+            events = events.concat(operationEvents);
         }
 
-        for (var ve = 0; ve < (processedBlock.veEvents || []).length; ve++) {
-            events = events.concat(_processVEEvent(processedBlock.veEvents[ve], blockNum, huntEntropy));
-        }
+        if (options.runMaintenance === false) return events;
 
-        // Process Voice / Chronicle posts
-        for (var vp = 0; vp < processedBlock.voicePosts.length; vp++) {
-            _processVoicePost(processedBlock.voicePosts[vp], blockNum);
+        var maintenanceKey = String(blockNum);
+        if (worldState.processedMaintenanceBlocks[maintenanceKey]) {
+            if (options.advanceHead !== false) advanceHead(blockNum);
+            return events;
         }
-
-        // Process awards (blessings)
-        for (var j = 0; j < processedBlock.awards.length; j++) {
-            var award = processedBlock.awards[j];
-            _processAward(award, blockNum);
-        }
+        worldState.processedMaintenanceBlocks[maintenanceKey] = true;
 
         // Check duel timeouts
         if (typeof DuelStateManager !== 'undefined') {
@@ -266,7 +381,7 @@ var StateEngine = (function() {
         }
 
         // Update head block
-        worldState.headBlock = Math.max(worldState.headBlock || 0, blockNum);
+        if (options.advanceHead !== false) advanceHead(blockNum);
 
         // Keep recent actions trimmed
         while (worldState.recentActions.length > 200) {
@@ -322,7 +437,7 @@ var StateEngine = (function() {
                 events = events.concat(_handleRest(sender, blockNum));
                 break;
             case AT.MOVE:
-                events = events.concat(_handleMove(sender, action.data, blockNum, huntEntropy || blockHash, txIndex, opIndex));
+                events = events.concat(_handleMove(sender, action.data, blockNum, huntEntropy || blockHash, txIndex, opIndex, action.version));
                 break;
             case AT.LIBRARY_UNLOCK:
                 if (libraryPaymentVerified && action.data && _isLibraryChapter(action.data.chapter) && _isLibraryDay(action.data.day)) {
@@ -552,9 +667,6 @@ var StateEngine = (function() {
     function _handleHunt(sender, data, blockNum, blockHash) {
         var character = worldState.characters[sender];
         if (!character) return [];
-
-        // Skip if already processed by optimistic processHuntResult()
-        if (character.lastHuntBlock === blockNum) return [];
 
         // Get creature and spell definitions
         var creature = GameCreatures.getCreature(data.creature);
@@ -793,7 +905,7 @@ var StateEngine = (function() {
     /**
      * Handle move action
      */
-    function _handleMove(sender, data, blockNum, entropy, txIndex, opIndex) {
+    function _handleMove(sender, data, blockNum, entropy, txIndex, opIndex, actionVersion) {
         var character = worldState.characters[sender];
         if (!character) return [];
 
@@ -819,7 +931,9 @@ var StateEngine = (function() {
             zone: data.zone
         };
 
-        var find = typeof DeterministicActions !== 'undefined'
+        // Travel finds were introduced with paid V2 moves. Replaying old V1
+        // movement must not fabricate inventory that never existed on-chain.
+        var find = Number(actionVersion || 1) >= 2 && typeof DeterministicActions !== 'undefined'
             ? DeterministicActions.travelFind(entropy, blockNum, sender, data.zone, data.energy)
             : null;
         if (find) {
@@ -1578,6 +1692,18 @@ var StateEngine = (function() {
         return worldState;
     }
 
+    function setRecoveryStatus(account, status, reason) {
+        if (!account) return;
+        worldState.recovery[account] = {
+            status: status === 'complete' ? 'complete' : 'pending',
+            reason: reason || ''
+        };
+    }
+
+    function getRecoveryStatus(account) {
+        return worldState.recovery[account] || { status: 'pending', reason: 'not_checked' };
+    }
+
     /**
      * Get character state for an account
      * @param {string} account
@@ -1824,8 +1950,14 @@ var StateEngine = (function() {
     return {
         init: init,
         processBlock: processBlock,
+        advanceHead: advanceHead,
+        getOperationOutcome: getOperationOutcome,
+        getProcessedActionOutcome: getProcessedActionOutcome,
+        getProcessedBlockOutcomes: getProcessedBlockOutcomes,
         saveCheckpoint: saveCheckpoint,
         getState: getState,
+        setRecoveryStatus: setRecoveryStatus,
+        getRecoveryStatus: getRecoveryStatus,
         getCharacter: getCharacter,
         getInventory: getInventory,
         getLibraryDay: getLibraryDay,

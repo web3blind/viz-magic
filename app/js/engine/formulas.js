@@ -88,12 +88,25 @@ var GameFormulas = (function() {
      * @param {number} level
      * @returns {number}
      */
-    function totalXpForLevel(level, progressionVersion) {
-        var total = 0;
-        for (var i = 2; i <= level; i++) {
-            total += xpForLevel(i, progressionVersion);
+    function _rawTotalXpForLevel(level, progressionVersion) {
+        level = Number(level);
+        if (!Number.isFinite(level) || level <= 1) return 0;
+        level = Math.floor(level);
+        var total;
+        if (progressionVersion === 1) {
+            var sumLevels = level * (level + 1) / 2 - 1;
+            total = 800 * (level - 1) + 100 * sumLevels + 25 * (level - 2) * (level - 1);
+        } else {
+            var n = level - 1;
+            total = 1000 * n + (125 * n * (n + 1) * (n - 1) / 3);
         }
         return total;
+    }
+
+    function totalXpForLevel(level, progressionVersion) {
+        var total = _rawTotalXpForLevel(level, progressionVersion);
+        if (!Number.isFinite(total) || total > Number.MAX_SAFE_INTEGER) return Number.MAX_SAFE_INTEGER;
+        return Math.max(0, Math.floor(total));
     }
 
     /**
@@ -102,16 +115,20 @@ var GameFormulas = (function() {
      * @returns {number} current level
      */
     function levelFromXp(totalXp, progressionVersion) {
-        var level = 1;
-        var cumulative = 0;
-        totalXp = Math.max(0, Number(totalXp) || 0);
-        while (Number.isFinite(cumulative)) {
-            var needed = xpForLevel(level + 1, progressionVersion);
-            if (cumulative + needed > totalXp) break;
-            cumulative += needed;
-            level++;
+        totalXp = Number(totalXp);
+        if (!Number.isFinite(totalXp) || totalXp <= 0) return 1;
+        totalXp = Math.min(Number.MAX_SAFE_INTEGER, Math.floor(totalXp));
+        var low = 1;
+        var high = 2;
+        while (_rawTotalXpForLevel(high, progressionVersion) <= totalXp && high < Number.MAX_SAFE_INTEGER / 2) {
+            high *= 2;
         }
-        return level;
+        while (low + 1 < high) {
+            var mid = Math.floor((low + high) / 2);
+            if (_rawTotalXpForLevel(mid, progressionVersion) <= totalXp) low = mid;
+            else high = mid;
+        }
+        return low;
     }
 
     /**

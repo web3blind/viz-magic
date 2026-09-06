@@ -65,6 +65,8 @@ var LangRU = {
     onboarding_path_portrait_title: 'Портрет пути',
     onboarding_path_portrait_empty: 'Выберите класс, чтобы увидеть его образ и историю.',
     onboarding_next: 'Далее',
+    onboarding_recovery_pending: 'Сначала дождитесь завершения восстановления истории персонажа.',
+    onboarding_confirmation_pending: 'Создание отправлено, но подтверждённое действие ещё не найдено в блоке. Состояние не изменено.',
     onboarding_back: 'Назад',
 
     // Classes
@@ -544,6 +546,7 @@ var LangRU = {
     guild_active_key_persist: 'Сохранить - небезопасно',
     guild_active_key_security: 'Сохранённый ключ доступен коду страницы и расширениям браузера. Локальное хранение не защищает от XSS и вредоносных расширений.',
     guild_active_key_invalid: 'Неверный активный ключ.',
+    guild_active_key_storage_failed: 'Ключ оставлен только в памяти этой вкладки: безопасно записать настройки хранения не удалось.',
     guild_active_key_clear: 'Удалить',
 
     // Ranks
@@ -776,12 +779,13 @@ var LangRU = {
     enchant_error_duplicate_enchant: 'Такое зачарование уже есть.',
     enchant_error_not_enchantable: 'Предмет нельзя зачаровать.',
     enchant_error_wrong_rune: 'Неподходящая руна.',
-    enchant_error_not_enough_mana: 'Мало маны.',
+
     enchant_reforge_title: 'Перековка',
-    enchant_reforge_desc: 'Перебросьте характеристики предмета. Качество может повыситься. Стоит 500 маны.',
+    enchant_reforge_desc: 'Переброс характеристик остаётся воспроизводимым для старых подтверждённых событий.',
+    enchant_reforge_economy_pending: 'Новая перековка временно недоступна: честный расход в блокчейне ещё не определён.',
     enchant_reforge: 'Перековать',
     enchant_reforge_item: 'Предмет для перековки',
-    enchant_reforge_confirm: 'Перековать предмет за {cost} маны? Качество может только повыситься.',
+    enchant_reforge_confirm: 'Новая перековка недоступна до определения подтверждаемого расхода.',
     enchant_reforge_success: 'Перековка завершена!',
     enchant_reforge_upgrade: 'Перековка улучшила качество предмета!',
     enchant_reforge_error: 'Не удалось перековать.',
@@ -789,7 +793,8 @@ var LangRU = {
     enchant_consumables: 'Расходники',
     consume_success: 'Предмет использован!',
     consume_success_hp: 'Предмет использован: здоровье +{amount} HP. Сейчас {current}/{max} HP.',
-    consume_success_mana: 'Предмет использован: мана +{amount}. Сейчас {current}.',
+    consume_success_mana: 'VE-запись не подтверждает восстановление энергии аккаунта VIZ.',
+    consume_chain_energy_unavailable: 'Нельзя подтвердить восстановление энергии VIZ',
     consume_error: 'Не удалось использовать предмет.',
 
     // Enchantment types

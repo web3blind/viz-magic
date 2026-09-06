@@ -63,17 +63,17 @@ var ActionProof = (function() {
         var activation = Number(_paidConfig().V2_ACTIVATION_BLOCK || 0);
 
         function verify(sender, txIndex, action) {
-            var requirement = getRequirement(action);
-            if (!requirement) {
-                return { valid: false, legacy: false, error: 'paid_action_requirement_invalid' };
-            }
-
             var version = Number(action && action.version || 1);
             if (version < 2 && Number(blockNum) < activation) {
                 return { valid: true, legacy: true, error: null };
             }
             if (version < 2) {
                 return { valid: false, legacy: false, error: 'paid_action_v2_required' };
+            }
+
+            var requirement = getRequirement(action);
+            if (!requirement) {
+                return { valid: false, legacy: false, error: 'paid_action_requirement_invalid' };
             }
 
             for (var i = 0; i < source.length; i++) {
