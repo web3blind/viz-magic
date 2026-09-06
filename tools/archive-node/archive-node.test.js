@@ -78,6 +78,10 @@ var TEST_BLOCK = {
     }]
 };
 
+assert.strictEqual(archiveServer.virtualBlockComplete({ getVirtualReceiptStartBlock: function() { return 100; } }, { blockNum: 99, virtualComplete: false }), true);
+assert.strictEqual(archiveServer.virtualBlockComplete({ getVirtualReceiptStartBlock: function() { return 100; } }, { blockNum: 100, virtualComplete: false }), false);
+assert.strictEqual(archiveServer.virtualBlockComplete({ getVirtualReceiptStartBlock: function() { return 100; } }, { blockNum: 100, virtualComplete: true }), true);
+
 function listen(server) {
     return new Promise(function(resolve) {
         server.listen(0, '127.0.0.1', function() { resolve(server.address().port); });
@@ -158,12 +162,17 @@ async function run() {
             assert.strictEqual(block.status, 200);
             assert.strictEqual(block.body.block.block_id, TEST_BLOCK.block_id);
             assert.strictEqual(block.body.eventCount, 6);
+            assert.strictEqual(block.body.sourceOperationsComplete, true);
+            assert.strictEqual(block.body.virtualReceiptsComplete, true, 'pre-genesis blocks do not require virtual receipt coverage');
+            assert.strictEqual(block.body.block.virtualReceiptsComplete, true);
             assert.strictEqual(block.body.block.transactions[0].operations.length, 6);
             assert.ok(JSON.stringify(block.body.block).indexOf('dice.id') === -1, 'served block must be thinned to game operations');
 
             var range = await getJson(port, '/archive-mirror/v1/range?start=100&end=200&protocol=VM,V,VE,award');
             assert.strictEqual(range.status, 200);
             assert.strictEqual(range.body.count, 6);
+            assert.strictEqual(range.body.requestedStart, 100);
+            assert.strictEqual(range.body.requestedEnd, 200);
 
             var accountRange = await getJson(port, '/archive-mirror/v1/range?start=100&end=200&account=' + ACCOUNT + '&protocol=VM');
             assert.strictEqual(accountRange.status, 200);
@@ -177,6 +186,8 @@ async function run() {
 
             var blockEvents = await getJson(port, '/archive-mirror/v1/events/block/123.json');
             assert.strictEqual(blockEvents.status, 200);
+            assert.strictEqual(blockEvents.body.sourceOperationsComplete, true);
+            assert.strictEqual(blockEvents.body.virtualReceiptsComplete, true, 'pre-genesis event blocks are complete without virtual history');
             assert.strictEqual(blockEvents.body.blockNum, 123);
             assert.strictEqual(blockEvents.body.count, 6);
             assert.strictEqual(blockEvents.body.events[0].protocol, 'VM');

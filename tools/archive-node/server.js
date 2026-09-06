@@ -180,6 +180,11 @@ function buildHealth(archive, startedAt, nowMs) {
     };
 }
 
+function virtualBlockComplete(archive, record) {
+    return Number(record && record.blockNum || 0) < archive.getVirtualReceiptStartBlock() ||
+        !!(record && record.virtualComplete);
+}
+
 function createServer(options) {
     options = options || {};
     var startedAt = Date.now();
@@ -231,6 +236,9 @@ function createServer(options) {
                 json(res, 404, { error: 'block_not_indexed', blockNum: blockNum }, { 'Cache-Control': 'no-store' });
                 return;
             }
+            var blockVirtualComplete = virtualBlockComplete(archive, record);
+            record.block.sourceOperationsComplete = true;
+            record.block.virtualReceiptsComplete = blockVirtualComplete;
             json(res, 200, {
                 blockNum: record.blockNum,
                 block_id: record.block_id,
@@ -238,7 +246,8 @@ function createServer(options) {
                 timestamp: record.timestamp,
                 eventCount: record.eventCount || 0,
                 complete: true,
-                virtualReceiptsComplete: record.virtualComplete,
+                sourceOperationsComplete: true,
+                virtualReceiptsComplete: blockVirtualComplete,
                 sourceNode: record.sourceNode || '',
                 indexedAt: record.indexedAt,
                 block: record.block
@@ -263,6 +272,7 @@ function createServer(options) {
                 end: eventBlockNum,
                 limit: 5000
             });
+            var eventBlockVirtualComplete = virtualBlockComplete(archive, eventBlockRecord);
             json(res, 200, {
                 blockNum: eventBlockRecord.blockNum,
                 block_id: eventBlockRecord.block_id,
@@ -270,7 +280,8 @@ function createServer(options) {
                 timestamp: eventBlockRecord.timestamp,
                 eventCount: eventBlockRecord.eventCount || blockEvents.length,
                 complete: true,
-                virtualReceiptsComplete: eventBlockRecord.virtualComplete,
+                sourceOperationsComplete: true,
+                virtualReceiptsComplete: eventBlockVirtualComplete,
                 sourceNode: eventBlockRecord.sourceNode || '',
                 indexedAt: eventBlockRecord.indexedAt,
                 events: blockEvents,
@@ -305,6 +316,8 @@ function createServer(options) {
                 complete: requestedEnd <= Number(archiveStatus.lastIndexedBlock || 0) && archive.isBlockRangeComplete(requestedStart, requestedEnd),
                 virtualReceiptsComplete: archive.isVirtualRangeComplete(requestedStart, requestedEnd),
                 virtualReceiptStartBlock: archive.getVirtualReceiptStartBlock(),
+                requestedStart: requestedStart,
+                requestedEnd: requestedEnd,
                 indexedThrough: Number(archiveStatus.lastIndexedBlock || 0),
                 nextEnd: events.length && events.length >= safeNum(parsedUrl.query.limit, 500) ? oldestBlock - 1 : null
             });
@@ -394,5 +407,6 @@ module.exports = {
     safeNum: safeNum,
     pathParts: pathParts,
     buildGuildDirectory: buildGuildDirectory,
-    buildHealth: buildHealth
+    buildHealth: buildHealth,
+    virtualBlockComplete: virtualBlockComplete
 };
