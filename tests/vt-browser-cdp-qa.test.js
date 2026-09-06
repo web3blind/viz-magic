@@ -91,6 +91,8 @@ async function click(cdp, selector) {
             VizAccount.hasActiveKey=function(){return false;};
             VizAccount.getAccount=function(name,cb){name==='bob'?cb(null,{name:'bob'}):cb(new Error('fixture-not-found'));};
             localStorage.removeItem('viz_magic_pending_burn_v1:alice');
+            window.__mintReady=false;
+            VizBroadcast.getMagicMintReadiness=function(cb){cb(null,window.__mintReady?{ready:true,reason:'ready',activationBlock:83500000,irreversibleBlock:83500001}:{ready:false,reason:'magic_activation_pending',activationBlock:83500000,irreversibleBlock:83180000});};
             VizBroadcast.mintMagicFixedAward=function(intent,amount,maxEnergy,cb){window.__vtFixed={intent:intent,amount:amount,maxEnergy:maxEnergy};cb(new Error('fixture-timeout'));};
             VizBroadcast.mintMagicAward=function(intent,energy,cb){window.__vtAward={intent:intent,energy:energy};cb(new Error('fixture-timeout'));};
             VizBroadcast.tokenAction=function(action,cb){window.__vtSend=action;cb(null,{});};
@@ -98,8 +100,21 @@ async function click(cdp, selector) {
         })()`);
 
         await click(cdp, '.nav-tab[data-screen="wallet"]');
+        await new Promise(function(resolve) { setTimeout(resolve, 30); });
+        var activationGate = await evalValue(cdp, `(function(){return{fixed:document.querySelector('#magic-mint-fixed-form button[type=submit]').disabled,award:document.querySelector('#magic-mint-award-form button[type=submit]').disabled,text:document.querySelector('#magic-mint-readiness').textContent};})()`);
+        assert.strictEqual(activationGate.fixed, true);
+        assert.strictEqual(activationGate.award, true);
+        assert.ok(activationGate.text.indexOf('Genesis: блок #83500000') >= 0 && activationGate.text.indexOf('Средства не отправляются') >= 0, 'pre-activation state must be visible and disable mint broadcasts');
+        await evalValue(cdp, `(function(){window.__mintReady=true;WalletScreen.refreshMintReadiness();return new Promise(function(resolve){setTimeout(resolve,30);});})()`);
         var wallet = await evalValue(cdp, `(function(){var burn=document.querySelector('#magic-mint-transfer-form button[type=submit]'),fixed=document.querySelector('#magic-mint-fixed-form button[type=submit]'),award=document.querySelector('#magic-mint-award-form button[type=submit]');return{screen:App.getCurrentScreen(),heading:document.querySelector('#screen-wallet h1').textContent,balance:document.querySelector('#magic-balance').textContent,burnDisabled:burn.disabled,fixedDisabled:fixed.disabled,awardDisabled:award.disabled,hasConsent:!!document.querySelector('#magic-burn-consent'),regularCopy:document.querySelector('#screen-wallet').textContent.indexOf('regular authority')>=0,policyCopy:document.querySelector('#screen-wallet').textContent.indexOf('не означает равенство нативных активов')>=0,unknownCopy:document.querySelector('#screen-wallet').textContent.indexOf('неизвестен до receive_award')>=0,zeroWarning:document.querySelector('#screen-wallet').textContent.indexOf('0.000 MAGIC')>=0};})()`);
         assert.deepStrictEqual(wallet, { screen: 'wallet', heading: 'Кошелёк', balance: '2.000 MAGIC', burnDisabled: true, fixedDisabled: false, awardDisabled: false, hasConsent: true, regularCopy: true, policyCopy: true, unknownCopy: true, zeroWarning: true });
+
+        await evalValue(cdp, `(function(){window.__vtFixedUnknown=VizBroadcast.mintMagicFixedAward;VizBroadcast.mintMagicFixedAward=function(intent,amount,maxEnergy,cb){var e=new Error('archive_unhealthy');e.code='archive_unhealthy';e.broadcastAttempted=false;e.details={reason:'archive_unhealthy',activationBlock:83500000,irreversibleBlock:83500001};cb(e);};document.querySelector('#magic-fixed-amount').value='1.000';document.querySelector('#magic-fixed-energy').value='500';document.querySelector('#magic-fixed-consent').checked=true;return true;})()`);
+        await click(cdp, '#magic-mint-fixed-form button[type="submit"]');
+        await click(cdp, '#modal-container [data-action="0"]');
+        await new Promise(function(resolve) { setTimeout(resolve, 30); });
+        var rejectedPreflight = await evalValue(cdp, `(function(){var result={pending:localStorage.getItem('viz_magic_pending_burn_v1:alice'),unavailable:document.body.textContent.indexOf('Операция не отправлена')>=0};VizBroadcast.mintMagicFixedAward=window.__vtFixedUnknown;window.__mintReady=true;WalletScreen.refreshMintReadiness();return new Promise(function(resolve){setTimeout(function(){resolve(result);},30);});})()`);
+        assert.deepStrictEqual(rejectedPreflight, { pending: null, unavailable: true }, 'known preflight rejection must not leave an ambiguous pending burn');
 
         await evalValue(cdp, `(function(){document.querySelector('#magic-fixed-amount').value='1.000';document.querySelector('#magic-fixed-energy').value='500';document.querySelector('#magic-fixed-consent').checked=true;return true;})()`);
         await click(cdp, '#magic-mint-fixed-form button[type="submit"]');

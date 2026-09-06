@@ -138,7 +138,9 @@ async function run() {
             },
             from: 123,
             to: 123,
-            once: true
+            once: true,
+            chainHead: 130,
+            irreversibleHead: 123
         });
         assert.strictEqual(result.indexedBlocks, 1);
         assert.strictEqual(result.indexedEvents, 6);
@@ -149,6 +151,8 @@ async function run() {
             var health = await getJson(port, '/archive-mirror/health');
             assert.strictEqual(health.status, 200);
             assert.strictEqual(health.body.service, 'viz-magic-game-archive');
+            assert.strictEqual(health.body.caughtUp, true);
+            assert.strictEqual(health.body.lastIrreversibleBlock, 123);
 
             var block = await getJson(port, '/archive-mirror/v1/block/123.json');
             assert.strictEqual(block.status, 200);
@@ -191,6 +195,14 @@ async function run() {
             assert.strictEqual(account.status, 200);
             assert.strictEqual(account.body.count, 3);
             assert.strictEqual(account.body.actions[0].type, 'char.attune');
+
+            var staleStore = new storeMod.ArchiveStore(tmp);
+            staleStore.db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES(?, ?)').run('status', JSON.stringify({ ok: true, mode: 'idle', chainHeadBlock: 130, lastIrreversibleBlock: 123, updatedAt: '2000-01-01T00:00:00.000Z' }));
+            staleStore.db.close();
+            var staleHealth = await getJson(port, '/archive-mirror/health');
+            assert.strictEqual(staleHealth.status, 503);
+            assert.strictEqual(staleHealth.body.ok, false);
+            assert.strictEqual(staleHealth.body.stale, true);
         } finally {
             await close(server);
         }

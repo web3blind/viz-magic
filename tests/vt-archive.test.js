@@ -91,6 +91,15 @@ try {
     assert.strictEqual(store.isVirtualRangeComplete(103, 103), true);
     assert.strictEqual(store.isVirtualRangeComplete(103, 104), false);
 
+    var reversible104 = makeBlock('reversible-104', 104, []);
+    reversible104.previous = 'canonical-103';
+    store.putBlockWithEvents(104, reversible104, 'fixture', [], { virtualComplete: true });
+    store.setCursor(104);
+    store.truncateAfter(103);
+    assert.strictEqual(store.hasBlock(104), false, 'reversible descendants must be removed atomically');
+    assert.strictEqual(store.getCursor().lastIndexedBlock, 103, 'cursor must rewind with reversible descendants');
+    assert.strictEqual(store.db.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
+
     var failed = makeBlock('failed-104', 104, [['custom', { id: 'VT', required_regular_auths: ['alice'], required_active_auths: [], json: JSON.stringify(mintAction) }]]);
     failed.previous = 'canonical-103';
     var originalInsert = store._insertEventsUnsafe;

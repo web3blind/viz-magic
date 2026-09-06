@@ -2,6 +2,7 @@
 
 var path = require('path');
 var indexer = require('./indexer');
+var storeMod = require('./storage');
 
 function sleep(ms) {
     return new Promise(function(resolve) { setTimeout(resolve, ms); });
@@ -66,15 +67,43 @@ async function getHeadBlock(cfg) {
     return (await getChainHeads(cfg)).head;
 }
 
+async function reconcileCursorToIrreversible(cfg, archive, irreversibleHead) {
+    var cursor = archive.getCursor();
+    var lastIndexed = Number(cursor.lastIndexedBlock || 0);
+    if (lastIndexed <= irreversibleHead) return { rewound: false, lastIndexedBlock: lastIndexed };
+    var retained = archive.getBlockRecord(irreversibleHead);
+    if (!retained || !retained.block_id) throw new Error('irreversible cursor reconciliation block missing');
+    var lastErr = null;
+    for (var i = 0; i < cfg.sourceNodes.length; i += 1) {
+        try {
+            var identity = await indexer.rpcFetchBlockId(cfg.sourceNodes[i], irreversibleHead, cfg.timeoutMs);
+            if (identity.blockId !== retained.block_id) throw new Error('irreversible cursor reconciliation identity mismatch');
+            archive.truncateAfter(irreversibleHead);
+            return { rewound: true, from: lastIndexed, lastIndexedBlock: irreversibleHead };
+        } catch (err) {
+            lastErr = err;
+        }
+    }
+    throw lastErr || new Error('irreversible cursor reconciliation failed');
+}
+
 async function runForever() {
     var cfg = loadDaemonConfig();
+    var archive = new storeMod.ArchiveStore(cfg.dataDir);
     console.log('archive-node daemon started pollMs=' + cfg.pollIntervalMs + ' maxBlocksPerTick=' + cfg.maxBlocksPerTick);
     while (true) {
         try {
             var heads = await getChainHeads(cfg);
             var head = heads.head;
             var irreversibleHead = heads.irreversible;
-            var result = await indexer.indexRange({ config: cfg, to: irreversibleHead, maxBlocks: cfg.maxBlocksPerTick, once: true });
+            var reconciliation = await reconcileCursorToIrreversible(cfg, archive, irreversibleHead);
+            if (reconciliation.rewound) {
+                console.log('archive-node removed reversible tip from=' + reconciliation.from + ' to=' + reconciliation.lastIndexedBlock);
+            }
+            var result = await indexer.indexRange({
+                config: cfg, store: archive, to: irreversibleHead, maxBlocks: cfg.maxBlocksPerTick, once: true,
+                chainHead: head, irreversibleHead: irreversibleHead
+            });
             if (result.indexedBlocks || result.indexedEvents) {
                 console.log('archive-node tick head=' + head + ' irreversible=' + irreversibleHead + ' indexedBlocks=' + result.indexedBlocks + ' indexedEvents=' + result.indexedEvents + ' last=' + result.lastIndexedBlock);
             }
@@ -97,5 +126,6 @@ module.exports = {
     rpcCall: rpcCall,
     getChainHeads: getChainHeads,
     getHeadBlock: getHeadBlock,
+    reconcileCursorToIrreversible: reconcileCursorToIrreversible,
     runForever: runForever
 };

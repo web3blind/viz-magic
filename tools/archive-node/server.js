@@ -153,6 +153,33 @@ function buildGuildDirectory(archive, options) {
     return { guilds: guilds, listings: Object.keys(listings).map(function(id) { return listings[id]; }), list: list, sourceEvents: rows.length };
 }
 
+function buildHealth(archive, startedAt, nowMs) {
+    var status = archive.getStatus();
+    var lastIndexed = Number(status.lastIndexedBlock || 0);
+    var lastIrreversible = Number(status.lastIrreversibleBlock || 0);
+    var updatedMs = Date.parse(status.updatedAt || '');
+    var stale = !Number.isFinite(updatedMs) || Number(nowMs || Date.now()) - updatedMs > 120000;
+    var caughtUp = Number.isSafeInteger(lastIndexed) && lastIndexed > 0 &&
+        Number.isSafeInteger(lastIrreversible) && lastIrreversible > 0 && lastIndexed === lastIrreversible;
+    var healthy = status.ok !== false && status.mode !== 'error' && !stale && caughtUp;
+    return {
+        ok: healthy,
+        stale: stale,
+        caughtUp: caughtUp,
+        service: 'viz-magic-game-archive',
+        uptimeSec: Math.round((Number(nowMs || Date.now()) - startedAt) / 1000),
+        lastIndexedBlock: lastIndexed,
+        chainHeadBlock: Number(status.chainHeadBlock || 0),
+        lastIrreversibleBlock: lastIrreversible,
+        virtualReceiptStartBlock: archive.getVirtualReceiptStartBlock(),
+        cursorUpdatedAt: status.cursorUpdatedAt || null,
+        statusUpdatedAt: status.updatedAt || null,
+        mode: status.mode || 'unknown',
+        storage: 'sqlite',
+        readOnly: true
+    };
+}
+
 function createServer(options) {
     options = options || {};
     var startedAt = Date.now();
@@ -179,28 +206,15 @@ function createServer(options) {
         if (parts[0] === 'archive-mirror') parts.shift();
 
         if (parts.length === 1 && parts[0] === 'health') {
-            var status = archive.getStatus();
-            json(res, 200, {
-                ok: true,
-                service: 'viz-magic-game-archive',
-                uptimeSec: Math.round((Date.now() - startedAt) / 1000),
-                dataDir: cfg.dataDir,
-                lastIndexedBlock: status.lastIndexedBlock || 0,
-                virtualReceiptStartBlock: archive.getVirtualReceiptStartBlock(),
-                cursorUpdatedAt: status.cursorUpdatedAt || null,
-                storage: 'sqlite',
-                readOnly: true
-            }, { 'Cache-Control': 'no-store' });
+            var health = buildHealth(archive, startedAt, Date.now());
+            json(res, health.ok ? 200 : 503, health, { 'Cache-Control': 'no-store' });
             return;
         }
 
         if (parts.length === 2 && parts[0] === 'v1' && parts[1] === 'status') {
             var st = archive.getStatus();
-            st.ok = st.ok !== false;
-            st.service = 'viz-magic-game-archive';
-            st.readOnly = true;
-            st.storage = 'sqlite';
-            st.virtualReceiptStartBlock = archive.getVirtualReceiptStartBlock();
+            var statusHealth = buildHealth(archive, startedAt, Date.now());
+            Object.keys(statusHealth).forEach(function(key) { st[key] = statusHealth[key]; });
             json(res, 200, st, { 'Cache-Control': 'no-store' });
             return;
         }
@@ -379,5 +393,6 @@ module.exports = {
     createServer: createServer,
     safeNum: safeNum,
     pathParts: pathParts,
-    buildGuildDirectory: buildGuildDirectory
+    buildGuildDirectory: buildGuildDirectory,
+    buildHealth: buildHealth
 };

@@ -213,10 +213,15 @@ function block(number, id, operations) {
             getRegularKey: function() { return 'regular-fixture'; },
             getActiveKey: function() { return 'active-fixture'; }
         },
+        HistorySource: {
+            checkMagicMintReadiness: function(activation, irreversible, callback) {
+                callback(null, { ready: true, activationBlock: activation, irreversibleBlock: irreversible });
+            }
+        },
         viz: { broadcast: {
             send: function(tx, keys, cb) { sent = { tx: tx, keys: keys }; cb(null, { fixture: true }); },
             custom: function(key, activeAuths, regularAuths, id, json, cb) { customCall = { key: key, regularAuths: regularAuths, activeAuths: activeAuths, id: id, json: json }; cb(null, {}); }
-        } }
+        }, api: { getDynamicGlobalProperties: function(callback) { callback(null, { head_block_number: 83500010, last_irreversible_block_num: 83500001 }); } } }
     });
     c.VizBroadcast.mintMagicTransfer('burn-fixture', '1.250', function(err) { assert.ifError(err); });
     assert.strictEqual(sent.keys.active, 'active-fixture');

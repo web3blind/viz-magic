@@ -459,6 +459,59 @@ var HistorySource = (function() {
         next(0);
     }
 
+    function checkMagicMintReadiness(activationBlock, irreversibleBlock, callback) {
+        callback = callback || function() {};
+        activationBlock = Number(activationBlock);
+        irreversibleBlock = Number(irreversibleBlock);
+        if (!Number.isSafeInteger(activationBlock) || activationBlock <= 0 ||
+                !Number.isSafeInteger(irreversibleBlock) || irreversibleBlock < activationBlock) {
+            callback(_makeError('Invalid MAGIC readiness range'));
+            return;
+        }
+        var mirrors = _archiveMirrors();
+        function next(index, lastReason) {
+            if (!mirrors.length || index >= mirrors.length) {
+                callback(null, { ready: false, reason: lastReason || 'archive_unavailable' });
+                return;
+            }
+            var mirror = _normalizeMirror(mirrors[index]);
+            var healthUrl = _healthUrl(mirror);
+            var rangeUrl = _rangeUrl(mirror, {
+                protocol: 'VT', start: activationBlock, end: irreversibleBlock, limit: 1
+            });
+            if (!healthUrl || !rangeUrl) {
+                next(index + 1, 'archive_unavailable');
+                return;
+            }
+            _requestJson(healthUrl, mirror.timeoutMs || 6000, function(healthErr, health) {
+                var healthReady = !healthErr && health && health.ok === true && health.stale !== true &&
+                    health.readOnly === true && health.storage === 'sqlite' &&
+                    Number(health.lastIndexedBlock || 0) >= irreversibleBlock &&
+                    Number(health.lastIrreversibleBlock || 0) >= irreversibleBlock &&
+                    Number(health.virtualReceiptStartBlock || 0) === activationBlock;
+                if (!healthReady) {
+                    next(index + 1, healthErr ? 'archive_unavailable' : 'archive_unhealthy');
+                    return;
+                }
+                _requestJson(rangeUrl, mirror.timeoutMs || 6000, function(rangeErr, range) {
+                    if (!rangeErr && range && range.complete === true && range.virtualReceiptsComplete === true &&
+                            Number(range.indexedThrough || 0) >= irreversibleBlock &&
+                            Number(range.virtualReceiptStartBlock || 0) === activationBlock) {
+                        callback(null, {
+                            ready: true,
+                            reason: 'ready',
+                            archiveIndexedThrough: Number(range.indexedThrough),
+                            archiveIrreversibleBlock: Number(health.lastIrreversibleBlock)
+                        });
+                        return;
+                    }
+                    next(index + 1, rangeErr ? 'archive_unavailable' : 'archive_history_incomplete');
+                });
+            });
+        }
+        next(0, 'archive_unavailable');
+    }
+
     function getEventsForBlock(blockNum, options, callback) {
         if (typeof options === 'function') {
             callback = options;
@@ -706,6 +759,7 @@ var HistorySource = (function() {
         getGuildDirectory: getGuildDirectory,
         getEventsRange: getEventsRange,
         getArchiveHead: getArchiveHead,
+        checkMagicMintReadiness: checkMagicMintReadiness,
         getEventsForBlock: getEventsForBlock,
         getAllEventsRange: getAllEventsRange,
         eventsToThinBlock: eventsToThinBlock,

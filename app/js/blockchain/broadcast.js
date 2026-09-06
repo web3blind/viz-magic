@@ -78,6 +78,65 @@ var VizBroadcast = (function() {
         custom(cfg.PROTOCOLS.VT, action, callback);
     }
 
+    function _preflightError(code, details) {
+        var err = new Error(code);
+        err.code = code;
+        err.broadcastAttempted = false;
+        err.details = details || null;
+        return err;
+    }
+
+    function getMagicMintReadiness(callback) {
+        callback = callback || function() {};
+        var activation = Number(cfg.TOKEN && cfg.TOKEN.ACTIVATION_BLOCK || 0);
+        if (!Number.isSafeInteger(activation) || activation <= 0 || typeof viz === 'undefined' || !viz.api || !viz.api.getDynamicGlobalProperties) {
+            callback(_preflightError('authoritative_lib_unavailable'));
+            return;
+        }
+        viz.api.getDynamicGlobalProperties(function(err, dgp) {
+            var head = Number(dgp && dgp.head_block_number || 0);
+            var irreversible = Number(dgp && dgp.last_irreversible_block_num || 0);
+            if (err || !Number.isSafeInteger(head) || head <= 0 ||
+                    !Number.isSafeInteger(irreversible) || irreversible <= 0 || irreversible > head) {
+                callback(_preflightError('authoritative_lib_unavailable'));
+                return;
+            }
+            if (irreversible < activation) {
+                callback(null, {
+                    ready: false,
+                    reason: 'magic_activation_pending',
+                    activationBlock: activation,
+                    irreversibleBlock: irreversible
+                });
+                return;
+            }
+            if (typeof HistorySource === 'undefined' || !HistorySource.checkMagicMintReadiness) {
+                callback(null, { ready: false, reason: 'archive_unavailable', activationBlock: activation, irreversibleBlock: irreversible });
+                return;
+            }
+            HistorySource.checkMagicMintReadiness(activation, irreversible, function(archiveErr, readiness) {
+                if (archiveErr) {
+                    callback(null, { ready: false, reason: 'archive_unavailable', activationBlock: activation, irreversibleBlock: irreversible });
+                    return;
+                }
+                readiness = readiness || {};
+                readiness.activationBlock = activation;
+                readiness.irreversibleBlock = irreversible;
+                callback(null, readiness);
+            });
+        });
+    }
+
+    function _withMagicMintReadiness(callback, send) {
+        getMagicMintReadiness(function(err, readiness) {
+            if (err) return callback(err);
+            if (!readiness || readiness.ready !== true) {
+                return callback(_preflightError(readiness && readiness.reason || 'archive_unavailable', readiness));
+            }
+            send();
+        });
+    }
+
     function mintMagicFixedAward(intent, amount, maxEnergy, callback) {
         var wif = VizAccount.getRegularKey();
         var user = VizAccount.getCurrentUser();
@@ -96,7 +155,9 @@ var VizBroadcast = (function() {
                 json: JSON.stringify(action)
             }]
         ] };
-        viz.broadcast.send(transaction, { regular: wif }, callback);
+        _withMagicMintReadiness(callback, function() {
+            viz.broadcast.send(transaction, { regular: wif }, callback);
+        });
     }
 
     function mintMagicAward(intent, energy, callback) {
@@ -116,7 +177,9 @@ var VizBroadcast = (function() {
                 json: JSON.stringify(action)
             }]
         ] };
-        viz.broadcast.send(transaction, { regular: wif }, callback);
+        _withMagicMintReadiness(callback, function() {
+            viz.broadcast.send(transaction, { regular: wif }, callback);
+        });
     }
 
     function mintMagicTransfer(intent, amount, callback) {
@@ -138,7 +201,9 @@ var VizBroadcast = (function() {
                 json: JSON.stringify(action)
             }]
         ] };
-        viz.broadcast.send(transaction, { active: activeWif, regular: regularWif }, callback);
+        _withMagicMintReadiness(callback, function() {
+            viz.broadcast.send(transaction, { active: activeWif, regular: regularWif }, callback);
+        });
     }
 
     /**
@@ -534,6 +599,7 @@ var VizBroadcast = (function() {
         award: award,
         custom: custom,
         tokenAction: tokenAction,
+        getMagicMintReadiness: getMagicMintReadiness,
         mintMagicFixedAward: mintMagicFixedAward,
         mintMagicAward: mintMagicAward,
         mintMagicTransfer: mintMagicTransfer,

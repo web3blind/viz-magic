@@ -76,6 +76,39 @@ test('archive thin blocks preserve source completeness and receive_award virtual
   assert.strictEqual(block.virtual_operations[0].op[0], 'receive_award');
 });
 
+test('MAGIC readiness requires healthy SQLite archive and complete virtual history through LIB', function () {
+  const replies = [
+    { ok: true, stale: false, readOnly: true, storage: 'sqlite', lastIndexedBlock: 110, lastIrreversibleBlock: 110, virtualReceiptStartBlock: 100 },
+    { complete: true, virtualReceiptsComplete: true, indexedThrough: 110, virtualReceiptStartBlock: 100, events: [], count: 0 }
+  ];
+  const urls = [];
+  function FakeXHR() { this.readyState = 0; this.status = 0; this.responseText = ''; }
+  FakeXHR.prototype.open = function(method, url) { this.url = url; };
+  FakeXHR.prototype.send = function() {
+    urls.push(this.url);
+    this.status = 200; this.readyState = 4; this.responseText = JSON.stringify(replies.shift()); this.onreadystatechange();
+  };
+  FakeXHR.prototype.abort = function() {};
+  const context = {
+    console: { log: function() {} }, setTimeout: function() { return 1; }, clearTimeout: function() {}, XMLHttpRequest: FakeXHR,
+    VizMagicConfig: { HISTORY_ARCHIVE_MIRRORS: [{ apiBase: 'https://archive.example' }], PROTOCOLS: { VM: 'VM' } }
+  };
+  vm.createContext(context);
+  vm.runInContext(historySourceJs, context, { filename: 'history-source.js' });
+  let readiness = null;
+  context.HistorySource.checkMagicMintReadiness(100, 110, function(err, value) { assert.ifError(err); readiness = value; });
+  assert.strictEqual(readiness && readiness.ready, true);
+  assert.ok(/\/health$/.test(urls[0]));
+  assert.ok(/start=100/.test(urls[1]) && /end=110/.test(urls[1]) && /protocol=VT/.test(urls[1]));
+
+  replies.push(
+    { ok: true, stale: false, readOnly: true, storage: 'sqlite', lastIndexedBlock: 110, lastIrreversibleBlock: 110, virtualReceiptStartBlock: 100 },
+    { complete: true, virtualReceiptsComplete: false, indexedThrough: 110, virtualReceiptStartBlock: 100, events: [], count: 0 }
+  );
+  context.HistorySource.checkMagicMintReadiness(100, 110, function(err, value) { assert.ifError(err); readiness = value; });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(readiness)), { ready: false, reason: 'archive_history_incomplete' });
+});
+
 test('archive mirror config is explicit and points at production nginx path', function () {
   assert.ok(/HISTORY_ARCHIVE_MIRRORS/.test(configJs), 'archive mirror config missing');
   assert.ok(/vizmagic\.web3blind\.xyz\/archive-mirror\/v1\/block\/\{block\}\.json/.test(configJs), 'production archive mirror URL missing');

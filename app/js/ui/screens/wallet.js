@@ -6,6 +6,9 @@ var WalletScreen = (function() {
 
     var PENDING_MINT_KEY = 'viz_magic_pending_burn_v1:';
     var historyOffset = 0;
+    var mintReadiness = { ready: false, reason: 'checking' };
+    var mintReadinessCheckedAt = 0;
+    var mintReadinessLoading = false;
 
     function _id(prefix) {
         return prefix + '-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1000000).toString(36);
@@ -43,6 +46,40 @@ var WalletScreen = (function() {
             ' VIZ ещё ожидает подтверждённой истории. Не повторяйте её.';
     }
 
+    function _mintReadinessText(readiness) {
+        readiness = readiness || {};
+        if (readiness.ready === true) return 'Выпуск MAGIC доступен: genesis активирован, архив необратимой истории синхронизирован.';
+        if (readiness.reason === 'magic_activation_pending') {
+            return 'Выпуск MAGIC ещё не активирован. Genesis: блок #' + Number(readiness.activationBlock || 0) +
+                '; текущий необратимый блок: #' + Number(readiness.irreversibleBlock || 0) + '. Средства не отправляются.';
+        }
+        if (readiness.reason === 'checking') return 'Проверяем genesis, необратимый блок и архив подтверждённой истории. Получение MAGIC пока недоступно.';
+        return 'Получение MAGIC временно недоступно: authoritative LIB или полный здоровый архив истории не подтверждены. Средства не отправляются.';
+    }
+
+    function _ensureMintReadiness(force) {
+        if (mintReadinessLoading || (!force && mintReadinessCheckedAt && Date.now() - mintReadinessCheckedAt < 30000)) return;
+        mintReadinessLoading = true;
+        VizBroadcast.getMagicMintReadiness(function(err, readiness) {
+            mintReadinessLoading = false;
+            mintReadinessCheckedAt = Date.now();
+            mintReadiness = err ? { ready: false, reason: err.code || 'authoritative_lib_unavailable' } : (readiness || { ready: false, reason: 'archive_unavailable' });
+            setTimeout(render, 0);
+        });
+    }
+
+    function _handleMintBroadcast(storageKey, err, successText) {
+        if (err && err.broadcastAttempted === false) {
+            localStorage.removeItem(storageKey);
+            mintReadinessCheckedAt = 0;
+            mintReadiness = Object.assign({ ready: false }, err.details || {}, { reason: err.code || 'archive_unavailable' });
+            Toast.show('Операция не отправлена: ' + _mintReadinessText(mintReadiness), 'error');
+        } else {
+            Toast.show(err ? 'Статус операции неизвестен. Не повторяйте её до проверки истории: ' + (err.message || err) : successText, err ? 'error' : 'success');
+        }
+        render();
+    }
+
     function render() {
         var root = Helpers.$('screen-wallet');
         if (!root) return;
@@ -51,6 +88,7 @@ var WalletScreen = (function() {
             root.innerHTML = '<div class="wallet-screen"><h1>Кошелёк</h1><p role="status">Войдите в Мир, чтобы открыть кошелёк.</p></div>';
             return;
         }
+        _ensureMintReadiness(false);
         var ledgerState = StateEngine.getState().magic;
         if (ledgerState && ledgerState.replayRequired) {
             root.innerHTML = '<div class="wallet-screen"><h1>Кошелёк</h1><p role="alert">Баланс MAGIC временно недоступен: требуется полный повтор подтверждённой истории VT. Отправка, сжигание и покупки заблокированы.</p></div>';
@@ -62,6 +100,7 @@ var WalletScreen = (function() {
         var hasNextHistory = historyPage.length > 50;
         var history = historyPage.slice(0, 50);
         var pendingMint = _pendingMint(pendingHistory, user);
+        var mintAvailable = mintReadiness.ready === true;
         var html = '<div class="wallet-screen">' +
             '<h1>Кошелёк</h1>' +
             '<p class="screen-intro">MAGIC — единственная игровая валюта. VT — технический протокол записи операций.</p>' +
@@ -69,6 +108,7 @@ var WalletScreen = (function() {
             '<p class="wallet-balance" id="magic-balance" aria-live="polite">' + VTProtocol.formatAmount(balance) + ' MAGIC</p>' +
             '<p>Баланс меняется только после подтверждённых необратимых операций.</p></section>' +
             '<section class="card" aria-labelledby="wallet-mint-title"><h2 id="wallet-mint-title">Получить MAGIC</h2>' +
+            '<p id="magic-mint-readiness" role="status">' + Helpers.escapeHtml(_mintReadinessText(mintReadiness)) + '</p>' +
             '<p>Курс протокола: 1.000 подтверждённого VIZ, направленного аккаунту <code>null</code>, = 1.000 MAGIC. Операция необратима.</p>' +
             '<form id="magic-mint-fixed-form"><h3>Fixed award — regular key</h3>' +
             '<label for="magic-fixed-amount">Сумма VIZ и будущий выпуск MAGIC</label>' +
@@ -77,7 +117,7 @@ var WalletScreen = (function() {
             '<input id="magic-fixed-energy" name="maxEnergy" type="number" min="1" max="10000" step="1" value="1000" required aria-describedby="magic-fixed-help">' +
             '<p id="magic-fixed-help">Fixed award подписывается regular key. Указанная сумма — точная номинальная аллокация; такой же выпуск MAGIC появится только после необратимого подтверждения.</p>' +
             '<label class="checkbox-label"><input id="magic-fixed-consent" type="checkbox" required> Я понимаю, что VIZ будут необратимо направлены аккаунту null</label>' +
-            '<button class="btn btn-primary" type="submit"' + (!pendingMint ? '' : ' disabled aria-disabled="true"') + '>Направить VIZ и получить MAGIC</button></form>' +
+            '<button class="btn btn-primary" type="submit"' + (mintAvailable && !pendingMint ? '' : ' disabled aria-disabled="true"') + '>Направить VIZ и получить MAGIC</button></form>' +
             (pendingMint ? '<p role="alert">' + _pendingMintText(pendingMint) + '</p>' : '') +
             '<details><summary>Обычный award — regular key</summary>' +
             '<p>Игровая конверсия VT: 1 canonical received SHARES = 1 MAGIC. Это правило выпуска в игре и не означает равенство нативных активов SHARES и VIZ.</p>' +
@@ -86,13 +126,13 @@ var WalletScreen = (function() {
             '<input id="magic-award-energy" name="energy" type="number" min="1" max="10000" step="1" value="100" required aria-describedby="magic-award-help">' +
             '<p id="magic-award-help">Award подписывается regular key и направляется аккаунту null. До canonical receive_award кошелёк не показывает оценку будущего выпуска.</p>' +
             '<label class="checkbox-label"><input id="magic-award-consent" type="checkbox" required> Я понимаю необратимость award и неизвестный заранее выпуск MAGIC</label>' +
-            '<button type="submit" class="btn btn-secondary"' + (!pendingMint ? '' : ' disabled aria-disabled="true"') + '>Отправить ordinary award</button></form></details>' +
+            '<button type="submit" class="btn btn-secondary"' + (mintAvailable && !pendingMint ? '' : ' disabled aria-disabled="true"') + '>Отправить ordinary award</button></form></details>' +
             '<details><summary>Жидкий перевод VIZ — active key</summary>' +
             '<form id="magic-mint-transfer-form"><label for="magic-mint-amount">Сумма VIZ</label>' +
             '<input id="magic-mint-amount" name="amount" inputmode="decimal" autocomplete="off" placeholder="1.000" required aria-describedby="magic-mint-help">' +
             '<p id="magic-mint-help">Жидкий перевод требует отдельно сохранённого active key и явного подтверждения.</p>' +
             '<label class="checkbox-label"><input id="magic-burn-consent" type="checkbox" required> Я понимаю, что сжигание VIZ необратимо</label>' +
-            '<button class="btn btn-primary" type="submit"' + (VizAccount.hasActiveKey() && !pendingMint ? '' : ' disabled aria-disabled="true"') + '>Перевести VIZ и получить MAGIC</button></form>' +
+            '<button class="btn btn-primary" type="submit"' + (mintAvailable && VizAccount.hasActiveKey() && !pendingMint ? '' : ' disabled aria-disabled="true"') + '>Перевести VIZ и получить MAGIC</button></form>' +
             (VizAccount.hasActiveKey() ? '' : '<p role="status">Active key не подключён. Кошелёк не запрашивает и не сохраняет его автоматически.</p>') +
             '</details></section>' +
             '<section class="card" aria-labelledby="wallet-send-title"><h2 id="wallet-send-title">Отправить MAGIC</h2>' +
@@ -154,8 +194,7 @@ var WalletScreen = (function() {
                     var intent = _id('mint-fixed');
                     localStorage.setItem(PENDING_MINT_KEY + user, JSON.stringify({ intent: intent, amount: canonical, account: user, method: 'fixed_award', maxEnergy: maxEnergy }));
                     VizBroadcast.mintMagicFixedAward(intent, canonical, maxEnergy, function(err) {
-                        Toast.show(err ? 'Статус операции неизвестен. Не повторяйте её до проверки истории: ' + (err.message || err) : 'Операция отправлена. MAGIC появится после необратимого подтверждения.', err ? 'error' : 'success');
-                        render();
+                        _handleMintBroadcast(PENDING_MINT_KEY + user, err, 'Операция отправлена. MAGIC появится после необратимого подтверждения.');
                     });
                 } }
             ] });
@@ -176,8 +215,7 @@ var WalletScreen = (function() {
                     var intent = _id('mint-award');
                     localStorage.setItem(PENDING_MINT_KEY + user, JSON.stringify({ intent: intent, account: user, method: 'award', energy: energy }));
                     VizBroadcast.mintMagicAward(intent, energy, function(err) {
-                        Toast.show(err ? 'Статус award неизвестен. Не повторяйте операцию до проверки истории: ' + (err.message || err) : 'Award отправлен. Точный выпуск появится только после необратимого receive_award.', err ? 'error' : 'success');
-                        render();
+                        _handleMintBroadcast(PENDING_MINT_KEY + user, err, 'Award отправлен. Точный выпуск появится только после необратимого receive_award.');
                     });
                 } }]
             });
@@ -198,8 +236,7 @@ var WalletScreen = (function() {
                     var intent = _id('mint');
                     localStorage.setItem(PENDING_MINT_KEY + user, JSON.stringify({ intent: intent, amount: canonical, account: user, method: 'transfer' }));
                     VizBroadcast.mintMagicTransfer(intent, canonical, function(err) {
-                        Toast.show(err ? 'Статус операции неизвестен. Не повторяйте сжигание до проверки истории: ' + (err.message || err) : 'Операция отправлена. Не повторяйте её; MAGIC появится после необратимого подтверждения.', err ? 'error' : 'success');
-                        render();
+                        _handleMintBroadcast(PENDING_MINT_KEY + user, err, 'Операция отправлена. Не повторяйте её; MAGIC появится после необратимого подтверждения.');
                     });
                 } }
             ] });
@@ -233,5 +270,12 @@ var WalletScreen = (function() {
         });
     }
 
-    return { render: render };
+    return {
+        render: render,
+        refreshMintReadiness: function() {
+            mintReadinessCheckedAt = 0;
+            mintReadiness = { ready: false, reason: 'checking' };
+            _ensureMintReadiness(true);
+        }
+    };
 })();

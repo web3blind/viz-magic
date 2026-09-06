@@ -129,6 +129,25 @@ ArchiveStore.prototype.setCursor = function(lastIndexedBlock) {
     });
 };
 
+ArchiveStore.prototype.truncateAfter = function(lastIrreversibleBlock) {
+    var blockNum = Number(lastIrreversibleBlock);
+    if (!Number.isSafeInteger(blockNum) || blockNum < 0) throw new Error('invalid irreversible block');
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+        this.db.prepare('DELETE FROM event_accounts WHERE event_id IN (SELECT id FROM events WHERE block_num > ?)').run(blockNum);
+        this.db.prepare('DELETE FROM events WHERE block_num > ?').run(blockNum);
+        this.db.prepare('DELETE FROM blocks WHERE block_num > ?').run(blockNum);
+        this.db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES(?, ?)').run('cursor', JSON.stringify({
+            lastIndexedBlock: blockNum,
+            updatedAt: new Date().toISOString()
+        }));
+        this.db.exec('COMMIT');
+    } catch (err) {
+        this.db.exec('ROLLBACK');
+        throw err;
+    }
+};
+
 ArchiveStore.prototype.getStatus = function() {
     var cursor = this.getCursor();
     var status = this._getMeta('status', {});

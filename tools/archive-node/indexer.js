@@ -148,8 +148,13 @@ async function indexRange(options) {
     var indexed = 0;
     var eventCount = 0;
     var virtualReceiptStartBlock = Number(cfg.virtualReceiptStartBlock || 83500000);
+    var observedHead = Number(options.chainHead || 0);
+    var observedIrreversible = Number(options.irreversibleHead || 0);
     archive.setVirtualReceiptStartBlock(virtualReceiptStartBlock);
-    archive.setStatus({ ok: true, service: 'viz-magic-game-archive', mode: 'indexing', sourceNodes: cfg.sourceNodes.length });
+    archive.setStatus({
+        ok: true, service: 'viz-magic-game-archive', mode: 'indexing', sourceNodes: cfg.sourceNodes.length,
+        chainHeadBlock: observedHead, lastIrreversibleBlock: observedIrreversible
+    });
 
     while (true) {
         if (end && start > end) break;
@@ -180,12 +185,18 @@ async function indexRange(options) {
             if (options.once && (!end || start > end)) break;
             if (cfg.requestDelayMs) await sleep(Number(cfg.requestDelayMs));
         } catch (err) {
-            archive.setStatus({ ok: false, service: 'viz-magic-game-archive', mode: 'error', lastError: err && err.message || String(err), failedBlock: start });
+            archive.setStatus({
+                ok: false, service: 'viz-magic-game-archive', mode: 'error', lastError: err && err.message || String(err), failedBlock: start,
+                chainHeadBlock: observedHead, lastIrreversibleBlock: observedIrreversible
+            });
             throw err;
         }
     }
 
-    archive.setStatus({ ok: true, service: 'viz-magic-game-archive', mode: 'idle', indexedBlocks: indexed, indexedEvents: eventCount, sourceNodes: cfg.sourceNodes.length });
+    archive.setStatus({
+        ok: true, service: 'viz-magic-game-archive', mode: 'idle', indexedBlocks: indexed, indexedEvents: eventCount, sourceNodes: cfg.sourceNodes.length,
+        chainHeadBlock: observedHead, lastIrreversibleBlock: observedIrreversible
+    });
     return { indexedBlocks: indexed, indexedEvents: eventCount, lastIndexedBlock: archive.getCursor().lastIndexedBlock };
 }
 
