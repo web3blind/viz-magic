@@ -171,7 +171,7 @@ test('marketplace state is mirrored into world state for checkpoints', function 
   assert.ok(/_handleMarketBuy[\s\S]*_syncMarketplaceState\(\)/.test(stateEngine), 'market buy should sync after successful mutation');
 });
 
-test('marketplace live UI routes successful actions through state-engine and checkpoints', function () {
+test('marketplace live UI routes listings through state engine but never settles VT buys optimistically', function () {
   assert.ok(/function processMarketListResult/.test(stateEngineJs), 'state engine should expose live market list path');
   assert.ok(/function processMarketCancelResult/.test(stateEngineJs), 'state engine should expose live market cancel path');
   assert.ok(/function processMarketBuyResult/.test(stateEngineJs), 'state engine should expose live market buy path');
@@ -179,7 +179,8 @@ test('marketplace live UI routes successful actions through state-engine and che
   assert.ok(/processMarketCancelResult: processMarketCancelResult/.test(stateEngineJs), 'live market cancel path should be exported');
   assert.ok(/processMarketBuyResult: processMarketBuyResult/.test(stateEngineJs), 'live market buy path should be exported');
   assert.ok(/StateEngine\.processMarketListResult\(user, itemId, price, 0, blockNum\)/.test(marketplaceJs), 'marketplace list success should use state engine');
-  assert.ok(/StateEngine\.processMarketBuyResult\(user, listingRef, blockNum\)/.test(marketplaceJs), 'marketplace buy success should use state engine');
+  assert.ok(/MarketProtocol\.broadcastBuy\(listingRef, listing\.revision, listing\.priceMilli/.test(marketplaceJs), 'VT buy must bind listing revision and exact price');
+  assert.ok(!/StateEngine\.processMarketBuyResult\(user, listingRef, blockNum\)/.test(marketplaceJs), 'VT buy must wait for irreversible canonical replay instead of optimistic settlement');
   assert.ok(/StateEngine\.processMarketCancelResult\(user, listingRef, blockNum\)/.test(marketplaceJs), 'marketplace cancel success should use state engine');
   assert.ok(/StateEngine\.saveCheckpoint\(function/.test(marketplaceJs), 'marketplace live success should save checkpoints');
 });
@@ -2287,7 +2288,8 @@ test('cross-device replay behavior uses previous-block entropy and migrates hist
   }
   const stale = initFrom({ state: { checkpointSchemaVersion: 1, headBlock: 999, characters: {}, inventories: {} } });
   assert.strictEqual(stale.headBlock, 999, 'old legitimate checkpoint progress must survive schema normalization');
-  assert.strictEqual(stale.checkpointSchemaVersion, 3, 'old checkpoint should migrate in memory');
+  assert.strictEqual(stale.checkpointSchemaVersion, 4, 'old checkpoint should migrate in memory');
+  assert.ok(stale.magic && stale.magic.balances, 'migration should add an empty MAGIC ledger without changing old game data');
   const current = initFrom({ state: { checkpointSchemaVersion: 2, headBlock: 999, characters: {}, inventories: {} } });
   assert.strictEqual(current.headBlock, 999, 'current deterministic checkpoint should still load');
 });

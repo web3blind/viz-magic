@@ -91,6 +91,7 @@ var EnchantingSystem = (function() {
         if (!item || !enchantId) {
             return { success: false, error: 'invalid_params' };
         }
+        if (item.listed || (runeItem && runeItem.listed)) return { success: false, error: 'item_listed' };
 
         var enchantType = getEnchantType(enchantId);
         if (!enchantType) {
@@ -167,6 +168,10 @@ var EnchantingSystem = (function() {
     function reforgeItem(item, character, blockHash, blockNum, account, materialItems) {
         if (!item) {
             return { success: false, error: 'invalid_item' };
+        }
+        if (item.listed) return { success: false, error: 'item_listed' };
+        for (var li = 0; li < (materialItems || []).length; li++) {
+            if (materialItems[li] && materialItems[li].listed) return { success: false, error: 'item_listed' };
         }
 
         var template = ItemSystem.getItemTemplate(item.type);
@@ -247,6 +252,7 @@ var EnchantingSystem = (function() {
         if (item.consumed) {
             return { success: false, error: 'already_consumed' };
         }
+        if (item.listed) return { success: false, error: 'item_listed' };
 
         // Check if item is consumable
         var template = ItemSystem.getItemTemplate(item.type);

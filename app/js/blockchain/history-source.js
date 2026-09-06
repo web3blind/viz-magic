@@ -92,12 +92,17 @@ var HistorySource = (function() {
             var txIndex = Number(typeof ev.txIndex !== 'undefined' ? ev.txIndex : ev.tx_index) || 0;
             var opIndex = Number(typeof ev.opIndex !== 'undefined' ? ev.opIndex : ev.op_index) || 0;
             while (block.transactions.length <= txIndex) block.transactions.push({ operations: [] });
+            block.transactions[txIndex].transaction_id = ev.txId || ev.tx_id || block.transactions[txIndex].transaction_id || '';
             var operations = block.transactions[txIndex].operations;
             while (operations.length <= opIndex) operations.push(null);
             if (ev.opType === 'custom' || ev.op_type === 'custom') {
                 operations[opIndex] = ['custom', ev.raw || {}];
             } else if (ev.opType === 'award' || ev.op_type === 'award') {
                 operations[opIndex] = ['award', ev.raw || ev.payload || {}];
+            } else if (ev.opType === 'transfer' || ev.op_type === 'transfer') {
+                operations[opIndex] = ['transfer', ev.raw || ev.payload || {}];
+            } else if (ev.opType === 'fixed_award' || ev.op_type === 'fixed_award') {
+                operations[opIndex] = ['fixed_award', ev.raw || ev.payload || {}];
             }
         }
         return block;
@@ -207,7 +212,7 @@ var HistorySource = (function() {
             if (eventBlockNum !== Number(blockNum) ||
                     !Number.isInteger(txIndex) || txIndex < 0 ||
                     !Number.isInteger(opIndex) || opIndex < 0 ||
-                    (opType !== 'custom' && opType !== 'award') ||
+                    ['custom', 'award', 'transfer', 'fixed_award'].indexOf(opType) === -1 ||
                     seenPositions[positionKey]) {
                 return null;
             }

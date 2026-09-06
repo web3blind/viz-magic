@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS events (
     timestamp TEXT,
     tx_index INTEGER NOT NULL,
     op_index INTEGER NOT NULL,
+    tx_id TEXT,
     op_type TEXT NOT NULL,
     protocol TEXT NOT NULL,
     type TEXT,
@@ -33,3 +34,16 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE INDEX IF NOT EXISTS idx_events_block ON events(block_num);
 CREATE INDEX IF NOT EXISTS idx_events_protocol_block ON events(protocol, block_num);
 CREATE INDEX IF NOT EXISTS idx_events_sender_protocol ON events(sender, protocol, block_num);
+
+CREATE TABLE IF NOT EXISTS event_accounts (
+    event_id TEXT NOT NULL,
+    account TEXT NOT NULL,
+    protocol TEXT NOT NULL,
+    block_num INTEGER NOT NULL,
+    PRIMARY KEY(event_id, account)
+);
+
+CREATE TABLE IF NOT EXISTS meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);

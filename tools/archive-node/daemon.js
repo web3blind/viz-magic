@@ -44,12 +44,15 @@ function rpcCall(nodeUrl, method, params, timeoutMs) {
     });
 }
 
-async function getHeadBlock(cfg) {
+async function getChainHeads(cfg) {
     var lastErr = null;
     for (var i = 0; i < cfg.sourceNodes.length; i += 1) {
         try {
             var dgp = await rpcCall(cfg.sourceNodes[i], 'get_dynamic_global_properties', [], cfg.timeoutMs);
-            return Number(dgp.head_block_number || 0);
+            var head = Number(dgp.head_block_number || 0);
+            var irreversible = Number(dgp.last_irreversible_block_num || 0);
+            if (!irreversible) irreversible = Math.max(0, head - Number(cfg.irreversibleDepth || 20));
+            return { head: head, irreversible: irreversible };
         } catch (err) {
             lastErr = err;
         }
@@ -57,15 +60,21 @@ async function getHeadBlock(cfg) {
     throw lastErr || new Error('cannot read head block');
 }
 
+async function getHeadBlock(cfg) {
+    return (await getChainHeads(cfg)).head;
+}
+
 async function runForever() {
     var cfg = loadDaemonConfig();
     console.log('archive-node daemon started pollMs=' + cfg.pollIntervalMs + ' maxBlocksPerTick=' + cfg.maxBlocksPerTick);
     while (true) {
         try {
-            var head = await getHeadBlock(cfg);
-            var result = await indexer.indexRange({ config: cfg, to: head, maxBlocks: cfg.maxBlocksPerTick, once: true });
+            var heads = await getChainHeads(cfg);
+            var head = heads.head;
+            var irreversibleHead = heads.irreversible;
+            var result = await indexer.indexRange({ config: cfg, to: irreversibleHead, maxBlocks: cfg.maxBlocksPerTick, once: true });
             if (result.indexedBlocks || result.indexedEvents) {
-                console.log('archive-node tick head=' + head + ' indexedBlocks=' + result.indexedBlocks + ' indexedEvents=' + result.indexedEvents + ' last=' + result.lastIndexedBlock);
+                console.log('archive-node tick head=' + head + ' irreversible=' + irreversibleHead + ' indexedBlocks=' + result.indexedBlocks + ' indexedEvents=' + result.indexedEvents + ' last=' + result.lastIndexedBlock);
             }
         } catch (err) {
             console.error('archive-node tick failed: ' + (err && err.stack || err));
@@ -84,6 +93,7 @@ if (require.main === module) {
 module.exports = {
     loadDaemonConfig: loadDaemonConfig,
     rpcCall: rpcCall,
+    getChainHeads: getChainHeads,
     getHeadBlock: getHeadBlock,
     runForever: runForever
 };

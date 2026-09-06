@@ -70,6 +70,58 @@ var VizBroadcast = (function() {
         );
     }
 
+    function tokenAction(action, callback) {
+        if (!action || action.p !== cfg.PROTOCOLS.VT || Number(action.v) !== 1) {
+            callback(new Error('invalid_vt_action'));
+            return;
+        }
+        custom(cfg.PROTOCOLS.VT, action, callback);
+    }
+
+    function mintMagicFixedAward(intent, amount, maxEnergy, callback) {
+        var wif = VizAccount.getRegularKey();
+        var user = VizAccount.getCurrentUser();
+        var action = typeof VTProtocol !== 'undefined' ? VTProtocol.createMintAction(intent, 'fixed_award', amount, { maxEnergy: maxEnergy }) : null;
+        if (!cfg.TOKEN.FIXED_AWARD_EVIDENCE) return callback(new Error('fixed_award_evidence_unavailable'));
+        if (!wif || !user) return callback(new Error('not_logged_in'));
+        if (!action || !Number.isInteger(maxEnergy) || maxEnergy <= 0 || maxEnergy > 10000) return callback(new Error('invalid_mint_request'));
+        var transaction = { extensions: [], operations: [
+            ['fixed_award', {
+                initiator: user, receiver: cfg.TOKEN.NULL_ACCOUNT,
+                reward_amount: VTProtocol.formatAmount(action.d.requested_milli) + ' VIZ',
+                max_energy: maxEnergy, custom_sequence: 0,
+                memo: VTProtocol.mintMemo(intent), beneficiaries: []
+            }],
+            ['custom', {
+                required_active_auths: [], required_regular_auths: [user], id: cfg.PROTOCOLS.VT,
+                json: JSON.stringify(action)
+            }]
+        ] };
+        viz.broadcast.send(transaction, { regular: wif }, callback);
+    }
+
+    function mintMagicTransfer(intent, amount, callback) {
+        var regularWif = VizAccount.getRegularKey();
+        var activeWif = VizAccount.getActiveKey();
+        var user = VizAccount.getCurrentUser();
+        var action = typeof VTProtocol !== 'undefined' ? VTProtocol.createMintAction(intent, 'transfer', amount) : null;
+        if (!regularWif || !user) return callback(new Error('not_logged_in'));
+        if (!activeWif) return callback(new Error('active_key_explicitly_required'));
+        if (!action) return callback(new Error('invalid_mint_request'));
+        var transaction = { extensions: [], operations: [
+            ['transfer', {
+                from: user, to: cfg.TOKEN.NULL_ACCOUNT,
+                amount: VTProtocol.formatAmount(action.d.amount_milli) + ' VIZ',
+                memo: VTProtocol.mintMemo(intent)
+            }],
+            ['custom', {
+                required_active_auths: [], required_regular_auths: [user], id: cfg.PROTOCOLS.VT,
+                json: JSON.stringify(action)
+            }]
+        ] };
+        viz.broadcast.send(transaction, { active: activeWif, regular: regularWif }, callback);
+    }
+
     /**
      * Send a game action (custom operation with VM protocol and chain link)
      * Automatically fetches the previous block reference for chain linking.
@@ -462,6 +514,9 @@ var VizBroadcast = (function() {
     return {
         award: award,
         custom: custom,
+        tokenAction: tokenAction,
+        mintMagicFixedAward: mintMagicFixedAward,
+        mintMagicTransfer: mintMagicTransfer,
         gameAction: gameAction,
         libraryUnlockAction: libraryUnlockAction,
         libraryUnlockChapterAction: libraryUnlockChapterAction,

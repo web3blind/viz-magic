@@ -1,6 +1,6 @@
 'use strict';
 
-var GAME_PROTOCOLS = { VM: true, V: true, VE: true };
+var GAME_PROTOCOLS = { VM: true, V: true, VE: true, VT: true };
 
 function parseJsonMaybe(value) {
     if (typeof value !== 'string') return value || null;
@@ -48,10 +48,13 @@ function normalizeCustom(block, blockNum, txIndex, opIndex, opData) {
         timestamp: block && block.timestamp || '',
         txIndex: txIndex,
         opIndex: opIndex,
+        txId: block && block.transactions && block.transactions[txIndex] && (block.transactions[txIndex].transaction_id || block.transactions[txIndex].id || '') || '',
         opType: 'custom',
         protocol: protocol,
         type: actionType,
         sender: sender,
+        regularAuths: opData.required_regular_auths || [],
+        activeAuths: opData.required_active_auths || [],
         accounts: accounts,
         payload: parsed,
         raw: opData
@@ -97,6 +100,32 @@ function normalizeAward(block, blockNum, txIndex, opIndex, opData) {
     };
 }
 
+function isVtMemo(opData) {
+    return String(opData && opData.memo || '').indexOf('viz://vt/mint/v1/') === 0;
+}
+
+function normalizeTransfer(block, blockNum, txIndex, opIndex, opData) {
+    if (!opData || opData.to !== 'null' || !isVtMemo(opData) || !/^[0-9]+\.[0-9]{3} VIZ$/.test(opData.amount || '')) return null;
+    return {
+        blockNum: Number(blockNum), block_id: block.block_id || '', previous: block.previous || '', timestamp: block.timestamp || '',
+        txIndex: txIndex, opIndex: opIndex,
+        txId: block.transactions[txIndex] && (block.transactions[txIndex].transaction_id || block.transactions[txIndex].id || '') || '',
+        opType: 'transfer', protocol: 'VT', type: 'mint.transfer', sender: opData.from || '', account: opData.from || '',
+        accounts: [opData.from || '', 'null'].filter(Boolean), payload: opData, raw: opData
+    };
+}
+
+function normalizeFixedAward(block, blockNum, txIndex, opIndex, opData) {
+    if (!opData || opData.receiver !== 'null' || !isVtMemo(opData) || !/^[0-9]+\.[0-9]{3} VIZ$/.test(opData.reward_amount || '')) return null;
+    return {
+        blockNum: Number(blockNum), block_id: block.block_id || '', previous: block.previous || '', timestamp: block.timestamp || '',
+        txIndex: txIndex, opIndex: opIndex,
+        txId: block.transactions[txIndex] && (block.transactions[txIndex].transaction_id || block.transactions[txIndex].id || '') || '',
+        opType: 'fixed_award', protocol: 'VT', type: 'mint.fixed_award', sender: opData.initiator || '', account: opData.initiator || '',
+        accounts: [opData.initiator || '', 'null'].filter(Boolean), payload: opData, raw: opData
+    };
+}
+
 function extractGameEvents(block, blockNum) {
     var events = [];
     if (!block || !block.transactions) return events;
@@ -110,6 +139,8 @@ function extractGameEvents(block, blockNum) {
             var event = null;
             if (opType === 'custom') event = normalizeCustom(block, blockNum, i, j, opData);
             else if (opType === 'award') event = normalizeAward(block, blockNum, i, j, opData);
+            else if (opType === 'transfer') event = normalizeTransfer(block, blockNum, i, j, opData);
+            else if (opType === 'fixed_award') event = normalizeFixedAward(block, blockNum, i, j, opData);
             if (event) events.push(event);
         }
     }
@@ -120,5 +151,6 @@ module.exports = {
     extractGameEvents: extractGameEvents,
     parseJsonMaybe: parseJsonMaybe,
     getSender: getSender,
-    isGameAward: isGameAward
+    isGameAward: isGameAward,
+    isVtMemo: isVtMemo
 };

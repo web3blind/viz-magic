@@ -7,7 +7,7 @@ var StateEngine = (function() {
 
     var cfg = VizMagicConfig;
     var AT = cfg.ACTION_TYPES;
-    var CHECKPOINT_SCHEMA_VERSION = 3;
+    var CHECKPOINT_SCHEMA_VERSION = 4;
 
     /** Current world state */
     var worldState = _createEmptyState();
@@ -33,6 +33,7 @@ var StateEngine = (function() {
             recovery: {},
             accountHints: {},
             marketplace: null,
+            magic: (typeof MagicLedger !== 'undefined') ? MagicLedger.createState() : null,
             recentActions: [],
             social: {
                 knownAccounts: []
@@ -72,6 +73,8 @@ var StateEngine = (function() {
         );
         state.recovery = state.recovery || {};
         state.accountHints = state.accountHints || {};
+        if (typeof MagicLedger !== 'undefined') state.magic = MagicLedger.createState(state.magic);
+        else if (!state.magic) state.magic = { version: 1, supplyMilli: 0, balances: {}, history: [], processed: {}, pendingMints: {}, pendingBlocks: {}, canonicalBlocks: {} };
         state.recentActions = state.recentActions || [];
         state.social = state.social || { knownAccounts: [] };
         state.social.knownAccounts = state.social.knownAccounts || [];
@@ -131,7 +134,8 @@ var StateEngine = (function() {
             { kind: 'vm', records: processedBlock.vmActions || [] },
             { kind: 've', records: processedBlock.veEvents || [] },
             { kind: 'voice', records: processedBlock.voicePosts || [] },
-            { kind: 'award', records: processedBlock.awards || [] }
+            { kind: 'award', records: processedBlock.awards || [] },
+            { kind: 'vt', records: processedBlock.vtActions || [] }
         ];
         for (var s = 0; s < sources.length; s++) {
             for (var i = 0; i < sources[s].records.length; i++) {
@@ -186,6 +190,15 @@ var StateEngine = (function() {
 
     function advanceHead(blockNum) {
         worldState.headBlock = Math.max(worldState.headBlock || 0, Number(blockNum || 0));
+        if (typeof MagicLedger !== 'undefined' && worldState.magic) {
+            _ensureMarketplace();
+            MagicLedger.finalizeThrough(worldState.magic, Math.max(0, worldState.headBlock - Number(cfg.TOKEN && cfg.TOKEN.IRREVERSIBLE_DEPTH || 20)), {
+                worldState: worldState,
+                marketplace: typeof MarketplaceEngine !== 'undefined' ? MarketplaceEngine : null,
+                activationBlock: Number(cfg.TOKEN && cfg.TOKEN.ACTIVATION_BLOCK || 0)
+            });
+            _syncMarketplaceState();
+        }
         var floor = worldState.headBlock - 2000;
         if (floor <= 0) return;
         worldState.authoritativeOperationFloor = Math.max(
@@ -225,6 +238,18 @@ var StateEngine = (function() {
         var paidActionVerifier = typeof ActionProof !== 'undefined'
             ? ActionProof.createVerifier(processedBlock.awards || [], blockNum)
             : null;
+
+        var magicContext = null;
+        if (typeof MagicLedger !== 'undefined') {
+            worldState.magic = MagicLedger.createState(worldState.magic);
+            _ensureMarketplace();
+            magicContext = {
+                activationBlock: Number(cfg.TOKEN && cfg.TOKEN.ACTIVATION_BLOCK || 0),
+                worldState: worldState,
+                marketplace: typeof MarketplaceEngine !== 'undefined' ? MarketplaceEngine : null
+            };
+            MagicLedger.ingestBlock(worldState.magic, processedBlock, magicContext);
+        }
 
         var orderedOperations = _orderedOperations(processedBlock);
         for (var i = 0; i < orderedOperations.length; i++) {
@@ -279,6 +304,11 @@ var StateEngine = (function() {
                 _processVoicePost(entry.record, blockNum);
             } else if (entry.kind === 'award') {
                 _processAward(entry.record, blockNum);
+            } else if (entry.kind === 'vt') {
+                if (magicContext && blockNum >= magicContext.activationBlock && MagicLedger.reserveEntry) {
+                    MagicLedger.reserveEntry(worldState.magic, processedBlock, entry.record, magicContext);
+                }
+                shouldRemember = false;
             }
 
             if (shouldRemember) {
@@ -286,6 +316,14 @@ var StateEngine = (function() {
                 worldState.actionOutcomes[operationKey] = operationEvents;
             }
             events = events.concat(operationEvents);
+        }
+
+        if (typeof MagicLedger !== 'undefined') {
+            var irreversibleThrough = processedBlock.irreversible === true
+                ? blockNum
+                : Math.max(0, blockNum - Number(cfg.TOKEN && cfg.TOKEN.IRREVERSIBLE_DEPTH || 20));
+            MagicLedger.finalizeThrough(worldState.magic, irreversibleThrough, magicContext || {});
+            _syncMarketplaceState();
         }
 
         if (options.runMaintenance === false) return events;
@@ -344,6 +382,7 @@ var StateEngine = (function() {
         // Expire marketplace listings
         _ensureMarketplace();
         if (typeof MarketplaceEngine !== 'undefined') {
+            if (MarketplaceEngine.activateMagicMarket) MarketplaceEngine.activateMagicMarket(blockNum);
             MarketplaceEngine.expireListings(blockNum);
             _syncMarketplaceState();
         }
@@ -819,7 +858,7 @@ var StateEngine = (function() {
         // Verify armageddon_stone exists and is not consumed
         var stoneIndex = -1;
         for (var i = 0; i < inventory.length; i++) {
-            if (inventory[i] && inventory[i].type === 'armageddon_stone' && !inventory[i].consumed) {
+            if (inventory[i] && inventory[i].type === 'armageddon_stone' && !inventory[i].consumed && !inventory[i].listed) {
                 // Prefer matching by id if provided
                 if (inventory[i].id === data.stone) {
                     stoneIndex = i;
@@ -1449,6 +1488,9 @@ var StateEngine = (function() {
         var character = worldState.characters[sender];
         var inventory = worldState.inventories[sender];
         if (!character || !inventory) return [];
+        if (!data || typeof data.item_ref !== 'string' || !/^[a-zA-Z0-9_-]{1,120}$/.test(data.item_ref)) return [];
+        if (cfg.TOKEN && blockNum >= cfg.TOKEN.ACTIVATION_BLOCK &&
+                (data.revision !== 1 || !Number.isSafeInteger(data.expires_block) || data.expires_block < 0)) return [];
 
         // Find item
         var item = null;
@@ -1460,8 +1502,10 @@ var StateEngine = (function() {
         }
         if (!item) return [];
 
+        var priceMilli = Number.isSafeInteger(data.price_milli) ? data.price_milli : data.price;
+        if (cfg.TOKEN && blockNum >= cfg.TOKEN.ACTIVATION_BLOCK && !Number.isSafeInteger(data.price_milli)) return [];
         var result = MarketplaceEngine.createListing(
-            sender, item, data.price, blockNum, data.expires_block
+            sender, item, priceMilli, blockNum, data.expires_block, data.revision || 1
         );
 
         if (!result.success) {
@@ -1476,7 +1520,9 @@ var StateEngine = (function() {
             account: sender,
             listingRef: result.listing.ref,
             itemType: item.type,
-            price: data.price
+            price: priceMilli,
+            priceMilli: priceMilli,
+            currency: blockNum >= Number(cfg.TOKEN && cfg.TOKEN.ACTIVATION_BLOCK || 0) ? 'MAGIC' : 'legacy_unpaid'
         }];
     }
 
@@ -1789,6 +1835,14 @@ var StateEngine = (function() {
         return worldState.inventories[account] || [];
     }
 
+    function getMagicBalance(account) {
+        return typeof MagicLedger !== 'undefined' ? MagicLedger.getBalance(worldState.magic, account) : 0;
+    }
+
+    function getMagicHistory(account, offset, limit) {
+        return typeof MagicLedger !== 'undefined' ? MagicLedger.getHistory(worldState.magic, account, offset, limit) : [];
+    }
+
     /**
      * Handle loot.acquire — on-chain proof of item drop.
      * During live play the item is already in inventory (added by processHuntResult).
@@ -1948,8 +2002,9 @@ var StateEngine = (function() {
     function processMarketListResult(account, itemRef, price, expiresBlock, blockNum) {
         var data = {
             item_ref: itemRef,
-            price: price | 0,
-            expires_block: expiresBlock | 0
+            price_milli: price,
+            revision: 1,
+            expires_block: Number(expiresBlock) || 0
         };
         var events = _handleMarketList(account, data, blockNum || 0);
         if (!events.length) return null;
@@ -2027,6 +2082,8 @@ var StateEngine = (function() {
         getRecoveryStatus: getRecoveryStatus,
         getCharacter: getCharacter,
         getInventory: getInventory,
+        getMagicBalance: getMagicBalance,
+        getMagicHistory: getMagicHistory,
         getLibraryDay: getLibraryDay,
         getLibraryMidnightDelay: getLibraryMidnightDelay,
         hasLibraryAccess: hasLibraryAccess,

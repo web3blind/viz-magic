@@ -1,7 +1,7 @@
 /**
  * Viz Magic — Marketplace Engine
  * Listings, trust trades, escrow trades, sealed-bid auctions.
- * Currency: Печати Мира (Realm Seals) = liquid VIZ.
+ * Currency: MAGIC. VT is the technical protocol, never a second currency.
  */
 var MarketplaceEngine = (function() {
     'use strict';
@@ -32,13 +32,13 @@ var MarketplaceEngine = (function() {
      * @param {number} expiresBlock - block at which listing expires (0 = default)
      * @returns {Object} {success, listing, error}
      */
-    function createListing(seller, item, price, currentBlock, expiresBlock) {
+    function createListing(seller, item, price, currentBlock, expiresBlock, revision) {
         // Validate
         if (!seller || !item) {
             return { success: false, error: 'invalid_params' };
         }
 
-        if ((price | 0) <= 0) {
+        if (!Number.isSafeInteger(price) || price <= 0) {
             return { success: false, error: 'invalid_price' };
         }
 
@@ -76,7 +76,10 @@ var MarketplaceEngine = (function() {
             itemRarity: item.rarity,
             itemStats: item.stats ? _copyStats(item.stats) : {},
             seller: seller,
-            price: price | 0,
+            price: price,
+            priceMilli: price,
+            revision: Number.isSafeInteger(revision) && revision > 0 ? revision : 1,
+            payment: (cfg.TOKEN && currentBlock >= cfg.TOKEN.ACTIVATION_BLOCK) ? 'magic' : 'legacy_unpaid',
             listedBlock: currentBlock,
             expiresBlock: expires,
             state: 'active', // active, sold, cancelled, expired
@@ -107,9 +110,10 @@ var MarketplaceEngine = (function() {
             return { success: false, error: 'not_seller' };
         }
 
-        if (listing.state !== 'active') {
+        if (listing.state !== 'active' && listing.state !== 'legacy_unpaid') {
             return { success: false, error: 'listing_not_active' };
         }
+        if (listing.pendingPurchase) return { success: false, error: 'purchase_pending' };
 
         // Cancel listing
         listing.state = 'cancelled';
@@ -133,26 +137,25 @@ var MarketplaceEngine = (function() {
      * @param {Object} worldState - world state (for inventory transfer)
      * @returns {Object} {success, error, listing, item}
      */
-    function buyItem(buyer, listingRef, currentBlock, worldState) {
+    function buyItem(buyer, listingRef, currentBlock, worldState, magicState, expectedRevision, expectedPriceMilli) {
         var listing = marketState.listings[listingRef];
-        if (!listing) {
-            return { success: false, error: 'listing_not_found' };
+        var legacy = !magicState && (!cfg.TOKEN || currentBlock < cfg.TOKEN.ACTIVATION_BLOCK);
+        if (!listing) return { success: false, error: 'listing_not_found' };
+        if (listing.state !== 'active') return { success: false, error: 'listing_not_active' };
+        if (!legacy && listing.payment !== 'magic') return { success: false, error: 'legacy_listing_requires_relist' };
+        if (!legacy && listing.revision !== expectedRevision) return { success: false, error: 'listing_revision_mismatch' };
+        if (!legacy && listing.priceMilli !== expectedPriceMilli) return { success: false, error: 'listing_price_mismatch' };
+        if (!legacy && listing.pendingPurchase && listing.pendingPurchase.buyer !== buyer) return { success: false, error: 'purchase_reserved' };
+        if (listing.expiresBlock > 0 && currentBlock > listing.expiresBlock) return { success: false, error: 'listing_expired' };
+        if (listing.seller === buyer) return { success: false, error: 'cannot_buy_own' };
+        if (!legacy && (!magicState || !magicState.balances || (magicState.balances[buyer] || 0) < listing.priceMilli)) {
+            return { success: false, error: 'insufficient_magic' };
         }
 
-        if (listing.state !== 'active') {
-            return { success: false, error: 'listing_not_active' };
-        }
+        var sellerBalance = legacy ? 0 : (magicState.balances[listing.seller] || 0);
+        var nextSellerBalance = sellerBalance + listing.priceMilli;
+        if (!legacy && !Number.isSafeInteger(nextSellerBalance)) return { success: false, error: 'balance_overflow' };
 
-        if (listing.expiresBlock > 0 && currentBlock > listing.expiresBlock) {
-            listing.state = 'expired';
-            return { success: false, error: 'listing_expired' };
-        }
-
-        if (listing.seller === buyer) {
-            return { success: false, error: 'cannot_buy_own' };
-        }
-
-        // Find item in seller's inventory
         var sellerInv = worldState.inventories[listing.seller] || [];
         var item = null;
         var itemIndex = -1;
@@ -163,67 +166,82 @@ var MarketplaceEngine = (function() {
                 break;
             }
         }
-
-        if (!item) {
-            listing.state = 'cancelled';
-            return { success: false, error: 'item_not_found' };
+        if (!item) return { success: false, error: 'item_not_found' };
+        if (item.owner !== listing.seller || item.consumed || item.equipped || !item.listed) {
+            return { success: false, error: 'item_reservation_invalid' };
         }
 
-        // Transfer item
+        // Atomic deterministic settlement begins only after every precondition passes.
+        if (!legacy) {
+            magicState.balances[buyer] -= listing.priceMilli;
+            if (magicState.balances[buyer] === 0) delete magicState.balances[buyer];
+            magicState.balances[listing.seller] = nextSellerBalance;
+        }
         item.owner = buyer;
         item.listed = false;
-        item.volatile_ = false; // Traded items become non-volatile
-
-        // Remove from seller inventory
+        item.volatile_ = false;
         sellerInv.splice(itemIndex, 1);
-
-        // Add to buyer inventory
-        if (!worldState.inventories[buyer]) {
-            worldState.inventories[buyer] = [];
-        }
+        if (!worldState.inventories[buyer]) worldState.inventories[buyer] = [];
         worldState.inventories[buyer].push(item);
-
-        // Update listing
         listing.state = 'sold';
+        delete listing.pendingPurchase;
         listing.buyer = buyer;
         listing.soldBlock = currentBlock;
 
-        // Track price history
-        if (!marketState.priceHistory[listing.itemType]) {
-            marketState.priceHistory[listing.itemType] = [];
-        }
-        marketState.priceHistory[listing.itemType].push({
-            price: listing.price,
-            block: currentBlock,
-            rarity: listing.itemRarity
-        });
-
-        // Keep only last 50 price entries per item type
-        if (marketState.priceHistory[listing.itemType].length > 50) {
-            marketState.priceHistory[listing.itemType].shift();
-        }
-
-        // Add to trade history
+        if (!marketState.priceHistory[listing.itemType]) marketState.priceHistory[listing.itemType] = [];
+        marketState.priceHistory[listing.itemType].push({ price: listing.priceMilli, block: currentBlock, rarity: listing.itemRarity });
+        if (marketState.priceHistory[listing.itemType].length > 50) marketState.priceHistory[listing.itemType].shift();
         marketState.history.push({
-            listingRef: listingRef,
-            itemType: listing.itemType,
-            itemRarity: listing.itemRarity,
-            seller: listing.seller,
-            buyer: buyer,
-            price: listing.price,
-            block: currentBlock
+            listingRef: listingRef, itemType: listing.itemType, itemRarity: listing.itemRarity,
+            seller: listing.seller, buyer: buyer, price: listing.priceMilli, priceMilli: listing.priceMilli,
+            currency: legacy ? 'legacy_unpaid' : 'MAGIC', block: currentBlock
         });
+        if (marketState.history.length > 200) marketState.history.shift();
+        return { success: true, listing: listing, item: item };
+    }
 
-        // Keep history trimmed
-        if (marketState.history.length > 200) {
-            marketState.history.shift();
+    function reservePurchase(buyer, listingRef, expectedRevision, expectedPriceMilli, blockHash, operationId, worldState) {
+        var listing = marketState.listings[listingRef];
+        if (!listing || listing.state !== 'active' || listing.payment !== 'magic') return { success: false, error: listing ? 'listing_not_active' : 'listing_not_found' };
+        if (listing.revision !== expectedRevision || listing.priceMilli !== expectedPriceMilli || listing.seller === buyer) return { success: false, error: 'listing_mismatch' };
+        if (listing.pendingPurchase) {
+            if (listing.pendingPurchase.operationId === operationId) return { success: true, duplicate: true };
+            return { success: false, error: 'purchase_reserved' };
         }
+        var inventory = worldState && worldState.inventories && worldState.inventories[listing.seller] || [];
+        var validItem = false;
+        for (var i = 0; i < inventory.length; i++) {
+            if (inventory[i].id === listing.itemRef && inventory[i].owner === listing.seller && inventory[i].listed && !inventory[i].consumed && !inventory[i].equipped) validItem = true;
+        }
+        if (!validItem) return { success: false, error: 'item_reservation_invalid' };
+        listing.pendingPurchase = { buyer: buyer, blockHash: blockHash, operationId: operationId };
+        return { success: true };
+    }
 
-        return {
-            success: true,
-            listing: listing,
-            item: item
-        };
+    function releasePurchase(listingRef, operationId) {
+        var listing = marketState.listings[listingRef];
+        if (listing && listing.pendingPurchase && (!operationId || listing.pendingPurchase.operationId === operationId)) delete listing.pendingPurchase;
+    }
+
+    function releaseReservationsForBlock(blockHash) {
+        Object.keys(marketState.listings).forEach(function(ref) {
+            var pending = marketState.listings[ref] && marketState.listings[ref].pendingPurchase;
+            if (pending && pending.blockHash === blockHash) delete marketState.listings[ref].pendingPurchase;
+        });
+    }
+
+    function activateMagicMarket(currentBlock) {
+        if (!cfg.TOKEN || currentBlock < cfg.TOKEN.ACTIVATION_BLOCK) return 0;
+        var changed = 0;
+        Object.keys(marketState.listings).forEach(function(ref) {
+            var listing = marketState.listings[ref];
+            if (listing && listing.state === 'active' && listing.payment !== 'magic' && listing.listedBlock < cfg.TOKEN.ACTIVATION_BLOCK) {
+                listing.state = 'legacy_unpaid';
+                listing.payment = 'legacy_unpaid';
+                changed += 1;
+            }
+        });
+        return changed;
     }
 
     /**
@@ -306,7 +324,7 @@ var MarketplaceEngine = (function() {
         for (var ref in marketState.listings) {
             if (!marketState.listings.hasOwnProperty(ref)) continue;
             var listing = marketState.listings[ref];
-            if (listing.state !== 'active') continue;
+            if (listing.state !== 'active' && !(filters.seller && listing.state === 'legacy_unpaid')) continue;
 
             // Apply filters
             if (filters.category) {
@@ -431,6 +449,10 @@ var MarketplaceEngine = (function() {
         createListing: createListing,
         cancelListing: cancelListing,
         buyItem: buyItem,
+        reservePurchase: reservePurchase,
+        releasePurchase: releasePurchase,
+        releaseReservationsForBlock: releaseReservationsForBlock,
+        activateMagicMarket: activateMagicMarket,
         createOffer: createOffer,
         transferItem: transferItem,
         getListings: getListings,

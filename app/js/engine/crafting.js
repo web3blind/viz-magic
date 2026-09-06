@@ -131,6 +131,7 @@ var CraftingSystem = (function() {
                 if (usedItemIds[item.id]) continue;
                 if (item.consumed) continue;
                 if (item.equipped) continue;
+                if (item.listed) continue;
 
                 if (item.type === req.type) {
                     matches.push(item);
@@ -194,7 +195,7 @@ var CraftingSystem = (function() {
                 }
             }
 
-            if (!item || item.consumed || item.equipped || !required[item.type]) {
+            if (!item || item.consumed || item.equipped || item.listed || !required[item.type]) {
                 return { valid: false, error: 'missing_materials', recipe: recipe };
             }
 

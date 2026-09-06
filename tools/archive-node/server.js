@@ -274,7 +274,34 @@ function createServer(options) {
                 protocols: accountFilter ? null : protocols,
                 limit: safeNum(parsedUrl.query.limit, 500)
             });
-            json(res, 200, { events: events, count: events.length });
+            var requestedEnd = safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647);
+            var archiveStatus = archive.getStatus();
+            var oldestBlock = events.length ? Number(events[0].blockNum || 0) : 0;
+            json(res, 200, {
+                events: events,
+                count: events.length,
+                order: 'block_tx_op_asc',
+                complete: requestedEnd <= Number(archiveStatus.lastIndexedBlock || 0),
+                indexedThrough: Number(archiveStatus.lastIndexedBlock || 0),
+                nextEnd: events.length && events.length >= safeNum(parsedUrl.query.limit, 500) ? oldestBlock - 1 : null
+            });
+            return;
+        }
+
+        if (parts.length === 5 && parts[0] === 'v1' && parts[1] === 'magic' && parts[2] === 'account' && parts[4] === 'history') {
+            var magicAccount = decodeURIComponent(parts[3]);
+            var magicEvents = archive.queryEvents({
+                account: magicAccount, protocol: 'VT',
+                start: safeNum(parsedUrl.query.start || parsedUrl.query.from, 0),
+                end: safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647),
+                limit: safeNum(parsedUrl.query.limit, 100)
+            });
+            var magicStatus = archive.getStatus();
+            json(res, 200, {
+                account: magicAccount, currency: 'MAGIC', protocol: 'VT', events: magicEvents,
+                count: magicEvents.length, indexedThrough: Number(magicStatus.lastIndexedBlock || 0),
+                complete: safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647) <= Number(magicStatus.lastIndexedBlock || 0)
+            });
             return;
         }
 

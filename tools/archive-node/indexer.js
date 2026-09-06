@@ -11,6 +11,7 @@ var DEFAULT_CONFIG = {
     startBlock: 1,
     requestDelayMs: 120,
     timeoutMs: 8000,
+    irreversibleDepth: 20,
     maxBlocksPerRun: 0
 };
 
@@ -107,8 +108,7 @@ async function indexRange(options) {
         try {
             var fetched = await fetchBlockFromNodes(cfg.sourceNodes, start, cfg.timeoutMs);
             var events = parser.extractGameEvents(fetched.block, start);
-            archive.putBlock(start, fetched.block, fetched.node, events);
-            if (events.length) archive.putEventsForBlock(events);
+            archive.putBlockWithEvents(start, fetched.block, fetched.node, events);
             archive.setCursor(start);
             indexed += 1;
             eventCount += events.length;

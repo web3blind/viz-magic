@@ -20,6 +20,10 @@ var BlockProcessor = (function() {
             voicePosts: [],
             veEvents: [],
             awards: [],
+            vtActions: [],
+            transfers: [],
+            fixedAwards: [],
+            burnProofs: [],
             blockHash: block.block_id || '',
             huntEntropy: block.previous || block.block_id || '',
             blockNum: blockNum,
@@ -40,10 +44,19 @@ var BlockProcessor = (function() {
 
                 switch (opType) {
                     case 'custom':
-                        _processCustomOp(opData, blockNum, result, block.timestamp || '', i, j);
+                        _processCustomOp(opData, blockNum, result, block.timestamp || '', i, j, tx.transaction_id || tx.id || '');
                         break;
                     case 'award':
                         _processAwardOp(opData, blockNum, result, i, j);
+                        break;
+                    case 'transfer':
+                        _processTransferOp(opData, blockNum, result, i, j, tx.transaction_id || tx.id || '');
+                        break;
+                    case 'fixed_award':
+                        _processFixedAwardOp(opData, blockNum, result, i, j, tx.transaction_id || tx.id || '');
+                        break;
+                    case 'vt_burn_proof':
+                        _processBurnProofOp(opData, blockNum, result, i, j, tx.transaction_id || tx.id || '');
                         break;
                     // Other operations can be added as needed
                 }
@@ -66,7 +79,7 @@ var BlockProcessor = (function() {
     /**
      * Process a custom operation
      */
-    function _processCustomOp(opData, blockNum, result, blockTimestamp, txIndex, opIndex) {
+    function _processCustomOp(opData, blockNum, result, blockTimestamp, txIndex, opIndex, txId) {
         var sender = '';
         if (opData.required_regular_auths && opData.required_regular_auths.length > 0) {
             sender = opData.required_regular_auths[0];
@@ -74,7 +87,22 @@ var BlockProcessor = (function() {
             sender = opData.required_active_auths[0];
         }
 
-        if (opData.id === cfg.PROTOCOLS.VM) {
+        if (cfg.PROTOCOLS.VT && opData.id === cfg.PROTOCOLS.VT && typeof VTProtocol !== 'undefined') {
+            var vtAction = VTProtocol.parseAction(opData.json);
+            if (vtAction) {
+                result.vtActions.push({
+                    sender: sender,
+                    action: vtAction,
+                    blockNum: blockNum,
+                    txId: txId || '',
+                    txIndex: txIndex,
+                    opIndex: opIndex,
+                    regularAuths: (opData.required_regular_auths || []).slice(),
+                    activeAuths: (opData.required_active_auths || []).slice(),
+                    raw: opData
+                });
+            }
+        } else if (opData.id === cfg.PROTOCOLS.VM) {
             var action = VMProtocol.parseAction(opData.json);
             if (action) {
                 result.vmActions.push({
@@ -129,6 +157,42 @@ var BlockProcessor = (function() {
         });
     }
 
+    function _assetParts(value) {
+        if (typeof value !== 'string') return { amountMilli: null, symbol: '' };
+        var match = value.match(/^((?:0|[1-9][0-9]*)\.[0-9]{3}) ([A-Z]{1,8})$/);
+        if (!match || typeof VTProtocol === 'undefined') return { amountMilli: null, symbol: match ? match[2] : '' };
+        return { amountMilli: VTProtocol.parseAmount(match[1]), symbol: match[2] };
+    }
+
+    function _processTransferOp(opData, blockNum, result, txIndex, opIndex, txId) {
+        var asset = _assetParts(opData.amount);
+        result.transfers.push({
+            from: opData.from || '', to: opData.to || '', amount: opData.amount || '',
+            amountMilli: asset.amountMilli, symbol: asset.symbol, memo: opData.memo || '',
+            blockNum: blockNum, txId: txId || '', txIndex: txIndex, opIndex: opIndex, raw: opData
+        });
+    }
+
+    function _processFixedAwardOp(opData, blockNum, result, txIndex, opIndex, txId) {
+        var asset = _assetParts(opData.reward_amount);
+        result.fixedAwards.push({
+            initiator: opData.initiator || '', receiver: opData.receiver || '',
+            requestedMilli: asset.amountMilli, symbol: asset.symbol,
+            maxEnergy: opData.max_energy, customSequence: opData.custom_sequence,
+            memo: opData.memo || '', beneficiaries: opData.beneficiaries || [],
+            blockNum: blockNum, txId: txId || '', txIndex: txIndex, opIndex: opIndex, raw: opData
+        });
+    }
+
+    function _processBurnProofOp(opData, blockNum, result, txIndex, opIndex, txId) {
+        if (!opData || opData.canonical !== true || !Number.isSafeInteger(opData.actualBurnMilli)) return;
+        result.burnProofs.push({
+            initiator: opData.initiator || '', receiver: opData.receiver || '', intent: opData.intent || '',
+            actualBurnMilli: opData.actualBurnMilli, sourceOpIndex: opData.sourceOpIndex, canonical: true,
+            blockNum: blockNum, txId: txId || '', txIndex: txIndex, opIndex: opIndex
+        });
+    }
+
     /**
      * Fetch and process a range of blocks
      * @param {number} startBlock
@@ -167,7 +231,7 @@ var BlockProcessor = (function() {
                 current++;
 
                 // Skip delay for empty blocks during catch-up; short delay otherwise
-                var hasContent = processed.vmActions.length > 0 || processed.veEvents.length > 0 || processed.voicePosts.length > 0 || processed.awards.length > 0;
+                var hasContent = processed.vmActions.length > 0 || processed.veEvents.length > 0 || processed.voicePosts.length > 0 || processed.awards.length > 0 || processed.vtActions.length > 0 || processed.transfers.length > 0 || processed.fixedAwards.length > 0;
                 if (isCatchUp && !hasContent) {
                     nextBlock();
                 } else {

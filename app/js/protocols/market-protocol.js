@@ -17,12 +17,17 @@ var MarketProtocol = (function() {
      * @returns {Object} action data for broadcasting
      */
     function createListAction(itemRef, price, expiresBlock) {
+        var priceMilli = typeof price === 'string' && typeof VTProtocol !== 'undefined'
+            ? VTProtocol.parseAmount(price)
+            : price;
+        if (!Number.isSafeInteger(priceMilli) || priceMilli <= 0) return null;
         return {
             t: AT.MARKET_LIST,
             d: {
                 item_ref: itemRef,
-                price: price | 0,
-                expires_block: expiresBlock | 0
+                price_milli: priceMilli,
+                revision: 1,
+                expires_block: Number(expiresBlock) || 0
             }
         };
     }
@@ -46,13 +51,10 @@ var MarketProtocol = (function() {
      * @param {string} listingRef - listing reference
      * @returns {Object} action data
      */
-    function createBuyAction(listingRef) {
-        return {
-            t: AT.MARKET_BUY,
-            d: {
-                listing_ref: listingRef
-            }
-        };
+    function createBuyAction(listingRef, revision, priceMilli) {
+        return typeof VTProtocol !== 'undefined'
+            ? VTProtocol.createBazaarBuyAction(listingRef, revision, priceMilli)
+            : null;
     }
 
     /**
@@ -172,9 +174,13 @@ var MarketProtocol = (function() {
      * @param {string} listingRef
      * @param {Function} callback
      */
-    function broadcastBuy(listingRef, callback) {
-        var actionData = createBuyAction(listingRef);
-        VizBroadcast.gameAction(actionData, callback);
+    function broadcastBuy(listingRef, revision, priceMilli, callback) {
+        var actionData = createBuyAction(listingRef, revision, priceMilli);
+        if (!actionData) {
+            callback(new Error('invalid_magic_purchase'));
+            return;
+        }
+        VizBroadcast.tokenAction(actionData, callback);
     }
 
     /**

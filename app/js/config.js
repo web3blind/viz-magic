@@ -30,7 +30,8 @@ var VizMagicConfig = (function() {
     var PROTOCOLS = {
         VM: 'VM',   // Viz Magic — all game actions
         VE: 'VE',   // VIZ Events — enchanting, consumption, edits
-        V:  'V'     // Voice — social layer (Realm Chronicle)
+        V:  'V',    // Voice — social layer (Realm Chronicle)
+        VT: 'VT'    // VIZ Tokens protocol — MAGIC game currency only
     };
 
     /** App version and storage */
@@ -67,6 +68,17 @@ var VizMagicConfig = (function() {
     var PAID_ACTIONS = {
         V2_ACTIVATION_BLOCK: 83500000,
         TRAVEL_RECEIVER: 'denis-skripnik'
+    };
+
+    /** VT protocol / MAGIC currency consensus settings. */
+    var TOKEN = {
+        VERSION: 1,
+        ACTIVATION_BLOCK: 83500000,
+        IRREVERSIBLE_DEPTH: 20,
+        NULL_ACCOUNT: 'null',
+        FIXED_AWARD_EVIDENCE: false,
+        MAGIC_PRECISION: 3,
+        MAX_HISTORY: 500
     };
 
     /** Versioned VE rules. Existing v1 history before activation remains replayable. */
@@ -265,6 +277,7 @@ var VizMagicConfig = (function() {
         ENERGY: ENERGY,
         LIBRARY: LIBRARY,
         PAID_ACTIONS: PAID_ACTIONS,
+        TOKEN: TOKEN,
         VE_ACTIONS: VE_ACTIONS,
         HP_REGEN: HP_REGEN,
         BLOCK: BLOCK,
