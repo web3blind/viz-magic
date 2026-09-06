@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS blocks (
     source_node TEXT,
     indexed_at TEXT,
     event_count INTEGER NOT NULL DEFAULT 0,
+    virtual_complete INTEGER NOT NULL DEFAULT 0,
     raw_json TEXT NOT NULL
 );
 
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS events (
     timestamp TEXT,
     tx_index INTEGER NOT NULL,
     op_index INTEGER NOT NULL,
+    virtual_op INTEGER NOT NULL DEFAULT 0,
     tx_id TEXT,
     op_type TEXT NOT NULL,
     protocol TEXT NOT NULL,

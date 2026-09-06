@@ -71,7 +71,8 @@ function isGameAward(opData) {
 }
 
 function normalizeAward(block, blockNum, txIndex, opIndex, opData) {
-    if (!isGameAward(opData)) return null;
+    var vtAward = isVtMemo(opData) && opData && opData.receiver === 'null';
+    if (!isGameAward(opData) && !vtAward) return null;
     var accounts = [];
     uniquePush(accounts, opData && opData.initiator);
     uniquePush(accounts, opData && opData.receiver);
@@ -82,9 +83,10 @@ function normalizeAward(block, blockNum, txIndex, opIndex, opData) {
         timestamp: block && block.timestamp || '',
         txIndex: txIndex,
         opIndex: opIndex,
+        txId: block.transactions[txIndex] && (block.transactions[txIndex].transaction_id || block.transactions[txIndex].id || '') || '',
         opType: 'award',
-        protocol: 'award',
-        type: 'award',
+        protocol: vtAward ? 'VT' : 'award',
+        type: vtAward ? 'mint.award' : 'award',
         sender: opData && opData.initiator || '',
         account: opData && opData.receiver || '',
         accounts: accounts,
@@ -102,6 +104,100 @@ function normalizeAward(block, blockNum, txIndex, opIndex, opData) {
 
 function isVtMemo(opData) {
     return String(opData && opData.memo || '').indexOf('viz://vt/mint/v1/') === 0;
+}
+
+function stableValue(value) {
+    if (Array.isArray(value)) return value.map(stableValue);
+    if (!value || typeof value !== 'object') return value;
+    var result = {};
+    Object.keys(value).sort().forEach(function(key) { result[key] = stableValue(value[key]); });
+    return result;
+}
+
+function sameOperation(left, right) {
+    return JSON.stringify(stableValue(left)) === JSON.stringify(stableValue(right));
+}
+
+function isVtSourceOperation(op) {
+    var type = op && op[0];
+    var data = op && op[1] || {};
+    return (type === 'custom' && data.id === 'VT') ||
+        ((type === 'award' || type === 'transfer' || type === 'fixed_award') && isVtMemo(data));
+}
+
+function bindOperationHistory(block, blockNum, rows) {
+    if (!block || !Array.isArray(block.transactions) || !Array.isArray(rows)) throw new Error('operation history unavailable');
+    var sourceByPosition = {};
+    for (var i = 0; i < rows.length; i += 1) {
+        var row = rows[i] || {};
+        if (Number(row.block) !== Number(blockNum)) throw new Error('operation history block mismatch');
+        if (Number(row.virtual_op || 0) !== 0) continue;
+        var txIndex = Number(row.trx_in_block);
+        var opIndex = Number(row.op_in_trx);
+        if (!Number.isInteger(txIndex) || txIndex < 0 || !Number.isInteger(opIndex) || opIndex < 0) continue;
+        sourceByPosition[txIndex + ':' + opIndex] = row;
+        if (block.transactions[txIndex]) {
+            var existingId = block.transactions[txIndex].transaction_id || block.transactions[txIndex].id || '';
+            if (existingId && row.trx_id && existingId !== row.trx_id) throw new Error('operation history transaction mismatch');
+            if (row.trx_id) block.transactions[txIndex].transaction_id = row.trx_id;
+        }
+    }
+    for (var tx = 0; tx < block.transactions.length; tx += 1) {
+        var operations = block.transactions[tx] && block.transactions[tx].operations || [];
+        for (var operationIndex = 0; operationIndex < operations.length; operationIndex += 1) {
+            var operation = operations[operationIndex];
+            if (!isVtSourceOperation(operation)) continue;
+            var source = sourceByPosition[tx + ':' + operationIndex];
+            if (!source || !sameOperation(source.op, operation)) throw new Error('operation history source mismatch');
+        }
+    }
+    return block;
+}
+
+function parseSharesMicro(value) {
+    var match = typeof value === 'string' && value.match(/^((?:0|[1-9][0-9]*)\.([0-9]{6})) SHARES$/);
+    if (!match) return null;
+    var parts = match[1].split('.');
+    var micro = Number(parts[0]) * 1000000 + Number(parts[1]);
+    return Number.isSafeInteger(micro) && micro > 0 ? micro : null;
+}
+
+function extractVirtualEvents(block, blockNum, rows) {
+    var events = [];
+    if (!Array.isArray(rows)) return events;
+    var sources = {};
+    for (var i = 0; i < rows.length; i += 1) {
+        var sourceRow = rows[i] || {};
+        if (Number(sourceRow.block) === Number(blockNum) && Number(sourceRow.virtual_op || 0) === 0 &&
+                sourceRow.op && sourceRow.op[0] === 'award') {
+            sources[Number(sourceRow.trx_in_block) + ':' + Number(sourceRow.op_in_trx)] = sourceRow;
+        }
+    }
+    for (var r = 0; r < rows.length; r += 1) {
+        var row = rows[r] || {};
+        var data = row.op && row.op[1] || {};
+        var txIndex = Number(row.trx_in_block);
+        var opIndex = Number(row.op_in_trx);
+        var virtualOp = Number(row.virtual_op || 0);
+        var sharesMicro = row.op && row.op[0] === 'receive_award' ? parseSharesMicro(data.shares) : null;
+        var source = sources[txIndex + ':' + opIndex];
+        var sourceData = source && source.op && source.op[1] || {};
+        if (Number(row.block) !== Number(blockNum) || virtualOp <= 0 || !sharesMicro || !source ||
+                !row.trx_id || row.trx_id !== source.trx_id ||
+                sourceData.receiver !== 'null' || !isVtMemo(sourceData) || !isVtMemo(data) ||
+                sourceData.initiator !== data.initiator || sourceData.receiver !== data.receiver ||
+                Number(sourceData.custom_sequence || 0) !== Number(data.custom_sequence || 0) ||
+                sourceData.memo !== data.memo || (sourceData.beneficiaries || []).length !== 0) continue;
+        events.push({
+            blockNum: Number(blockNum), block_id: block.block_id || '', previous: block.previous || '', timestamp: row.timestamp || block.timestamp || '',
+            txIndex: txIndex, opIndex: opIndex, virtualOp: virtualOp, txId: row.trx_id || '',
+            opType: 'receive_award', protocol: 'VT', type: 'mint.award.receipt',
+            sender: data.initiator || '', account: data.initiator || '', accounts: [data.initiator || '', 'null'].filter(Boolean),
+            payload: { initiator: data.initiator || '', receiver: data.receiver || '', custom_sequence: data.custom_sequence || 0, memo: data.memo || '', shares: data.shares, shares_micro: sharesMicro },
+            raw: data
+        });
+    }
+    return events;
 }
 
 function normalizeTransfer(block, blockNum, txIndex, opIndex, opData) {
@@ -152,5 +248,8 @@ module.exports = {
     parseJsonMaybe: parseJsonMaybe,
     getSender: getSender,
     isGameAward: isGameAward,
-    isVtMemo: isVtMemo
+    isVtMemo: isVtMemo,
+    bindOperationHistory: bindOperationHistory,
+    extractVirtualEvents: extractVirtualEvents,
+    parseSharesMicro: parseSharesMicro
 };

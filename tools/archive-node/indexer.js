@@ -12,6 +12,7 @@ var DEFAULT_CONFIG = {
     requestDelayMs: 120,
     timeoutMs: 8000,
     irreversibleDepth: 20,
+    virtualReceiptStartBlock: 83500000,
     maxBlocksPerRun: 0
 };
 
@@ -90,6 +91,52 @@ async function fetchBlockFromNodes(nodes, blockNum, timeoutMs) {
     throw lastErr || new Error('no source nodes configured');
 }
 
+function rpcFetch(nodeUrl, api, method, params, timeoutMs, errorMessage) {
+    return new Promise(function(resolve, reject) {
+        var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        var settled = false;
+        var timer = setTimeout(function() {
+            if (controller) controller.abort();
+            if (!settled) reject(new Error(errorMessage || 'rpc timeout'));
+        }, timeoutMs || 8000);
+        fetch(nodeUrl, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: [api, method, params || []], id: 1 }),
+            signal: controller ? controller.signal : undefined
+        }).then(function(resp) {
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            return resp.json();
+        }).then(function(payload) {
+            settled = true;
+            clearTimeout(timer);
+            if (!payload || payload.error || payload.result === null || typeof payload.result === 'undefined') {
+                throw new Error(errorMessage || 'rpc result unavailable');
+            }
+            resolve(payload.result);
+        }).catch(function(err) {
+            settled = true;
+            clearTimeout(timer);
+            reject(new Error(errorMessage || err.message || String(err)));
+        });
+    });
+}
+
+function rpcFetchOperations(nodeUrl, blockNum, timeoutMs) {
+    return rpcFetch(nodeUrl, 'operation_history', 'get_ops_in_block', [blockNum, false], timeoutMs, 'operation history unavailable').then(function(rows) {
+        if (!Array.isArray(rows)) throw new Error('operation history unavailable');
+        return rows;
+    });
+}
+
+function rpcFetchBlockId(nodeUrl, blockNum, timeoutMs) {
+    return rpcFetch(nodeUrl, 'block_info', 'get_block_info', [blockNum, 1], timeoutMs, 'block identity unavailable').then(function(rows) {
+        var info = rows && rows[0];
+        var blockId = info && info.block_id;
+        if (!blockId) throw new Error('block identity unavailable');
+        return { blockId: String(blockId), timestamp: String(info.timestamp || '') };
+    });
+}
+
 async function indexRange(options) {
     var cfg = options.config || DEFAULT_CONFIG;
     var archive = options.store || new storeMod.ArchiveStore(cfg.dataDir);
@@ -100,6 +147,8 @@ async function indexRange(options) {
     var maxBlocks = Number(options.maxBlocks || cfg.maxBlocksPerRun || 0);
     var indexed = 0;
     var eventCount = 0;
+    var virtualReceiptStartBlock = Number(cfg.virtualReceiptStartBlock || 83500000);
+    archive.setVirtualReceiptStartBlock(virtualReceiptStartBlock);
     archive.setStatus({ ok: true, service: 'viz-magic-game-archive', mode: 'indexing', sourceNodes: cfg.sourceNodes.length });
 
     while (true) {
@@ -108,7 +157,19 @@ async function indexRange(options) {
         try {
             var fetched = await fetchBlockFromNodes(cfg.sourceNodes, start, cfg.timeoutMs);
             var events = parser.extractGameEvents(fetched.block, start);
-            archive.putBlockWithEvents(start, fetched.block, fetched.node, events);
+            var virtualComplete = false;
+            if (start >= virtualReceiptStartBlock) {
+                var operationRows = await rpcFetchOperations(fetched.node, start, cfg.timeoutMs);
+                var blockIdentity = await rpcFetchBlockId(fetched.node, start, cfg.timeoutMs);
+                if (blockIdentity.timestamp && String(fetched.block.timestamp || '') !== blockIdentity.timestamp) {
+                    throw new Error('block identity mismatch');
+                }
+                fetched.block.block_id = blockIdentity.blockId;
+                parser.bindOperationHistory(fetched.block, start, operationRows);
+                events = parser.extractGameEvents(fetched.block, start).concat(parser.extractVirtualEvents(fetched.block, start, operationRows));
+                virtualComplete = true;
+            }
+            archive.putBlockWithEvents(start, fetched.block, fetched.node, events, { virtualComplete: virtualComplete });
             archive.setCursor(start);
             indexed += 1;
             eventCount += events.length;
@@ -143,6 +204,8 @@ module.exports = {
     loadConfig: loadConfig,
     parseArgs: parseArgs,
     rpcFetchBlock: rpcFetchBlock,
+    rpcFetchOperations: rpcFetchOperations,
+    rpcFetchBlockId: rpcFetchBlockId,
     fetchBlockFromNodes: fetchBlockFromNodes,
     indexRange: indexRange
 };

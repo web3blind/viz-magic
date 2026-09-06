@@ -762,6 +762,12 @@ var App = (function() {
         if (_shouldUseArchiveEventBatch(startBlock, endBlock, chainHead)) {
             _processArchiveEventBatch(startBlock, endBlock, chainHead, function(usedArchive) {
                 if (!usedArchive) {
+                    var tokenActivation = Number(VizMagicConfig.TOKEN && VizMagicConfig.TOKEN.ACTIVATION_BLOCK || 0);
+                    if (tokenActivation > 0 && endBlock >= tokenActivation) {
+                        console.log('App: authoritative VT archive unavailable; monetary replay remains pending');
+                        _pollBusy = false;
+                        return;
+                    }
                     _processBlockBatchFromRpc(startBlock, endBlock, chainHead);
                 }
             });
@@ -772,9 +778,10 @@ var App = (function() {
     }
 
     function _shouldUseArchiveEventBatch(startBlock, endBlock, chainHead) {
+        var tokenActivation = Number(VizMagicConfig.TOKEN && VizMagicConfig.TOKEN.ACTIVATION_BLOCK || 0);
         return typeof HistorySource !== 'undefined' &&
             (HistorySource.getAllEventsRange || HistorySource.getEventsRange) &&
-            chainHead - startBlock > 1000;
+            (chainHead - startBlock > 1000 || (tokenActivation > 0 && endBlock >= tokenActivation));
     }
 
     function _processArchiveEventBatch(startBlock, endBlock, chainHead, done) {
@@ -798,7 +805,7 @@ var App = (function() {
             start: startBlock,
             end: endBlock,
             limit: 5000
-        }, function(err, events) {
+        }, function(err, events, rangeMeta) {
             if (err || !events) {
                 done(false);
                 return;
@@ -816,7 +823,9 @@ var App = (function() {
                     groupedMeta[blockNum] = {
                         block_id: ev.block_id || ev.blockId || '',
                         previous: ev.previous || '',
-                        timestamp: ev.timestamp || ''
+                        timestamp: ev.timestamp || '',
+                        sourceOperationsComplete: !!(rangeMeta && rangeMeta.sourceOperationsComplete),
+                        virtualReceiptsComplete: !!(rangeMeta && rangeMeta.virtualReceiptsComplete)
                     };
                     order.push(blockNum);
                 }
@@ -848,7 +857,9 @@ var App = (function() {
                         vtActions: [],
                         transfers: [],
                         fixedAwards: [],
-                        burnProofs: []
+                        awardReceipts: [],
+                        sourceOperationsComplete: !!(rangeMeta && rangeMeta.sourceOperationsComplete),
+                        virtualReceiptsComplete: !!(rangeMeta && rangeMeta.virtualReceiptsComplete)
                     };
                     var stateEvents = StateEngine.processBlock(processed, { advanceHead: false });
                     for (var k = 0; k < stateEvents.length; k++) {

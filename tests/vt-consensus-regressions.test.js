@@ -162,28 +162,21 @@ function mintBlock(number, hash, sender, intent, amountMilli, withProof) {
     assert.strictEqual(Object.keys(state.pendingBlocks).length, 201);
 }());
 
-(function authoredCanonicalFlagIsNotTrustedBurnProof() {
-    c.VizMagicConfig.TOKEN.FIXED_AWARD_EVIDENCE = true;
-    var fixed = P.createMintAction('fixed-untrusted', 'fixed_award', '1.000', { maxEnergy: 100 });
+(function canonicalFixedAwardUsesNominalAllocationAndIgnoresFictionalProofFields() {
+    var fixed = P.createMintAction('fixed-nominal', 'fixed_award', '1.000', { maxEnergy: 100 });
     var block = {
         blockNum: activation + 20,
-        blockHash: 'fixed-untrusted-block',
+        blockHash: 'fixed-nominal-block',
         vtActions: [vtEntry('alice', fixed, 0, 1)],
         transfers: [],
-        fixedAwards: [{ initiator: 'alice', receiver: 'null', requestedMilli: 1000, symbol: 'VIZ', maxEnergy: 100, memo: P.mintMemo('fixed-untrusted'), beneficiaries: [], txIndex: 0, opIndex: 0 }],
-        burnProofs: [{ initiator: 'alice', receiver: 'null', intent: 'fixed-untrusted', actualBurnMilli: 999, sourceOpIndex: 0, txIndex: 0, opIndex: 9, canonical: true }]
+        fixedAwards: [{ initiator: 'alice', receiver: 'null', requestedMilli: 1000, symbol: 'VIZ', maxEnergy: 100, memo: P.mintMemo('fixed-nominal'), beneficiaries: [], txId: 'tx-0', txIndex: 0, opIndex: 0 }],
+        burnProofs: [{ initiator: 'alice', receiver: 'null', intent: 'fixed-nominal', actualBurnMilli: 999, txIndex: 0, opIndex: 9, canonical: true }]
     };
     var state = L.createState();
     L.ingestBlock(state, block);
     L.finalizeThrough(state, block.blockNum, context(block.blockNum));
-    assert.strictEqual(L.getBalance(state, 'alice'), 0, 'an operation-authored canonical=true field must never authorize fixed-award mint');
-    assert.ok(state.pendingBlocks[block.blockNum]);
-
-    block.proofSource = 'trusted_archive_v1';
-    L.ingestBlock(state, block);
-    L.finalizeThrough(state, block.blockNum, context(block.blockNum));
-    assert.strictEqual(L.getBalance(state, 'alice'), 999, 'only a trusted archive boundary may hydrate exact realized-burn evidence');
-    c.VizMagicConfig.TOKEN.FIXED_AWARD_EVIDENCE = false;
+    assert.strictEqual(L.getBalance(state, 'alice'), 1000, 'successful canonical reward_amount is the approved nominal allocation proof');
+    assert.strictEqual(state.supplyMilli, 1000);
 }());
 
 (function rawOperationsCannotDeclareTrustedBurnReceipts() {
@@ -199,22 +192,45 @@ function mintBlock(number, hash, sender, intent, amountMilli, withProof) {
             canonical: true, actualBurnMilli: 1000, initiator: 'alice', receiver: 'null'
         }]] }]
     }, activation + 30);
-    assert.strictEqual(processed.burnProofs.length, 0, 'a block operation cannot self-assert the trusted archive boundary');
+    assert.strictEqual(processed.burnProofs, undefined, 'obsolete fictional proof collection must not exist');
     assert.strictEqual(processed.proofSource, undefined);
 }());
 
-(function disabledFixedAwardIsAClosedRejectionNotAnUnboundedDependency() {
-    var fixed = P.createMintAction('disabled-fixed', 'fixed_award', '1.000', { maxEnergy: 100 });
+(function ordinaryAwardWaitsForCompleteVirtualHistoryThenFailsWithoutExactVizAllocation() {
+    var award = P.createAwardMintAction('award-pending', 100);
     var block = {
-        blockNum: activation + 21, blockHash: 'disabled-fixed-block',
-        vtActions: [vtEntry('alice', fixed, 0, 1)], transfers: [], fixedAwards: [], burnProofs: []
+        blockNum: activation + 21, blockHash: 'award-pending-block', virtualReceiptsComplete: false,
+        vtActions: [vtEntry('alice', award, 0, 1)], transfers: [], fixedAwards: [],
+        awards: [{ initiator: 'alice', receiver: 'null', energy: 100, customSequence: 0, memo: P.mintMemo('award-pending'), beneficiaries: [], txId: 'tx-0', txIndex: 0, opIndex: 0 }],
+        awardReceipts: []
     };
     var state = L.createState({ supplyMilli: 0, balances: {}, finalizedBlock: activation + 20 });
     L.ingestBlock(state, block);
     L.finalizeThrough(state, block.blockNum, context(block.blockNum));
     assert.strictEqual(L.getBalance(state, 'alice'), 0);
-    assert.strictEqual(state.pendingBlocks[block.blockNum], undefined, 'disabled evidence mode must reject safely instead of freezing every later transfer');
+    assert.ok(state.pendingBlocks[block.blockNum], 'missing virtual history must remain hydratable');
+
+    block.virtualReceiptsComplete = true;
+    block.awardReceipts = [{ initiator: 'alice', receiver: 'null', customSequence: 0, memo: P.mintMemo('award-pending'), shares: '1.000000 SHARES', sharesMicro: 1000000, txId: 'tx-0', txIndex: 0, opIndex: 0, virtualOp: 1 }];
+    L.ingestBlock(state, block);
+    L.finalizeThrough(state, block.blockNum, context(block.blockNum));
+    assert.strictEqual(L.getBalance(state, 'alice'), 0, 'SHARES receipt must not be treated as a VIZ amount');
+    assert.strictEqual(state.pendingBlocks[block.blockNum], undefined, 'complete but insufficient evidence must reject without freezing later economy');
     assert.strictEqual(state.finalizedBlock, block.blockNum);
+}());
+
+(function completeArchiveMakesFailedOrInsufficientEnergyMintFinalInsteadOfAReplayDos() {
+    var blockNum = activation + 22;
+    var state = L.createState({ supplyMilli: 0, balances: {}, finalizedBlock: blockNum - 1 });
+    L.ingestBlock(state, {
+        blockNum: blockNum, blockHash: 'complete-unmatched', sourceOperationsComplete: true, virtualReceiptsComplete: true,
+        vtActions: [vtEntry('mallory', P.createMintAction('no-source', 'fixed_award', '1.000', { maxEnergy: 100 }), 0, 0)],
+        transfers: [], fixedAwards: [], awards: [], awardReceipts: []
+    });
+    L.finalizeThrough(state, blockNum, { activationBlock: activation, completeFrom: blockNum, completeThrough: blockNum });
+    assert.strictEqual(state.finalizedBlock, blockNum, 'a complete archive proves a rejected or insufficient-energy source operation is absent');
+    assert.strictEqual(state.pendingBlocks[blockNum], undefined);
+    assert.strictEqual(state.supplyMilli, 0);
 }());
 
 (function malformedCheckpointEntriesFailClosedBeforeFiltering() {

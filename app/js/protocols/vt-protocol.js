@@ -55,6 +55,7 @@ var VTProtocol = (function() {
     }
 
     function createMintAction(intent, method, amount, options) {
+        if (method === 'award') return createAwardMintAction(intent, options && options.energy);
         var amountMilli = parseAmount(amount);
         if (!validIntent(intent) || (method !== 'transfer' && method !== 'fixed_award') || amountMilli === null) return null;
         if (method === 'fixed_award') {
@@ -63,6 +64,11 @@ var VTProtocol = (function() {
             return _base('mint', { intent: intent, method: method, requested_milli: amountMilli, max_energy: options.maxEnergy });
         }
         return _base('mint', { intent: intent, method: method, amount_milli: amountMilli });
+    }
+
+    function createAwardMintAction(intent, energy) {
+        if (!validIntent(intent) || !Number.isInteger(energy) || energy <= 0 || energy > 10000) return null;
+        return _base('mint', { intent: intent, method: 'award', energy: energy });
     }
 
     function createTransferAction(to, amount, nonce) {
@@ -86,10 +92,11 @@ var VTProtocol = (function() {
         if (!value || value.p !== PROTOCOL || Number(value.v) !== VERSION || typeof value.t !== 'string' || !value.d) return null;
         var d = value.d;
         if (value.t === 'mint') {
-            if (!validIntent(d.intent) || (d.method !== 'transfer' && d.method !== 'fixed_award')) return null;
+            if (!validIntent(d.intent) || ['transfer', 'fixed_award', 'award'].indexOf(d.method) === -1) return null;
             if (d.method === 'transfer' && (!Number.isSafeInteger(d.amount_milli) || d.amount_milli <= 0)) return null;
             if (d.method === 'fixed_award' && (!Number.isSafeInteger(d.requested_milli) || d.requested_milli <= 0 ||
                 !Number.isInteger(d.max_energy) || d.max_energy <= 0 || d.max_energy > 10000)) return null;
+            if (d.method === 'award' && (!Number.isInteger(d.energy) || d.energy <= 0 || d.energy > 10000)) return null;
         } else if (value.t === 'transfer') {
             if (!validAccount(d.to) || !validIntent(d.nonce) || !Number.isSafeInteger(d.amount_milli) || d.amount_milli <= 0) return null;
         } else if (value.t === 'bazaar.buy') {
@@ -112,6 +119,7 @@ var VTProtocol = (function() {
         validIntent: validIntent,
         mintMemo: mintMemo,
         createMintAction: createMintAction,
+        createAwardMintAction: createAwardMintAction,
         createTransferAction: createTransferAction,
         createBazaarBuyAction: createBazaarBuyAction,
         parseAction: parseAction

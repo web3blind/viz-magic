@@ -85,12 +85,24 @@ var HistorySource = (function() {
             previous: payload.previous || '',
             timestamp: payload.timestamp || '',
             block_id: payload.block_id || payload.blockId || '',
-            transactions: []
+            transactions: [],
+            virtual_operations: [],
+            sourceOperationsComplete: payload.complete === true || payload.sourceOperationsComplete === true,
+            virtualReceiptsComplete: payload.virtualReceiptsComplete === true
         };
         for (var i = 0; i < events.length; i++) {
             var ev = events[i] || {};
             var txIndex = Number(typeof ev.txIndex !== 'undefined' ? ev.txIndex : ev.tx_index) || 0;
             var opIndex = Number(typeof ev.opIndex !== 'undefined' ? ev.opIndex : ev.op_index) || 0;
+            if (ev.opType === 'receive_award' || ev.op_type === 'receive_award') {
+                block.virtual_operations.push({
+                    trx_id: ev.txId || ev.tx_id || '', block: Number(ev.blockNum || ev.block_num || 0),
+                    trx_in_block: txIndex, op_in_trx: opIndex,
+                    virtual_op: Number(ev.virtualOp || ev.virtual_op || 0),
+                    op: ['receive_award', ev.raw || ev.payload || {}]
+                });
+                continue;
+            }
             while (block.transactions.length <= txIndex) block.transactions.push({ operations: [] });
             block.transactions[txIndex].transaction_id = ev.txId || ev.tx_id || block.transactions[txIndex].transaction_id || '';
             var operations = block.transactions[txIndex].operations;
@@ -114,7 +126,9 @@ var HistorySource = (function() {
             events: events || [],
             previous: metadata.previous || '',
             timestamp: metadata.timestamp || '',
-            block_id: metadata.block_id || metadata.blockId || ''
+            block_id: metadata.block_id || metadata.blockId || '',
+            sourceOperationsComplete: metadata.sourceOperationsComplete === true,
+            virtualReceiptsComplete: metadata.virtualReceiptsComplete === true
         });
     }
 
@@ -208,11 +222,13 @@ var HistorySource = (function() {
             var txIndex = Number(typeof event.txIndex !== 'undefined' ? event.txIndex : event.tx_index);
             var opIndex = Number(typeof event.opIndex !== 'undefined' ? event.opIndex : event.op_index);
             var opType = event.opType || event.op_type || '';
-            var positionKey = txIndex + ':' + opIndex;
+            var virtualOp = Number(event.virtualOp || event.virtual_op || 0);
+            var positionKey = txIndex + ':' + opIndex + ':' + virtualOp;
             if (eventBlockNum !== Number(blockNum) ||
                     !Number.isInteger(txIndex) || txIndex < 0 ||
                     !Number.isInteger(opIndex) || opIndex < 0 ||
-                    ['custom', 'award', 'transfer', 'fixed_award'].indexOf(opType) === -1 ||
+                    ['custom', 'award', 'transfer', 'fixed_award', 'receive_award'].indexOf(opType) === -1 ||
+                    (opType === 'receive_award' && (!Number.isInteger(virtualOp) || virtualOp <= 0)) ||
                     seenPositions[positionKey]) {
                 return null;
             }
@@ -485,6 +501,9 @@ var HistorySource = (function() {
         var nextEnd = originalEnd;
         var pages = [];
         var seen = {};
+        var sourceOperationsComplete = true;
+        var virtualReceiptsComplete = true;
+        var virtualReceiptStartBlock = 0;
 
         function finish() {
             var all = [];
@@ -492,16 +511,21 @@ var HistorySource = (function() {
             all.sort(function(a, b) {
                 if (Number(a.blockNum || 0) !== Number(b.blockNum || 0)) return Number(a.blockNum || 0) - Number(b.blockNum || 0);
                 if (Number(a.txIndex || 0) !== Number(b.txIndex || 0)) return Number(a.txIndex || 0) - Number(b.txIndex || 0);
-                return Number(a.opIndex || 0) - Number(b.opIndex || 0);
+                if (Number(a.opIndex || 0) !== Number(b.opIndex || 0)) return Number(a.opIndex || 0) - Number(b.opIndex || 0);
+                return Number(a.virtualOp || a.virtual_op || 0) - Number(b.virtualOp || b.virtual_op || 0);
             });
-            callback(null, all);
+            callback(null, all, {
+                sourceOperationsComplete: sourceOperationsComplete,
+                virtualReceiptsComplete: virtualReceiptsComplete,
+                virtualReceiptStartBlock: virtualReceiptStartBlock
+            });
         }
 
         function addPage(events) {
             var page = [];
             for (var i = 0; i < events.length; i++) {
                 var event = events[i] || {};
-                var identity = event.id || [event.blockNum, event.txIndex, event.opIndex, event.protocol, event.type].join(':');
+                var identity = event.id || [event.blockNum, event.txIndex, event.opIndex, event.virtualOp || event.virtual_op || 0, event.protocol, event.type].join(':');
                 if (!seen[identity]) {
                     seen[identity] = true;
                     page.push(event);
@@ -518,11 +542,14 @@ var HistorySource = (function() {
             request.start = start;
             request.end = nextEnd;
             request.limit = pageLimit;
-            getEventsRange(request, function(err, events) {
+            getEventsRange(request, function(err, events, payload) {
                 if (err) {
                     callback(err);
                     return;
                 }
+                sourceOperationsComplete = sourceOperationsComplete && !!(payload && payload.complete);
+                virtualReceiptsComplete = virtualReceiptsComplete && !!(payload && payload.virtualReceiptsComplete);
+                virtualReceiptStartBlock = Math.max(virtualReceiptStartBlock, Number(payload && payload.virtualReceiptStartBlock || 0));
                 events = events || [];
                 var oldest = null;
                 for (var i = 0; i < events.length; i++) {

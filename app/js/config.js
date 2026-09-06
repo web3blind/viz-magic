@@ -76,7 +76,6 @@ var VizMagicConfig = (function() {
         ACTIVATION_BLOCK: 83500000,
         IRREVERSIBLE_DEPTH: 20,
         NULL_ACCOUNT: 'null',
-        FIXED_AWARD_EVIDENCE: false,
         MAGIC_PRECISION: 3,
         MAX_HISTORY: 500
     };

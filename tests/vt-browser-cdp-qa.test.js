@@ -90,13 +90,29 @@ async function click(cdp, selector) {
             VizAccount.isLoggedIn=function(){return true;};
             VizAccount.hasActiveKey=function(){return false;};
             VizAccount.getAccount=function(name,cb){name==='bob'?cb(null,{name:'bob'}):cb(new Error('fixture-not-found'));};
+            localStorage.removeItem('viz_magic_pending_burn_v1:alice');
+            VizBroadcast.mintMagicFixedAward=function(intent,amount,maxEnergy,cb){window.__vtFixed={intent:intent,amount:amount,maxEnergy:maxEnergy};cb(new Error('fixture-timeout'));};
             VizBroadcast.tokenAction=function(action,cb){window.__vtSend=action;cb(null,{});};
             App.navigateTo('home');NavComponent.render();return true;
         })()`);
 
         await click(cdp, '.nav-tab[data-screen="wallet"]');
-        var wallet = await evalValue(cdp, `(function(){var burn=document.querySelector('#magic-mint-transfer-form button[type=submit]');return{screen:App.getCurrentScreen(),heading:document.querySelector('#screen-wallet h1').textContent,balance:document.querySelector('#magic-balance').textContent,burnDisabled:burn.disabled,hasConsent:!!document.querySelector('#magic-burn-consent'),regularCopy:document.querySelector('#screen-wallet').textContent.indexOf('regular authority')>=0};})()`);
-        assert.deepStrictEqual(wallet, { screen: 'wallet', heading: 'Кошелёк', balance: '2.000 MAGIC', burnDisabled: true, hasConsent: true, regularCopy: true });
+        var wallet = await evalValue(cdp, `(function(){var burn=document.querySelector('#magic-mint-transfer-form button[type=submit]'),fixed=document.querySelector('#magic-mint-fixed-form button[type=submit]');return{screen:App.getCurrentScreen(),heading:document.querySelector('#screen-wallet h1').textContent,balance:document.querySelector('#magic-balance').textContent,burnDisabled:burn.disabled,fixedDisabled:fixed.disabled,hasConsent:!!document.querySelector('#magic-burn-consent'),regularCopy:document.querySelector('#screen-wallet').textContent.indexOf('regular authority')>=0,ordinaryBlocked:document.querySelector('#screen-wallet').textContent.indexOf('содержит SHARES')>=0};})()`);
+        assert.deepStrictEqual(wallet, { screen: 'wallet', heading: 'Кошелёк', balance: '2.000 MAGIC', burnDisabled: true, fixedDisabled: false, hasConsent: true, regularCopy: true, ordinaryBlocked: true });
+
+        await evalValue(cdp, `(function(){document.querySelector('#magic-fixed-amount').value='1.000';document.querySelector('#magic-fixed-energy').value='500';document.querySelector('#magic-fixed-consent').checked=true;return true;})()`);
+        await click(cdp, '#magic-mint-fixed-form button[type="submit"]');
+        var fixedConfirmation = await evalValue(cdp, `(function(){return document.querySelector('#modal-container').textContent;})()`);
+        assert.ok(fixedConfirmation.indexOf('1.000 VIZ') >= 0 && fixedConfirmation.indexOf('1.000 MAGIC') >= 0 && fixedConfirmation.indexOf('500') >= 0 && fixedConfirmation.indexOf('regular key') >= 0, 'fixed-award confirmation must state exact input/output, energy cap and authority');
+        await click(cdp, '#modal-container [data-action="0"]');
+        var unknownFixed = await evalValue(cdp, `(function(){var pending=JSON.parse(localStorage.getItem('viz_magic_pending_burn_v1:alice'));return{call:window.__vtFixed,pending:{intent:pending.intent,amount:pending.amount,method:pending.method,maxEnergy:pending.maxEnergy},disabled:document.querySelector('#magic-mint-fixed-form button[type=submit]').disabled,warning:document.querySelector('#screen-wallet').textContent.indexOf('Не повторяйте')>=0,balance:StateEngine.getMagicBalance('alice')};})()`);
+        assert.strictEqual(unknownFixed.call.amount, '1.000');
+        assert.strictEqual(unknownFixed.call.maxEnergy, 500);
+        assert.strictEqual(unknownFixed.call.intent, unknownFixed.pending.intent);
+        assert.deepStrictEqual({ amount: unknownFixed.pending.amount, method: unknownFixed.pending.method, maxEnergy: unknownFixed.pending.maxEnergy, disabled: unknownFixed.disabled, warning: unknownFixed.warning, balance: unknownFixed.balance }, { amount: '1.000', method: 'fixed_award', maxEnergy: 500, disabled: true, warning: true, balance: 2000 });
+
+        var fixedRecovered = await evalValue(cdp, `(function(){var call=window.__vtFixed,action=VTProtocol.parseAction(VTProtocol.createMintAction(call.intent,'fixed_award',call.amount,{maxEnergy:call.maxEnergy}));StateEngine.processBlock({blockNum:83500002,blockHash:'qa-fixed-block',irreversible:true,awards:[],awardReceipts:[],veEvents:[],voicePosts:[],vmActions:[],transfers:[],fixedAwards:[{initiator:'alice',receiver:'null',requestedMilli:1000,symbol:'VIZ',maxEnergy:500,customSequence:0,memo:VTProtocol.mintMemo(call.intent),beneficiaries:[],txId:'qa-fixed-tx',txIndex:0,opIndex:0}],vtActions:[{sender:'alice',txId:'qa-fixed-tx',txIndex:0,opIndex:1,regularAuths:['alice'],activeAuths:[],action:action}]});WalletScreen.render();return{balance:StateEngine.getMagicBalance('alice'),pending:localStorage.getItem('viz_magic_pending_burn_v1:alice'),history:StateEngine.getMagicHistory('alice',0,10).map(function(x){return x.type;})};})()`);
+        assert.deepStrictEqual(fixedRecovered, { balance: 3000, pending: null, history: ['mint'] });
 
         await evalValue(cdp, `(function(){document.querySelector('#magic-send-to').value='<script>';document.querySelector('#magic-send-amount').value='1.000';return true;})()`);
         await click(cdp, '#magic-send-form button[type="submit"]');
@@ -106,8 +122,8 @@ async function click(cdp, selector) {
         await evalValue(cdp, `(function(){document.querySelector('#magic-send-to').value='bob';document.querySelector('#magic-send-amount').value='0.500';return true;})()`);
         await click(cdp, '#magic-send-form button[type="submit"]');
         await click(cdp, '#modal-container [data-action="0"]');
-        var sent = await evalValue(cdp, `(function(){var before={alice:StateEngine.getMagicBalance('alice'),bob:StateEngine.getMagicBalance('bob')};var parsed=VTProtocol.parseAction(window.__vtSend);var processed={blockNum:83500002,blockHash:'qa-transfer-block',irreversible:true,awards:[],veEvents:[],voicePosts:[],vmActions:[],transfers:[],fixedAwards:[],burnProofs:[],vtActions:[{sender:'alice',txId:'qa-transfer-tx',txIndex:0,opIndex:0,regularAuths:['alice'],activeAuths:[],action:parsed}]};StateEngine.processBlock(processed);return{before:before,action:{to:parsed.data.to,amount:parsed.data.amount_milli},after:{alice:StateEngine.getMagicBalance('alice'),bob:StateEngine.getMagicBalance('bob')},history:StateEngine.getMagicHistory('alice',0,10).map(function(x){return x.type;})};})()`);
-        assert.deepStrictEqual(sent, { before: { alice: 2000, bob: 0 }, action: { to: 'bob', amount: 500 }, after: { alice: 1500, bob: 500 }, history: ['transfer'] });
+        var sent = await evalValue(cdp, `(function(){var before={alice:StateEngine.getMagicBalance('alice'),bob:StateEngine.getMagicBalance('bob')};var parsed=VTProtocol.parseAction(window.__vtSend);var processed={blockNum:83500003,blockHash:'qa-transfer-block',irreversible:true,awards:[],awardReceipts:[],veEvents:[],voicePosts:[],vmActions:[],transfers:[],fixedAwards:[],vtActions:[{sender:'alice',txId:'qa-transfer-tx',txIndex:0,opIndex:0,regularAuths:['alice'],activeAuths:[],action:parsed}]};StateEngine.processBlock(processed);return{before:before,action:{to:parsed.data.to,amount:parsed.data.amount_milli},after:{alice:StateEngine.getMagicBalance('alice'),bob:StateEngine.getMagicBalance('bob')},history:StateEngine.getMagicHistory('alice',0,10).map(function(x){return x.type;})};})()`);
+        assert.deepStrictEqual(sent, { before: { alice: 3000, bob: 0 }, action: { to: 'bob', amount: 500 }, after: { alice: 2500, bob: 500 }, history: ['transfer', 'mint'] });
 
         await evalValue(cdp, `(function(){
             var toast=document.getElementById('toast-container');if(toast)toast.remove();
@@ -125,16 +141,16 @@ async function click(cdp, selector) {
         await click(cdp, '.market-buy-btn');
         await click(cdp, '#modal-container [data-action="0"]');
         var purchase = await evalValue(cdp, `(function(){var s=StateEngine.getState();return{call:window.__vtBuy,buyer:s.magic.balances.alice,seller:s.magic.balances.seller||0,owner:s.inventories.seller[0].owner,screen:App.getCurrentScreen()};})()`);
-        assert.deepStrictEqual(purchase, { call: { ref: '83500001_qa-item', rev: 1, price: 1250 }, buyer: 1500, seller: 0, owner: 'seller', screen: 'marketplace' });
-        var settled = await evalValue(cdp, `(function(){var parsed=VTProtocol.parseAction(VTProtocol.createBazaarBuyAction(window.__listingRef,1,1250));StateEngine.processBlock({blockNum:83500003,blockHash:'qa-buy-block',irreversible:true,awards:[],veEvents:[],voicePosts:[],vmActions:[],transfers:[],fixedAwards:[],burnProofs:[],vtActions:[{sender:'alice',txId:'qa-buy-tx',txIndex:0,opIndex:0,regularAuths:['alice'],activeAuths:[],action:parsed}]});var s=StateEngine.getState();var bought=(s.inventories.alice||[]).filter(function(x){return x.id==='qa-item';})[0];return{alice:StateEngine.getMagicBalance('alice'),bob:StateEngine.getMagicBalance('bob'),seller:StateEngine.getMagicBalance('seller'),owner:bought&&bought.owner,supply:s.magic.supplyMilli,listing:MarketplaceEngine.getMarketState().listings[window.__listingRef].state,history:StateEngine.getMagicHistory('alice',0,10).map(function(x){return x.type;})};})()`);
-        assert.deepStrictEqual(settled, { alice: 250, bob: 500, seller: 1250, owner: 'alice', supply: 2000, listing: 'sold', history: ['trade', 'transfer'] });
+        assert.deepStrictEqual(purchase, { call: { ref: '83500001_qa-item', rev: 1, price: 1250 }, buyer: 2500, seller: 0, owner: 'seller', screen: 'marketplace' });
+        var settled = await evalValue(cdp, `(function(){var parsed=VTProtocol.parseAction(VTProtocol.createBazaarBuyAction(window.__listingRef,1,1250));StateEngine.processBlock({blockNum:83500004,blockHash:'qa-buy-block',irreversible:true,awards:[],awardReceipts:[],veEvents:[],voicePosts:[],vmActions:[],transfers:[],fixedAwards:[],vtActions:[{sender:'alice',txId:'qa-buy-tx',txIndex:0,opIndex:0,regularAuths:['alice'],activeAuths:[],action:parsed}]});var s=StateEngine.getState();var bought=(s.inventories.alice||[]).filter(function(x){return x.id==='qa-item';})[0];return{alice:StateEngine.getMagicBalance('alice'),bob:StateEngine.getMagicBalance('bob'),seller:StateEngine.getMagicBalance('seller'),owner:bought&&bought.owner,supply:s.magic.supplyMilli,listing:MarketplaceEngine.getMarketState().listings[window.__listingRef].state,history:StateEngine.getMagicHistory('alice',0,10).map(function(x){return x.type;})};})()`);
+        assert.deepStrictEqual(settled, { alice: 1250, bob: 500, seller: 1250, owner: 'alice', supply: 3000, listing: 'sold', history: ['trade', 'transfer', 'mint'] });
         var serious = cdp.events.filter(function(event) {
             return event.method === 'Runtime.exceptionThrown' ||
                 (event.method === 'Runtime.consoleAPICalled' && event.params && event.params.type === 'error') ||
                 (event.method === 'Log.entryAdded' && event.params && event.params.entry && event.params.entry.level === 'error');
         });
         assert.deepStrictEqual(serious, [], 'wallet/Bazaar click flow must not emit uncaught or console errors');
-        console.log('PASS Chromium CDP two-account MAGIC transfer and atomic Bazaar handler flow');
+        console.log('PASS Chromium CDP fixed-award recovery, two-account MAGIC transfer and atomic Bazaar flow');
     } finally {
         try { cdp.ws.close(); } catch (_) {}
         try { await request('GET', CDP + '/json/close/' + encodeURIComponent(cdp.target.id)); } catch (_) {}

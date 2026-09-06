@@ -55,6 +55,27 @@ test('history source wraps VIZ block/account access', function () {
   assert.ok(/\/v1\/range/.test(historySourceJs), 'event range API should call archive range endpoint');
 });
 
+test('archive thin blocks preserve source completeness and receive_award virtual positions', function () {
+  const context = {
+    console: { log: function() {} },
+    VizMagicConfig: { HISTORY_ARCHIVE_MIRRORS: [], PROTOCOLS: { VM: 'VM' } }
+  };
+  vm.createContext(context);
+  vm.runInContext(historySourceJs, context, { filename: 'history-source.js' });
+  const events = [
+    { blockNum: 100, txIndex: 0, opIndex: 0, virtualOp: 0, txId: 'tx-100', opType: 'award', raw: { initiator: 'alice', receiver: 'null' } },
+    { blockNum: 100, txIndex: 0, opIndex: 0, virtualOp: 1, txId: 'tx-100', opType: 'receive_award', raw: { initiator: 'alice', receiver: 'null', shares: '1.000000 SHARES' } }
+  ];
+  const block = context.HistorySource.eventsToThinBlock(events, {
+    block_id: 'block-100', previous: 'block-99', sourceOperationsComplete: true, virtualReceiptsComplete: true
+  });
+  assert.strictEqual(block.sourceOperationsComplete, true);
+  assert.strictEqual(block.virtualReceiptsComplete, true);
+  assert.strictEqual(block.transactions[0].operations[0][0], 'award');
+  assert.strictEqual(block.virtual_operations[0].virtual_op, 1);
+  assert.strictEqual(block.virtual_operations[0].op[0], 'receive_award');
+});
+
 test('archive mirror config is explicit and points at production nginx path', function () {
   assert.ok(/HISTORY_ARCHIVE_MIRRORS/.test(configJs), 'archive mirror config missing');
   assert.ok(/vizmagic\.web3blind\.xyz\/archive-mirror\/v1\/block\/\{block\}\.json/.test(configJs), 'production archive mirror URL missing');

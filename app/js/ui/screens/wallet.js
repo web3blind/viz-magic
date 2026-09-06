@@ -4,7 +4,7 @@
 var WalletScreen = (function() {
     'use strict';
 
-    var PENDING_BURN_KEY = 'viz_magic_pending_burn_v1:';
+    var PENDING_MINT_KEY = 'viz_magic_pending_burn_v1:';
     var historyOffset = 0;
 
     function _id(prefix) {
@@ -13,7 +13,7 @@ var WalletScreen = (function() {
 
     function _historyText(entry, account) {
         var amount = VTProtocol.formatAmount(entry.amountMilli || 0) + ' MAGIC';
-        if (entry.type === 'mint') return 'Получено ' + amount + ' за подтверждённое сжигание VIZ';
+        if (entry.type === 'mint') return 'Получено ' + amount + ' за подтверждённое направление VIZ аккаунту null';
         if (entry.type === 'transfer') return entry.from === account ? 'Отправлено ' + amount + ' → ' + entry.to : 'Получено ' + amount + ' ← ' + entry.from;
         if (entry.type === 'trade') return entry.buyer === account ? 'Покупка: −' + amount : 'Продажа: +' + amount;
         return 'Операция MAGIC ' + amount;
@@ -37,7 +37,7 @@ var WalletScreen = (function() {
         var historyPage = StateEngine.getMagicHistory(user, historyOffset, 51);
         var hasNextHistory = historyPage.length > 50;
         var history = historyPage.slice(0, 50);
-        var pendingBurn = _pendingBurn(pendingHistory, user);
+        var pendingMint = _pendingMint(pendingHistory, user);
         var html = '<div class="wallet-screen">' +
             '<h1>Кошелёк</h1>' +
             '<p class="screen-intro">MAGIC — единственная игровая валюта. VT — технический протокол записи операций.</p>' +
@@ -45,16 +45,26 @@ var WalletScreen = (function() {
             '<p class="wallet-balance" id="magic-balance" aria-live="polite">' + VTProtocol.formatAmount(balance) + ' MAGIC</p>' +
             '<p>Баланс меняется только после подтверждённых необратимых операций.</p></section>' +
             '<section class="card" aria-labelledby="wallet-mint-title"><h2 id="wallet-mint-title">Получить MAGIC</h2>' +
-            '<p>Курс: 1.000 фактически сожжённого VIZ = 1.000 MAGIC. Сжигание необратимо; получатель VIZ — <code>null</code>.</p>' +
+            '<p>Курс протокола: 1.000 подтверждённого VIZ, направленного аккаунту <code>null</code>, = 1.000 MAGIC. Операция необратима.</p>' +
+            '<form id="magic-mint-fixed-form"><h3>Fixed award — regular key</h3>' +
+            '<label for="magic-fixed-amount">Сумма VIZ и будущий выпуск MAGIC</label>' +
+            '<input id="magic-fixed-amount" name="fixedAmount" inputmode="decimal" autocomplete="off" placeholder="1.000" required aria-describedby="magic-fixed-help">' +
+            '<label for="magic-fixed-energy">Максимум энергии, 1–10000</label>' +
+            '<input id="magic-fixed-energy" name="maxEnergy" type="number" min="1" max="10000" step="1" value="1000" required aria-describedby="magic-fixed-help">' +
+            '<p id="magic-fixed-help">Fixed award подписывается regular key. Указанная сумма — точная номинальная аллокация; такой же выпуск MAGIC появится только после необратимого подтверждения.</p>' +
+            '<label class="checkbox-label"><input id="magic-fixed-consent" type="checkbox" required> Я понимаю, что VIZ будут необратимо направлены аккаунту null</label>' +
+            '<button class="btn btn-primary" type="submit"' + (!pendingMint ? '' : ' disabled aria-disabled="true"') + '>Направить VIZ и получить MAGIC</button></form>' +
+            (pendingMint ? '<p role="alert">Предыдущая операция ' + Helpers.escapeHtml(pendingMint.amount) + ' VIZ ещё ожидает подтверждённой истории. Не повторяйте её.</p>' : '') +
+            '<details><summary>Обычный award — статус доказательства</summary><p>Обычный award разрешён правилами VT, но пока недоступен для отправки: подтверждение <code>receive_award</code> содержит SHARES, а не точную историческую сумму VIZ. Кошелёк не показывает оценку как обещанный выпуск.</p>' +
+            '<button type="button" class="btn btn-secondary" disabled aria-disabled="true">Обычный award: точная сумма VIZ недоступна</button></details>' +
+            '<details><summary>Жидкий перевод VIZ — active key</summary>' +
             '<form id="magic-mint-transfer-form"><label for="magic-mint-amount">Сумма VIZ</label>' +
             '<input id="magic-mint-amount" name="amount" inputmode="decimal" autocomplete="off" placeholder="1.000" required aria-describedby="magic-mint-help">' +
             '<p id="magic-mint-help">Жидкий перевод требует отдельно сохранённого active key и явного подтверждения.</p>' +
             '<label class="checkbox-label"><input id="magic-burn-consent" type="checkbox" required> Я понимаю, что сжигание VIZ необратимо</label>' +
-            '<button class="btn btn-primary" type="submit"' + (VizAccount.hasActiveKey() && !pendingBurn ? '' : ' disabled aria-disabled="true"') + '>Сжечь VIZ и получить MAGIC</button></form>' +
-            (pendingBurn ? '<p role="alert">Предыдущая операция сжигания ' + Helpers.escapeHtml(pendingBurn.amount) + ' VIZ ещё ожидает подтверждённой истории. Не повторяйте перевод.</p>' : '') +
+            '<button class="btn btn-primary" type="submit"' + (VizAccount.hasActiveKey() && !pendingMint ? '' : ' disabled aria-disabled="true"') + '>Перевести VIZ и получить MAGIC</button></form>' +
             (VizAccount.hasActiveKey() ? '' : '<p role="status">Active key не подключён. Кошелёк не запрашивает и не сохраняет его автоматически.</p>') +
-            '<details><summary>Fixed award (regular key)</summary><p>Энергетический лимит задаётся точно, но выпуск временно заблокирован: публичная история ещё не доказывает точное количество VIZ после vesting-округления. VIZ не будет сожжён без доказуемого начисления MAGIC.</p>' +
-            '<button type="button" class="btn btn-secondary" disabled aria-disabled="true">Fixed award: доказательство недоступно</button></details></section>' +
+            '</details></section>' +
             '<section class="card" aria-labelledby="wallet-send-title"><h2 id="wallet-send-title">Отправить MAGIC</h2>' +
             '<p>Перевод подписывается regular authority — это намеренная денежная власть внутри игры, не доступ к жидким VIZ.</p>' +
             '<form id="magic-send-form"><label for="magic-send-to">Аккаунт получателя</label><input id="magic-send-to" autocomplete="off" required>' +
@@ -74,9 +84,9 @@ var WalletScreen = (function() {
         _bind(user);
     }
 
-    function _pendingBurn(history, user) {
+    function _pendingMint(history, user) {
         var pending = null;
-        var storageKey = PENDING_BURN_KEY + user;
+        var storageKey = PENDING_MINT_KEY + user;
         try { pending = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch (_) { pending = null; }
         if (!pending || !VTProtocol.validIntent(pending.intent) || VTProtocol.parseAmount(pending.amount) === null) return null;
         for (var i = 0; i < history.length; i++) {
@@ -93,6 +103,29 @@ var WalletScreen = (function() {
         if (previousHistory) previousHistory.addEventListener('click', function() { historyOffset = Math.max(0, historyOffset - 50); render(); });
         var nextHistory = Helpers.$('wallet-history-next');
         if (nextHistory) nextHistory.addEventListener('click', function() { historyOffset += 50; render(); });
+        var fixedForm = Helpers.$('magic-mint-fixed-form');
+        if (fixedForm) fixedForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            var amount = String(Helpers.$('magic-fixed-amount').value || '').trim();
+            var milli = VTProtocol.parseAmount(amount);
+            var maxEnergy = Number(Helpers.$('magic-fixed-energy').value);
+            if (milli === null || !Number.isInteger(maxEnergy) || maxEnergy <= 0 || maxEnergy > 10000 || !Helpers.$('magic-fixed-consent').checked) {
+                Toast.show('Укажите точную положительную сумму, лимит энергии 1–10000 и подтвердите необратимость.', 'error');
+                return;
+            }
+            var canonical = VTProtocol.formatAmount(milli);
+            Modal.show({ title: 'Направить VIZ аккаунту null?', text: 'Fixed award: ' + canonical + ' VIZ. Выпуск после необратимого подтверждения: ' + canonical + ' MAGIC. Максимум энергии: ' + maxEnergy + '. Подпись regular key.', buttons: [
+                { text: 'Подтвердить ' + canonical + ' VIZ', className: 'btn-danger', action: function() {
+                    var intent = _id('mint-fixed');
+                    localStorage.setItem(PENDING_MINT_KEY + user, JSON.stringify({ intent: intent, amount: canonical, account: user, method: 'fixed_award', maxEnergy: maxEnergy }));
+                    VizBroadcast.mintMagicFixedAward(intent, canonical, maxEnergy, function(err) {
+                        Toast.show(err ? 'Статус операции неизвестен. Не повторяйте её до проверки истории: ' + (err.message || err) : 'Операция отправлена. MAGIC появится после необратимого подтверждения.', err ? 'error' : 'success');
+                        render();
+                    });
+                } }
+            ] });
+        });
+
         var mintForm = Helpers.$('magic-mint-transfer-form');
         if (mintForm) mintForm.addEventListener('submit', function(event) {
             event.preventDefault();
@@ -106,7 +139,7 @@ var WalletScreen = (function() {
             Modal.show({ title: 'Необратимо сжечь VIZ?', text: 'Будет отправлено ' + canonical + ' VIZ аккаунту null. После необратимого подтверждения выпуск составит ' + canonical + ' MAGIC по курсу 1:1. Требуется active key.', buttons: [
                 { text: 'Сжечь ' + canonical + ' VIZ', className: 'btn-danger', action: function() {
                     var intent = _id('mint');
-                    localStorage.setItem(PENDING_BURN_KEY + user, JSON.stringify({ intent: intent, amount: canonical, account: user }));
+                    localStorage.setItem(PENDING_MINT_KEY + user, JSON.stringify({ intent: intent, amount: canonical, account: user, method: 'transfer' }));
                     VizBroadcast.mintMagicTransfer(intent, canonical, function(err) {
                         Toast.show(err ? 'Статус операции неизвестен. Не повторяйте сжигание до проверки истории: ' + (err.message || err) : 'Операция отправлена. Не повторяйте её; MAGIC появится после необратимого подтверждения.', err ? 'error' : 'success');
                         render();

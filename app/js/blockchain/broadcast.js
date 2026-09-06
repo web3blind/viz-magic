@@ -82,7 +82,6 @@ var VizBroadcast = (function() {
         var wif = VizAccount.getRegularKey();
         var user = VizAccount.getCurrentUser();
         var action = typeof VTProtocol !== 'undefined' ? VTProtocol.createMintAction(intent, 'fixed_award', amount, { maxEnergy: maxEnergy }) : null;
-        if (!cfg.TOKEN.FIXED_AWARD_EVIDENCE) return callback(new Error('fixed_award_evidence_unavailable'));
         if (!wif || !user) return callback(new Error('not_logged_in'));
         if (!action || !Number.isInteger(maxEnergy) || maxEnergy <= 0 || maxEnergy > 10000) return callback(new Error('invalid_mint_request'));
         var transaction = { extensions: [], operations: [
@@ -98,6 +97,12 @@ var VizBroadcast = (function() {
             }]
         ] };
         viz.broadcast.send(transaction, { regular: wif }, callback);
+    }
+
+    function mintMagicAward(intent, energy, callback) {
+        var action = typeof VTProtocol !== 'undefined' ? VTProtocol.createAwardMintAction(intent, energy) : null;
+        if (!action) return callback(new Error('invalid_mint_request'));
+        callback(new Error('ordinary_award_allocation_unavailable'));
     }
 
     function mintMagicTransfer(intent, amount, callback) {
@@ -516,6 +521,7 @@ var VizBroadcast = (function() {
         custom: custom,
         tokenAction: tokenAction,
         mintMagicFixedAward: mintMagicFixedAward,
+        mintMagicAward: mintMagicAward,
         mintMagicTransfer: mintMagicTransfer,
         gameAction: gameAction,
         libraryUnlockAction: libraryUnlockAction,

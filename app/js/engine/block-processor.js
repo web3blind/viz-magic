@@ -23,7 +23,9 @@ var BlockProcessor = (function() {
             vtActions: [],
             transfers: [],
             fixedAwards: [],
-            burnProofs: [],
+            awardReceipts: [],
+            sourceOperationsComplete: block.sourceOperationsComplete === true || block.source_operations_complete === true,
+            virtualReceiptsComplete: block.virtualReceiptsComplete === true || block.virtual_receipts_complete === true,
             blockHash: block.block_id || '',
             huntEntropy: block.previous || block.block_id || '',
             blockNum: blockNum,
@@ -47,7 +49,7 @@ var BlockProcessor = (function() {
                         _processCustomOp(opData, blockNum, result, block.timestamp || '', i, j, tx.transaction_id || tx.id || '');
                         break;
                     case 'award':
-                        _processAwardOp(opData, blockNum, result, i, j);
+                        _processAwardOp(opData, blockNum, result, i, j, tx.transaction_id || tx.id || '');
                         break;
                     case 'transfer':
                         _processTransferOp(opData, blockNum, result, i, j, tx.transaction_id || tx.id || '');
@@ -58,6 +60,19 @@ var BlockProcessor = (function() {
                     // Other operations can be added as needed
                 }
             }
+        }
+
+        var virtualOperations = block.virtual_operations || block.virtualOperations || [];
+        for (var v = 0; v < virtualOperations.length; v++) {
+            var virtualRow = virtualOperations[v] || {};
+            var virtualOperation = _normalizeOperation(virtualRow.op || virtualRow.operation || virtualRow);
+            if (!virtualOperation || virtualOperation[0] !== 'receive_award') continue;
+            _processReceiveAwardOp(virtualOperation[1] || {}, blockNum, result, {
+                txId: virtualRow.trx_id || virtualRow.txId || '',
+                txIndex: Number(typeof virtualRow.trx_in_block !== 'undefined' ? virtualRow.trx_in_block : virtualRow.txIndex),
+                opIndex: Number(typeof virtualRow.op_in_trx !== 'undefined' ? virtualRow.op_in_trx : virtualRow.opIndex),
+                virtualOp: Number(typeof virtualRow.virtual_op !== 'undefined' ? virtualRow.virtual_op : virtualRow.virtualOp)
+            });
         }
 
         return result;
@@ -140,7 +155,7 @@ var BlockProcessor = (function() {
     /**
      * Process an award operation
      */
-    function _processAwardOp(opData, blockNum, result, txIndex, opIndex) {
+    function _processAwardOp(opData, blockNum, result, txIndex, opIndex, txId) {
         result.awards.push({
             initiator: opData.initiator,
             receiver: opData.receiver,
@@ -148,6 +163,7 @@ var BlockProcessor = (function() {
             customSequence: opData.custom_sequence,
             memo: opData.memo || '',
             beneficiaries: opData.beneficiaries || [],
+            txId: txId || '',
             txIndex: txIndex,
             opIndex: opIndex,
             blockNum: blockNum
@@ -178,6 +194,29 @@ var BlockProcessor = (function() {
             maxEnergy: opData.max_energy, customSequence: opData.custom_sequence,
             memo: opData.memo || '', beneficiaries: opData.beneficiaries || [],
             blockNum: blockNum, txId: txId || '', txIndex: txIndex, opIndex: opIndex, raw: opData
+        });
+    }
+
+    function _parseShares(value) {
+        if (typeof value !== 'string') return null;
+        var match = value.match(/^((?:0|[1-9][0-9]*)\.([0-9]{6})) SHARES$/);
+        if (!match) return null;
+        var parts = match[1].split('.');
+        var micro = Number(parts[0]) * 1000000 + Number(parts[1]);
+        return Number.isSafeInteger(micro) && micro > 0 ? micro : null;
+    }
+
+    function _processReceiveAwardOp(opData, blockNum, result, position) {
+        var sharesMicro = _parseShares(opData.shares);
+        if (!sharesMicro || !Number.isInteger(position.txIndex) || position.txIndex < 0 ||
+                !Number.isInteger(position.opIndex) || position.opIndex < 0 ||
+                !Number.isInteger(position.virtualOp) || position.virtualOp <= 0) return;
+        result.awardReceipts.push({
+            initiator: opData.initiator || '', receiver: opData.receiver || '',
+            customSequence: opData.custom_sequence,
+            memo: opData.memo || '', shares: opData.shares, sharesMicro: sharesMicro,
+            blockNum: blockNum, txId: position.txId || '', txIndex: position.txIndex,
+            opIndex: position.opIndex, virtualOp: position.virtualOp, raw: opData
         });
     }
 
@@ -220,7 +259,7 @@ var BlockProcessor = (function() {
                 current++;
 
                 // Skip delay for empty blocks during catch-up; short delay otherwise
-                var hasContent = processed.vmActions.length > 0 || processed.veEvents.length > 0 || processed.voicePosts.length > 0 || processed.awards.length > 0 || processed.vtActions.length > 0 || processed.transfers.length > 0 || processed.fixedAwards.length > 0;
+                var hasContent = processed.vmActions.length > 0 || processed.veEvents.length > 0 || processed.voicePosts.length > 0 || processed.awards.length > 0 || processed.vtActions.length > 0 || processed.transfers.length > 0 || processed.fixedAwards.length > 0 || processed.awardReceipts.length > 0;
                 if (isCatchUp && !hasContent) {
                     nextBlock();
                 } else {

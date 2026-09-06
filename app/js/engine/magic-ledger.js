@@ -187,54 +187,87 @@ var MagicLedger = (function() {
             entry.regularAuths[0] === account && (!entry.activeAuths || entry.activeAuths.length === 0);
     }
 
-    function _findProof(list, entry, sender, intent, amountMilli) {
-        list = list || [];
+    function _sameTransaction(entry, proof) {
+        return Number(proof.txIndex) === Number(entry.txIndex) &&
+            (!entry.txId || !proof.txId || String(entry.txId) === String(proof.txId));
+    }
+
+    function _emptyBeneficiaries(value) {
+        return !value || (Array.isArray(value) && value.length === 0);
+    }
+
+    function _findTransferProof(block, entry, sender, data) {
+        var list = block.transfers || [];
         for (var i = 0; i < list.length; i++) {
             var proof = list[i];
-            if (proof.txIndex === entry.txIndex && proof.from === sender && proof.to === 'null' &&
-                proof.amountMilli === amountMilli && proof.memo === VTProtocol.mintMemo(intent) && proof.symbol === 'VIZ') return proof;
+            if (_sameTransaction(entry, proof) && proof.from === sender && proof.to === 'null' &&
+                    proof.amountMilli === data.amount_milli && proof.memo === VTProtocol.mintMemo(data.intent) &&
+                    proof.symbol === 'VIZ') {
+                return { source: proof, mintMilli: data.amount_milli };
+            }
         }
         return null;
+    }
+
+    function _findFixedAwardCandidate(block, entry, sender, data, exact) {
+        var list = block.fixedAwards || [];
+        for (var i = 0; i < list.length; i++) {
+            var candidate = list[i];
+            if (!_sameTransaction(entry, candidate) || candidate.initiator !== sender ||
+                    candidate.receiver !== 'null' || candidate.memo !== VTProtocol.mintMemo(data.intent)) continue;
+            if (!exact || (candidate.requestedMilli === data.requested_milli && candidate.symbol === 'VIZ' &&
+                    Number(candidate.maxEnergy) === data.max_energy && _emptyBeneficiaries(candidate.beneficiaries))) return candidate;
+        }
+        return null;
+    }
+
+    function _findAwardEvidence(block, entry, sender, data) {
+        var source = null;
+        var awards = block.awards || [];
+        for (var i = 0; i < awards.length; i++) {
+            var candidate = awards[i];
+            if (_sameTransaction(entry, candidate) && candidate.initiator === sender && candidate.receiver === 'null' &&
+                    Number(candidate.energy) === data.energy && candidate.memo === VTProtocol.mintMemo(data.intent) &&
+                    _emptyBeneficiaries(candidate.beneficiaries)) {
+                source = candidate;
+                break;
+            }
+        }
+        if (!source) return { source: null, receipt: null };
+        var receipts = block.awardReceipts || [];
+        for (var r = 0; r < receipts.length; r++) {
+            var receipt = receipts[r];
+            if (_sameTransaction(entry, receipt) && Number(receipt.opIndex) === Number(source.opIndex) &&
+                    receipt.initiator === sender && receipt.receiver === 'null' &&
+                    Number(receipt.customSequence || 0) === Number(source.customSequence || 0) &&
+                    receipt.memo === source.memo && Number.isSafeInteger(receipt.sharesMicro) && receipt.sharesMicro > 0) {
+                return { source: source, receipt: receipt };
+            }
+        }
+        return { source: source, receipt: null };
     }
 
     function _findMintProof(block, entry) {
-        var d = entry.action.data;
+        var data = entry.action.data;
         var sender = entry.sender;
-        if (d.method === 'transfer') return _findProof(block.transfers, entry, sender, d.intent, d.amount_milli);
-        if (d.method !== 'fixed_award' || block.proofSource !== 'trusted_archive_v1') return null;
-        var fixed = null;
-        for (var fa = 0; fa < (block.fixedAwards || []).length; fa++) {
-            var candidate = block.fixedAwards[fa];
-            if (candidate.txIndex === entry.txIndex && candidate.initiator === sender && candidate.receiver === 'null' &&
-                candidate.requestedMilli === d.requested_milli && candidate.symbol === 'VIZ' &&
-                Number(candidate.maxEnergy) === d.max_energy && candidate.memo === VTProtocol.mintMemo(d.intent) &&
-                (!candidate.beneficiaries || candidate.beneficiaries.length === 0)) fixed = candidate;
-        }
-        for (var i = 0; i < (block.burnProofs || []).length; i++) {
-            var evidence = block.burnProofs[i];
-            if (fixed && evidence.txIndex === entry.txIndex && evidence.initiator === sender && evidence.receiver === 'null' &&
-                evidence.intent === d.intent && Number.isSafeInteger(evidence.actualBurnMilli) && evidence.actualBurnMilli > 0 &&
-                evidence.actualBurnMilli <= d.requested_milli &&
-                (typeof evidence.sourceOpIndex === 'undefined' || evidence.sourceOpIndex === fixed.opIndex)) return evidence;
+        if (data.method === 'transfer') return _findTransferProof(block, entry, sender, data);
+        if (data.method === 'fixed_award') {
+            var fixed = _findFixedAwardCandidate(block, entry, sender, data, true);
+            return fixed ? { source: fixed, mintMilli: data.requested_milli } : null;
         }
         return null;
     }
 
-    function _fixedAwardEnabled() {
-        return typeof VizMagicConfig !== 'undefined' && VizMagicConfig.TOKEN &&
-            VizMagicConfig.TOKEN.FIXED_AWARD_EVIDENCE === true;
-    }
-
-    function _rememberPendingMint(state, block, entry) {
-        var d = entry.action.data;
-        var key = entry.sender + ':' + d.intent;
+    function _rememberPendingMint(state, block, entry, reason) {
+        var data = entry.action.data;
+        var key = entry.sender + ':' + data.intent;
         state.pendingMints[key] = {
             account: entry.sender,
-            method: d.method,
-            requestedMilli: d.method === 'fixed_award' ? d.requested_milli : d.amount_milli,
+            method: data.method,
+            requestedMilli: data.method === 'fixed_award' ? data.requested_milli : (data.method === 'transfer' ? data.amount_milli : null),
             blockNum: block.blockNum,
             blockHash: block.blockHash,
-            reason: d.method === 'fixed_award' ? 'actual_burn_evidence_missing' : 'matching_burn_transfer_missing'
+            reason: reason || (data.method === 'transfer' ? 'matching_burn_transfer_missing' : 'matching_reward_evidence_missing')
         };
         var pendingKeys = Object.keys(state.pendingMints);
         if (pendingKeys.length > PENDING_LIMIT) delete state.pendingMints[pendingKeys[0]];
@@ -246,10 +279,24 @@ var MagicLedger = (function() {
             var entry = entries[i];
             if (state.processed[_identity(block, entry)]) continue;
             if (!entry.action || entry.action.type !== 'mint' || !_sameSignedSender(entry, entry.sender)) continue;
-            if (entry.action.data.method === 'fixed_award' && !_fixedAwardEnabled()) continue;
-            var intentKey = entry.sender + ':' + entry.action.data.intent;
+            var data = entry.action.data;
+            var intentKey = entry.sender + ':' + data.intent;
             if (state.mintIntents[intentKey]) continue;
+            if (data.method === 'award') {
+                var awardEvidence = _findAwardEvidence(block, entry, entry.sender, data);
+                if (!awardEvidence.source && block.sourceOperationsComplete !== true) {
+                    _rememberPendingMint(state, block, entry, 'matching_award_source_missing');
+                    return false;
+                }
+                if (awardEvidence.source && !awardEvidence.receipt && block.virtualReceiptsComplete !== true) {
+                    _rememberPendingMint(state, block, entry, 'receive_award_receipt_missing');
+                    return false;
+                }
+                continue;
+            }
             if (!_findMintProof(block, entry)) {
+                if (data.method === 'fixed_award' && _findFixedAwardCandidate(block, entry, entry.sender, data, false)) continue;
+                if (block.sourceOperationsComplete === true) continue;
                 _rememberPendingMint(state, block, entry);
                 return false;
             }
@@ -258,28 +305,47 @@ var MagicLedger = (function() {
     }
 
     function _mint(state, block, entry) {
-        var d = entry.action.data;
+        var data = entry.action.data;
         var sender = entry.sender;
         if (!_sameSignedSender(entry, sender)) return { applied: false, final: true };
-        if (d.method === 'fixed_award' && !_fixedAwardEnabled()) return { applied: false, final: true };
-        var intentKey = sender + ':' + d.intent;
+        var intentKey = sender + ':' + data.intent;
         if (state.mintIntents[intentKey]) return { applied: false, final: true };
+        if (data.method === 'award') {
+            var awardEvidence = _findAwardEvidence(block, entry, sender, data);
+            if (!awardEvidence.source && block.sourceOperationsComplete !== true) {
+                _rememberPendingMint(state, block, entry, 'matching_award_source_missing');
+                return { applied: false, final: false };
+            }
+            if (awardEvidence.source && !awardEvidence.receipt && block.virtualReceiptsComplete !== true) {
+                _rememberPendingMint(state, block, entry, 'receive_award_receipt_missing');
+                return { applied: false, final: false };
+            }
+            delete state.pendingMints[intentKey];
+            return { applied: false, final: true };
+        }
         var proof = _findMintProof(block, entry);
-        var mintMilli = d.method === 'fixed_award' && proof ? proof.actualBurnMilli : d.amount_milli;
         if (!proof) {
+            if (data.method === 'fixed_award' && _findFixedAwardCandidate(block, entry, sender, data, false)) {
+                delete state.pendingMints[intentKey];
+                return { applied: false, final: true };
+            }
+            if (block.sourceOperationsComplete === true) {
+                delete state.pendingMints[intentKey];
+                return { applied: false, final: true };
+            }
             _rememberPendingMint(state, block, entry);
             return { applied: false, final: false };
         }
-        var proofId = [block.blockHash, proof.txIndex, proof.opIndex].join(':');
+        var proofId = [block.blockHash, proof.source.txIndex, proof.source.opIndex].join(':');
         if (state.usedProofs[proofId]) return { applied: false, final: true };
-        var nextSupply = state.supplyMilli + mintMilli;
+        var nextSupply = state.supplyMilli + proof.mintMilli;
         if (!Number.isSafeInteger(nextSupply)) return { applied: false, final: true };
-        if (!_credit(state, sender, mintMilli)) return { applied: false, final: true };
+        if (!_credit(state, sender, proof.mintMilli)) return { applied: false, final: true };
         state.supplyMilli = nextSupply;
         state.mintIntents[intentKey] = Number(block.blockNum);
         state.usedProofs[proofId] = Number(block.blockNum);
         delete state.pendingMints[intentKey];
-        _history(state, { type: 'mint', account: sender, amountMilli: mintMilli, intent: d.intent, method: d.method, blockNum: block.blockNum });
+        _history(state, { type: 'mint', account: sender, amountMilli: proof.mintMilli, intent: data.intent, method: data.method, blockNum: block.blockNum });
         return { applied: true, final: true };
     }
 

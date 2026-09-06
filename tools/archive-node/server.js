@@ -186,6 +186,7 @@ function createServer(options) {
                 uptimeSec: Math.round((Date.now() - startedAt) / 1000),
                 dataDir: cfg.dataDir,
                 lastIndexedBlock: status.lastIndexedBlock || 0,
+                virtualReceiptStartBlock: archive.getVirtualReceiptStartBlock(),
                 cursorUpdatedAt: status.cursorUpdatedAt || null,
                 storage: 'sqlite',
                 readOnly: true
@@ -199,6 +200,7 @@ function createServer(options) {
             st.service = 'viz-magic-game-archive';
             st.readOnly = true;
             st.storage = 'sqlite';
+            st.virtualReceiptStartBlock = archive.getVirtualReceiptStartBlock();
             json(res, 200, st, { 'Cache-Control': 'no-store' });
             return;
         }
@@ -221,6 +223,8 @@ function createServer(options) {
                 previous: record.previous,
                 timestamp: record.timestamp,
                 eventCount: record.eventCount || 0,
+                complete: true,
+                virtualReceiptsComplete: record.virtualComplete,
                 sourceNode: record.sourceNode || '',
                 indexedAt: record.indexedAt,
                 block: record.block
@@ -251,6 +255,8 @@ function createServer(options) {
                 previous: eventBlockRecord.previous,
                 timestamp: eventBlockRecord.timestamp,
                 eventCount: eventBlockRecord.eventCount || blockEvents.length,
+                complete: true,
+                virtualReceiptsComplete: eventBlockRecord.virtualComplete,
                 sourceNode: eventBlockRecord.sourceNode || '',
                 indexedAt: eventBlockRecord.indexedAt,
                 events: blockEvents,
@@ -275,13 +281,16 @@ function createServer(options) {
                 limit: safeNum(parsedUrl.query.limit, 500)
             });
             var requestedEnd = safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647);
+            var requestedStart = safeNum(parsedUrl.query.start || parsedUrl.query.from, 0);
             var archiveStatus = archive.getStatus();
             var oldestBlock = events.length ? Number(events[0].blockNum || 0) : 0;
             json(res, 200, {
                 events: events,
                 count: events.length,
                 order: 'block_tx_op_asc',
-                complete: requestedEnd <= Number(archiveStatus.lastIndexedBlock || 0),
+                complete: requestedEnd <= Number(archiveStatus.lastIndexedBlock || 0) && archive.isBlockRangeComplete(requestedStart, requestedEnd),
+                virtualReceiptsComplete: archive.isVirtualRangeComplete(requestedStart, requestedEnd),
+                virtualReceiptStartBlock: archive.getVirtualReceiptStartBlock(),
                 indexedThrough: Number(archiveStatus.lastIndexedBlock || 0),
                 nextEnd: events.length && events.length >= safeNum(parsedUrl.query.limit, 500) ? oldestBlock - 1 : null
             });
@@ -300,7 +309,14 @@ function createServer(options) {
             json(res, 200, {
                 account: magicAccount, currency: 'MAGIC', protocol: 'VT', events: magicEvents,
                 count: magicEvents.length, indexedThrough: Number(magicStatus.lastIndexedBlock || 0),
-                complete: safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647) <= Number(magicStatus.lastIndexedBlock || 0)
+                complete: safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647) <= Number(magicStatus.lastIndexedBlock || 0) && archive.isBlockRangeComplete(
+                    safeNum(parsedUrl.query.start || parsedUrl.query.from, 0),
+                    safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647)
+                ),
+                virtualReceiptsComplete: archive.isVirtualRangeComplete(
+                    safeNum(parsedUrl.query.start || parsedUrl.query.from, 0),
+                    safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647)
+                )
             });
             return;
         }

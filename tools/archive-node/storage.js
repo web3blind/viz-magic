@@ -56,6 +56,7 @@ ArchiveStore.prototype._initSchema = function() {
         '  source_node TEXT,',
         '  indexed_at TEXT,',
         '  event_count INTEGER NOT NULL DEFAULT 0,',
+        '  virtual_complete INTEGER NOT NULL DEFAULT 0,',
         '  raw_json TEXT NOT NULL',
         ')',
         ';',
@@ -67,6 +68,7 @@ ArchiveStore.prototype._initSchema = function() {
         '  timestamp TEXT,',
         '  tx_index INTEGER NOT NULL,',
         '  op_index INTEGER NOT NULL,',
+        '  virtual_op INTEGER NOT NULL DEFAULT 0,',
         '  tx_id TEXT,',
         '  op_type TEXT NOT NULL,',
         '  protocol TEXT NOT NULL,',
@@ -98,9 +100,12 @@ ArchiveStore.prototype._initSchema = function() {
         'CREATE INDEX IF NOT EXISTS idx_event_accounts_account_protocol ON event_accounts(account, protocol, block_num)',
         ';'
     ].join('\n'));
-    var columns = this.db.prepare('PRAGMA table_info(events)').all().map(function(row) { return row.name; });
-    if (columns.indexOf('tx_id') === -1) this.db.exec('ALTER TABLE events ADD COLUMN tx_id TEXT');
-    this._setMeta('schema_version', 2);
+    var eventColumns = this.db.prepare('PRAGMA table_info(events)').all().map(function(row) { return row.name; });
+    if (eventColumns.indexOf('tx_id') === -1) this.db.exec('ALTER TABLE events ADD COLUMN tx_id TEXT');
+    if (eventColumns.indexOf('virtual_op') === -1) this.db.exec('ALTER TABLE events ADD COLUMN virtual_op INTEGER NOT NULL DEFAULT 0');
+    var blockColumns = this.db.prepare('PRAGMA table_info(blocks)').all().map(function(row) { return row.name; });
+    if (blockColumns.indexOf('virtual_complete') === -1) this.db.exec('ALTER TABLE blocks ADD COLUMN virtual_complete INTEGER NOT NULL DEFAULT 0');
+    this._setMeta('schema_version', 3);
 };
 
 ArchiveStore.prototype._getMeta = function(key, fallback) {
@@ -153,12 +158,13 @@ ArchiveStore.prototype.getBlockRecord = function(blockNum) {
         sourceNode: row.source_node || '',
         indexedAt: row.indexed_at || '',
         eventCount: row.event_count || 0,
+        virtualComplete: row.virtual_complete === 1,
         block: JSON.parse(row.raw_json)
     };
 };
 
 ArchiveStore.prototype.eventKey = function(event) {
-    return [event.blockNum, event.txIndex, event.opIndex, event.protocol, event.type, event.sender || event.account || ''].join(':');
+    return [event.blockNum, event.txIndex, event.opIndex, event.virtualOp || 0, event.protocol, event.type, event.sender || event.account || ''].join(':');
 };
 
 ArchiveStore.prototype._thinBlock = function(block, events) {
@@ -166,7 +172,9 @@ ArchiveStore.prototype._thinBlock = function(block, events) {
         previous: block && (block.previous || block.previous_block_id || '') || '',
         timestamp: block && block.timestamp || '',
         block_id: block && (block.block_id || block.id || '') || '',
-        transactions: []
+        transactions: [],
+        virtual_operations: [],
+        virtualReceiptsComplete: block && block.virtualReceiptsComplete === true
     };
     var byTx = {};
     events = events || [];
@@ -179,7 +187,13 @@ ArchiveStore.prototype._thinBlock = function(block, events) {
             byTx[txIndex].transaction_id = ev.txId || '';
         }
         while (byTx[txIndex].operations.length < Number(ev.opIndex || 0)) byTx[txIndex].operations.push(null);
-        if (ev.opType === 'custom') {
+        if (ev.opType === 'receive_award') {
+            thin.virtual_operations.push({
+                trx_id: ev.txId || '', block: Number(ev.blockNum) || 0,
+                trx_in_block: txIndex, op_in_trx: Number(ev.opIndex) || 0,
+                virtual_op: Number(ev.virtualOp) || 0, op: ['receive_award', ev.raw || {}]
+            });
+        } else if (ev.opType === 'custom') {
             byTx[txIndex].operations.push(['custom', ev.raw || {}]);
         } else if (ev.opType === 'award') {
             byTx[txIndex].operations.push(['award', ev.raw || {}]);
@@ -192,7 +206,7 @@ ArchiveStore.prototype._thinBlock = function(block, events) {
     return thin;
 };
 
-ArchiveStore.prototype.putBlock = function(blockNum, block, sourceNode, events) {
+ArchiveStore.prototype.putBlock = function(blockNum, block, sourceNode, events, metadata) {
     var now = new Date().toISOString();
     var bn = Number(blockNum);
     var blockId = block && (block.block_id || block.id || '') || '';
@@ -202,11 +216,12 @@ ArchiveStore.prototype.putBlock = function(blockNum, block, sourceNode, events) 
     try {
         this.db.prepare('DELETE FROM event_accounts WHERE block_num = ?').run(bn);
         this.db.prepare('DELETE FROM events WHERE block_num = ?').run(bn);
+        block.virtualReceiptsComplete = !!(metadata && metadata.virtualComplete);
         var storedBlock = this._thinBlock(block, events || []);
         this.db.prepare([
-            'INSERT OR REPLACE INTO blocks(block_num, block_id, previous, timestamp, source_node, indexed_at, event_count, raw_json)',
-            'VALUES(?, ?, ?, ?, ?, ?, ?, ?)'
-        ].join(' ')).run(bn, blockId, previous, timestamp, sourceNode || '', now, events ? events.length : 0, JSON.stringify(storedBlock));
+            'INSERT OR REPLACE INTO blocks(block_num, block_id, previous, timestamp, source_node, indexed_at, event_count, virtual_complete, raw_json)',
+            'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ].join(' ')).run(bn, blockId, previous, timestamp, sourceNode || '', now, events ? events.length : 0, metadata && metadata.virtualComplete ? 1 : 0, JSON.stringify(storedBlock));
         this.db.exec('COMMIT');
     } catch (err) {
         this.db.exec('ROLLBACK');
@@ -216,8 +231,8 @@ ArchiveStore.prototype.putBlock = function(blockNum, block, sourceNode, events) 
 
 ArchiveStore.prototype._insertEventsUnsafe = function(events) {
     var insertEvent = this.db.prepare([
-        'INSERT OR REPLACE INTO events(id, block_num, block_id, previous, timestamp, tx_index, op_index, tx_id, op_type, protocol, type, sender, account, accounts_json, payload_json, raw_json)',
-        'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT OR REPLACE INTO events(id, block_num, block_id, previous, timestamp, tx_index, op_index, virtual_op, tx_id, op_type, protocol, type, sender, account, accounts_json, payload_json, raw_json)',
+        'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     ].join(' '));
     var insertAccount = this.db.prepare('INSERT OR REPLACE INTO event_accounts(event_id, account, protocol, block_num) VALUES(?, ?, ?, ?)');
     var self = this;
@@ -226,7 +241,7 @@ ArchiveStore.prototype._insertEventsUnsafe = function(events) {
         var accounts = event.accounts || [];
         insertEvent.run(
             event.id, Number(event.blockNum) || 0, event.block_id || '', event.previous || '', event.timestamp || '',
-            Number(event.txIndex) || 0, Number(event.opIndex) || 0, event.txId || '', event.opType || '',
+            Number(event.txIndex) || 0, Number(event.opIndex) || 0, Number(event.virtualOp) || 0, event.txId || '', event.opType || '',
             event.protocol || '', event.type || '', event.sender || '', event.account || '',
             JSON.stringify(accounts), JSON.stringify(event.payload || null), JSON.stringify(event.raw || null)
         );
@@ -247,7 +262,7 @@ ArchiveStore.prototype.putEventsForBlock = function(events) {
     }
 };
 
-ArchiveStore.prototype.putBlockWithEvents = function(blockNum, block, sourceNode, events) {
+ArchiveStore.prototype.putBlockWithEvents = function(blockNum, block, sourceNode, events, metadata) {
     var bn = Number(blockNum);
     var blockId = block && (block.block_id || block.id || '') || '';
     var previous = block && (block.previous || block.previous_block_id || '') || '';
@@ -268,11 +283,12 @@ ArchiveStore.prototype.putBlockWithEvents = function(blockNum, block, sourceNode
         }
         this.db.prepare('DELETE FROM event_accounts WHERE event_id IN (SELECT id FROM events WHERE block_num = ?)').run(bn);
         this.db.prepare('DELETE FROM events WHERE block_num = ?').run(bn);
+        block.virtualReceiptsComplete = !!(metadata && metadata.virtualComplete);
         var storedBlock = this._thinBlock(block, events);
         this.db.prepare([
-            'INSERT OR REPLACE INTO blocks(block_num, block_id, previous, timestamp, source_node, indexed_at, event_count, raw_json)',
-            'VALUES(?, ?, ?, ?, ?, ?, ?, ?)'
-        ].join(' ')).run(bn, blockId, previous, timestamp, sourceNode || '', now, events.length, JSON.stringify(storedBlock));
+            'INSERT OR REPLACE INTO blocks(block_num, block_id, previous, timestamp, source_node, indexed_at, event_count, virtual_complete, raw_json)',
+            'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ].join(' ')).run(bn, blockId, previous, timestamp, sourceNode || '', now, events.length, metadata && metadata.virtualComplete ? 1 : 0, JSON.stringify(storedBlock));
         this._insertEventsUnsafe(events);
         this.db.exec('COMMIT');
     } catch (err) {
@@ -289,6 +305,7 @@ ArchiveStore.prototype._eventFromRow = function(row) {
         timestamp: row.timestamp || '',
         txIndex: row.tx_index,
         opIndex: row.op_index,
+        virtualOp: row.virtual_op || 0,
         txId: row.tx_id || '',
         opType: row.op_type || '',
         protocol: row.protocol || '',
@@ -324,7 +341,7 @@ ArchiveStore.prototype.queryEvents = function(options) {
         options.protocols.forEach(function(protocol) { params.push(String(protocol)); });
     }
     sql += ' WHERE ' + where.join(' AND ');
-    sql += ' ORDER BY e.block_num DESC, e.tx_index DESC, e.op_index DESC LIMIT ?';
+    sql += ' ORDER BY e.block_num DESC, e.tx_index DESC, e.op_index DESC, e.virtual_op DESC LIMIT ?';
     params.push(limit);
     var stmt = this.db.prepare(sql);
     var rows = stmt.all.apply(stmt, params);
@@ -340,9 +357,43 @@ ArchiveStore.prototype.queryEventsByTypePrefix = function(prefix, options) {
     var stmt = this.db.prepare([
         'SELECT e.* FROM events e',
         'WHERE e.block_num >= ? AND e.block_num <= ? AND e.type LIKE ?',
-        'ORDER BY e.block_num ASC, e.tx_index ASC, e.op_index ASC LIMIT ?'
+        'ORDER BY e.block_num ASC, e.tx_index ASC, e.op_index ASC, e.virtual_op ASC LIMIT ?'
     ].join(' '));
     return stmt.all(start, end, String(prefix || '') + '%', limit).map(this._eventFromRow);
+};
+
+ArchiveStore.prototype.setVirtualReceiptStartBlock = function(blockNum) {
+    var value = Number(blockNum);
+    if (!Number.isSafeInteger(value) || value <= 0) throw new Error('invalid virtual receipt start block');
+    var existing = Number(this._getMeta('virtual_receipt_start_block', 0));
+    if (!existing || value < existing) this._setMeta('virtual_receipt_start_block', value);
+};
+
+ArchiveStore.prototype.getVirtualReceiptStartBlock = function() {
+    return Number(this._getMeta('virtual_receipt_start_block', 0)) || 0;
+};
+
+ArchiveStore.prototype.isBlockRangeComplete = function(start, end) {
+    start = Number(start);
+    end = Number(end);
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start <= 0 || end < start) return false;
+    var row = this.db.prepare('SELECT COUNT(*) AS total FROM blocks WHERE block_num >= ? AND block_num <= ?').get(start, end);
+    return Number(row && row.total || 0) === end - start + 1;
+};
+
+ArchiveStore.prototype.isVirtualRangeComplete = function(start, end) {
+    start = Number(start);
+    end = Number(end);
+    var receiptStart = this.getVirtualReceiptStartBlock();
+    if (!receiptStart || !Number.isSafeInteger(start) || !Number.isSafeInteger(end) || end < start) return false;
+    var requiredStart = Math.max(start, receiptStart);
+    if (end < requiredStart) return true;
+    var row = this.db.prepare([
+        'SELECT COUNT(*) AS total, SUM(CASE WHEN virtual_complete = 1 THEN 1 ELSE 0 END) AS complete',
+        'FROM blocks WHERE block_num >= ? AND block_num <= ?'
+    ].join(' ')).get(requiredStart, end);
+    var expected = end - requiredStart + 1;
+    return Number(row && row.total || 0) === expected && Number(row && row.complete || 0) === expected;
 };
 
 module.exports = {

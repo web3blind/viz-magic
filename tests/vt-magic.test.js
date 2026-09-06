@@ -36,10 +36,12 @@ function block(number, id, operations) {
     assert.strictEqual(p.formatAmount(1001), '1.001');
     assert.strictEqual(p.mintMemo('abc-123'), 'viz://vt/mint/v1/abc-123');
     assert.strictEqual(p.createTransferAction('bob', '2.500', 'n-1').d.amount_milli, 2500);
+    assert.strictEqual(p.createAwardMintAction('award-1', 250).d.energy, 250);
+    assert.strictEqual(p.createAwardMintAction('award-1', 0), null);
 }());
 
 (function proofAndLedgerTests() {
-    var cfg = { PROTOCOLS: { VM: 'VM', V: 'V', VE: 'VE', VT: 'VT' }, TOKEN: { ACTIVATION_BLOCK: 100, IRREVERSIBLE_DEPTH: 2, FIXED_AWARD_EVIDENCE: true } };
+    var cfg = { PROTOCOLS: { VM: 'VM', V: 'V', VE: 'VE', VT: 'VT' }, TOKEN: { ACTIVATION_BLOCK: 100, IRREVERSIBLE_DEPTH: 2 } };
     var c = load([
         'app/js/protocols/vt-protocol.js',
         'app/js/engine/magic-ledger.js',
@@ -97,22 +99,52 @@ function block(number, id, operations) {
     ]), 105);
     c.MagicLedger.ingestBlock(ledger, fixedBlock);
     finalize(105);
-    assert.strictEqual(c.MagicLedger.getBalance(ledger, 'bob'), 1500, 'requested fixed award is not actual burn proof');
-    assert.strictEqual(ledger.pendingMints['bob:intent-fixed'].reason, 'actual_burn_evidence_missing');
-    fixedBlock.burnProofs = [{ txIndex: 0, opIndex: 0, sourceOpIndex: 0, initiator: 'bob', receiver: 'null', intent: 'intent-fixed', actualBurnMilli: 997, canonical: true }];
-    fixedBlock.proofSource = 'trusted_archive_v1';
-    c.MagicLedger.ingestBlock(ledger, fixedBlock);
-    finalize(105);
-    assert.strictEqual(c.MagicLedger.getBalance(ledger, 'bob'), 2497, 'fixed award mints actual proven burn, not requested amount');
-    assert.strictEqual(ledger.supplyMilli, 3997);
+    assert.strictEqual(c.MagicLedger.getBalance(ledger, 'bob'), 2500, 'canonical fixed award mints its exact nominal VIZ allocation');
+    assert.strictEqual(ledger.supplyMilli, 4000);
     assert.strictEqual(ledger.pendingMints['bob:intent-fixed'], undefined);
 
-    var bad = c.BlockProcessor.processBlock(block(106, 'block-bad', [
+    var diverted = p.createMintAction('intent-diverted', 'fixed_award', '1.000', { maxEnergy: 500 });
+    var divertedBlock = c.BlockProcessor.processBlock(block(106, 'block-diverted', [
+        op('fixed_award', { initiator: 'bob', receiver: 'null', reward_amount: '1.000 VIZ', max_energy: 500, custom_sequence: 4, memo: p.mintMemo('intent-diverted'), beneficiaries: [{ account: 'mallory', weight: 100 }] }),
+        custom('bob', diverted)
+    ]), 106);
+    c.MagicLedger.ingestBlock(ledger, divertedBlock);
+    finalize(106);
+    assert.strictEqual(c.MagicLedger.getBalance(ledger, 'bob'), 2500, 'beneficiary diversion must not mint MAGIC');
+
+    var sharedProofAction = p.createMintAction('one-proof', 'fixed_award', '0.500', { maxEnergy: 250 });
+    var sharedProofBlock = c.BlockProcessor.processBlock(block(107, 'block-one-proof', [
+        op('fixed_award', { initiator: 'bob', receiver: 'null', reward_amount: '0.500 VIZ', max_energy: 250, custom_sequence: 0, memo: p.mintMemo('one-proof'), beneficiaries: [] }),
+        custom('bob', sharedProofAction),
+        custom('bob', sharedProofAction)
+    ]), 107);
+    c.MagicLedger.ingestBlock(ledger, sharedProofBlock);
+    finalize(107);
+    assert.strictEqual(c.MagicLedger.getBalance(ledger, 'bob'), 3000, 'one canonical fixed award can mint only once');
+    assert.strictEqual(ledger.supplyMilli, 4500);
+
+    [
+        { number: 108, intent: 'zero-reward', amount: '0.000 VIZ', maxEnergy: 250, expectedAmount: '0.500' },
+        { number: 109, intent: 'wrong-denomination', amount: '0.500 SHARES', maxEnergy: 250, expectedAmount: '0.500' },
+        { number: 110, intent: 'wrong-energy-cap', amount: '0.500 VIZ', maxEnergy: 251, expectedAmount: '0.500' }
+    ].forEach(function(fixture) {
+        var action = p.createMintAction(fixture.intent, 'fixed_award', fixture.expectedAmount, { maxEnergy: 250 });
+        var invalidBlock = c.BlockProcessor.processBlock(block(fixture.number, 'block-' + fixture.intent, [
+            op('fixed_award', { initiator: 'bob', receiver: 'null', reward_amount: fixture.amount, max_energy: fixture.maxEnergy, custom_sequence: 0, memo: p.mintMemo(fixture.intent), beneficiaries: [] }),
+            custom('bob', action)
+        ]), fixture.number);
+        c.MagicLedger.ingestBlock(ledger, invalidBlock);
+        finalize(fixture.number);
+        assert.strictEqual(c.MagicLedger.getBalance(ledger, 'bob'), 3000, fixture.intent + ' must not mint');
+        assert.strictEqual(ledger.supplyMilli, 4500);
+    });
+
+    var bad = c.BlockProcessor.processBlock(block(111, 'block-bad', [
         op('transfer', { from: 'alice', to: 'null', amount: '1.000 VIZ', memo: p.mintMemo('bad') }),
         custom('mallory', p.createMintAction('bad', 'transfer', '1.000'))
-    ]), 106);
+    ]), 111);
     c.MagicLedger.ingestBlock(ledger, bad);
-    finalize(106);
+    finalize(111);
     assert.strictEqual(c.MagicLedger.getBalance(ledger, 'mallory'), 0, 'proof sender must equal signed VT sender');
 }());
 
@@ -200,10 +232,18 @@ function block(number, id, operations) {
     assert.strictEqual(customCall.regularAuths[0], 'alice');
     assert.strictEqual(customCall.activeAuths.length, 0);
     sent = null;
-    var fixedFailed = false;
-    c.VizBroadcast.mintMagicFixedAward('fixed-fixture', '1.000', 500, function(err) { fixedFailed = !!err; });
-    assert.strictEqual(fixedFailed, true, 'fixed award broadcast must fail closed without authoritative burn evidence');
-    assert.strictEqual(sent, null);
+    c.VizBroadcast.mintMagicFixedAward('fixed-fixture', '1.000', 500, function(err) { assert.ifError(err); });
+    assert.strictEqual(sent.tx.operations[0][0], 'fixed_award');
+    assert.strictEqual(sent.tx.operations[0][1].receiver, 'null');
+    assert.strictEqual(sent.tx.operations[0][1].reward_amount, '1.000 VIZ');
+    assert.strictEqual(sent.tx.operations[0][1].max_energy, 500);
+    assert.strictEqual(sent.tx.operations[0][1].beneficiaries.length, 0);
+    assert.strictEqual(sent.tx.operations[1][1].required_regular_auths[0], 'alice');
+    sent = null;
+    c.VizBroadcast.mintMagicAward('award-fixture', 250, function(err) {
+        assert.strictEqual(err && err.message, 'ordinary_award_allocation_unavailable');
+    });
+    assert.strictEqual(sent, null, 'ordinary award is not broadcast until an exact historical VIZ allocation source exists');
 }());
 
 console.log('PASS VT/MAGIC protocol, proof, ledger and Bazaar invariants');
