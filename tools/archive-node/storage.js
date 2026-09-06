@@ -392,6 +392,11 @@ ArchiveStore.prototype.getVirtualReceiptStartBlock = function() {
     return Number(this._getMeta('virtual_receipt_start_block', 0)) || 0;
 };
 
+ArchiveStore.prototype.getFirstIndexedBlock = function() {
+    var row = this.db.prepare('SELECT MIN(block_num) AS first FROM blocks').get();
+    return Number(row && row.first || 0);
+};
+
 ArchiveStore.prototype.isBlockRangeComplete = function(start, end) {
     start = Number(start);
     end = Number(end);

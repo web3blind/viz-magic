@@ -848,7 +848,7 @@ var App = (function() {
                         _handleCatchupFailure(startBlock, endBlock, chainHead, archiveFailure || { reason: 'archive_unavailable' });
                         return;
                     }
-                    _processBlockBatchFromRpc(startBlock, endBlock, chainHead, archiveFailure);
+                    _handleCatchupFailure(startBlock, endBlock, chainHead, archiveFailure || { reason: 'retry' });
                 }
             });
             return;
@@ -858,10 +858,8 @@ var App = (function() {
     }
 
     function _shouldUseArchiveEventBatch(startBlock, endBlock, chainHead) {
-        var tokenActivation = Number(VizMagicConfig.TOKEN && VizMagicConfig.TOKEN.ACTIVATION_BLOCK || 0);
         return typeof HistorySource !== 'undefined' &&
-            (HistorySource.getAllEventsRange || HistorySource.getEventsRange) &&
-            (chainHead - startBlock > 1000 || (tokenActivation > 0 && endBlock >= tokenActivation));
+            !!(HistorySource.getAllEventsRange || HistorySource.getEventsRange);
     }
 
     function _processArchiveEventBatch(startBlock, endBlock, chainHead, done) {
@@ -869,12 +867,30 @@ var App = (function() {
             done(false);
             return;
         }
-        HistorySource.getArchiveHead(function(headErr, archiveHead) {
-            if (headErr || Number(archiveHead || 0) < endBlock) {
+        HistorySource.getArchiveHead(function(headErr, archiveHead, coverage) {
+            if (headErr || !Number.isSafeInteger(archiveHead) || archiveHead < startBlock) {
                 done(false);
                 return;
             }
-            _loadArchiveEventBatch(startBlock, endBlock, chainHead, done);
+            var first = Number(coverage && coverage.firstIndexedBlock || 0);
+            if (Number.isSafeInteger(first) && first > startBlock && first <= archiveHead) {
+                var activation = Number(VizMagicConfig.TOKEN && VizMagicConfig.TOKEN.ACTIVATION_BLOCK || 0);
+                if ((activation > 0 && first > activation) || typeof CheckpointSystem === 'undefined') {
+                    done(false, { reason: 'history_gap' });
+                    return;
+                }
+                var state = StateEngine.getState();
+                CheckpointSystem.saveCheckpoint('before-mirror-rebase', state.headBlock || 0, state, function(backupErr) {
+                    if (backupErr) { done(false, { reason: 'retry' }); return; }
+                    state.mirrorHistoryBoundary = { previousHead: state.headBlock || 0, firstAvailableBlock: first, skippedThrough: first - 1 };
+                    StateEngine.advanceHead(first - 1);
+                    _lastPolledBlock = first - 1;
+                    _syncStartBlock = first - 1;
+                    _loadArchiveEventBatch(first, Math.min(archiveHead, _nextCatchupBatchEnd(first, chainHead)), chainHead, done);
+                });
+                return;
+            }
+            _loadArchiveEventBatch(startBlock, Math.min(endBlock, archiveHead), chainHead, done);
         });
     }
 

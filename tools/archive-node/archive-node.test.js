@@ -157,6 +157,7 @@ async function run() {
             assert.strictEqual(health.body.service, 'viz-magic-game-archive');
             assert.strictEqual(health.body.caughtUp, true);
             assert.strictEqual(health.body.lastIrreversibleBlock, 123);
+            assert.strictEqual(health.body.firstIndexedBlock, 123);
 
             var block = await getJson(port, '/archive-mirror/v1/block/123.json');
             assert.strictEqual(block.status, 200);

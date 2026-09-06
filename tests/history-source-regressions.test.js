@@ -110,7 +110,8 @@ test('paginated range metadata preserves the exact requested coverage boundary',
   });
 });
 
-test('proof lookup falls back to the archive when live RPC throws before its callback', function () {
+test('configured mirror proof lookup never waits for stalled RPC', function () {
+  let rpcCalls = 0;
   function FakeXHR() { this.readyState = 0; this.status = 0; this.responseText = ''; }
   FakeXHR.prototype.open = function() {};
   FakeXHR.prototype.send = function() {
@@ -122,7 +123,7 @@ test('proof lookup falls back to the archive when live RPC throws before its cal
   FakeXHR.prototype.abort = function() {};
   const context = {
     console: { log: function() {} }, setTimeout: function() { return 1; }, clearTimeout: function() {}, XMLHttpRequest: FakeXHR,
-    viz: { api: { getBlock: function() { throw new Error('unknown transport'); } } },
+    viz: { api: { getBlock: function() { rpcCalls++; } } },
     VizMagicConfig: { HISTORY_ARCHIVE_MIRRORS: [{ apiBase: 'https://archive.example' }], PROTOCOLS: { VM: 'VM' } }
   };
   vm.createContext(context);
@@ -135,6 +136,8 @@ test('proof lookup falls back to the archive when live RPC throws before its cal
     });
   });
   assert.strictEqual(result && result.block_id, 'archive-150');
+  context.HistorySource.getBlock(150, function(err, block) { assert.ifError(err); assert(block); });
+  assert.strictEqual(rpcCalls, 0);
 });
 
 test('MAGIC readiness requires healthy SQLite archive and complete virtual history through LIB', function () {

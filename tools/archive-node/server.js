@@ -169,6 +169,7 @@ function buildHealth(archive, startedAt, nowMs) {
         service: 'viz-magic-game-archive',
         uptimeSec: Math.round((Number(nowMs || Date.now()) - startedAt) / 1000),
         lastIndexedBlock: lastIndexed,
+        firstIndexedBlock: archive.getFirstIndexedBlock(),
         chainHeadBlock: Number(status.chainHeadBlock || 0),
         lastIrreversibleBlock: lastIrreversible,
         virtualReceiptStartBlock: archive.getVirtualReceiptStartBlock(),

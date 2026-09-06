@@ -77,6 +77,59 @@ function makeContext(rangeReply) {
   return { context: context, state: state, status: status };
 }
 
+(function mirrorBoundaryPreservesProgressAndIncludesFirstBlock() {
+  const f = makeContext({events: [], meta: {sourceOperationsComplete: true, virtualReceiptsComplete: true}});
+  const character = f.state.characters.alice;
+  character.xp = 4168;
+  let saved = false;
+  let requested;
+  f.context.CheckpointSystem = {saveCheckpoint: function(key, block, state, cb) {
+    assert.strictEqual(block, 100);
+    assert.strictEqual(state.characters.alice.xp, 4168);
+    saved = true; cb(null);
+  }};
+  f.context.HistorySource.getArchiveHead = cb => cb(null, 200, {firstIndexedBlock: 150});
+  f.context.HistorySource.getAllEventsRange = function(opts, cb) {
+    assert(saved); if (!requested) requested = opts;
+    cb(null, [], {sourceOperationsComplete: true, virtualReceiptsComplete: true});
+  };
+  const result = runArchiveBatch(f, 101, 200);
+  assert.strictEqual(result.used, true);
+  assert.strictEqual(requested.start, 150);
+  assert.strictEqual(f.state.headBlock, 200);
+  assert.strictEqual(f.state.characters.alice, character);
+  assert.strictEqual(character.xp, 4168);
+  assert.strictEqual(f.state.mirrorHistoryBoundary.skippedThrough, 149);
+  console.log('PASS approved mirror boundary preserves progress and includes first block');
+})();
+
+(function failedBoundaryBackupDoesNotMoveCursor() {
+  const f = makeContext({events: [], meta: {sourceOperationsComplete: true}});
+  f.context.HistorySource.getArchiveHead = cb => cb(null, 200, {firstIndexedBlock: 150});
+  f.context.CheckpointSystem = {saveCheckpoint: function(k,b,s,cb) {cb(new Error('disk full'));}};
+  assert.strictEqual(runArchiveBatch(f,101,200).used, false);
+  assert.strictEqual(f.state.headBlock,100);
+})();
+
+(function monetaryHistoryCannotBeSkippedByRebase() {
+  const f = makeContext({events: [], meta: {sourceOperationsComplete: true}});
+  f.context.VizMagicConfig.TOKEN.ACTIVATION_BLOCK = 120;
+  f.context.HistorySource.getArchiveHead = cb => cb(null,200,{firstIndexedBlock:150});
+  f.context.CheckpointSystem = {saveCheckpoint: function() {throw new Error('must not rebase money');}};
+  assert.strictEqual(runArchiveBatch(f,101,200).used,false);
+  assert.strictEqual(f.state.headBlock,100);
+})();
+
+(function equalOrLaterCursorIsNotRebased() {
+  for (const first of [100,101]) {
+    const f=makeContext({events:[],meta:{sourceOperationsComplete:true,virtualReceiptsComplete:true}});
+    f.context.HistorySource.getArchiveHead=cb=>cb(null,200,{firstIndexedBlock:first});
+    f.context.CheckpointSystem={saveCheckpoint:function(){throw new Error('unexpected backup');}};
+    assert.strictEqual(runArchiveBatch(f,101,200).used,true);
+    assert.strictEqual(f.state.mirrorHistoryBoundary,undefined);
+  }
+})();
+
 function runArchiveBatch(fixture, start, end) {
   let result = null;
   fixture.context.App.processArchiveEventBatch(start, end, end, function(used, detail) {

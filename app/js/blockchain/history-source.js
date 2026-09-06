@@ -392,7 +392,7 @@ var HistorySource = (function() {
             callback(_makeError('Invalid block number'));
             return;
         }
-        if (typeof viz === 'undefined' || !viz.api || !viz.api.getBlock) {
+        if (_archiveMirrors().length || typeof viz === 'undefined' || !viz.api || !viz.api.getBlock) {
             _getBlockEventsFromMirrors(blockNum, 0, function(eventsErr, eventsBlock) {
                 if (!eventsErr && eventsBlock) {
                     callback(null, eventsBlock);
@@ -435,7 +435,7 @@ var HistorySource = (function() {
             callback(_makeError('Invalid block number'));
             return;
         }
-        if (typeof viz === 'undefined' || !viz.api || !viz.api.getBlock) {
+        if (_archiveMirrors().length || typeof viz === 'undefined' || !viz.api || !viz.api.getBlock) {
             _getProofEventsFromMirrors(blockNum, 0, callback);
             return;
         }
@@ -566,7 +566,7 @@ var HistorySource = (function() {
             _requestJson(url, mirror.timeoutMs || 6000, function(err, payload) {
                 var head = payload && Number(payload.lastIndexedBlock || payload.last_indexed_block || 0);
                 if (!err && Number.isInteger(head) && head > 0) {
-                    callback(null, head);
+                    callback(null, head, { firstIndexedBlock: Number(payload.firstIndexedBlock || 0) });
                     return;
                 }
                 next(index + 1);
