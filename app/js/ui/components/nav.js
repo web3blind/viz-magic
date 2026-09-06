@@ -17,6 +17,7 @@ var NavComponent = (function() {
             { id: 'map',         icon: 'map',         label: t('nav_map') },
             { id: 'guild',       icon: 'guild',       label: t('nav_guild') },
             { id: 'marketplace', icon: 'marketplace', label: t('nav_bazaar') },
+            { id: 'wallet',      icon: 'wallet',      label: t('nav_wallet') },
             { id: 'crafting',    icon: 'crafting',    label: t('nav_crafting') },
             { id: 'quests',      icon: 'quests',      label: t('nav_quests') },
             { id: 'temple',      icon: 'temple',      label: t('nav_temple') },

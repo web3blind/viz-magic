@@ -6,7 +6,7 @@ var App = (function() {
     'use strict';
 
     var currentScreen = 'landing';
-    var screens = ['landing', 'onboarding', 'login', 'home', 'character', 'hunt', 'inventory', 'chronicle', 'duel', 'arena', 'guild', 'map', 'marketplace', 'crafting', 'quests', 'world-boss', 'settings', 'help', 'leaderboard', 'temple', 'developers'];
+    var screens = ['landing', 'onboarding', 'login', 'home', 'character', 'hunt', 'inventory', 'chronicle', 'duel', 'arena', 'guild', 'map', 'marketplace', 'wallet', 'crafting', 'quests', 'world-boss', 'settings', 'help', 'leaderboard', 'temple', 'developers'];
     var initialized = false;
     var _pollTimer = null;
     var _lastPolledBlock = 0;
@@ -199,7 +199,7 @@ var App = (function() {
         _renderScreen(screenId);
 
         // Update navigation
-        var gameScreens = ['home', 'character', 'hunt', 'inventory', 'chronicle', 'duel', 'arena', 'guild', 'map', 'marketplace', 'crafting', 'quests', 'world-boss', 'settings', 'help', 'leaderboard', 'temple', 'developers'];
+        var gameScreens = ['home', 'character', 'hunt', 'inventory', 'chronicle', 'duel', 'arena', 'guild', 'map', 'marketplace', 'wallet', 'crafting', 'quests', 'world-boss', 'settings', 'help', 'leaderboard', 'temple', 'developers'];
         var nav = Helpers.$('bottom-nav');
         if (gameScreens.indexOf(screenId) !== -1) {
             nav.classList.add('show');
@@ -238,6 +238,7 @@ var App = (function() {
             case 'guild':      GuildScreen.render(); break;
             case 'map':        MapScreen.render(); break;
             case 'marketplace': MarketplaceScreen.render(); break;
+            case 'wallet':      WalletScreen.render(); break;
             case 'crafting':    CraftingScreen.render(); break;
             case 'quests':      if (typeof QuestsScreen !== 'undefined') QuestsScreen.render(); break;
             case 'world-boss':  if (typeof WorldBossScreen !== 'undefined') WorldBossScreen.render(); break;
@@ -779,7 +780,7 @@ var App = (function() {
     function _loadArchiveEventBatch(startBlock, endBlock, chainHead, done) {
         var rangeLoader = HistorySource.getAllEventsRange || HistorySource.getEventsRange;
         rangeLoader.call(HistorySource, {
-            protocol: [VizMagicConfig.PROTOCOLS.VM, VizMagicConfig.PROTOCOLS.V, VizMagicConfig.PROTOCOLS.VE, 'award'].join(','),
+            protocol: [VizMagicConfig.PROTOCOLS.VM, VizMagicConfig.PROTOCOLS.V, VizMagicConfig.PROTOCOLS.VE, VizMagicConfig.PROTOCOLS.VT, 'award'].join(','),
             start: startBlock,
             end: endBlock,
             limit: 5000

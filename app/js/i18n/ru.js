@@ -631,6 +631,7 @@ var LangRU = {
 
     // Navigation (marketplace/crafting)
     nav_bazaar: 'Базар',
+    nav_wallet: 'Кошелёк',
     nav_craft: 'Мастерская',
     nav_marketplace: 'Базар',
     nav_crafting: 'Мастерская',

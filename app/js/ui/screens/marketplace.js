@@ -125,7 +125,8 @@ var MarketplaceScreen = (function() {
         var itemName = t('item_' + listing.itemType) || listing.itemType.replace(/_/g, ' ');
         var rarityName = t('rarity_' + rarityInfo.name);
 
-        var html = '<div class="market-listing-card ' + rarityClass + '" role="listitem" data-listing="' + listing.ref + '">';
+        var safeListingRef = Helpers.escapeHtml(String(listing.ref || ''));
+        var html = '<div class="market-listing-card ' + rarityClass + '" role="listitem" data-listing="' + safeListingRef + '">';
         html += '<div class="listing-header">';
         html += '<span class="listing-name">' + Helpers.escapeHtml(itemName) + '</span>';
         html += '<span class="listing-rarity rarity-color-' + rarityInfo.name + '">' + rarityInfo.symbol + ' ' + rarityName + '</span>';
@@ -148,13 +149,15 @@ var MarketplaceScreen = (function() {
 
         html += '<div class="listing-footer">';
         html += '<span class="listing-seller">' + Helpers.escapeHtml(listing.seller) + '</span>';
-        html += '<span class="listing-price">' + listing.price + ' ' + t('market_seals') + '</span>';
+        var displayPrice = typeof VTProtocol !== 'undefined' ? VTProtocol.formatAmount(listing.priceMilli || listing.price) : String(listing.price);
+        html += '<span class="listing-price">' + displayPrice + ' MAGIC</span>';
         html += '</div>';
 
         // Buy button
         var user = typeof VizAccount !== 'undefined' ? VizAccount.getCurrentUser() : '';
-        if (user && listing.seller !== user) {
-            html += '<button class="btn btn-primary btn-sm market-buy-btn" data-listing="' + listing.ref + '" ' +
+        var magicState = StateEngine.getState().magic;
+        if (user && listing.seller !== user && listing.payment === 'magic' && !(magicState && magicState.replayRequired)) {
+            html += '<button class="btn btn-primary btn-sm market-buy-btn" data-listing="' + safeListingRef + '" ' +
                     'aria-label="' + t('market_buy') + ' ' + Helpers.escapeHtml(itemName) + '">' +
                     t('market_buy') + '</button>';
         }
@@ -195,10 +198,11 @@ var MarketplaceScreen = (function() {
                 var mListing = myListings[ml];
                 var mName = t('item_' + mListing.itemType) || mListing.itemType.replace(/_/g, ' ');
                 html += '<div class="market-my-listing">';
-                html += '<span>' + Helpers.escapeHtml(mName) + ' — ' + mListing.price + ' ' + t('market_seals') +
+                html += '<span>' + Helpers.escapeHtml(mName) + ' — ' + VTProtocol.formatAmount(mListing.priceMilli || mListing.price) + ' MAGIC' +
+                        (mListing.payment === 'legacy_unpaid' ? ' (нужно выставить заново)' : '') +
                         (mListing.pending ? ' (' + t('market_pending_listing') + ')' : '') + '</span>';
                 if (!mListing.pending) {
-                    html += '<button class="btn btn-sm btn-secondary market-cancel-btn" data-listing="' + mListing.ref + '">' +
+                    html += '<button class="btn btn-sm btn-secondary market-cancel-btn" data-listing="' + Helpers.escapeHtml(String(mListing.ref || '')) + '">' +
                             t('market_cancel_listing') + '</button>';
                 }
                 html += '</div>';
@@ -218,17 +222,18 @@ var MarketplaceScreen = (function() {
                 var sName = t('item_' + sItem.type) || sItem.type.replace(/_/g, ' ');
                 var sRarity = ItemSystem.getRarityInfo(sItem.rarity);
                 var itemIds = group.items.map(function(it) { return it.id; }).join(',');
-                html += '<div class="market-sell-item ' + Helpers.rarityClass(sItem.rarity) + '" role="listitem" data-item="' + sItem.id + '">';
+                var safeItemId = Helpers.escapeHtml(String(sItem.id || ''));
+                html += '<div class="market-sell-item ' + Helpers.rarityClass(sItem.rarity) + '" role="listitem" data-item="' + safeItemId + '">';
                 html += '<span class="sell-item-name"><span class="market-item-icon vmagic-breathe" aria-hidden="true">' + _marketItemIcon(sItem) + '</span> ' + Helpers.escapeHtml(sName) + _marketItemAfterIcon(sItem) +
                     ' <span class="sell-item-rarity rarity-color-' + sRarity.name + '">(' + Helpers.escapeHtml(_marketRarityName(sItem, sRarity, t)) + ')</span>' +
                     (group.items.length > 1 ? ' <span class="sell-item-count">×' + group.items.length + '</span>' : '') +
                     '</span>';
                 html += '<div class="sell-item-controls">';
-                html += '<label for="price-' + sItem.id + '" class="sr-only">' + t('market_set_price') + '</label>';
-                html += '<input type="number" id="price-' + sItem.id + '" class="input-field sell-price-input" min="1" placeholder="' + t('market_price_placeholder') + '" aria-label="' + t('market_set_price') + '">';
-                html += '<label for="qty-' + sItem.id + '" class="sr-only">' + t('market_set_quantity') + '</label>';
-                html += '<input type="number" id="qty-' + sItem.id + '" class="input-field sell-qty-input" min="1" max="' + group.items.length + '" value="1" aria-label="' + t('market_set_quantity') + '">';
-                html += '<button class="btn btn-primary btn-sm market-list-btn" data-item="' + sItem.id + '" data-items="' + itemIds + '">' + t('market_list_item') + '</button>';
+                html += '<label for="price-' + safeItemId + '" class="sr-only">' + t('market_set_price') + '</label>';
+                html += '<input type="text" inputmode="decimal" autocomplete="off" id="price-' + safeItemId + '" class="input-field sell-price-input" placeholder="1.000 MAGIC" aria-label="Точная цена в MAGIC">';
+                html += '<label for="qty-' + safeItemId + '" class="sr-only">' + t('market_set_quantity') + '</label>';
+                html += '<input type="number" id="qty-' + safeItemId + '" class="input-field sell-qty-input" min="1" max="' + group.items.length + '" value="1" aria-label="' + t('market_set_quantity') + '">';
+                html += '<button class="btn btn-primary btn-sm market-list-btn" data-item="' + safeItemId + '" data-items="' + Helpers.escapeHtml(itemIds) + '">' + t('market_list_item') + '</button>';
                 html += '</div>';
                 html += '</div>';
             }
@@ -350,6 +355,11 @@ var MarketplaceScreen = (function() {
      */
     function _handleBuy(listingRef) {
         var t = Helpers.t;
+        var magicState = StateEngine.getState().magic;
+        if (magicState && magicState.replayRequired) {
+            Toast.error('Покупки заблокированы до полного повтора подтверждённой истории VT.');
+            return;
+        }
         var listings = _getDisplayListings();
         var listing = null;
         for (var i = 0; i < listings.length; i++) {
@@ -361,7 +371,8 @@ var MarketplaceScreen = (function() {
         if (!listing) return;
 
         var itemName = t('item_' + listing.itemType) || listing.itemType.replace(/_/g, ' ');
-        var msg = t('market_buy_confirm', { item: itemName, price: listing.price });
+        var priceText = VTProtocol.formatAmount(listing.priceMilli || listing.price);
+        var msg = 'Купить ' + itemName + ' за ' + priceText + ' MAGIC? Оплата и передача предмета выполнятся одной необратимой операцией.';
 
         Modal.show({
             title: t('market_buy'),
@@ -372,17 +383,12 @@ var MarketplaceScreen = (function() {
                     className: 'btn-primary',
                     action: function() {
                         SoundManager.play('success');
-                        MarketProtocol.broadcastBuy(listingRef, function(err, result) {
+                        MarketProtocol.broadcastBuy(listingRef, listing.revision, listing.priceMilli, function(err) {
                             if (err) {
                                 Toast.error(t('market_buy_error'));
                                 SoundManager.play('error');
                             } else {
-                                var user = typeof VizAccount !== 'undefined' ? VizAccount.getCurrentUser() : '';
-                                var blockNum = _resultBlockNum(result);
-                                if (user && StateEngine.processMarketBuyResult(user, listingRef, blockNum)) {
-                                    StateEngine.saveCheckpoint(function() {});
-                                }
-                                Toast.success(t('market_bought'));
+                                Toast.success('Покупка отправлена. Предмет и MAGIC изменятся вместе после необратимого подтверждения.');
                                 SoundManager.play('equip');
                                 SoundManager.vibrate('loot');
                                 render();
@@ -435,8 +441,9 @@ var MarketplaceScreen = (function() {
         var priceInput = container.querySelector('#price-' + firstId);
         if (!priceInput) return;
 
-        var price = parseInt(priceInput.value, 10);
-        if (!price || price <= 0) {
+        var priceText = String(priceInput.value || '').trim();
+        var price = VTProtocol.parseAmount(priceText);
+        if (price === null) {
             Toast.error(t('market_invalid_price'));
             SoundManager.play('error');
             return;
@@ -458,7 +465,7 @@ var MarketplaceScreen = (function() {
                 return;
             }
             var itemId = selectedIds[index];
-            MarketProtocol.broadcastList(itemId, price, 0, function(err, result) {
+            MarketProtocol.broadcastList(itemId, priceText, 0, function(err, result) {
                 if (err) {
                     Toast.error(t(listed > 0 ? 'market_list_partial_error' : 'market_list_error', { count: listed }));
                     SoundManager.play('error');
@@ -622,7 +629,10 @@ var MarketplaceScreen = (function() {
             itemRarity: item.rarity,
             itemStats: item.stats ? _copyStats(item.stats) : {},
             seller: user,
-            price: price | 0,
+            price: price,
+            priceMilli: price,
+            revision: 1,
+            payment: 'magic',
             listedBlock: blockNum || 0,
             expiresBlock: 0,
             state: 'active',

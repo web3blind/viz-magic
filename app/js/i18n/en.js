@@ -631,6 +631,7 @@ var LangEN = {
 
     // Navigation (marketplace/crafting)
     nav_bazaar: 'Bazaar',
+    nav_wallet: 'Wallet',
     nav_craft: 'Craft',
     nav_marketplace: 'Bazaar',
     nav_crafting: 'Craft',
