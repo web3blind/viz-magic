@@ -169,16 +169,25 @@ ArchiveStore.prototype.hasBlock = function(blockNum) {
 ArchiveStore.prototype.getBlockRecord = function(blockNum) {
     var row = this.db.prepare('SELECT * FROM blocks WHERE block_num = ?').get(Number(blockNum));
     if (!row) return null;
+    var blockId = row.block_id || '';
+    if (!blockId) {
+        var next = this.db.prepare('SELECT previous FROM blocks WHERE block_num = ?').get(Number(blockNum) + 1);
+        var linkedId = next && next.previous || '';
+        // The next retained block names this exact block, including its height.
+        if (/^[0-9a-f]{40}$/.test(linkedId) && parseInt(linkedId.slice(0, 8), 16) === Number(blockNum)) blockId = linkedId;
+    }
+    var rawBlock = JSON.parse(row.raw_json);
+    rawBlock.block_id = blockId;
     return {
         blockNum: row.block_num,
-        block_id: row.block_id || '',
+        block_id: blockId,
         previous: row.previous || '',
         timestamp: row.timestamp || '',
         sourceNode: row.source_node || '',
         indexedAt: row.indexed_at || '',
         eventCount: row.event_count || 0,
         virtualComplete: row.virtual_complete === 1,
-        block: JSON.parse(row.raw_json)
+        block: rawBlock
     };
 };
 
