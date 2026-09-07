@@ -1835,6 +1835,18 @@ body[data-icon-motion="sparkle"] .energy-path-shimmer {
 @media (max-width: 680px) {
     .help-lore-page-grid { grid-template-columns: 1fr; }
     .help-book { padding-left: 26px; }
+    .modal:not(.help-library-fullscreen) .help-library-map-viewport {
+        max-height: 42vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal:not(.help-library-fullscreen) .help-library-map-image {
+        width: auto;
+        max-width: 100%;
+        max-height: 42vh;
+        object-fit: contain;
+    }
 }
 
 /* Tooltip / hint button */
@@ -2086,14 +2098,6 @@ body,
 }
 
 @media (max-width: 360px) {
-    #bottom-nav.show {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .screen {
-        padding-bottom: calc(150px + env(safe-area-inset-bottom));
-    }
-
     .nav-tab {
         padding: 2px 1px;
         min-height: 34px;
@@ -3290,15 +3294,11 @@ html body[data-icon-motion] .magical-forecast .forecast-card-hunt-summary .forec
     .landing-cards { grid-template-columns: repeat(3, 1fr); }
 
     #bottom-nav { padding: 6px 0 calc(6px + env(safe-area-inset-bottom)); }
-    #bottom-nav.show { display: flex; flex-wrap: nowrap; }
-    .nav-tab { min-height: 44px; }
-    .nav-tab { font-size: 0.92rem; gap: 4px; padding: 8px 4px; }
-    .nav-tab-icon { font-size: 1.5rem; }
-    .nav-tab-label { color: var(--color-text); }
+    #bottom-nav.show { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
 
     h1 { font-size: 1.9rem; }
     h2 { font-size: 1.4rem; }
-    .screen { padding: 24px; padding-bottom: 100px; }
+    .screen { padding: 24px; padding-bottom: calc(128px + env(safe-area-inset-bottom)); }
 }
 
 /* ===== v126 polish: contrast, alignment, grouping ===== */

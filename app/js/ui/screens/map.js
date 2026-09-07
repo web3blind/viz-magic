@@ -44,7 +44,8 @@ var MapScreen = (function() {
         var character = state.characters ? state.characters[user] : null;
         var confirmedZone = character ? character.currentZone : 'commons_first_light';
         var homeZone = character ? GameRegions.getHomeRegionForLevel(character.level) : confirmedZone;
-        if (character && homeZone && !confirmedZone) {
+        var hasConfirmedTravel = !!(character && character.lastMoveAction);
+        if (character && homeZone && (!confirmedZone || (!hasConfirmedTravel && confirmedZone !== homeZone))) {
             character.currentZone = homeZone;
             confirmedZone = homeZone;
         }

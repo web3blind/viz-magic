@@ -410,9 +410,10 @@ test('map travel waits for one paid blockchain transaction and keeps level range
   assert.ok(/var processed = BlockProcessor\.processBlock\(block, blockNum\)/.test(mapJs) && /StateEngine\.processBlock\(processed, \{ advanceHead: false, runMaintenance: false \}\)/.test(mapJs), 'map should apply the confirmed replay path');
   assert.ok(!/processMoveResult\(user, regionId, optimisticBlock\)/.test(mapScreenJs), 'map must not create an optimistic movement or find');
   assert.ok(!/Math\.random\(\)/.test(mapScreenJs), 'map finds must not use local randomness');
-  assert.ok(/homeZone = character \? GameRegions\.getHomeRegionForLevel\(character\.level\)/.test(mapScreenJs) && /homeZone && !confirmedZone/.test(mapScreenJs), 'map screen should use a level-matched home only when no confirmed location exists');
-  assert.ok(!/confirmedZone !== homeZone/.test(mapScreenJs), 'rendering the map must not undo confirmed travel');
-  assert.ok(!/GameRegions\.canCharacterEnterRegion/.test(mapScreenJs + stateEngineJs + regionsJs), 'world-map travel must not be level-gated; levels are informational card ranges only');
+  assert.ok(/homeZone = character \? GameRegions\.getHomeRegionForLevel\(character\.level\)/.test(mapScreenJs), 'map screen should calculate the level-matched home card');
+  assert.ok(/var hasConfirmedTravel = !!\(character && character\.lastMoveAction\)/.test(mapScreenJs), 'map screen should distinguish replay-confirmed travel from a stale default zone');
+  assert.ok(/!hasConfirmedTravel && confirmedZone !== homeZone/.test(mapScreenJs) && /character\.currentZone = homeZone/.test(mapScreenJs), 'a level 9 character with stale starter state should move from the 1-7 card to the 8-14 home card');
+  assert.ok(!/GameRegions\.canCharacterEnterRegion/.test(mapScreenJs + stateEngineJs + regionsJs), 'world-map travel must remain unrestricted; levels are informational card ranges only');
   assert.ok(/PENDING_TRAVEL_TTL_MS/.test(mapScreenJs), 'pending travel state should have a stale guard');
   assert.ok(/!\(pendingTravel && pendingTravel\.account === user\)/.test(mapScreenJs), 'pending travel should suppress repeat travel buttons');
 });
@@ -488,15 +489,15 @@ test('Russian crafting naming is unified as Workshop/Masterская', function (
 });
 
 
-test('mobile shell prevents tray and tab controls from overflowing the viewport', function () {
-  assert.ok(/padding-bottom:\s*calc\(128px \+ env\(safe-area-inset-bottom\)\)/.test(mainCss), 'screens need compact bottom padding for the two-row mobile tray');
-  assert.ok(/#bottom-nav\.show[\s\S]*display:\s*grid[\s\S]*repeat\(5, minmax\(0, 1fr\)\)/.test(mainCss), 'bottom nav should fit all tabs without horizontal overflow');
+test('mobile shell keeps all ten tray actions in exactly two rows', function () {
+  assert.ok(/padding-bottom:\s*calc\(128px \+ env\(safe-area-inset-bottom\)\)/.test(mainCss), 'screens need bottom padding for the two-row tray');
+  assert.ok(/#bottom-nav\.show[\s\S]*display:\s*grid[\s\S]*repeat\(5, minmax\(0, 1fr\)\)/.test(mainCss), 'bottom nav should use five columns for two rows');
+  assert.ok(!/@media \(max-width: 360px\) \{\s*#bottom-nav\.show/.test(mainCss), 'narrow phones must not override the five-column tray into four rows');
+  assert.ok(!/@media \(min-width: 880px\)[\s\S]*#bottom-nav\.show\s*\{[^}]*display:\s*flex/.test(mainCss), 'desktop must not collapse all ten actions into one row');
   assert.ok(/\.nav-tab[\s\S]*min-width:\s*0/.test(mainCss), 'nav tabs must be allowed to shrink inside viewport');
   assert.ok(/\.nav-label[\s\S]*text-overflow:\s*ellipsis/.test(mainCss), 'long nav labels should not push tabs off screen');
-  assert.ok(/\.nav-tab[\s\S]*min-height:\s*38px/.test(mainCss), 'nav tray should be compact enough to preserve game viewport');
-  assert.ok(/\.nav-icon[\s\S]*font-size:\s*0\.95rem/.test(mainCss), 'nav icons should be smaller but still visible');
-  assert.ok(/@media \(max-width: 360px\)[\s\S]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/.test(mainCss), 'narrow screens should cap the tray at three rows for nine tabs');
-  assert.ok(/@media \(max-width: 360px\)[\s\S]*padding-bottom:\s*calc\(150px \+ env\(safe-area-inset-bottom\)\)/.test(mainCss), 'three-row tray should not steal excessive vertical space');
+  assert.ok(/\.nav-tab[\s\S]*min-height:\s*38px/.test(mainCss), 'nav tray should preserve compact accessible targets');
+  assert.ok(/\.nav-icon[\s\S]*font-size:\s*0\.95rem/.test(mainCss), 'nav icons should be compact but visible');
   assert.ok(/@media \(max-width: 480px\)[\s\S]*\.chronicle-tabs[\s\S]*grid-template-columns:\s*1fr/.test(mainCss), 'mobile chronicle tabs should stack instead of clipping');
   assert.ok(/@media \(max-width: 480px\)[\s\S]*\.craft-tabs[\s\S]*grid-template-columns:\s*1fr/.test(mainCss), 'mobile craft tabs should stack instead of clipping');
   assert.ok(/\.recipe-card[\s\S]*flex-wrap:\s*wrap/.test(mainCss), 'recipe cards should wrap on narrow screens');
@@ -2191,7 +2192,7 @@ test('secret maps daily broadcast builder binds award and proof to the same day'
     VizMagicConfig: {
       PROTOCOLS: { VM: 'VIZMAGIC' }, APP_VERSION: 1,
       ACTION_TYPES: { LIBRARY_UNLOCK: 'library.unlock' },
-      LIBRARY: { TREASURY: 'denis-skripnik', CHAPTER_TWO_COST: 1000, CHAPTER_TWO_MEMO_PREFIX: 'viz://vm/library/chapter2/', CHAPTER_THREE_COST: 1000, CHAPTER_THREE_MEMO_PREFIX: 'viz://vm/library/chapter3/', CHAPTER_FOUR_COST: 1000, CHAPTER_FOUR_MEMO_PREFIX: 'viz://vm/library/chapter4/', CHAPTER_FIVE_COST: 1000, CHAPTER_FIVE_MEMO_PREFIX: 'viz://vm/library/chapter5/' }
+      LIBRARY: { TREASURY: 'denis-skripnik', CHAPTER_TWO_COST: 1000, CHAPTER_TWO_MEMO_PREFIX: 'viz://vm/library/chapter2/', CHAPTER_THREE_COST: 1000, CHAPTER_THREE_MEMO_PREFIX: 'viz://vm/library/chapter3/', CHAPTER_FOUR_COST: 1000, CHAPTER_FOUR_MEMO_PREFIX: 'viz://vm/library/chapter4/', CHAPTER_FIVE_COST: 1000, CHAPTER_FIVE_MEMO_PREFIX: 'viz://vm/library/chapter5/', CHAPTER_SIX_COST: 1000, CHAPTER_SIX_MEMO_PREFIX: 'viz://vm/library/chapter6/' }
     },
     VizAccount: {
       getRegularKey: function () { return 'test-wif'; },
@@ -2225,6 +2226,11 @@ test('secret maps daily broadcast builder binds award and proof to the same day'
   assert.ifError(error);
   assert.strictEqual(sent.operations[0][1].memo, 'viz://vm/library/chapter5/2026-08-23');
   assert.strictEqual(JSON.parse(sent.operations[1][1].json).d.chapter, 'chapter5');
+  sent = null;
+  context.VizBroadcast.libraryUnlockChapterAction('chapter6', 1000, '2026-08-23', function (err) { error = err; });
+  assert.ifError(error);
+  assert.strictEqual(sent.operations[0][1].memo, 'viz://vm/library/chapter6/2026-08-23');
+  assert.strictEqual(JSON.parse(sent.operations[1][1].json).d.chapter, 'chapter6');
   sent = null;
   context.VizBroadcast.libraryUnlockChapterAction('chapter4', 999, '2026-08-23', function (err) { error = err; });
   assert.ok(error && /invalid_library_energy/.test(error.message));
@@ -2343,6 +2349,43 @@ test('world attraction maps keep first masquerade card and Growing Up section', 
   assert.ok(/assets\/library-maps-attraction\/attraction-map-' \+ entry\.id \+ '\.jpg/.test(helpJs), 'attraction modal should load the accepted attraction assets');
   assert.strictEqual(fs.readdirSync(path.join(root, 'app/assets/library-maps-attraction')).filter(name => /^attraction-map-\d{2}\.jpg$/.test(name)).length, 15, 'attraction maps should contain exactly 15 JPEG maps');
   assert.ok(/library-maps-attraction/.test(swJs), 'service worker should treat attraction maps as runtime library images');
+});
+
+test('Living Nature Maps use an independent paid chapter and the requested boundary order', function () {
+  assert.ok(/CHAPTER_SIX_COST:\s*1000/.test(configJs), 'Living Nature chapter should cost the canonical 10% energy');
+  assert.ok(/CHAPTER_SIX_MEMO_PREFIX:\s*'viz:\/\/vm\/library\/chapter6\/'/.test(configJs), 'Living Nature chapter needs an independent memo prefix');
+  assert.ok(/help_magic_library_living_nature_title:\s*'Карты живой природы Мира — ветка шестая'/.test(ruJs), 'Living Nature block should append the requested sixth-branch phrase');
+  assert.ok(/Звери, птицы, морские и речные обитатели здесь далеко не просто фауна - они полноценные участники магических событий\. И некоторые из них очень могущественны\.\.\./.test(ruJs), 'Living Nature block should preserve the requested description');
+  assert.ok(/help_living_nature_library_boundary:\s*'Магическая граница'/.test(ruJs), 'Living Nature block should name the boundary');
+
+  var firstSource = helpJs.match(/var HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS\s*=\s*\[([\s\S]*?)\];/);
+  var boundarySource = helpJs.match(/var HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS\s*=\s*\[([\s\S]*?)\];/);
+  assert.ok(firstSource && boundarySource, 'Living Nature maps should keep explicit separated lists');
+  assert.deepStrictEqual(Array.from(firstSource[1].matchAll(/id:\s*'(\d+)'/g), function (match) { return match[1]; }), ['02', '01'], 'the first two approved maps should be swapped');
+  assert.deepStrictEqual(Array.from(boundarySource[1].matchAll(/id:\s*'(\d+)'/g), function (match) { return match[1]; }), ['03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15'], 'maps below the Magical Boundary should follow the curated evolution order');
+  assert.ok(/data-living-nature-library-map=\"' \+ firstEntry\.id[\s\S]*help-unknown-library-divider[\s\S]*help_living_nature_library_boundary[\s\S]*HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS/.test(helpJs), 'a plain divider and Magical Boundary heading should separate the first pair from the other maps');
+  assert.ok(/HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS\.concat\(HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS\)/.test(helpJs), 'modal lookup should include both Living Nature lists');
+  assert.ok(/StateEngine\.hasLibraryAccess\(user, 'chapter6', day\)/.test(helpJs), 'Living Nature maps should use an independent daily chapter-six entitlement');
+  assert.ok(/VizMagicConfig\.LIBRARY\.CHAPTER_SIX_COST/.test(helpJs) && /libraryUnlockChapterAction\(\s*'chapter6'/.test(helpJs), 'Living Nature unlock should charge chapter six only');
+  assert.ok(/assets\/library-maps-living-nature\/living-nature-map-' \+ entry\.id \+ '\.jpg/.test(helpJs), 'Living Nature modal should load its accepted assets');
+  assert.strictEqual(fs.readdirSync(path.join(root, 'app/assets/library-maps-living-nature')).filter(name => /^living-nature-map-\d{2}\.jpg$/.test(name)).length, 15, 'Living Nature chapter should contain exactly 15 JPEG maps');
+  assert.ok(/library-maps-living-nature/.test(swJs), 'service worker should treat Living Nature maps as runtime library images');
+
+  const engineContext = loadMarketplaceStateEngine();
+  const engine = engineContext.StateEngine;
+  const day = '2026-09-07';
+  const proof = {
+    vmActions: [{ sender: 'alice', txIndex: 13, action: { type: 'library.unlock', data: { chapter: 'chapter6', day: day } } }],
+    awards: [{ initiator: 'alice', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter6/' + day, txIndex: 13 }]
+  };
+  assert.strictEqual(engine.verifyLibraryUnlockProof(proof, 'alice', 'chapter6', day), true, 'chapter six should verify its own atomic proof');
+  ['chapter2', 'chapter3', 'chapter4', 'chapter5'].forEach(function(chapter) {
+    assert.strictEqual(engine.verifyLibraryUnlockProof(proof, 'alice', chapter, day), false, 'chapter-six payment must not unlock ' + chapter);
+  });
+  assert.strictEqual(engine.verifyLibraryUnlockProof({ vmActions: proof.vmActions, awards: [] }, 'alice', 'chapter6', day), false, 'chapter six must fail closed without its award');
+  assert.strictEqual(engine.verifyLibraryUnlockProof({ vmActions: proof.vmActions, awards: [{ initiator: 'alice', receiver: 'denis-skripnik', energy: 999, memo: 'viz://vm/library/chapter6/' + day, txIndex: 13 }] }, 'alice', 'chapter6', day), false, 'chapter six must reject wrong energy');
+  const unlockEvent = engine.processLibraryUnlockResult('alice', 900, day, 'chapter6');
+  assert.strictEqual(unlockEvent && unlockEvent.type, 'library_chapter_six_unlocked', 'chapter six should emit its own replay event');
 });
 
 test('Magical Library uses the original board-game artwork with lore and Close', function () {

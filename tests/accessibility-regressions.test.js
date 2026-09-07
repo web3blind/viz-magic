@@ -118,6 +118,19 @@ test('Unknown Maps chapter and Fading Path are labelled without hiding the red w
   assert.ok(/\.help-secret-library-link[\s\S]*min-height:\s*44px/.test(mainCss), 'unknown map links should inherit 44px touch targets');
 });
 
+test('Living Nature paid chapter is labelled, keyboard-safe, and announces unlock state', function () {
+  assert.ok(/help-living-nature-library[^>]*aria-labelledby="help-living-nature-library-title"/.test(helpJs), 'Living Nature chapter should be a labelled article');
+  assert.ok(/id="help-living-nature-library-title" tabindex="-1"/.test(helpJs), 'Living Nature heading should accept focus after unlock');
+  assert.ok(/help-living-nature-library-status[\s\S]*role="status" aria-live="polite"/.test(helpJs), 'Living Nature unlock status should be announced');
+  assert.ok(/type="button" class="btn btn-primary" id="help-living-nature-library-unlock"/.test(helpJs), 'locked Living Nature chapter should use a real button');
+  assert.ok(/livingNatureBusyAttrs[\s\S]*disabled aria-disabled="true" aria-busy="true"/.test(helpJs), 'Living Nature payment button should retain busy semantics across rerenders');
+  assert.ok(/type="button" class="help-library-link help-secret-library-link help-living-nature-library-link"/.test(helpJs), 'Living Nature map entries should be keyboard-operable buttons');
+  assert.ok(/id="help-living-nature-library-boundary-title"[\s\S]*role="group" aria-labelledby="help-living-nature-library-boundary-title"/.test(helpJs), 'Magical Boundary should label the second map group for screen readers');
+  assert.ok(/_finishSecretLibraryOpen\('help_magic_library_living_nature_success', 'help-living-nature-library-title'\)/.test(helpJs), 'focus should return to the Living Nature heading after unlock');
+  assert.ok(/var zoomBtn = Helpers\.\$\('help-library-zoom-toggle'\)[\s\S]*zoomBtn\.focus\(\)/.test(helpJs), 'an opened library dialog should move keyboard focus to its Zoom button');
+  assert.ok(/@media \(max-width: 680px\)[\s\S]*modal:not\(\.help-library-fullscreen\) \.help-library-map-viewport[\s\S]*max-height:\s*42vh[\s\S]*modal:not\(\.help-library-fullscreen\) \.help-library-map-image[\s\S]*object-fit:\s*contain/.test(mainCss), 'mobile library dialog should show the complete map preview while keeping actions reachable');
+});
+
 test('core screen fallbacks avoid blank controls and fixture crashes', function () {
   assert.ok(/typeof num === 'undefined'/.test(helpersJs), 'formatNumber should tolerate missing numeric values');
   assert.ok(/ch\.coreBonus = ch\.coreBonus \|\| 0/.test(characterJs), 'character screen should default missing coreBonus');

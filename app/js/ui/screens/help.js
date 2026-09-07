@@ -9,10 +9,12 @@ var HelpScreen = (function() {
     var HELP_UNKNOWN_LIBRARY_ASSET_VERSION = '20260824a';
     var HELP_MIDDLE_LIBRARY_ASSET_VERSION = '20260828a';
     var HELP_ATTRACTION_LIBRARY_ASSET_VERSION = '20260828a';
+    var HELP_LIVING_NATURE_LIBRARY_ASSET_VERSION = '20260907a';
     var secretLibraryBusy = false;
     var unknownLibraryBusy = false;
     var middleLibraryBusy = false;
     var attractionLibraryBusy = false;
+    var livingNatureLibraryBusy = false;
     var secretLibraryExpiryTimer = null;
     var HELP_LIBRARY_MAPS = [
         { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-10' },
@@ -105,6 +107,25 @@ var HelpScreen = (function() {
         { id: '15', titleKey: 'help_attraction_map_15_title', textKey: 'help_attraction_map_15_text' },
         { id: '08', titleKey: 'help_attraction_map_08_title', textKey: 'help_attraction_map_08_text' }
     ];
+    var HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS = [
+        { id: '02', titleKey: 'help_living_nature_map_02_title', textKey: 'help_living_nature_map_02_text' },
+        { id: '01', titleKey: 'help_living_nature_map_01_title', textKey: 'help_living_nature_map_01_text' }
+    ];
+    var HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS = [
+        { id: '03', titleKey: 'help_living_nature_map_03_title', textKey: 'help_living_nature_map_03_text' },
+        { id: '04', titleKey: 'help_living_nature_map_04_title', textKey: 'help_living_nature_map_04_text' },
+        { id: '05', titleKey: 'help_living_nature_map_05_title', textKey: 'help_living_nature_map_05_text' },
+        { id: '06', titleKey: 'help_living_nature_map_06_title', textKey: 'help_living_nature_map_06_text' },
+        { id: '07', titleKey: 'help_living_nature_map_07_title', textKey: 'help_living_nature_map_07_text' },
+        { id: '08', titleKey: 'help_living_nature_map_08_title', textKey: 'help_living_nature_map_08_text' },
+        { id: '09', titleKey: 'help_living_nature_map_09_title', textKey: 'help_living_nature_map_09_text' },
+        { id: '10', titleKey: 'help_living_nature_map_10_title', textKey: 'help_living_nature_map_10_text' },
+        { id: '11', titleKey: 'help_living_nature_map_11_title', textKey: 'help_living_nature_map_11_text' },
+        { id: '12', titleKey: 'help_living_nature_map_12_title', textKey: 'help_living_nature_map_12_text' },
+        { id: '13', titleKey: 'help_living_nature_map_13_title', textKey: 'help_living_nature_map_13_text' },
+        { id: '14', titleKey: 'help_living_nature_map_14_title', textKey: 'help_living_nature_map_14_text' },
+        { id: '15', titleKey: 'help_living_nature_map_15_title', textKey: 'help_living_nature_map_15_text' }
+    ];
 
     function render() {
         var t = Helpers.t;
@@ -159,6 +180,7 @@ var HelpScreen = (function() {
         _bindUnknownLibrary(el);
         _bindMiddleLibrary(el);
         _bindAttractionLibrary(el);
+        _bindLivingNatureLibrary(el);
         _scheduleSecretLibraryExpiry();
     }
 
@@ -211,7 +233,7 @@ var HelpScreen = (function() {
                     '<h3>' + Helpers.icon('festival', 'section-icon vmagic-breathe') + ' ' + t('help_section_world_months') + '</h3>' +
                     '<p>' + t('help_world_months_text') + '</p>' +
                 '</article>' +
-            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + _renderMiddleLibrary(t) + _renderAttractionLibrary(t) + '</section>';
+            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + _renderMiddleLibrary(t) + _renderAttractionLibrary(t) + _renderLivingNatureLibrary(t) + '</section>';
     }
 
     function _renderMagicLibrary(t) {
@@ -362,6 +384,42 @@ var HelpScreen = (function() {
         return html;
     }
 
+    function _renderLivingNatureLibrary(t) {
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        var day = StateEngine.getLibraryDay();
+        var unlocked = StateEngine.hasLibraryAccess(user, 'chapter6', day);
+        var html = '<article class="help-magic-library help-secret-library help-unknown-library help-living-nature-library" aria-labelledby="help-living-nature-library-title">' +
+            '<h3 id="help-living-nature-library-title" tabindex="-1">' + Helpers.icon('leaf', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_living_nature_title') + '</h3>' +
+            '<p>' + t('help_magic_library_living_nature_intro') + '</p>' +
+            '<p class="help-library-danger">' + t('help_magic_library_living_nature_warning') + '</p>' +
+            '<p id="help-living-nature-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (livingNatureLibraryBusy ? t('help_secret_library_checking') : '') + '</p>';
+        if (!unlocked) {
+            var livingNatureBusyAttrs = livingNatureLibraryBusy ? ' disabled aria-disabled="true" aria-busy="true"' : '';
+            var buttonText = livingNatureLibraryBusy ? t('help_secret_library_checking') : t('help_magic_library_living_nature_unlock');
+            html += '<div class="help-secret-library-lock">' +
+                '<p>' + t('help_magic_library_living_nature_locked') + '</p>' +
+                '<button type="button" class="btn btn-primary" id="help-living-nature-library-unlock"' + livingNatureBusyAttrs + '>' + buttonText + '</button>' +
+                '</div>';
+        } else {
+            html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_living_nature_opened') + '</p>' +
+                '<div class="help-library-list help-secret-library-list">';
+            for (var f = 0; f < HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS.length; f++) {
+                var firstEntry = HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS[f];
+                html += '<button type="button" class="help-library-link help-secret-library-link help-living-nature-library-link" data-living-nature-library-map="' + firstEntry.id + '">' + Helpers.escapeHtml(t(firstEntry.titleKey)) + '</button>';
+            }
+            html += '<hr class="help-unknown-library-divider">' +
+                '<p id="help-living-nature-library-boundary-title" class="help-unknown-library-fading-title">' + t('help_living_nature_library_boundary') + '</p>' +
+                '<div role="group" aria-labelledby="help-living-nature-library-boundary-title">';
+            for (var i = 0; i < HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS.length; i++) {
+                var entry = HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS[i];
+                html += '<button type="button" class="help-library-link help-secret-library-link help-living-nature-library-link" data-living-nature-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
+            }
+            html += '</div></div>';
+        }
+        html += '</article>';
+        return html;
+    }
+
     function _bindSecretLibrary(el) {
         var unlock = Helpers.$('help-secret-library-unlock');
         if (unlock) unlock.addEventListener('click', _unlockSecretLibrary);
@@ -420,6 +478,110 @@ var HelpScreen = (function() {
                 }
             });
         }
+    }
+
+    function _bindLivingNatureLibrary(el) {
+        var unlock = Helpers.$('help-living-nature-library-unlock');
+        if (unlock) unlock.addEventListener('click', _unlockLivingNatureLibrary);
+        var links = el.querySelectorAll('.help-living-nature-library-link');
+        for (var i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function() {
+                var entry = _findLivingNatureLibraryEntry(this.getAttribute('data-living-nature-library-map'));
+                if (entry) {
+                    if (typeof SoundManager !== 'undefined') SoundManager.play('tap');
+                    _openLivingNatureLibraryMap(entry);
+                }
+            });
+        }
+    }
+
+    function _setLivingNatureLibraryStatus(message) {
+        var status = Helpers.$('help-living-nature-library-status');
+        if (status) status.textContent = message || '';
+    }
+
+    function _resetLivingNatureLibraryAction(button) {
+        livingNatureLibraryBusy = false;
+        _setLivingNatureLibraryStatus('');
+        if (button) {
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+            button.removeAttribute('aria-disabled');
+            button.textContent = button.getAttribute('data-idle-label') || Helpers.t('help_magic_library_living_nature_unlock');
+        }
+    }
+
+    function _unlockLivingNatureLibrary() {
+        if (livingNatureLibraryBusy) return;
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        if (!user) {
+            ModalComponent.hide();
+            Toast.error(Helpers.t('error_no_account'));
+            return;
+        }
+        var button = Helpers.$('help-living-nature-library-unlock');
+        var day = StateEngine.getLibraryDay();
+        livingNatureLibraryBusy = true;
+        _setLivingNatureLibraryStatus(Helpers.t('help_secret_library_checking'));
+        if (button) {
+            button.setAttribute('data-idle-label', button.textContent);
+            button.disabled = true;
+            button.setAttribute('aria-disabled', 'true');
+            button.setAttribute('aria-busy', 'true');
+            button.textContent = Helpers.t('help_secret_library_checking');
+        }
+        _preflightSecretLibraryEntitlement(user, day, function(historyErr, alreadyUnlocked) {
+            if (historyErr) {
+                _resetLivingNatureLibraryAction(button);
+                Toast.error(Helpers.t('help_secret_library_history_check_failed'));
+                return;
+            }
+            if (alreadyUnlocked) {
+                livingNatureLibraryBusy = false;
+                _finishSecretLibraryOpen('help_magic_library_living_nature_already_open', 'help-living-nature-library-title');
+                return;
+            }
+            VizAccount.getAccount(user, function(energyErr, accountData) {
+                if (energyErr || !accountData) {
+                    _resetLivingNatureLibraryAction(button);
+                    Toast.error(Helpers.t('help_magic_library_living_nature_energy_failed'));
+                    return;
+                }
+                var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
+                if (currentEnergy < VizMagicConfig.LIBRARY.CHAPTER_SIX_COST) {
+                    _resetLivingNatureLibraryAction(button);
+                    Toast.error(Helpers.t('help_magic_library_living_nature_not_enough'));
+                    return;
+                }
+                if (StateEngine.getLibraryDay() !== day) {
+                    _resetLivingNatureLibraryAction(button);
+                    _unlockLivingNatureLibrary();
+                    return;
+                }
+                VizBroadcast.libraryUnlockChapterAction(
+                    'chapter6',
+                    VizMagicConfig.LIBRARY.CHAPTER_SIX_COST,
+                    day,
+                    function(err, result) {
+                        if (err) {
+                            _resetLivingNatureLibraryAction(button);
+                            Toast.error(Helpers.t('help_magic_library_living_nature_failed'));
+                            return;
+                        }
+                        if (button) button.textContent = Helpers.t('help_secret_library_waiting_confirmation');
+                        _setLivingNatureLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
+                        _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
+                            if (proofErr) {
+                                Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                                return;
+                            }
+                            livingNatureLibraryBusy = false;
+                            _finishSecretLibraryOpen('help_magic_library_living_nature_success', 'help-living-nature-library-title');
+                        }, 'chapter6');
+                    }
+                );
+            });
+        }, 'chapter6');
     }
 
     function _setMiddleLibraryStatus(message) {
@@ -594,6 +756,14 @@ var HelpScreen = (function() {
                 );
             });
         }, 'chapter4');
+    }
+
+    function _findLivingNatureLibraryEntry(id) {
+        var allMaps = HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS.concat(HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS);
+        for (var i = 0; i < allMaps.length; i++) {
+            if (allMaps[i].id === id) return allMaps[i];
+        }
+        return null;
     }
 
     function _findAttractionLibraryEntry(id) {
@@ -959,6 +1129,7 @@ var HelpScreen = (function() {
         var modal = Helpers.$('modal-container');
         var viewport = Helpers.$('help-library-map-viewport');
         var zoomBtn = Helpers.$('help-library-zoom-toggle');
+        if (zoomBtn) zoomBtn.focus();
         if (zoomBtn && viewport && modal) {
             zoomBtn.addEventListener('click', function() {
                 modal.classList.add('help-library-fullscreen');
@@ -997,20 +1168,27 @@ var HelpScreen = (function() {
         _openPaidLibraryMap(entry, 'chapter5');
     }
 
+    function _openLivingNatureLibraryMap(entry) {
+        _openPaidLibraryMap(entry, 'chapter6');
+    }
+
     function _openPaidLibraryMap(entry, chapter) {
         var titleText = Helpers.t(entry.titleKey);
         var title = Helpers.escapeHtml(titleText);
         var description = Helpers.t(entry.textKey);
-        var imagePath = chapter === 'chapter5'
-            ? 'assets/library-maps-attraction/attraction-map-' + entry.id + '.jpg?v=' + HELP_ATTRACTION_LIBRARY_ASSET_VERSION
-            : chapter === 'chapter4'
-                ? 'assets/library-maps-middle/middle-map-' + entry.id + '.jpg?v=' + HELP_MIDDLE_LIBRARY_ASSET_VERSION
-                : chapter === 'chapter3'
-                ? 'assets/library-maps-chapter3/unknown-map-' + entry.id + '.jpg?v=' + HELP_UNKNOWN_LIBRARY_ASSET_VERSION
-                : 'assets/library-maps-chapter2/secret-map-' + entry.id + '.jpg?v=' + HELP_SECRET_LIBRARY_ASSET_VERSION;
+        var imagePath = chapter === 'chapter6'
+            ? 'assets/library-maps-living-nature/living-nature-map-' + entry.id + '.jpg?v=' + HELP_LIVING_NATURE_LIBRARY_ASSET_VERSION
+            : chapter === 'chapter5'
+                ? 'assets/library-maps-attraction/attraction-map-' + entry.id + '.jpg?v=' + HELP_ATTRACTION_LIBRARY_ASSET_VERSION
+                : chapter === 'chapter4'
+                    ? 'assets/library-maps-middle/middle-map-' + entry.id + '.jpg?v=' + HELP_MIDDLE_LIBRARY_ASSET_VERSION
+                    : chapter === 'chapter3'
+                        ? 'assets/library-maps-chapter3/unknown-map-' + entry.id + '.jpg?v=' + HELP_UNKNOWN_LIBRARY_ASSET_VERSION
+                        : 'assets/library-maps-chapter2/secret-map-' + entry.id + '.jpg?v=' + HELP_SECRET_LIBRARY_ASSET_VERSION;
         var cardClass = chapter === 'chapter3' ? ' help-unknown-library-map-card' :
             chapter === 'chapter4' ? ' help-middle-library-map-card' :
-                chapter === 'chapter5' ? ' help-attraction-library-map-card' : '';
+                chapter === 'chapter5' ? ' help-attraction-library-map-card' :
+                    chapter === 'chapter6' ? ' help-living-nature-library-map-card' : '';
         var html = '<div class="help-library-map-card help-secret-library-map-card' + cardClass + '">';
         html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
         html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';
@@ -1023,6 +1201,7 @@ var HelpScreen = (function() {
         var modal = Helpers.$('modal-container');
         var viewport = Helpers.$('help-library-map-viewport');
         var zoomBtn = Helpers.$('help-library-zoom-toggle');
+        if (zoomBtn) zoomBtn.focus();
         if (zoomBtn && viewport && modal) {
             zoomBtn.addEventListener('click', function() {
                 modal.classList.add('help-library-fullscreen');
