@@ -131,6 +131,18 @@ test('Living Nature paid chapter is labelled, keyboard-safe, and announces unloc
   assert.ok(/@media \(max-width: 680px\)[\s\S]*modal:not\(\.help-library-fullscreen\) \.help-library-map-viewport[\s\S]*max-height:\s*42vh[\s\S]*modal:not\(\.help-library-fullscreen\) \.help-library-map-image[\s\S]*object-fit:\s*contain/.test(mainCss), 'mobile library dialog should show the complete map preview while keeping actions reachable');
 });
 
+test('Living Elements paid chapter is numbered, labelled, keyboard-safe, and announces unlock state', function () {
+  assert.ok(/help-living-elements-library[^>]*aria-labelledby="help-living-elements-library-title"/.test(helpJs), 'Living Elements chapter should be a labelled article');
+  assert.ok(/id="help-living-elements-library-title" tabindex="-1"/.test(helpJs), 'Living Elements heading should accept focus after unlock');
+  assert.ok(/help-living-elements-library-status[\s\S]*role="status" aria-live="polite"/.test(helpJs), 'Living Elements unlock status should be announced');
+  assert.ok(/type="button" class="btn btn-primary" id="help-living-elements-library-unlock"/.test(helpJs), 'locked Living Elements chapter should use a real button');
+  assert.ok(/livingElementsBusyAttrs[\s\S]*disabled aria-disabled="true" aria-busy="true"/.test(helpJs), 'Living Elements payment button should retain busy semantics across rerenders');
+  assert.ok(/type="button" class="help-library-link help-secret-library-link help-living-elements-library-link"/.test(helpJs), 'Living Elements map entries should be keyboard-operable buttons');
+  assert.ok(/id="help-living-elements-library-awakening-title"[\s\S]*role="group" aria-labelledby="help-living-elements-library-awakening-title"/.test(helpJs), 'Awakening should label the second map group for screen readers');
+  assert.ok(/_finishSecretLibraryOpen\('help_magic_library_living_elements_success', 'help-living-elements-library-title'\)/.test(helpJs), 'focus should return to the Living Elements heading after unlock');
+  assert.ok(/Helpers\.escapeHtml\(entry\.number \+ '\. ' \+ t\(entry\.titleKey\)\)/.test(helpJs), 'visible map numbering and title should be included in each button accessible name');
+});
+
 test('core screen fallbacks avoid blank controls and fixture crashes', function () {
   assert.ok(/typeof num === 'undefined'/.test(helpersJs), 'formatNumber should tolerate missing numeric values');
   assert.ok(/ch\.coreBonus = ch\.coreBonus \|\| 0/.test(characterJs), 'character screen should default missing coreBonus');

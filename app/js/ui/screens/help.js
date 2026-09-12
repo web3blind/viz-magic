@@ -10,11 +10,13 @@ var HelpScreen = (function() {
     var HELP_MIDDLE_LIBRARY_ASSET_VERSION = '20260828a';
     var HELP_ATTRACTION_LIBRARY_ASSET_VERSION = '20260828a';
     var HELP_LIVING_NATURE_LIBRARY_ASSET_VERSION = '20260907a';
+    var HELP_LIVING_ELEMENTS_LIBRARY_ASSET_VERSION = '20260911a';
     var secretLibraryBusy = false;
     var unknownLibraryBusy = false;
     var middleLibraryBusy = false;
     var attractionLibraryBusy = false;
     var livingNatureLibraryBusy = false;
+    var livingElementsLibraryBusy = false;
     var secretLibraryExpiryTimer = null;
     var HELP_LIBRARY_MAPS = [
         { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-10' },
@@ -126,6 +128,25 @@ var HelpScreen = (function() {
         { id: '14', titleKey: 'help_living_nature_map_14_title', textKey: 'help_living_nature_map_14_text' },
         { id: '15', titleKey: 'help_living_nature_map_15_title', textKey: 'help_living_nature_map_15_text' }
     ];
+    var HELP_LIVING_ELEMENTS_LIBRARY_FIRST_MAPS = [
+        { id: '01', number: 1, titleKey: 'help_living_elements_map_01_title', textKey: 'help_living_elements_map_01_text' },
+        { id: '02', number: 2, titleKey: 'help_living_elements_map_02_title', textKey: 'help_living_elements_map_02_text' },
+        { id: '03', number: 3, titleKey: 'help_living_elements_map_03_title', textKey: 'help_living_elements_map_03_text' }
+    ];
+    var HELP_LIVING_ELEMENTS_LIBRARY_AWAKENING_MAPS = [
+        { id: '04', number: 4, titleKey: 'help_living_elements_map_04_title', textKey: 'help_living_elements_map_04_text' },
+        { id: '05', number: 5, titleKey: 'help_living_elements_map_05_title', textKey: 'help_living_elements_map_05_text' },
+        { id: '06', number: 6, titleKey: 'help_living_elements_map_06_title', textKey: 'help_living_elements_map_06_text' },
+        { id: '07', number: 7, titleKey: 'help_living_elements_map_07_title', textKey: 'help_living_elements_map_07_text' },
+        { id: '08', number: 8, titleKey: 'help_living_elements_map_08_title', textKey: 'help_living_elements_map_08_text' },
+        { id: '09', number: 9, titleKey: 'help_living_elements_map_09_title', textKey: 'help_living_elements_map_09_text' },
+        { id: '10', number: 10, titleKey: 'help_living_elements_map_10_title', textKey: 'help_living_elements_map_10_text' },
+        { id: '11', number: 11, titleKey: 'help_living_elements_map_11_title', textKey: 'help_living_elements_map_11_text' },
+        { id: '12', number: 12, titleKey: 'help_living_elements_map_12_title', textKey: 'help_living_elements_map_12_text' },
+        { id: '13', number: 13, titleKey: 'help_living_elements_map_13_title', textKey: 'help_living_elements_map_13_text' },
+        { id: '14', number: 14, titleKey: 'help_living_elements_map_14_title', textKey: 'help_living_elements_map_14_text' },
+        { id: '15', number: 15, titleKey: 'help_living_elements_map_15_title', textKey: 'help_living_elements_map_15_text' }
+    ];
 
     function render() {
         var t = Helpers.t;
@@ -181,6 +202,7 @@ var HelpScreen = (function() {
         _bindMiddleLibrary(el);
         _bindAttractionLibrary(el);
         _bindLivingNatureLibrary(el);
+        _bindLivingElementsLibrary(el);
         _scheduleSecretLibraryExpiry();
     }
 
@@ -233,7 +255,7 @@ var HelpScreen = (function() {
                     '<h3>' + Helpers.icon('festival', 'section-icon vmagic-breathe') + ' ' + t('help_section_world_months') + '</h3>' +
                     '<p>' + t('help_world_months_text') + '</p>' +
                 '</article>' +
-            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + _renderMiddleLibrary(t) + _renderAttractionLibrary(t) + _renderLivingNatureLibrary(t) + '</section>';
+            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + _renderMiddleLibrary(t) + _renderAttractionLibrary(t) + _renderLivingNatureLibrary(t) + _renderLivingElementsLibrary(t) + '</section>';
     }
 
     function _renderMagicLibrary(t) {
@@ -420,6 +442,43 @@ var HelpScreen = (function() {
         return html;
     }
 
+    function _renderLivingElementsLibrary(t) {
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        var day = StateEngine.getLibraryDay();
+        var unlocked = StateEngine.hasLibraryAccess(user, 'chapter7', day);
+        var html = '<article class="help-magic-library help-secret-library help-unknown-library help-living-elements-library" aria-labelledby="help-living-elements-library-title">' +
+            '<h3 id="help-living-elements-library-title" tabindex="-1">' + Helpers.icon('weather', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_living_elements_title') + '</h3>' +
+            '<p>' + t('help_magic_library_living_elements_intro') + '</p>' +
+            '<p class="help-library-danger">' + t('help_magic_library_living_elements_warning') + '</p>' +
+            '<p id="help-living-elements-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (livingElementsLibraryBusy ? t('help_secret_library_checking') : '') + '</p>';
+        if (!unlocked) {
+            var livingElementsBusyAttrs = livingElementsLibraryBusy ? ' disabled aria-disabled="true" aria-busy="true"' : '';
+            var buttonText = livingElementsLibraryBusy ? t('help_secret_library_checking') : t('help_magic_library_living_elements_unlock');
+            html += '<div class="help-secret-library-lock">' +
+                '<p>' + t('help_magic_library_living_elements_locked') + '</p>' +
+                '<button type="button" class="btn btn-primary" id="help-living-elements-library-unlock"' + livingElementsBusyAttrs + '>' + buttonText + '</button>' +
+                '</div>';
+        } else {
+            html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_living_elements_opened') + '</p>' +
+                '<div class="help-library-list help-secret-library-list">' +
+                '<div role="group" aria-label="' + Helpers.escapeHtml(t('help_living_elements_library_first_group')) + '">';
+            for (var f = 0; f < HELP_LIVING_ELEMENTS_LIBRARY_FIRST_MAPS.length; f++) {
+                var firstEntry = HELP_LIVING_ELEMENTS_LIBRARY_FIRST_MAPS[f];
+                html += '<button type="button" class="help-library-link help-secret-library-link help-living-elements-library-link" data-living-elements-library-map="' + firstEntry.id + '">' + Helpers.escapeHtml(firstEntry.number + '. ' + t(firstEntry.titleKey)) + '</button>';
+            }
+            html += '</div><hr class="help-unknown-library-divider">' +
+                '<p id="help-living-elements-library-awakening-title" class="help-unknown-library-fading-title">' + t('help_living_elements_library_awakening') + '</p>' +
+                '<div role="group" aria-labelledby="help-living-elements-library-awakening-title">';
+            for (var i = 0; i < HELP_LIVING_ELEMENTS_LIBRARY_AWAKENING_MAPS.length; i++) {
+                var entry = HELP_LIVING_ELEMENTS_LIBRARY_AWAKENING_MAPS[i];
+                html += '<button type="button" class="help-library-link help-secret-library-link help-living-elements-library-link" data-living-elements-library-map="' + entry.id + '">' + Helpers.escapeHtml(entry.number + '. ' + t(entry.titleKey)) + '</button>';
+            }
+            html += '</div></div>';
+        }
+        html += '</article>';
+        return html;
+    }
+
     function _bindSecretLibrary(el) {
         var unlock = Helpers.$('help-secret-library-unlock');
         if (unlock) unlock.addEventListener('click', _unlockSecretLibrary);
@@ -490,6 +549,21 @@ var HelpScreen = (function() {
                 if (entry) {
                     if (typeof SoundManager !== 'undefined') SoundManager.play('tap');
                     _openLivingNatureLibraryMap(entry);
+                }
+            });
+        }
+    }
+
+    function _bindLivingElementsLibrary(el) {
+        var unlock = Helpers.$('help-living-elements-library-unlock');
+        if (unlock) unlock.addEventListener('click', _unlockLivingElementsLibrary);
+        var links = el.querySelectorAll('.help-living-elements-library-link');
+        for (var i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function() {
+                var entry = _findLivingElementsLibraryEntry(this.getAttribute('data-living-elements-library-map'));
+                if (entry) {
+                    if (typeof SoundManager !== 'undefined') SoundManager.play('tap');
+                    _openLivingElementsLibraryMap(entry);
                 }
             });
         }
@@ -572,7 +646,10 @@ var HelpScreen = (function() {
                         _setLivingNatureLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
                         _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
+                                _resetLivingNatureLibraryAction(button);
+                                _setLivingNatureLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                                if (button) button.focus();
                                 return;
                             }
                             livingNatureLibraryBusy = false;
@@ -582,6 +659,98 @@ var HelpScreen = (function() {
                 );
             });
         }, 'chapter6');
+    }
+
+    function _setLivingElementsLibraryStatus(message) {
+        var status = Helpers.$('help-living-elements-library-status');
+        if (status) status.textContent = message || '';
+    }
+
+    function _resetLivingElementsLibraryAction(button) {
+        livingElementsLibraryBusy = false;
+        _setLivingElementsLibraryStatus('');
+        if (button) {
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+            button.removeAttribute('aria-disabled');
+            button.textContent = button.getAttribute('data-idle-label') || Helpers.t('help_magic_library_living_elements_unlock');
+        }
+    }
+
+    function _unlockLivingElementsLibrary() {
+        if (livingElementsLibraryBusy) return;
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        if (!user) {
+            ModalComponent.hide();
+            Toast.error(Helpers.t('error_no_account'));
+            return;
+        }
+        var button = Helpers.$('help-living-elements-library-unlock');
+        var day = StateEngine.getLibraryDay();
+        livingElementsLibraryBusy = true;
+        _setLivingElementsLibraryStatus(Helpers.t('help_secret_library_checking'));
+        if (button) {
+            button.setAttribute('data-idle-label', button.textContent);
+            button.disabled = true;
+            button.setAttribute('aria-disabled', 'true');
+            button.setAttribute('aria-busy', 'true');
+            button.textContent = Helpers.t('help_secret_library_checking');
+        }
+        _preflightSecretLibraryEntitlement(user, day, function(historyErr, alreadyUnlocked) {
+            if (historyErr) {
+                _resetLivingElementsLibraryAction(button);
+                Toast.error(Helpers.t('help_secret_library_history_check_failed'));
+                return;
+            }
+            if (alreadyUnlocked) {
+                livingElementsLibraryBusy = false;
+                _finishSecretLibraryOpen('help_magic_library_living_elements_already_open', 'help-living-elements-library-title');
+                return;
+            }
+            VizAccount.getAccount(user, function(energyErr, accountData) {
+                if (energyErr || !accountData) {
+                    _resetLivingElementsLibraryAction(button);
+                    Toast.error(Helpers.t('help_magic_library_living_elements_energy_failed'));
+                    return;
+                }
+                var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
+                if (currentEnergy < VizMagicConfig.LIBRARY.CHAPTER_SEVEN_COST) {
+                    _resetLivingElementsLibraryAction(button);
+                    Toast.error(Helpers.t('help_magic_library_living_elements_not_enough'));
+                    return;
+                }
+                if (StateEngine.getLibraryDay() !== day) {
+                    _resetLivingElementsLibraryAction(button);
+                    _unlockLivingElementsLibrary();
+                    return;
+                }
+                VizBroadcast.libraryUnlockChapterAction(
+                    'chapter7',
+                    VizMagicConfig.LIBRARY.CHAPTER_SEVEN_COST,
+                    day,
+                    function(err, result) {
+                        if (err) {
+                            _resetLivingElementsLibraryAction(button);
+                            Toast.error(Helpers.t('help_magic_library_living_elements_failed'));
+                            return;
+                        }
+                        if (button) button.textContent = Helpers.t('help_secret_library_waiting_confirmation');
+                        _setLivingElementsLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
+                        _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
+                            if (proofErr) {
+                                _resetLivingElementsLibraryAction(button);
+                                _setLivingElementsLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
+                                Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                                if (button) button.focus();
+                                return;
+                            }
+                            livingElementsLibraryBusy = false;
+                            _finishSecretLibraryOpen('help_magic_library_living_elements_success', 'help-living-elements-library-title');
+                        }, 'chapter7');
+                    }
+                );
+            });
+        }, 'chapter7');
     }
 
     function _setMiddleLibraryStatus(message) {
@@ -675,7 +844,10 @@ var HelpScreen = (function() {
                         _setAttractionLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
                         _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
+                                _resetAttractionLibraryAction(button);
+                                _setAttractionLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                                if (button) button.focus();
                                 return;
                             }
                             attractionLibraryBusy = false;
@@ -746,7 +918,10 @@ var HelpScreen = (function() {
                         _setMiddleLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
                         _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
+                                _resetMiddleLibraryAction(button);
+                                _setMiddleLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                                if (button) button.focus();
                                 return;
                             }
                             middleLibraryBusy = false;
@@ -756,6 +931,14 @@ var HelpScreen = (function() {
                 );
             });
         }, 'chapter4');
+    }
+
+    function _findLivingElementsLibraryEntry(id) {
+        var allMaps = HELP_LIVING_ELEMENTS_LIBRARY_FIRST_MAPS.concat(HELP_LIVING_ELEMENTS_LIBRARY_AWAKENING_MAPS);
+        for (var i = 0; i < allMaps.length; i++) {
+            if (allMaps[i].id === id) return allMaps[i];
+        }
+        return null;
     }
 
     function _findLivingNatureLibraryEntry(id) {
@@ -916,7 +1099,10 @@ var HelpScreen = (function() {
             return;
         }
         function retry() {
-            if (attempt >= 40) {
+            // A synchronous broadcast normally exposes its block within a few
+            // VIZ blocks. Do not keep the payment control hostage while an
+            // archive mirror is still waiting for block irreversibility.
+            if (attempt >= 12) {
                 callback(new Error('library_confirmation_pending'));
                 return;
             }
@@ -1010,7 +1196,10 @@ var HelpScreen = (function() {
                         _setSecretLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
                         _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
+                                _resetSecretLibraryAction(confirm);
+                                _setSecretLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                                if (confirm) confirm.focus();
                                 return;
                             }
                             secretLibraryBusy = false;
@@ -1095,7 +1284,10 @@ var HelpScreen = (function() {
                         _setUnknownLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
                         _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
+                                _resetUnknownLibraryAction(button);
+                                _setUnknownLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                                if (button) button.focus();
                                 return;
                             }
                             unknownLibraryBusy = false;
@@ -1172,13 +1364,19 @@ var HelpScreen = (function() {
         _openPaidLibraryMap(entry, 'chapter6');
     }
 
+    function _openLivingElementsLibraryMap(entry) {
+        _openPaidLibraryMap(entry, 'chapter7');
+    }
+
     function _openPaidLibraryMap(entry, chapter) {
-        var titleText = Helpers.t(entry.titleKey);
+        var titleText = (chapter === 'chapter7' ? entry.number + '. ' : '') + Helpers.t(entry.titleKey);
         var title = Helpers.escapeHtml(titleText);
         var description = Helpers.t(entry.textKey);
-        var imagePath = chapter === 'chapter6'
-            ? 'assets/library-maps-living-nature/living-nature-map-' + entry.id + '.jpg?v=' + HELP_LIVING_NATURE_LIBRARY_ASSET_VERSION
-            : chapter === 'chapter5'
+        var imagePath = chapter === 'chapter7'
+            ? 'assets/library-maps-living-elements/living-elements-map-' + entry.id + '.jpg?v=' + HELP_LIVING_ELEMENTS_LIBRARY_ASSET_VERSION
+            : chapter === 'chapter6'
+                ? 'assets/library-maps-living-nature/living-nature-map-' + entry.id + '.jpg?v=' + HELP_LIVING_NATURE_LIBRARY_ASSET_VERSION
+                : chapter === 'chapter5'
                 ? 'assets/library-maps-attraction/attraction-map-' + entry.id + '.jpg?v=' + HELP_ATTRACTION_LIBRARY_ASSET_VERSION
                 : chapter === 'chapter4'
                     ? 'assets/library-maps-middle/middle-map-' + entry.id + '.jpg?v=' + HELP_MIDDLE_LIBRARY_ASSET_VERSION
@@ -1188,11 +1386,13 @@ var HelpScreen = (function() {
         var cardClass = chapter === 'chapter3' ? ' help-unknown-library-map-card' :
             chapter === 'chapter4' ? ' help-middle-library-map-card' :
                 chapter === 'chapter5' ? ' help-attraction-library-map-card' :
-                    chapter === 'chapter6' ? ' help-living-nature-library-map-card' : '';
+                    chapter === 'chapter6' ? ' help-living-nature-library-map-card' :
+                        chapter === 'chapter7' ? ' help-living-elements-library-map-card' : '';
         var html = '<div class="help-library-map-card help-secret-library-map-card' + cardClass + '">';
         html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
         html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';
-        html += '<img class="lore-map-image help-library-map-image" id="help-library-map-image" src="' + imagePath + '" alt="' + Helpers.escapeHtml(Helpers.t('help_magic_library_image_alt', { name: titleText })) + '" loading="lazy">';
+        var imageAlt = chapter === 'chapter7' ? description : Helpers.t('help_magic_library_image_alt', { name: titleText });
+        html += '<img class="lore-map-image help-library-map-image" id="help-library-map-image" src="' + imagePath + '" alt="' + Helpers.escapeHtml(imageAlt) + '" loading="lazy">';
         html += '</div>';
         html += '<p class="lore-map-text help-library-map-text">' + description + '</p>';
         html += '<div class="modal-actions lore-map-actions help-library-map-actions"><button type="button" class="btn btn-secondary" id="help-library-zoom-toggle">' + Helpers.t('map_zoom_toggle') + '</button><button type="button" class="btn btn-primary" id="help-library-close">' + Helpers.t('close') + '</button></div>';

@@ -2367,6 +2367,9 @@ test('Living Nature Maps use an independent paid chapter and the requested bound
   assert.ok(/HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS\.concat\(HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS\)/.test(helpJs), 'modal lookup should include both Living Nature lists');
   assert.ok(/StateEngine\.hasLibraryAccess\(user, 'chapter6', day\)/.test(helpJs), 'Living Nature maps should use an independent daily chapter-six entitlement');
   assert.ok(/VizMagicConfig\.LIBRARY\.CHAPTER_SIX_COST/.test(helpJs) && /libraryUnlockChapterAction\(\s*'chapter6'/.test(helpJs), 'Living Nature unlock should charge chapter six only');
+  assert.ok(/_waitForSecretLibraryProof\(user, day, result, 0, function\(proofErr\) \{[\s\S]{0,180}if \(proofErr\) \{[\s\S]{0,180}_resetLivingNatureLibraryAction\(button\)/.test(helpJs), 'Living Nature confirmation timeout must restore the payment button instead of leaving it busy forever');
+  assert.ok(/_setLivingNatureLibraryStatus\(Helpers\.t\('help_secret_library_confirmation_pending'\)\);[\s\S]{0,180}if \(button\) button\.focus\(\)/.test(helpJs), 'Living Nature confirmation timeout should leave an announced status and restore keyboard focus');
+  assert.ok(/if \(attempt >= 12\)/.test(helpJs), 'paid-library confirmation should stop blocking the interface after about 18 seconds');
   assert.ok(/assets\/library-maps-living-nature\/living-nature-map-' \+ entry\.id \+ '\.jpg/.test(helpJs), 'Living Nature modal should load its accepted assets');
   assert.strictEqual(fs.readdirSync(path.join(root, 'app/assets/library-maps-living-nature')).filter(name => /^living-nature-map-\d{2}\.jpg$/.test(name)).length, 15, 'Living Nature chapter should contain exactly 15 JPEG maps');
   assert.ok(/library-maps-living-nature/.test(swJs), 'service worker should treat Living Nature maps as runtime library images');
@@ -2386,6 +2389,60 @@ test('Living Nature Maps use an independent paid chapter and the requested bound
   assert.strictEqual(engine.verifyLibraryUnlockProof({ vmActions: proof.vmActions, awards: [{ initiator: 'alice', receiver: 'denis-skripnik', energy: 999, memo: 'viz://vm/library/chapter6/' + day, txIndex: 13 }] }, 'alice', 'chapter6', day), false, 'chapter six must reject wrong energy');
   const unlockEvent = engine.processLibraryUnlockResult('alice', 900, day, 'chapter6');
   assert.strictEqual(unlockEvent && unlockEvent.type, 'library_chapter_six_unlocked', 'chapter six should emit its own replay event');
+});
+
+test('Living Elements Maps use numbered links, Awakening, and an independent paid chapter', function () {
+  assert.ok(/CHAPTER_SEVEN_COST:\s*1000/.test(configJs), 'Living Elements chapter should cost the canonical 10% energy');
+  assert.ok(/CHAPTER_SEVEN_MEMO_PREFIX:\s*'viz:\/\/vm\/library\/chapter7\/'/.test(configJs), 'Living Elements chapter needs an independent memo prefix');
+  assert.ok(/help_magic_library_living_elements_title:\s*'Карты живых Стихий Мира'/.test(ruJs), 'Living Elements block should use the approved Russian title');
+  assert.ok(/help_living_elements_library_awakening:\s*'Пробуждение'/.test(ruJs), 'the lower Living Elements group should be named Awakening');
+
+  var firstSource = helpJs.match(/var HELP_LIVING_ELEMENTS_LIBRARY_FIRST_MAPS\s*=\s*\[([\s\S]*?)\];/);
+  var awakeningSource = helpJs.match(/var HELP_LIVING_ELEMENTS_LIBRARY_AWAKENING_MAPS\s*=\s*\[([\s\S]*?)\];/);
+  assert.ok(firstSource && awakeningSource, 'Living Elements maps should keep explicit first and Awakening lists');
+  assert.deepStrictEqual(Array.from(firstSource[1].matchAll(/id:\s*'(\d+)'/g), function (match) { return match[1]; }), ['01', '02', '03'], 'the first three approved maps should stay above the divider');
+  assert.deepStrictEqual(Array.from(awakeningSource[1].matchAll(/id:\s*'(\d+)'/g), function (match) { return match[1]; }), ['04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15'], 'Awakening should preserve the approved order from map four onward');
+  assert.ok(/entry\.number \+ '\. ' \+ t\(entry\.titleKey\)/.test(helpJs), 'every Living Elements link should begin with its visible list number and preserve its title');
+  assert.ok(/data-living-elements-library-map=\"' \+ firstEntry\.id[\s\S]*help-unknown-library-divider[\s\S]*help_living_elements_library_awakening[\s\S]*HELP_LIVING_ELEMENTS_LIBRARY_AWAKENING_MAPS/.test(helpJs), 'a plain divider and Awakening heading should separate the first three maps from the rest');
+  assert.ok(/HELP_LIVING_ELEMENTS_LIBRARY_FIRST_MAPS\.concat\(HELP_LIVING_ELEMENTS_LIBRARY_AWAKENING_MAPS\)/.test(helpJs), 'modal lookup should include both Living Elements lists');
+  assert.ok(/StateEngine\.hasLibraryAccess\(user, 'chapter7', day\)/.test(helpJs), 'Living Elements maps should use an independent daily chapter-seven entitlement');
+  assert.ok(/VizMagicConfig\.LIBRARY\.CHAPTER_SEVEN_COST/.test(helpJs) && /libraryUnlockChapterAction\(\s*'chapter7'/.test(helpJs), 'Living Elements unlock should charge chapter seven only');
+  assert.ok(/assets\/library-maps-living-elements\/living-elements-map-' \+ entry\.id \+ '\.jpg/.test(helpJs), 'Living Elements modal should load the approved numbered assets');
+  assert.strictEqual(fs.readdirSync(path.join(root, 'app/assets/library-maps-living-elements')).filter(name => /^living-elements-map-\d{2}\.jpg$/.test(name)).length, 15, 'Living Elements chapter should contain exactly 15 JPEG maps');
+  assert.ok(/library-maps-living-elements/.test(swJs), 'service worker should treat Living Elements maps as runtime library images');
+
+  const engineContext = loadMarketplaceStateEngine();
+  const engine = engineContext.StateEngine;
+  const day = '2026-09-11';
+  const proof = {
+    vmActions: [{ sender: 'alice', txIndex: 17, action: { type: 'library.unlock', data: { chapter: 'chapter7', day: day } } }],
+    awards: [{ initiator: 'alice', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter7/' + day, txIndex: 17 }]
+  };
+  assert.strictEqual(engine.verifyLibraryUnlockProof(proof, 'alice', 'chapter7', day), true, 'chapter seven should verify its own atomic proof');
+  ['chapter2', 'chapter3', 'chapter4', 'chapter5', 'chapter6'].forEach(function(chapter) {
+    assert.strictEqual(engine.verifyLibraryUnlockProof(proof, 'alice', chapter, day), false, 'chapter-seven payment must not unlock ' + chapter);
+  });
+  assert.strictEqual(engine.verifyLibraryUnlockProof({ vmActions: proof.vmActions, awards: [] }, 'alice', 'chapter7', day), false, 'chapter seven must fail closed without its award');
+  assert.strictEqual(engine.verifyLibraryUnlockProof({ vmActions: [], awards: proof.awards }, 'alice', 'chapter7', day), false, 'chapter seven must fail closed without its custom action');
+  assert.strictEqual(engine.verifyLibraryUnlockProof({ vmActions: proof.vmActions, awards: [{ initiator: 'alice', receiver: 'denis-skripnik', energy: 999, memo: 'viz://vm/library/chapter7/' + day, txIndex: 17 }] }, 'alice', 'chapter7', day), false, 'chapter seven must reject wrong energy');
+  assert.strictEqual(engine.verifyLibraryUnlockProof({ vmActions: proof.vmActions, awards: [{ initiator: 'alice', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter7/2026-09-10', txIndex: 17 }] }, 'alice', 'chapter7', day), false, 'chapter seven must reject a mismatched memo day');
+  assert.strictEqual(engine.verifyLibraryUnlockProof(proof, 'alice', 'chapter7', '2026-09-10'), false, 'chapter seven must reject a mismatched requested day');
+  const unlockEvent = engine.processLibraryUnlockResult('alice', 901, day, 'chapter7');
+  assert.strictEqual(unlockEvent && unlockEvent.type, 'library_chapter_seven_unlocked', 'chapter seven should emit its own replay event');
+});
+
+test('all paid library confirmation timeouts release their controls accessibly', function () {
+  [
+    ['Secret', '_resetSecretLibraryAction\\(confirm\\)', '_setSecretLibraryStatus', 'confirm'],
+    ['Unknown', '_resetUnknownLibraryAction\\(button\\)', '_setUnknownLibraryStatus', 'button'],
+    ['Middle', '_resetMiddleLibraryAction\\(button\\)', '_setMiddleLibraryStatus', 'button'],
+    ['Attraction', '_resetAttractionLibraryAction\\(button\\)', '_setAttractionLibraryStatus', 'button'],
+    ['Living Nature', '_resetLivingNatureLibraryAction\\(button\\)', '_setLivingNatureLibraryStatus', 'button'],
+    ['Living Elements', '_resetLivingElementsLibraryAction\\(button\\)', '_setLivingElementsLibraryStatus', 'button']
+  ].forEach(function(spec) {
+    var pattern = new RegExp(spec[1] + '[\\s\\S]{0,220}' + spec[2] + "\\(Helpers\\.t\\('help_secret_library_confirmation_pending'\\)\\)[\\s\\S]{0,220}if \\(" + spec[3] + '\\) ' + spec[3] + '\\.focus\\(\\)');
+    assert.ok(pattern.test(helpJs), spec[0] + ' timeout should restore the control, keep an announced warning, and return keyboard focus');
+  });
 });
 
 test('Magical Library uses the original board-game artwork with lore and Close', function () {
