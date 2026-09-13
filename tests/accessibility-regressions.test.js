@@ -96,6 +96,25 @@ test('paid secret library uses labeled regions, buttons, live status, and focus 
   assert.ok(/\.help-secret-library-link[\s\S]*min-height:\s*44px[\s\S]*white-space:\s*normal[\s\S]*overflow-wrap:\s*anywhere/.test(css), 'secret map buttons should have 44px touch targets and wrap without mobile overflow');
 });
 
+test('rapid paid chapter queue exposes the same polite status for every chapter', function () {
+  const ru = read('app/js/i18n/ru.js');
+  const en = read('app/js/i18n/en.js');
+  const setters = [
+    '_setSecretLibraryStatus',
+    '_setUnknownLibraryStatus',
+    '_setMiddleLibraryStatus',
+    '_setAttractionLibraryStatus',
+    '_setLivingNatureLibraryStatus',
+    '_setLivingElementsLibraryStatus'
+  ];
+  setters.forEach(function (setter) {
+    const pattern = new RegExp(setter + "\\(Helpers\\.t\\('help_library_payment_queued'\\)\\)");
+    assert.ok(pattern.test(helpJs), setter + ' should announce that its payment request entered the queue');
+  });
+  assert.ok(/help_library_payment_queued:\s*'Запрос принят\./.test(ru), 'Russian queue status should reassure the user that the request was accepted');
+  assert.ok(/help_library_payment_queued:\s*'Request accepted\./.test(en), 'English queue status should explain the same state');
+});
+
 test('Creators book has ordered headings, labeled pages, and keyboard-safe external links', function () {
   assert.ok(/setAttribute\('aria-label', t\('developers_title'\)\)/.test(developersJs), 'creator route label should follow the selected language');
   assert.ok(/aria-labelledby="creators-book-title"/.test(developersJs), 'creator book should be named by its visible heading');

@@ -148,6 +148,23 @@ var HelpScreen = (function() {
         { id: '15', number: 15, titleKey: 'help_living_elements_map_15_title', textKey: 'help_living_elements_map_15_text' }
     ];
 
+    function _numberPaidLibraryGroups(groups) {
+        var number = 1;
+        for (var g = 0; g < groups.length; g++) {
+            for (var i = 0; i < groups[g].length; i++) {
+                groups[g][i].number = number;
+                number += 1;
+            }
+        }
+    }
+
+    _numberPaidLibraryGroups([HELP_SECRET_LIBRARY_MAPS]);
+    _numberPaidLibraryGroups([HELP_UNKNOWN_LIBRARY_MAPS, HELP_UNKNOWN_LIBRARY_FADING_MAPS]);
+    _numberPaidLibraryGroups([HELP_MIDDLE_LIBRARY_REVEALING_MAPS, HELP_MIDDLE_LIBRARY_MAPS]);
+    _numberPaidLibraryGroups([HELP_ATTRACTION_LIBRARY_FIRST_MAPS, HELP_ATTRACTION_LIBRARY_GROWING_MAPS]);
+    _numberPaidLibraryGroups([HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS, HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS]);
+    _numberPaidLibraryGroups([HELP_LIVING_ELEMENTS_LIBRARY_FIRST_MAPS, HELP_LIVING_ELEMENTS_LIBRARY_AWAKENING_MAPS]);
+
     function render() {
         var t = Helpers.t;
         var el = Helpers.$('screen-help');
@@ -290,7 +307,7 @@ var HelpScreen = (function() {
                 '<div class="help-library-list help-secret-library-list">';
             for (var i = 0; i < HELP_SECRET_LIBRARY_MAPS.length; i++) {
                 var entry = HELP_SECRET_LIBRARY_MAPS[i];
-                html += '<button type="button" class="help-library-link help-secret-library-link" data-secret-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
+                html += '<button type="button" class="help-library-link help-secret-library-link" data-secret-library-map="' + entry.id + '">' + Helpers.escapeHtml(entry.number + '. ' + t(entry.titleKey)) + '</button>';
             }
             html += '</div>';
         }
@@ -317,7 +334,7 @@ var HelpScreen = (function() {
                 '<div class="help-library-list help-secret-library-list">';
             for (var i = 0; i < HELP_UNKNOWN_LIBRARY_MAPS.length; i++) {
                 var entry = HELP_UNKNOWN_LIBRARY_MAPS[i];
-                html += '<button type="button" class="help-library-link help-secret-library-link help-unknown-library-link" data-unknown-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
+                html += '<button type="button" class="help-library-link help-secret-library-link help-unknown-library-link" data-unknown-library-map="' + entry.id + '">' + Helpers.escapeHtml(entry.number + '. ' + t(entry.titleKey)) + '</button>';
             }
             if (HELP_UNKNOWN_LIBRARY_FADING_MAPS.length) {
                 html += '<hr class="help-unknown-library-divider">' +
@@ -325,7 +342,7 @@ var HelpScreen = (function() {
                     '<div role="group" aria-labelledby="help-unknown-library-fading-title">';
                 for (var j = 0; j < HELP_UNKNOWN_LIBRARY_FADING_MAPS.length; j++) {
                     var fadingEntry = HELP_UNKNOWN_LIBRARY_FADING_MAPS[j];
-                    html += '<button type="button" class="help-library-link help-secret-library-link help-unknown-library-link" data-unknown-library-map="' + fadingEntry.id + '">' + Helpers.escapeHtml(t(fadingEntry.titleKey)) + '</button>';
+                    html += '<button type="button" class="help-library-link help-secret-library-link help-unknown-library-link" data-unknown-library-map="' + fadingEntry.id + '">' + Helpers.escapeHtml(fadingEntry.number + '. ' + t(fadingEntry.titleKey)) + '</button>';
                 }
                 html += '</div>';
             }
@@ -355,14 +372,14 @@ var HelpScreen = (function() {
                 '<div class="help-library-list help-secret-library-list">';
             for (var r = 0; r < HELP_MIDDLE_LIBRARY_REVEALING_MAPS.length; r++) {
                 var revealingEntry = HELP_MIDDLE_LIBRARY_REVEALING_MAPS[r];
-                html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + revealingEntry.id + '">' + Helpers.escapeHtml(t(revealingEntry.titleKey)) + '</button>';
+                html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + revealingEntry.id + '">' + Helpers.escapeHtml(revealingEntry.number + '. ' + t(revealingEntry.titleKey)) + '</button>';
             }
             html += '<hr class="help-unknown-library-divider">' +
                 '<p id="help-middle-library-revealing-title" class="help-unknown-library-fading-title">' + t('help_middle_library_revealing_path') + '</p>' +
                 '<div role="group" aria-labelledby="help-middle-library-revealing-title">';
             for (var i = 0; i < HELP_MIDDLE_LIBRARY_MAPS.length; i++) {
                 var entry = HELP_MIDDLE_LIBRARY_MAPS[i];
-                html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
+                html += '<button type="button" class="help-library-link help-secret-library-link help-middle-library-link" data-middle-library-map="' + entry.id + '">' + Helpers.escapeHtml(entry.number + '. ' + t(entry.titleKey)) + '</button>';
             }
             html += '</div></div>';
         }
@@ -391,14 +408,14 @@ var HelpScreen = (function() {
                 '<div class="help-library-list help-secret-library-list">';
             for (var a = 0; a < HELP_ATTRACTION_LIBRARY_FIRST_MAPS.length; a++) {
                 var firstEntry = HELP_ATTRACTION_LIBRARY_FIRST_MAPS[a];
-                html += '<button type="button" class="help-library-link help-secret-library-link help-attraction-library-link" data-attraction-library-map="' + firstEntry.id + '">' + Helpers.escapeHtml(t(firstEntry.titleKey)) + '</button>';
+                html += '<button type="button" class="help-library-link help-secret-library-link help-attraction-library-link" data-attraction-library-map="' + firstEntry.id + '">' + Helpers.escapeHtml(firstEntry.number + '. ' + t(firstEntry.titleKey)) + '</button>';
             }
             html += '<hr class="help-unknown-library-divider">' +
                 '<p id="help-attraction-library-growing-title" class="help-unknown-library-fading-title">' + t('help_attraction_library_growing') + '</p>' +
                 '<div role="group" aria-labelledby="help-attraction-library-growing-title">';
             for (var i = 0; i < HELP_ATTRACTION_LIBRARY_GROWING_MAPS.length; i++) {
                 var entry = HELP_ATTRACTION_LIBRARY_GROWING_MAPS[i];
-                html += '<button type="button" class="help-library-link help-secret-library-link help-attraction-library-link" data-attraction-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
+                html += '<button type="button" class="help-library-link help-secret-library-link help-attraction-library-link" data-attraction-library-map="' + entry.id + '">' + Helpers.escapeHtml(entry.number + '. ' + t(entry.titleKey)) + '</button>';
             }
             html += '</div></div>';
         }
@@ -427,14 +444,14 @@ var HelpScreen = (function() {
                 '<div class="help-library-list help-secret-library-list">';
             for (var f = 0; f < HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS.length; f++) {
                 var firstEntry = HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS[f];
-                html += '<button type="button" class="help-library-link help-secret-library-link help-living-nature-library-link" data-living-nature-library-map="' + firstEntry.id + '">' + Helpers.escapeHtml(t(firstEntry.titleKey)) + '</button>';
+                html += '<button type="button" class="help-library-link help-secret-library-link help-living-nature-library-link" data-living-nature-library-map="' + firstEntry.id + '">' + Helpers.escapeHtml(firstEntry.number + '. ' + t(firstEntry.titleKey)) + '</button>';
             }
             html += '<hr class="help-unknown-library-divider">' +
                 '<p id="help-living-nature-library-boundary-title" class="help-unknown-library-fading-title">' + t('help_living_nature_library_boundary') + '</p>' +
                 '<div role="group" aria-labelledby="help-living-nature-library-boundary-title">';
             for (var i = 0; i < HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS.length; i++) {
                 var entry = HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS[i];
-                html += '<button type="button" class="help-library-link help-secret-library-link help-living-nature-library-link" data-living-nature-library-map="' + entry.id + '">' + Helpers.escapeHtml(t(entry.titleKey)) + '</button>';
+                html += '<button type="button" class="help-library-link help-secret-library-link help-living-nature-library-link" data-living-nature-library-map="' + entry.id + '">' + Helpers.escapeHtml(entry.number + '. ' + t(entry.titleKey)) + '</button>';
             }
             html += '</div></div>';
         }
@@ -632,6 +649,8 @@ var HelpScreen = (function() {
                     _unlockLivingNatureLibrary();
                     return;
                 }
+                if (button) button.textContent = Helpers.t('help_library_payment_queued');
+                _setLivingNatureLibraryStatus(Helpers.t('help_library_payment_queued'));
                 VizBroadcast.libraryUnlockChapterAction(
                     'chapter6',
                     VizMagicConfig.LIBRARY.CHAPTER_SIX_COST,
@@ -724,6 +743,8 @@ var HelpScreen = (function() {
                     _unlockLivingElementsLibrary();
                     return;
                 }
+                if (button) button.textContent = Helpers.t('help_library_payment_queued');
+                _setLivingElementsLibraryStatus(Helpers.t('help_library_payment_queued'));
                 VizBroadcast.libraryUnlockChapterAction(
                     'chapter7',
                     VizMagicConfig.LIBRARY.CHAPTER_SEVEN_COST,
@@ -830,6 +851,8 @@ var HelpScreen = (function() {
                     _unlockAttractionLibrary();
                     return;
                 }
+                if (button) button.textContent = Helpers.t('help_library_payment_queued');
+                _setAttractionLibraryStatus(Helpers.t('help_library_payment_queued'));
                 VizBroadcast.libraryUnlockChapterAction(
                     'chapter5',
                     VizMagicConfig.LIBRARY.CHAPTER_FIVE_COST,
@@ -904,6 +927,8 @@ var HelpScreen = (function() {
                     _unlockMiddleLibrary();
                     return;
                 }
+                if (button) button.textContent = Helpers.t('help_library_payment_queued');
+                _setMiddleLibraryStatus(Helpers.t('help_library_payment_queued'));
                 VizBroadcast.libraryUnlockChapterAction(
                     'chapter4',
                     VizMagicConfig.LIBRARY.CHAPTER_FOUR_COST,
@@ -1059,7 +1084,8 @@ var HelpScreen = (function() {
             callback(new Error('library_confirmation_pending'));
             return;
         }
-        HistorySource.getBlock(blockNum, function(blockErr, block) {
+        var getFreshBlock = HistorySource.getLiveBlock || HistorySource.getBlock;
+        getFreshBlock(blockNum, function(blockErr, block) {
             if (blockErr || !block) {
                 callback(blockErr || new Error('library_confirmation_pending'));
                 return;
@@ -1080,6 +1106,43 @@ var HelpScreen = (function() {
             } catch (err) {
                 callback(err);
             }
+        });
+    }
+
+    function _confirmLatestSecretLibraryProof(user, day, chapter, callback) {
+        if (typeof HistorySource === 'undefined' || !HistorySource.getAccountProtocol ||
+                !HistorySource.getLiveBlock) {
+            callback(new Error('library_live_confirmation_unavailable'));
+            return;
+        }
+        HistorySource.getAccountProtocol(user, VizMagicConfig.PROTOCOLS.VM, function(pointerErr, pointer) {
+            var blockNum = Number(pointer && pointer.custom_sequence_block_num || 0);
+            if (pointerErr || !blockNum) {
+                callback(pointerErr || new Error('library_confirmation_pending'));
+                return;
+            }
+            HistorySource.getLiveBlock(blockNum, function(blockErr, block) {
+                if (blockErr || !block) {
+                    callback(blockErr || new Error('library_confirmation_pending'));
+                    return;
+                }
+                try {
+                    var processed = BlockProcessor.processBlock(block, blockNum);
+                    if (!StateEngine.verifyLibraryUnlockProof(processed, user, chapter, day)) {
+                        callback(new Error('library_confirmation_pending'));
+                        return;
+                    }
+                    var event = StateEngine.processLibraryUnlockResult(user, blockNum, day, chapter);
+                    if (!event) {
+                        callback(new Error('library_unlock_state_rejected'));
+                        return;
+                    }
+                    StateEngine.saveCheckpoint(function() {});
+                    callback(null, event);
+                } catch (err) {
+                    callback(err);
+                }
+            });
         });
     }
 
@@ -1110,20 +1173,29 @@ var HelpScreen = (function() {
                 _waitForSecretLibraryProof(user, day, null, attempt + 1, callback, chapter);
             }, 1500);
         }
+        function checkLatestThenArchive() {
+            _confirmLatestSecretLibraryProof(user, day, chapter, function(liveErr, liveEvent) {
+                if (!liveErr) {
+                    callback(null, liveEvent);
+                    return;
+                }
+                _preflightSecretLibraryEntitlement(user, day, function(historyErr, unlocked) {
+                    if (!historyErr && unlocked) {
+                        callback(null, true);
+                        return;
+                    }
+                    retry();
+                }, chapter);
+            });
+        }
         if (result && attempt === 0) {
             _confirmSecretLibraryBroadcastProof(user, day, result, function(proofErr, event) {
                 if (!proofErr) callback(null, event);
-                else retry();
+                else checkLatestThenArchive();
             }, chapter);
             return;
         }
-        _preflightSecretLibraryEntitlement(user, day, function(historyErr, unlocked) {
-            if (!historyErr && unlocked) {
-                callback(null, true);
-                return;
-            }
-            retry();
-        }, chapter);
+        checkLatestThenArchive();
     }
 
     function _finishSecretLibraryOpen(messageKey, headingId) {
@@ -1183,6 +1255,8 @@ var HelpScreen = (function() {
                     _unlockSecretLibrary();
                     return;
                 }
+                if (confirm) confirm.textContent = Helpers.t('help_library_payment_queued');
+                _setSecretLibraryStatus(Helpers.t('help_library_payment_queued'));
                 VizBroadcast.libraryUnlockAction(
                     VizMagicConfig.LIBRARY.CHAPTER_TWO_COST,
                     day,
@@ -1270,6 +1344,8 @@ var HelpScreen = (function() {
                     _unlockUnknownLibrary();
                     return;
                 }
+                if (button) button.textContent = Helpers.t('help_library_payment_queued');
+                _setUnknownLibraryStatus(Helpers.t('help_library_payment_queued'));
                 VizBroadcast.libraryUnlockChapterAction(
                     'chapter3',
                     VizMagicConfig.LIBRARY.CHAPTER_THREE_COST,
@@ -1369,7 +1445,7 @@ var HelpScreen = (function() {
     }
 
     function _openPaidLibraryMap(entry, chapter) {
-        var titleText = (chapter === 'chapter7' ? entry.number + '. ' : '') + Helpers.t(entry.titleKey);
+        var titleText = (entry.number ? entry.number + '. ' : '') + Helpers.t(entry.titleKey);
         var title = Helpers.escapeHtml(titleText);
         var description = Helpers.t(entry.textKey);
         var imagePath = chapter === 'chapter7'

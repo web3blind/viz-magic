@@ -424,6 +424,44 @@ var HistorySource = (function() {
         }
     }
 
+    // Freshly broadcast operations may be present on the live VIZ node before
+    // the irreversible archive indexes them. This method is intentionally
+    // live-only; proof callers still validate the complete returned block.
+    function getLiveBlock(blockNum, callback) {
+        callback = callback || function() {};
+        if (!blockNum || blockNum <= 0) {
+            callback(_makeError('Invalid block number'));
+            return;
+        }
+        if (typeof viz === 'undefined' || !viz.api || !viz.api.getBlock) {
+            callback(_makeError('Live VIZ block lookup is unavailable'));
+            return;
+        }
+        var completed = false;
+        var timer = setTimeout(function() {
+            if (completed) return;
+            completed = true;
+            callback(_makeError('Live VIZ block lookup timeout'));
+        }, 6000);
+        try {
+            viz.api.getBlock(blockNum, function(err, block) {
+                if (completed) return;
+                completed = true;
+                clearTimeout(timer);
+                if (err || !block) {
+                    callback(err || _makeError('Live VIZ block is unavailable'));
+                    return;
+                }
+                callback(null, block);
+            });
+        } catch (rpcErr) {
+            if (completed) return;
+            completed = true;
+            clearTimeout(timer);
+            callback(rpcErr);
+        }
+    }
+
     // Proof-sensitive callers must not accept an arbitrary thin block as
     // evidence that an award was absent. VIZ RPC returns a full block. Archive
     // fallback is accepted only when its per-block event response proves that
@@ -894,6 +932,7 @@ var HistorySource = (function() {
 
     return {
         getBlock: getBlock,
+        getLiveBlock: getLiveBlock,
         getProofBlock: getProofBlock,
         getAccountProtocol: getAccountProtocol,
         getAccountActions: getAccountActions,

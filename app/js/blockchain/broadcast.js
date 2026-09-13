@@ -6,6 +6,8 @@ var VizBroadcast = (function() {
     'use strict';
 
     var cfg = VizMagicConfig;
+    var libraryUnlockQueue = [];
+    var libraryUnlockActive = false;
 
     /**
      * Send an award (Blessing / Spellcasting)
@@ -269,7 +271,94 @@ var VizBroadcast = (function() {
      * The award and backward-linked VM action share one signed transaction,
      * allowing replay to verify payment by transaction index.
      */
+    function _finishLibraryUnlockRequest(request, err, result) {
+        try {
+            request.callback(err, result);
+        } finally {
+            libraryUnlockActive = false;
+            _drainLibraryUnlockQueue();
+        }
+    }
+
+    function _finishLibraryUnlockAfterPointer(request, previous, result, attempt) {
+        attempt = Number(attempt || 0);
+        VizAccount.getAccountProtocol(request.user, cfg.PROTOCOLS.VM, function(pointerErr, pointer) {
+            var blockNum = Number(pointer && pointer.custom_sequence_block_num || 0);
+            if (!pointerErr && blockNum > 0 && blockNum !== Number(previous || 0)) {
+                if (result && typeof result === 'object') {
+                    result.block_num = Number(result.block_num || result.block || blockNum);
+                } else {
+                    result = { block_num: blockNum };
+                }
+                _finishLibraryUnlockRequest(request, null, result);
+                return;
+            }
+            if (attempt >= 11) {
+                _finishLibraryUnlockRequest(request, null, result);
+                return;
+            }
+            setTimeout(function() {
+                _finishLibraryUnlockAfterPointer(request, previous, result, attempt + 1);
+            }, 250);
+        });
+    }
+
+    function _drainLibraryUnlockQueue() {
+        if (libraryUnlockActive || !libraryUnlockQueue.length) return;
+        var request = libraryUnlockQueue.shift();
+        var library = cfg.LIBRARY || {};
+        var wif = VizAccount.getRegularKey();
+        var user = VizAccount.getCurrentUser();
+        libraryUnlockActive = true;
+        if (!wif || !user || user !== request.user) {
+            _finishLibraryUnlockRequest(request, new Error('not_logged_in'));
+            return;
+        }
+        VizAccount.getAccountProtocol(user, cfg.PROTOCOLS.VM, function(err, response) {
+            if (err || !response) {
+                _finishLibraryUnlockRequest(request, err || new Error('protocol_history_unavailable'));
+                return;
+            }
+            var previous = response.custom_sequence_block_num || 0;
+            var action = {
+                p: cfg.PROTOCOLS.VM,
+                v: cfg.APP_VERSION,
+                b: previous,
+                t: cfg.ACTION_TYPES.LIBRARY_UNLOCK,
+                d: { chapter: request.chapter, day: request.day }
+            };
+            var transaction = {
+                extensions: [],
+                operations: [
+                    ['award', {
+                        initiator: user,
+                        receiver: library.TREASURY,
+                        energy: request.energy,
+                        custom_sequence: 0,
+                        memo: request.chapterConfig.memoPrefix + request.day,
+                        beneficiaries: []
+                    }],
+                    ['custom', {
+                        required_active_auths: [],
+                        required_regular_auths: [user],
+                        id: cfg.PROTOCOLS.VM,
+                        json: JSON.stringify(action)
+                    }]
+                ]
+            };
+            viz.broadcast.send(transaction, { regular: wif }, function(sendErr, result) {
+                if (sendErr) console.log('Library unlock broadcast error:', sendErr);
+                if (sendErr) {
+                    _finishLibraryUnlockRequest(request, sendErr, result);
+                    return;
+                }
+                _finishLibraryUnlockAfterPointer(request, previous, result);
+            });
+        });
+    }
+
     function libraryUnlockChapterAction(chapter, energy, day, callback) {
+        callback = callback || function() {};
         var library = cfg.LIBRARY || {};
         var chapterConfig = chapter === 'chapter2'
             ? { cost: library.CHAPTER_TWO_COST, memoPrefix: library.CHAPTER_TWO_MEMO_PREFIX }
@@ -302,43 +391,15 @@ var VizBroadcast = (function() {
             callback(new Error('invalid_library_day'));
             return;
         }
-        VizAccount.getAccountProtocol(user, cfg.PROTOCOLS.VM, function(err, response) {
-            if (err || !response) {
-                callback(err || new Error('protocol_history_unavailable'));
-                return;
-            }
-            var previous = response.custom_sequence_block_num || 0;
-            var action = {
-                p: cfg.PROTOCOLS.VM,
-                v: cfg.APP_VERSION,
-                b: previous,
-                t: cfg.ACTION_TYPES.LIBRARY_UNLOCK,
-                d: { chapter: chapter, day: day }
-            };
-            var transaction = {
-                extensions: [],
-                operations: [
-                    ['award', {
-                        initiator: user,
-                        receiver: library.TREASURY,
-                        energy: energy,
-                        custom_sequence: 0,
-                        memo: chapterConfig.memoPrefix + day,
-                        beneficiaries: []
-                    }],
-                    ['custom', {
-                        required_active_auths: [],
-                        required_regular_auths: [user],
-                        id: cfg.PROTOCOLS.VM,
-                        json: JSON.stringify(action)
-                    }]
-                ]
-            };
-            viz.broadcast.send(transaction, { regular: wif }, function(sendErr, result) {
-                if (sendErr) console.log('Library unlock broadcast error:', sendErr);
-                callback(sendErr, result);
-            });
+        libraryUnlockQueue.push({
+            chapter: chapter,
+            chapterConfig: chapterConfig,
+            energy: energy,
+            day: day,
+            user: user,
+            callback: callback
         });
+        _drainLibraryUnlockQueue();
     }
 
     function libraryUnlockAction(energy, day, callback) {

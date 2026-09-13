@@ -2110,7 +2110,7 @@ test('The Ember Wastes uses the distinct underground forge map and matching lore
 
 
 test('secret maps room renders fifteen daily voluntary-support maps and world map markers', function () {
-  assert.ok(ruJs.includes("help_magic_library_chapter_two_title: 'Тайные Карты Мира\\nкомната вторая'"), 'RU title should preserve Denis wording and line break');
+  assert.ok(ruJs.includes("help_magic_library_chapter_two_title: 'Тайные Карты Мира - комната вторая'"), 'RU title should separate the map-block name and figurative chapter number with a hyphen');
   assert.ok(ruJs.includes("help_magic_library_chapter_two_intro: 'В бесчисленных тайниках Мира есть множество секретных схронов... Этот первый.'") && /help_magic_library_chapter_two_warning:\s*'Добровольная поддержка Мира/.test(ruJs), 'room should preserve its description and honest voluntary-support notice');
   assert.ok(/Тайные Карты Мира закроются ровно в полночь! Торопись Путник!/.test(ruJs), 'paid state should show the exact red midnight warning');
   assert.ok(/HELP_SECRET_LIBRARY_MAPS\s*=\s*\[/.test(helpJs), 'Help should define a separate secret-map set');
@@ -2122,13 +2122,13 @@ test('secret maps room renders fifteen daily voluntary-support maps and world ma
   assert.ok(/verifyLibraryUnlockProof\(processed, user, chapter, day\)/.test(helpJs), 'archive proof must be checked for the selected chapter and today');
   assert.ok(/VizBroadcast\.libraryUnlockAction\(\s*VizMagicConfig\.LIBRARY\.CHAPTER_TWO_COST,\s*day,/.test(helpJs), 'unlock must pass today into the atomic transaction builder');
   assert.ok(/function libraryUnlockAction\(energy, day, callback\)/.test(broadcastJs) && /operations:\s*\[[\s\S]*\['award'[\s\S]*\['custom'/.test(broadcastJs), 'broadcast helper should sign award and daily VM proof as one transaction');
-  assert.ok(/d:\s*\{ chapter:\s*chapter, day:\s*day \}/.test(broadcastJs) && /memo:\s*chapterConfig\.memoPrefix \+ day/.test(broadcastJs), 'award memo and VM action should bind the same chapter and day');
+  assert.ok(/d:\s*\{ chapter:\s*request\.chapter, day:\s*request\.day \}/.test(broadcastJs) && /memo:\s*request\.chapterConfig\.memoPrefix \+ request\.day/.test(broadcastJs), 'award memo and VM action should bind the same queued chapter and day');
   assert.ok(/help-secret-library-midnight/.test(helpJs + mainCss), 'open room should expose a styled midnight warning');
   assert.ok(/setTimeout\([\s\S]*StateEngine\.getLibraryMidnightDelay\(\)/.test(helpJs), 'an open guide should rerender itself at world midnight');
   assert.ok(!/getLibraryMidnightDelay\(\) \+ 50/.test(helpJs), 'midnight expiry must not add a post-midnight grace interval');
   assert.ok(/help-secret-library-map-card/.test(helpJs) && /ModalComponent\.hide\(\)[\s\S]{0,180}render\(\)/.test(helpJs), 'world midnight should also close an already open secret map modal');
   assert.ok(/StateEngine\.getLibraryDay\(\) !== day[\s\S]{0,260}_unlockSecretLibrary\(\)/.test(helpJs), 'payment flow should restart preflight if the Moscow day changes before broadcast');
-  assert.ok(/function _confirmSecretLibraryBroadcastProof/.test(helpJs) && /HistorySource\.getBlock\(blockNum[\s\S]*verifyLibraryUnlockProof\(processed, user, chapter, day\)/.test(helpJs), 'live access should require a fetched and verified atomic proof block');
+  assert.ok(/function _confirmSecretLibraryBroadcastProof/.test(helpJs) && /getFreshBlock\(blockNum[\s\S]*verifyLibraryUnlockProof\(processed, user, chapter, day\)/.test(helpJs), 'live access should require a fetched and verified atomic proof block');
   var preflightBody = helpJs.slice(helpJs.indexOf('function _preflightSecretLibraryEntitlement'), helpJs.indexOf('function _confirmSecretLibraryBroadcastProof'));
   assert.ok(/try \{[\s\S]*BlockProcessor\.processBlock[\s\S]*catch \(err\)[\s\S]*callback\(err\)/.test(preflightBody), 'malformed preflight blocks should fail closed without leaving the payment flow busy');
   assert.ok(/unlock\.addEventListener\('click', _unlockSecretLibrary\)/.test(helpJs), 'the visible payment button should start preflight directly with one click');
@@ -2152,7 +2152,7 @@ test('secret maps room renders fifteen daily voluntary-support maps and world ma
 });
 
 test('unknown maps chapter three keeps the selected ten-map order and a separated fading path', function () {
-  assert.ok(ruJs.includes("help_magic_library_chapter_three_title: 'Неизвестные карты Мира\\nглава третья'"), 'chapter three should preserve Denis title and line break');
+  assert.ok(ruJs.includes("help_magic_library_chapter_three_title: 'Неизвестные карты Мира - глава третья'"), 'chapter three should use the unified hyphenated title');
   assert.ok(/Как эти карты оказались в Магической библиотеке, никто не помнит[\s\S]*Старики шепчут[\s\S]*Маги ухмыляются/.test(ruJs), 'chapter three should preserve Denis lore');
   assert.ok(/help_magic_library_chapter_three_warning:\s*'Добровольная поддержка Мира/.test(ruJs), 'chapter three should show honest voluntary-support wording');
   assert.ok(/help_magic_library_chapter_two_warning/.test(ruJs) && /help-library-danger/.test(helpJs + mainCss), 'chapters two and three should render their danger warning in red');
@@ -2187,6 +2187,7 @@ test('middle world maps begin with the separated Revealing Path card', function 
 
 test('secret maps daily broadcast builder binds award and proof to the same day', function () {
   let sent = null;
+  let pointer = 99;
   const context = {
     console: { log: function () {} },
     VizMagicConfig: {
@@ -2197,9 +2198,9 @@ test('secret maps daily broadcast builder binds award and proof to the same day'
     VizAccount: {
       getRegularKey: function () { return 'test-wif'; },
       getCurrentUser: function () { return 'alice'; },
-      getAccountProtocol: function (account, protocol, cb) { cb(null, { custom_sequence_block_num: 99 }); }
+      getAccountProtocol: function (account, protocol, cb) { cb(null, { custom_sequence_block_num: pointer }); }
     },
-    viz: { broadcast: { send: function (transaction, keys, cb) { sent = transaction; cb(null, { block_num: 100 }); } } }
+    viz: { broadcast: { send: function (transaction, keys, cb) { sent = transaction; pointer += 1; cb(null, { block_num: pointer }); } } }
   };
   vm.createContext(context);
   vm.runInContext(read('app/js/blockchain/broadcast.js'), context, { filename: 'broadcast.js' });
@@ -2326,7 +2327,7 @@ test('verified world maps and font-independent SVG icons remain intact', functio
 test('world attraction maps keep first masquerade card and Growing Up section', function () {
   const design = read('GAME_DESIGN.md');
   assert.ok(/Общий метод прорисовки эмоций для любых будущих генераций/.test(design), 'general emotion rendering method should be documented');
-  assert.ok(/Карты Притяжения Мира свиток пятый/.test(ruJs) && /help_magic_library_attraction_title/.test(ruJs), 'attraction maps should have the Russian fifth-scroll library title');
+  assert.ok(/Карты Притяжения Мира - свиток пятый/.test(ruJs) && /help_magic_library_attraction_title/.test(ruJs), 'attraction maps should have the unified Russian fifth-scroll title');
   assert.ok(/help_attraction_library_growing:\s*'Взросление'/.test(ruJs), 'attraction maps should name the second section Growing Up');
   var firstMapSource = helpJs.match(/var HELP_ATTRACTION_LIBRARY_FIRST_MAPS\s*=\s*\[([\s\S]*?)\];/);
   var growingMapSource = helpJs.match(/var HELP_ATTRACTION_LIBRARY_GROWING_MAPS\s*=\s*\[([\s\S]*?)\];/);
@@ -2354,7 +2355,7 @@ test('world attraction maps keep first masquerade card and Growing Up section', 
 test('Living Nature Maps use an independent paid chapter and the requested boundary order', function () {
   assert.ok(/CHAPTER_SIX_COST:\s*1000/.test(configJs), 'Living Nature chapter should cost the canonical 10% energy');
   assert.ok(/CHAPTER_SIX_MEMO_PREFIX:\s*'viz:\/\/vm\/library\/chapter6\/'/.test(configJs), 'Living Nature chapter needs an independent memo prefix');
-  assert.ok(/help_magic_library_living_nature_title:\s*'Карты живой природы Мира — ветка шестая'/.test(ruJs), 'Living Nature block should append the requested sixth-branch phrase');
+  assert.ok(/help_magic_library_living_nature_title:\s*'Карты живой природы Мира - ветка шестая'/.test(ruJs), 'Living Nature block should separate its sixth-branch phrase with a hyphen');
   assert.ok(/Звери, птицы, морские и речные обитатели здесь далеко не просто фауна - они полноценные участники магических событий\. И некоторые из них очень могущественны\.\.\./.test(ruJs), 'Living Nature block should preserve the requested description');
   assert.ok(/help_living_nature_library_boundary:\s*'Магическая граница'/.test(ruJs), 'Living Nature block should name the boundary');
 
@@ -2394,7 +2395,7 @@ test('Living Nature Maps use an independent paid chapter and the requested bound
 test('Living Elements Maps use numbered links, Awakening, and an independent paid chapter', function () {
   assert.ok(/CHAPTER_SEVEN_COST:\s*1000/.test(configJs), 'Living Elements chapter should cost the canonical 10% energy');
   assert.ok(/CHAPTER_SEVEN_MEMO_PREFIX:\s*'viz:\/\/vm\/library\/chapter7\/'/.test(configJs), 'Living Elements chapter needs an independent memo prefix');
-  assert.ok(/help_magic_library_living_elements_title:\s*'Карты живых Стихий Мира'/.test(ruJs), 'Living Elements block should use the approved Russian title');
+  assert.ok(/help_magic_library_living_elements_title:\s*'Карты живых Стихий Мира - отголосок седьмой'/.test(ruJs), 'Living Elements block should use the requested seventh-echo title');
   assert.ok(/help_living_elements_library_awakening:\s*'Пробуждение'/.test(ruJs), 'the lower Living Elements group should be named Awakening');
 
   var firstSource = helpJs.match(/var HELP_LIVING_ELEMENTS_LIBRARY_FIRST_MAPS\s*=\s*\[([\s\S]*?)\];/);
@@ -2429,6 +2430,90 @@ test('Living Elements Maps use numbered links, Awakening, and an independent pai
   assert.strictEqual(engine.verifyLibraryUnlockProof(proof, 'alice', 'chapter7', '2026-09-10'), false, 'chapter seven must reject a mismatched requested day');
   const unlockEvent = engine.processLibraryUnlockResult('alice', 901, day, 'chapter7');
   assert.strictEqual(unlockEvent && unlockEvent.type, 'library_chapter_seven_unlocked', 'chapter seven should emit its own replay event');
+});
+
+test('all paid map blocks use unified titles and visible ordinals', function () {
+  [
+    "help_magic_library_chapter_two_title: 'Тайные Карты Мира - комната вторая'",
+    "help_magic_library_chapter_three_title: 'Неизвестные карты Мира - глава третья'",
+    "help_magic_library_middle_title: 'Срединные карты Мира - переулок четвёртый'",
+    "help_magic_library_attraction_title: 'Карты Притяжения Мира - свиток пятый'",
+    "help_magic_library_living_nature_title: 'Карты живой природы Мира - ветка шестая'",
+    "help_magic_library_living_elements_title: 'Карты живых Стихий Мира - отголосок седьмой'"
+  ].forEach(function (title) {
+    assert.ok(ruJs.includes(title), 'missing unified Russian title: ' + title);
+  });
+  [
+    'Secret Maps of the World - room two',
+    'Unknown Maps of the World - chapter three',
+    'Middle World Maps - fourth alley',
+    'World Attraction Maps - fifth scroll',
+    'Living Nature Maps of the World - sixth branch',
+    'Living Elements Maps of the World - seventh echo'
+  ].forEach(function (title) {
+    assert.ok(enJs.includes(title), 'missing unified English title: ' + title);
+  });
+  var paidRenderLines = helpJs.split('\n').filter(function (line) {
+    return line.indexOf("html += '<button") !== -1 && /data-(secret|unknown|middle|attraction|living-nature|living-elements)-library-map/.test(line);
+  });
+  assert.strictEqual(paidRenderLines.length, 11, 'all paid list and split-group render paths should be covered');
+  paidRenderLines.forEach(function (line) {
+    assert.ok(/\.number \+ '\. '/.test(line), 'every paid map link should render its visible ordinal: ' + line.trim());
+  });
+  assert.ok(/var titleText = \(entry\.number \? entry\.number \+ '\. ' : ''\) \+ Helpers\.t\(entry\.titleKey\)/.test(helpJs), 'paid map modals should preserve the visible ordinal and individual title');
+});
+
+test('paid library serializes rapid chapter payments and refreshes the VM backlink for each transaction', function () {
+  let pointer = 10;
+  const sent = [];
+  const callbacks = [];
+  const completed = [];
+  const timers = [];
+  const context = {
+    console: { log: function () {} },
+    setTimeout: function (fn) { timers.push(fn); },
+    VizMagicConfig: {
+      PROTOCOLS: { VM: 'VM' }, APP_VERSION: 1,
+      ACTION_TYPES: { LIBRARY_UNLOCK: 'library.unlock' },
+      LIBRARY: {
+        TREASURY: 'denis-skripnik',
+        CHAPTER_TWO_COST: 1000, CHAPTER_TWO_MEMO_PREFIX: 'viz://vm/library/chapter2/',
+        CHAPTER_THREE_COST: 1000, CHAPTER_THREE_MEMO_PREFIX: 'viz://vm/library/chapter3/'
+      }
+    },
+    VizAccount: {
+      getRegularKey: function () { return 'test-wif'; },
+      getCurrentUser: function () { return 'alice'; },
+      getAccountProtocol: function (account, protocol, cb) { cb(null, { custom_sequence_block_num: pointer }); }
+    },
+    viz: { broadcast: { send: function (transaction, keys, cb) { sent.push(transaction); callbacks.push(cb); } } }
+  };
+  vm.createContext(context);
+  vm.runInContext(read('app/js/blockchain/broadcast.js'), context, { filename: 'broadcast.js' });
+  context.VizBroadcast.libraryUnlockChapterAction('chapter2', 1000, '2026-09-13', function (err) { completed.push(['chapter2', err]); });
+  context.VizBroadcast.libraryUnlockChapterAction('chapter3', 1000, '2026-09-13', function (err) { completed.push(['chapter3', err]); });
+  assert.strictEqual(sent.length, 1, 'only the first rapid payment may broadcast immediately');
+  assert.strictEqual(JSON.parse(sent[0].operations[1][1].json).b, 10, 'first payment should use the current VM backlink');
+  callbacks.shift()(null, { block_num: 11 });
+  assert.strictEqual(sent.length, 1, 'the queue must not advance while the account still exposes the stale VM backlink');
+  assert.strictEqual(timers.length, 1, 'the queue should retry the account pointer without blocking forever');
+  pointer = 20;
+  timers.shift()();
+  assert.strictEqual(sent.length, 2, 'second chapter should broadcast automatically after the first pointer advances');
+  assert.strictEqual(JSON.parse(sent[1].operations[1][1].json).b, 20, 'queued payment should refresh its VM backlink instead of reusing stale state');
+  callbacks.shift()(null, { block_num: 21 });
+  pointer = 30;
+  timers.shift()();
+  assert.deepStrictEqual(completed.map(function(item) { return item[0]; }), ['chapter2', 'chapter3']);
+  assert.ok(completed.every(function(item) { return !item[1]; }));
+});
+
+test('paid library confirms a freshly broadcast payment from the live account pointer before archive finality', function () {
+  const historySourceJs = read('app/js/blockchain/history-source.js');
+  assert.ok(/function getLiveBlock\(blockNum, callback\)/.test(historySourceJs) && /viz\.api\.getBlock\(blockNum/.test(historySourceJs), 'HistorySource should expose a current-block RPC lookup that does not wait for archive irreversibility');
+  assert.ok(/function _confirmLatestSecretLibraryProof\(user, day, chapter, callback\)/.test(helpJs), 'paid-library UI should have a fast proof lookup through the account VM pointer');
+  assert.ok(/HistorySource\.getAccountProtocol\(user, VizMagicConfig\.PROTOCOLS\.VM[\s\S]{0,500}custom_sequence_block_num[\s\S]{0,500}HistorySource\.getLiveBlock/.test(helpJs), 'fast proof lookup should load the account current VM block from live RPC');
+  assert.ok(/_confirmLatestSecretLibraryProof\(user, day, chapter[\s\S]{0,700}_preflightSecretLibraryEntitlement/.test(helpJs), 'confirmation polling should try the live account pointer before the irreversible archive');
 });
 
 test('all paid library confirmation timeouts release their controls accessibly', function () {
