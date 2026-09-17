@@ -2372,8 +2372,8 @@ test('Living Nature Maps use an independent paid chapter and the requested bound
   assert.ok(/HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS\.concat\(HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS\)/.test(helpJs), 'modal lookup should include both Living Nature lists');
   assert.ok(/StateEngine\.hasLibraryAccess\(user, 'chapter6', day\)/.test(helpJs), 'Living Nature maps should use an independent daily chapter-six entitlement');
   assert.ok(/VizMagicConfig\.LIBRARY\.CHAPTER_SIX_COST/.test(helpJs) && /libraryUnlockChapterAction\(\s*'chapter6'/.test(helpJs), 'Living Nature unlock should charge chapter six only');
-  assert.ok(/_waitForSecretLibraryProof\(user, day, result, 0, function\(proofErr\) \{[\s\S]{0,180}if \(proofErr\) \{[\s\S]{0,180}_resetLivingNatureLibraryAction\(button\)/.test(helpJs), 'Living Nature confirmation timeout must restore the payment button instead of leaving it busy forever');
-  assert.ok(/_setLivingNatureLibraryStatus\(Helpers\.t\('help_secret_library_confirmation_pending'\)\);[\s\S]{0,180}if \(button\) button\.focus\(\)/.test(helpJs), 'Living Nature confirmation timeout should leave an announced status and restore keyboard focus');
+  assert.ok(/_setLibraryPendingProof\(user, 'chapter6', day, result\)[\s\S]{0,420}_waitForSecretLibraryProof\(user, day, result, 0, function\(proofErr\)/.test(helpJs), 'Living Nature must persist accepted payment before proof polling');
+  assert.ok(/if \(proofErr\) \{[\s\S]{0,180}_showLibraryPendingProofAction\(button, _setLivingNatureLibraryStatus\)/.test(helpJs), 'Living Nature confirmation timeout must expose proof-only recovery instead of another payable action');
   assert.ok(/if \(attempt >= 12\)/.test(helpJs), 'paid-library confirmation should stop blocking the interface after about 18 seconds');
   assert.ok(/assets\/library-maps-living-nature\/living-nature-map-' \+ entry\.id \+ '\.jpg/.test(helpJs), 'Living Nature modal should load its accepted assets');
   assert.strictEqual(fs.readdirSync(path.join(root, 'app/assets/library-maps-living-nature')).filter(name => /^living-nature-map-\d{2}\.jpg$/.test(name)).length, 15, 'Living Nature chapter should contain exactly 15 JPEG maps');
@@ -2471,7 +2471,7 @@ test('all paid map blocks use unified titles and visible ordinals', function () 
 
 test('paid library retries transient entitlement preflight errors before releasing a chapter button', function () {
   assert.ok(/function _preflightSecretLibraryEntitlementOnce\(user, day, callback, chapter\)/.test(helpJs), 'strict one-shot entitlement verification should remain isolated');
-  assert.ok(/function _preflightSecretLibraryEntitlement\(user, day, callback, chapter, attempt\)[\s\S]{0,1000}_preflightSecretLibraryEntitlementOnce[\s\S]{0,1000}attempt >= 2[\s\S]{0,1000}setTimeout[\s\S]{0,1000}attempt \+ 1/.test(helpJs), 'transient preflight failures should retry twice before returning an error');
+  assert.ok(/function _runSecretLibraryPreflight\(user, day, callback, chapter, attempt\)[\s\S]{0,1000}_preflightSecretLibraryEntitlementOnce[\s\S]{0,1000}attempt >= 2[\s\S]{0,1000}setTimeout[\s\S]{0,1000}attempt \+ 1/.test(helpJs), 'transient preflight failures should retry twice before returning an error');
 });
 
 test('paid library serializes rapid chapter payments and refreshes the VM backlink for each transaction', function () {
@@ -2527,19 +2527,20 @@ test('paid library confirms a freshly broadcast payment from the live account po
   assert.ok(/_confirmLatestSecretLibraryProof\(user, day, chapter[\s\S]{0,700}_preflightSecretLibraryEntitlement/.test(helpJs), 'confirmation polling should try the live account pointer before the irreversible archive');
 });
 
-test('all paid library confirmation timeouts release their controls accessibly', function () {
+test('all paid library confirmation timeouts expose proof-only controls accessibly', function () {
   assert.ok(/function _finishSecretLibraryOpen\(messageKey, headingId\)[\s\S]{0,300}render\(\)[\s\S]{0,300}heading\.focus\(\)/.test(helpJs), 'successful paid-library recovery should rerender and move focus to the opened chapter heading');
   [
-    ['Secret', '_resetSecretLibraryAction\\(confirm\\)', '_setSecretLibraryStatus', 'confirm'],
-    ['Unknown', '_resetUnknownLibraryAction\\(button\\)', '_setUnknownLibraryStatus', 'button'],
-    ['Middle', '_resetMiddleLibraryAction\\(button\\)', '_setMiddleLibraryStatus', 'button'],
-    ['Attraction', '_resetAttractionLibraryAction\\(button\\)', '_setAttractionLibraryStatus', 'button'],
-    ['Living Nature', '_resetLivingNatureLibraryAction\\(button\\)', '_setLivingNatureLibraryStatus', 'button'],
-    ['Living Elements', '_resetLivingElementsLibraryAction\\(button\\)', '_setLivingElementsLibraryStatus', 'button']
+    ['Secret', '_showLibraryPendingProofAction\\(confirm, _setSecretLibraryStatus\\)'],
+    ['Unknown', '_showLibraryPendingProofAction\\(button, _setUnknownLibraryStatus\\)'],
+    ['Middle', '_showLibraryPendingProofAction\\(button, _setMiddleLibraryStatus\\)'],
+    ['Attraction', '_showLibraryPendingProofAction\\(button, _setAttractionLibraryStatus\\)'],
+    ['Living Nature', '_showLibraryPendingProofAction\\(button, _setLivingNatureLibraryStatus\\)'],
+    ['Living Elements', '_showLibraryPendingProofAction\\(button, _setLivingElementsLibraryStatus\\)']
   ].forEach(function(spec) {
-    var pattern = new RegExp(spec[1] + '[\\s\\S]{0,220}' + spec[2] + "\\(Helpers\\.t\\('help_secret_library_confirmation_pending'\\)\\)[\\s\\S]{0,220}if \\(" + spec[3] + '\\) ' + spec[3] + '\\.focus\\(\\)');
-    assert.ok(pattern.test(helpJs), spec[0] + ' timeout should restore the control, keep an announced warning, and return keyboard focus');
+    assert.ok(new RegExp(spec[1]).test(helpJs), spec[0] + ' timeout should switch to the shared proof-only control');
   });
+  assert.ok(/function _showLibraryPendingProofAction\(button, setStatus\)[\s\S]{0,500}removeAttribute\('aria-busy'\)[\s\S]{0,500}removeAttribute\('aria-disabled'\)[\s\S]{0,500}data-proof-only[\s\S]{0,500}help_secret_library_check_access[\s\S]{0,500}help_secret_library_confirmation_pending/.test(helpJs), 'proof-only control should be operable, labelled distinctly, and announced politely');
+  assert.ok(/function _checkLibraryPendingProof[\s\S]{0,1400}if \(button\) button\.focus\(\)/.test(helpJs), 'failed proof-only recovery should restore keyboard focus without broadcasting');
 });
 
 test('Magical Library uses the original board-game artwork with lore and Close', function () {

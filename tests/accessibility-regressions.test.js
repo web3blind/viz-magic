@@ -115,6 +115,30 @@ test('rapid paid chapter queue exposes the same polite status for every chapter'
   assert.ok(/help_library_payment_queued:\s*'Request accepted\./.test(en), 'English queue status should explain the same state');
 });
 
+test('accepted paid chapter requests become persistent proof-only actions instead of payable buttons', function () {
+  const chapters = ['chapter2', 'chapter3', 'chapter4', 'chapter5', 'chapter6', 'chapter7'];
+  assert.ok(/function _setLibraryPendingProof\(user, chapter, day, result\)/.test(helpJs), 'accepted broadcasts should persist an account/chapter/day proof marker');
+  assert.ok(/function _getLibraryPendingProof\(user, chapter, day\)/.test(helpJs), 'render and activation should recover the persisted proof marker');
+  assert.ok(/function _clearLibraryPendingProof\(user, chapter\)/.test(helpJs), 'verified access or definite pre-acceptance failure should clear the marker');
+  assert.ok(/function _checkLibraryPendingProof\(/.test(helpJs), 'pending buttons should run proof-only recovery');
+  assert.ok(/help_secret_library_check_access/.test(helpJs), 'pending controls should have a distinct proof-only label');
+  chapters.forEach(function (chapter) {
+    const setPattern = new RegExp("_setLibraryPendingProof\\(user, '" + chapter + "', day, result\\)");
+    const getPattern = new RegExp("_getLibraryPendingProof\\(user, '" + chapter + "', day\\)");
+    assert.ok(setPattern.test(helpJs), chapter + ' should persist pending proof immediately after broadcast acceptance');
+    assert.ok(getPattern.test(helpJs), chapter + ' should recover pending proof before any new broadcast path');
+  });
+  assert.ok(!/if \(proofErr\) \{[\s\S]{0,120}_reset(?:Secret|Unknown|Middle|Attraction|LivingNature|LivingElements)LibraryAction/.test(helpJs), 'post-broadcast proof timeout must never restore a payable action');
+  assert.ok(/aria-busy[\s\S]*help_secret_library_check_access/.test(helpJs), 'proof-only actions should remain keyboard and screen-reader distinguishable');
+});
+
+test('paid chapter preflights are serialized before the broadcast queue', function () {
+  assert.ok(/var libraryPreflightQueue = \[\];/.test(helpJs), 'paid chapter checks should use one shared preflight queue');
+  assert.ok(/function _enqueueLibraryPreflight\(task\)/.test(helpJs), 'paid chapter checks should expose a sequential queue helper');
+  assert.ok(/function _preflightSecretLibraryEntitlement\(user, day, callback, chapter, attempt\) \{[\s\S]{0,180}_enqueueLibraryPreflight\(function\(release\)/.test(helpJs), 'public preflight should reserve one queue slot');
+  assert.ok(/_runSecretLibraryPreflight\(user, day, function\(err, unlocked\) \{[\s\S]{0,120}release\(\)/.test(helpJs), 'the complete retry cycle should release its queue slot at completion');
+});
+
 test('Unknown Maps keeps persistent polite feedback throughout preflight and send failure', function () {
   assert.ok(/unknownLibraryBusy = true;[\s\S]{0,180}_setUnknownLibraryStatus\(Helpers\.t\('help_secret_library_checking'\)\)/.test(helpJs), 'Unknown Maps should announce preflight immediately');
   ['help_secret_library_history_check_failed', 'help_magic_library_chapter_three_energy_failed', 'help_magic_library_chapter_three_not_enough', 'help_library_payment_not_sent'].forEach(function(key) {

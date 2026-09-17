@@ -18,6 +18,83 @@ var HelpScreen = (function() {
     var livingNatureLibraryBusy = false;
     var livingElementsLibraryBusy = false;
     var secretLibraryExpiryTimer = null;
+    var libraryPreflightQueue = [];
+    var libraryPreflightActive = false;
+
+    function _libraryPendingProofKey(user, chapter) {
+        return VizMagicConfig.STORAGE_PREFIX + 'library_pending_' + String(user || '') + '_' + String(chapter || '');
+    }
+
+    function _getLibraryPendingProof(user, chapter, day) {
+        if (!user || !chapter || !day) return null;
+        try {
+            var key = _libraryPendingProofKey(user, chapter);
+            var raw = localStorage.getItem(key);
+            if (!raw) return null;
+            var pending = JSON.parse(raw);
+            if (!pending || pending.day !== day) {
+                localStorage.removeItem(key);
+                return null;
+            }
+            return pending;
+        } catch (err) {
+            return null;
+        }
+    }
+
+    function _setLibraryPendingProof(user, chapter, day, result) {
+        if (!user || !chapter || !day) return;
+        try {
+            localStorage.setItem(_libraryPendingProofKey(user, chapter), JSON.stringify({
+                day: day,
+                blockNum: Number(result && (result.block_num || result.block) || 0),
+                acceptedAt: Date.now()
+            }));
+        } catch (err) {}
+    }
+
+    function _clearLibraryPendingProof(user, chapter) {
+        if (!user || !chapter) return;
+        try {
+            localStorage.removeItem(_libraryPendingProofKey(user, chapter));
+        } catch (err) {}
+    }
+
+    function _showLibraryPendingProofAction(button, setStatus) {
+        if (button) {
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+            button.removeAttribute('aria-disabled');
+            button.setAttribute('data-proof-only', 'true');
+            button.textContent = Helpers.t('help_secret_library_check_access');
+        }
+        setStatus(Helpers.t('help_secret_library_confirmation_pending'));
+    }
+
+    function _checkLibraryPendingProof(user, chapter, day, button, setBusy, setStatus, successKey, headingId) {
+        var pending = _getLibraryPendingProof(user, chapter, day);
+        if (!pending) return false;
+        setBusy(true);
+        setStatus(Helpers.t('help_secret_library_checking_access'));
+        if (button) {
+            button.disabled = true;
+            button.setAttribute('aria-disabled', 'true');
+            button.setAttribute('aria-busy', 'true');
+            button.textContent = Helpers.t('help_secret_library_checking_access');
+        }
+        _waitForSecretLibraryProof(user, day, pending.blockNum ? { block_num: pending.blockNum } : null, 0, function(proofErr) {
+            setBusy(false);
+            if (proofErr) {
+                _showLibraryPendingProofAction(button, setStatus);
+                Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                if (button) button.focus();
+                return;
+            }
+            _clearLibraryPendingProof(user, chapter);
+            _finishSecretLibraryOpen(successKey, headingId);
+        }, chapter);
+        return true;
+    }
     var HELP_LIBRARY_MAPS = [
         { id: 'commons_first_light', title: 'The Commons of First Light Ур. 1-10' },
         { id: 'covenant_bazaar', title: 'The Covenant Bazaar Ур. 3-50' },
@@ -292,15 +369,19 @@ var HelpScreen = (function() {
         var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
         var day = StateEngine.getLibraryDay();
         var unlocked = StateEngine.hasLibraryAccess(user, 'chapter2', day);
+        var pending = _getLibraryPendingProof(user, 'chapter2', day);
+        if (unlocked) _clearLibraryPendingProof(user, 'chapter2');
         var html = '<article class="help-magic-library help-secret-library" aria-labelledby="help-secret-library-title">' +
             '<h3 id="help-secret-library-title" tabindex="-1">' + Helpers.icon('map', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_chapter_two_title') + '</h3>' +
             '<p>' + t('help_magic_library_chapter_two_intro') + '</p>' +
             '<p class="help-library-danger">' + t('help_magic_library_chapter_two_warning') + '</p>' +
-            '<p id="help-secret-library-status" class="help-secret-library-status" role="status" aria-live="polite"></p>';
+            '<p id="help-secret-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (secretLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_confirmation_pending') : '') + '</p>';
         if (!unlocked) {
+            var secretBusyAttrs = secretLibraryBusy ? ' disabled aria-disabled="true" aria-busy="true"' : '';
+            var secretButtonText = secretLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_check_access') : t('help_magic_library_chapter_two_unlock');
             html += '<div class="help-secret-library-lock">' +
                 '<p>' + t('help_magic_library_chapter_two_locked') + '</p>' +
-                '<button type="button" class="btn btn-primary" id="help-secret-library-unlock">' + t('help_magic_library_chapter_two_unlock') + '</button>' +
+                '<button type="button" class="btn btn-primary" id="help-secret-library-unlock"' + secretBusyAttrs + (pending ? ' data-proof-only="true"' : '') + '>' + secretButtonText + '</button>' +
                 '</div>';
         } else {
             html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_chapter_two_opened') + '</p>' +
@@ -319,15 +400,19 @@ var HelpScreen = (function() {
         var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
         var day = StateEngine.getLibraryDay();
         var unlocked = StateEngine.hasLibraryAccess(user, 'chapter3', day);
+        var pending = _getLibraryPendingProof(user, 'chapter3', day);
+        if (unlocked) _clearLibraryPendingProof(user, 'chapter3');
         var html = '<article class="help-magic-library help-secret-library help-unknown-library" aria-labelledby="help-unknown-library-title">' +
             '<h3 id="help-unknown-library-title" tabindex="-1">' + Helpers.icon('map', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_chapter_three_title') + '</h3>' +
             '<p>' + t('help_magic_library_chapter_three_intro') + '</p>' +
             '<p class="help-library-danger">' + t('help_magic_library_chapter_three_warning') + '</p>' +
-            '<p id="help-unknown-library-status" class="help-secret-library-status" role="status" aria-live="polite"></p>';
+            '<p id="help-unknown-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (unknownLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_confirmation_pending') : '') + '</p>';
         if (!unlocked) {
+            var unknownBusyAttrs = unknownLibraryBusy ? ' disabled aria-disabled="true" aria-busy="true"' : '';
+            var unknownButtonText = unknownLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_check_access') : t('help_magic_library_chapter_three_unlock');
             html += '<div class="help-secret-library-lock">' +
                 '<p>' + t('help_magic_library_chapter_three_locked') + '</p>' +
-                '<button type="button" class="btn btn-primary" id="help-unknown-library-unlock">' + t('help_magic_library_chapter_three_unlock') + '</button>' +
+                '<button type="button" class="btn btn-primary" id="help-unknown-library-unlock"' + unknownBusyAttrs + (pending ? ' data-proof-only="true"' : '') + '>' + unknownButtonText + '</button>' +
                 '</div>';
         } else {
             html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_chapter_three_opened') + '</p>' +
@@ -357,15 +442,19 @@ var HelpScreen = (function() {
         var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
         var day = StateEngine.getLibraryDay();
         var unlocked = StateEngine.hasLibraryAccess(user, 'chapter4', day);
+        var pending = _getLibraryPendingProof(user, 'chapter4', day);
+        if (unlocked) _clearLibraryPendingProof(user, 'chapter4');
         var html = '<article class="help-magic-library help-secret-library help-unknown-library help-middle-library" aria-labelledby="help-middle-library-title">' +
             '<h3 id="help-middle-library-title" tabindex="-1">' + Helpers.icon('map', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_middle_title') + '</h3>' +
             '<p>' + t('help_magic_library_middle_intro') + '</p>' +
             '<p class="help-library-danger">' + t('help_magic_library_middle_warning') + '</p>' +
-            '<p id="help-middle-library-status" class="help-secret-library-status" role="status" aria-live="polite"></p>';
+            '<p id="help-middle-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (middleLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_confirmation_pending') : '') + '</p>';
         if (!unlocked) {
+            var middleBusyAttrs = middleLibraryBusy ? ' disabled aria-disabled="true" aria-busy="true"' : '';
+            var middleButtonText = middleLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_check_access') : t('help_magic_library_middle_unlock');
             html += '<div class="help-secret-library-lock">' +
                 '<p>' + t('help_magic_library_middle_locked') + '</p>' +
-                '<button type="button" class="btn btn-primary" id="help-middle-library-unlock">' + t('help_magic_library_middle_unlock') + '</button>' +
+                '<button type="button" class="btn btn-primary" id="help-middle-library-unlock"' + middleBusyAttrs + (pending ? ' data-proof-only="true"' : '') + '>' + middleButtonText + '</button>' +
                 '</div>';
         } else {
             html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_middle_opened') + '</p>' +
@@ -391,17 +480,19 @@ var HelpScreen = (function() {
         var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
         var day = StateEngine.getLibraryDay();
         var unlocked = StateEngine.hasLibraryAccess(user, 'chapter5', day);
+        var pending = _getLibraryPendingProof(user, 'chapter5', day);
+        if (unlocked) _clearLibraryPendingProof(user, 'chapter5');
         var html = '<article class="help-magic-library help-secret-library help-unknown-library help-attraction-library" aria-labelledby="help-attraction-library-title">' +
             '<h3 id="help-attraction-library-title" tabindex="-1">' + Helpers.icon('spark', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_attraction_title') + '</h3>' +
             '<p>' + t('help_magic_library_attraction_intro') + '</p>' +
             '<p class="help-library-danger">' + t('help_magic_library_attraction_warning') + '</p>' +
-            '<p id="help-attraction-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (attractionLibraryBusy ? t('help_secret_library_checking') : '') + '</p>';
+            '<p id="help-attraction-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (attractionLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_confirmation_pending') : '') + '</p>';
         if (!unlocked) {
             var attractionBusyAttrs = attractionLibraryBusy ? ' disabled aria-disabled="true" aria-busy="true"' : '';
-            var attractionButtonText = attractionLibraryBusy ? t('help_secret_library_checking') : t('help_magic_library_attraction_unlock');
+            var attractionButtonText = attractionLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_check_access') : t('help_magic_library_attraction_unlock');
             html += '<div class="help-secret-library-lock">' +
                 '<p>' + t('help_magic_library_attraction_locked') + '</p>' +
-                '<button type="button" class="btn btn-primary" id="help-attraction-library-unlock"' + attractionBusyAttrs + '>' + attractionButtonText + '</button>' +
+                '<button type="button" class="btn btn-primary" id="help-attraction-library-unlock"' + attractionBusyAttrs + (pending ? ' data-proof-only="true"' : '') + '>' + attractionButtonText + '</button>' +
                 '</div>';
         } else {
             html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_attraction_opened') + '</p>' +
@@ -427,17 +518,19 @@ var HelpScreen = (function() {
         var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
         var day = StateEngine.getLibraryDay();
         var unlocked = StateEngine.hasLibraryAccess(user, 'chapter6', day);
+        var pending = _getLibraryPendingProof(user, 'chapter6', day);
+        if (unlocked) _clearLibraryPendingProof(user, 'chapter6');
         var html = '<article class="help-magic-library help-secret-library help-unknown-library help-living-nature-library" aria-labelledby="help-living-nature-library-title">' +
             '<h3 id="help-living-nature-library-title" tabindex="-1">' + Helpers.icon('leaf', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_living_nature_title') + '</h3>' +
             '<p>' + t('help_magic_library_living_nature_intro') + '</p>' +
             '<p class="help-library-danger">' + t('help_magic_library_living_nature_warning') + '</p>' +
-            '<p id="help-living-nature-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (livingNatureLibraryBusy ? t('help_secret_library_checking') : '') + '</p>';
+            '<p id="help-living-nature-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (livingNatureLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_confirmation_pending') : '') + '</p>';
         if (!unlocked) {
             var livingNatureBusyAttrs = livingNatureLibraryBusy ? ' disabled aria-disabled="true" aria-busy="true"' : '';
-            var buttonText = livingNatureLibraryBusy ? t('help_secret_library_checking') : t('help_magic_library_living_nature_unlock');
+            var buttonText = livingNatureLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_check_access') : t('help_magic_library_living_nature_unlock');
             html += '<div class="help-secret-library-lock">' +
                 '<p>' + t('help_magic_library_living_nature_locked') + '</p>' +
-                '<button type="button" class="btn btn-primary" id="help-living-nature-library-unlock"' + livingNatureBusyAttrs + '>' + buttonText + '</button>' +
+                '<button type="button" class="btn btn-primary" id="help-living-nature-library-unlock"' + livingNatureBusyAttrs + (pending ? ' data-proof-only="true"' : '') + '>' + buttonText + '</button>' +
                 '</div>';
         } else {
             html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_living_nature_opened') + '</p>' +
@@ -463,17 +556,19 @@ var HelpScreen = (function() {
         var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
         var day = StateEngine.getLibraryDay();
         var unlocked = StateEngine.hasLibraryAccess(user, 'chapter7', day);
+        var pending = _getLibraryPendingProof(user, 'chapter7', day);
+        if (unlocked) _clearLibraryPendingProof(user, 'chapter7');
         var html = '<article class="help-magic-library help-secret-library help-unknown-library help-living-elements-library" aria-labelledby="help-living-elements-library-title">' +
             '<h3 id="help-living-elements-library-title" tabindex="-1">' + Helpers.icon('weather', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_living_elements_title') + '</h3>' +
             '<p>' + t('help_magic_library_living_elements_intro') + '</p>' +
             '<p class="help-library-danger">' + t('help_magic_library_living_elements_warning') + '</p>' +
-            '<p id="help-living-elements-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (livingElementsLibraryBusy ? t('help_secret_library_checking') : '') + '</p>';
+            '<p id="help-living-elements-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (livingElementsLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_confirmation_pending') : '') + '</p>';
         if (!unlocked) {
             var livingElementsBusyAttrs = livingElementsLibraryBusy ? ' disabled aria-disabled="true" aria-busy="true"' : '';
-            var buttonText = livingElementsLibraryBusy ? t('help_secret_library_checking') : t('help_magic_library_living_elements_unlock');
+            var buttonText = livingElementsLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_check_access') : t('help_magic_library_living_elements_unlock');
             html += '<div class="help-secret-library-lock">' +
                 '<p>' + t('help_magic_library_living_elements_locked') + '</p>' +
-                '<button type="button" class="btn btn-primary" id="help-living-elements-library-unlock"' + livingElementsBusyAttrs + '>' + buttonText + '</button>' +
+                '<button type="button" class="btn btn-primary" id="help-living-elements-library-unlock"' + livingElementsBusyAttrs + (pending ? ' data-proof-only="true"' : '') + '>' + buttonText + '</button>' +
                 '</div>';
         } else {
             html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_living_elements_opened') + '</p>' +
@@ -612,6 +707,12 @@ var HelpScreen = (function() {
         }
         var button = Helpers.$('help-living-nature-library-unlock');
         var day = StateEngine.getLibraryDay();
+        if (_getLibraryPendingProof(user, 'chapter6', day)) {
+            _checkLibraryPendingProof(user, 'chapter6', day, button, function(value) {
+                livingNatureLibraryBusy = value;
+            }, _setLivingNatureLibraryStatus, 'help_magic_library_living_nature_success', 'help-living-nature-library-title');
+            return;
+        }
         livingNatureLibraryBusy = true;
         _setLivingNatureLibraryStatus(Helpers.t('help_secret_library_checking'));
         if (button) {
@@ -661,17 +762,19 @@ var HelpScreen = (function() {
                             Toast.error(Helpers.t('help_magic_library_living_nature_failed'));
                             return;
                         }
+                        _setLibraryPendingProof(user, 'chapter6', day, result);
                         if (button) button.textContent = Helpers.t('help_secret_library_waiting_confirmation');
                         _setLivingNatureLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
                         _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
-                                _resetLivingNatureLibraryAction(button);
-                                _setLivingNatureLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
+                                livingNatureLibraryBusy = false;
+                                _showLibraryPendingProofAction(button, _setLivingNatureLibraryStatus);
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
                                 if (button) button.focus();
                                 return;
                             }
                             livingNatureLibraryBusy = false;
+                            _clearLibraryPendingProof(user, 'chapter6');
                             _finishSecretLibraryOpen('help_magic_library_living_nature_success', 'help-living-nature-library-title');
                         }, 'chapter6');
                     }
@@ -706,6 +809,12 @@ var HelpScreen = (function() {
         }
         var button = Helpers.$('help-living-elements-library-unlock');
         var day = StateEngine.getLibraryDay();
+        if (_getLibraryPendingProof(user, 'chapter7', day)) {
+            _checkLibraryPendingProof(user, 'chapter7', day, button, function(value) {
+                livingElementsLibraryBusy = value;
+            }, _setLivingElementsLibraryStatus, 'help_magic_library_living_elements_success', 'help-living-elements-library-title');
+            return;
+        }
         livingElementsLibraryBusy = true;
         _setLivingElementsLibraryStatus(Helpers.t('help_secret_library_checking'));
         if (button) {
@@ -755,17 +864,19 @@ var HelpScreen = (function() {
                             Toast.error(Helpers.t('help_magic_library_living_elements_failed'));
                             return;
                         }
+                        _setLibraryPendingProof(user, 'chapter7', day, result);
                         if (button) button.textContent = Helpers.t('help_secret_library_waiting_confirmation');
                         _setLivingElementsLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
                         _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
-                                _resetLivingElementsLibraryAction(button);
-                                _setLivingElementsLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
+                                livingElementsLibraryBusy = false;
+                                _showLibraryPendingProofAction(button, _setLivingElementsLibraryStatus);
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
                                 if (button) button.focus();
                                 return;
                             }
                             livingElementsLibraryBusy = false;
+                            _clearLibraryPendingProof(user, 'chapter7');
                             _finishSecretLibraryOpen('help_magic_library_living_elements_success', 'help-living-elements-library-title');
                         }, 'chapter7');
                     }
@@ -814,6 +925,12 @@ var HelpScreen = (function() {
         }
         var button = Helpers.$('help-attraction-library-unlock');
         var day = StateEngine.getLibraryDay();
+        if (_getLibraryPendingProof(user, 'chapter5', day)) {
+            _checkLibraryPendingProof(user, 'chapter5', day, button, function(value) {
+                attractionLibraryBusy = value;
+            }, _setAttractionLibraryStatus, 'help_magic_library_attraction_success', 'help-attraction-library-title');
+            return;
+        }
         attractionLibraryBusy = true;
         _setAttractionLibraryStatus(Helpers.t('help_secret_library_checking'));
         if (button) {
@@ -863,17 +980,19 @@ var HelpScreen = (function() {
                             Toast.error(Helpers.t('help_magic_library_attraction_failed'));
                             return;
                         }
+                        _setLibraryPendingProof(user, 'chapter5', day, result);
                         if (button) button.textContent = Helpers.t('help_secret_library_waiting_confirmation');
                         _setAttractionLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
                         _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
-                                _resetAttractionLibraryAction(button);
-                                _setAttractionLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
+                                attractionLibraryBusy = false;
+                                _showLibraryPendingProofAction(button, _setAttractionLibraryStatus);
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
                                 if (button) button.focus();
                                 return;
                             }
                             attractionLibraryBusy = false;
+                            _clearLibraryPendingProof(user, 'chapter5');
                             _finishSecretLibraryOpen('help_magic_library_attraction_success', 'help-attraction-library-title');
                         }, 'chapter5');
                     }
@@ -892,6 +1011,12 @@ var HelpScreen = (function() {
         }
         var button = Helpers.$('help-middle-library-unlock');
         var day = StateEngine.getLibraryDay();
+        if (_getLibraryPendingProof(user, 'chapter4', day)) {
+            _checkLibraryPendingProof(user, 'chapter4', day, button, function(value) {
+                middleLibraryBusy = value;
+            }, _setMiddleLibraryStatus, 'help_magic_library_middle_success', 'help-middle-library-title');
+            return;
+        }
         middleLibraryBusy = true;
         if (button) {
             button.setAttribute('data-idle-label', button.textContent);
@@ -939,17 +1064,19 @@ var HelpScreen = (function() {
                             Toast.error(Helpers.t('help_magic_library_middle_failed'));
                             return;
                         }
+                        _setLibraryPendingProof(user, 'chapter4', day, result);
                         if (button) button.textContent = Helpers.t('help_secret_library_waiting_confirmation');
                         _setMiddleLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
                         _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
-                                _resetMiddleLibraryAction(button);
-                                _setMiddleLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
+                                middleLibraryBusy = false;
+                                _showLibraryPendingProofAction(button, _setMiddleLibraryStatus);
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
                                 if (button) button.focus();
                                 return;
                             }
                             middleLibraryBusy = false;
+                            _clearLibraryPendingProof(user, 'chapter4');
                             _finishSecretLibraryOpen('help_magic_library_middle_success', 'help-middle-library-title');
                         }, 'chapter4');
                     }
@@ -1077,7 +1204,7 @@ var HelpScreen = (function() {
         );
     }
 
-    function _preflightSecretLibraryEntitlement(user, day, callback, chapter, attempt) {
+    function _runSecretLibraryPreflight(user, day, callback, chapter, attempt) {
         attempt = Number(attempt || 0);
         _preflightSecretLibraryEntitlementOnce(user, day, function(err, unlocked) {
             if (!err) {
@@ -1089,9 +1216,41 @@ var HelpScreen = (function() {
                 return;
             }
             setTimeout(function() {
-                _preflightSecretLibraryEntitlement(user, day, callback, chapter, attempt + 1);
+                _runSecretLibraryPreflight(user, day, callback, chapter, attempt + 1);
             }, 750);
         }, chapter);
+    }
+
+    function _drainLibraryPreflightQueue() {
+        if (libraryPreflightActive || !libraryPreflightQueue.length) return;
+        libraryPreflightActive = true;
+        var task = libraryPreflightQueue.shift();
+        var released = false;
+        task(function release() {
+            if (released) return;
+            released = true;
+            libraryPreflightActive = false;
+            setTimeout(_drainLibraryPreflightQueue, 0);
+        });
+    }
+
+    function _enqueueLibraryPreflight(task) {
+        libraryPreflightQueue.push(task);
+        _drainLibraryPreflightQueue();
+    }
+
+    function _preflightSecretLibraryEntitlement(user, day, callback, chapter, attempt) {
+        _enqueueLibraryPreflight(function(release) {
+            try {
+                _runSecretLibraryPreflight(user, day, function(err, unlocked) {
+                    release();
+                    callback(err, unlocked);
+                }, chapter, attempt);
+            } catch (err) {
+                release();
+                callback(err);
+            }
+        });
     }
 
     function _confirmSecretLibraryBroadcastProof(user, day, result, callback, chapter) {
@@ -1235,6 +1394,12 @@ var HelpScreen = (function() {
         }
         var confirm = Helpers.$('help-secret-library-unlock');
         var day = StateEngine.getLibraryDay();
+        if (_getLibraryPendingProof(user, 'chapter2', day)) {
+            _checkLibraryPendingProof(user, 'chapter2', day, confirm, function(value) {
+                secretLibraryBusy = value;
+            }, _setSecretLibraryStatus, 'help_magic_library_chapter_two_success', 'help-secret-library-title');
+            return;
+        }
         secretLibraryBusy = true;
         if (confirm) {
             confirm.setAttribute('data-idle-label', confirm.textContent);
@@ -1283,17 +1448,19 @@ var HelpScreen = (function() {
                             Toast.error(Helpers.t('help_magic_library_chapter_two_failed'));
                             return;
                         }
+                        _setLibraryPendingProof(user, 'chapter2', day, result);
                         if (confirm) confirm.textContent = Helpers.t('help_secret_library_waiting_confirmation');
                         _setSecretLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
                         _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
-                                _resetSecretLibraryAction(confirm);
-                                _setSecretLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
+                                secretLibraryBusy = false;
+                                _showLibraryPendingProofAction(confirm, _setSecretLibraryStatus);
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
                                 if (confirm) confirm.focus();
                                 return;
                             }
                             secretLibraryBusy = false;
+                            _clearLibraryPendingProof(user, 'chapter2');
                             _finishSecretLibraryOpen('help_magic_library_chapter_two_success');
                         });
                     }
@@ -1326,6 +1493,12 @@ var HelpScreen = (function() {
         }
         var button = Helpers.$('help-unknown-library-unlock');
         var day = StateEngine.getLibraryDay();
+        if (_getLibraryPendingProof(user, 'chapter3', day)) {
+            _checkLibraryPendingProof(user, 'chapter3', day, button, function(value) {
+                unknownLibraryBusy = value;
+            }, _setUnknownLibraryStatus, 'help_magic_library_chapter_three_success', 'help-unknown-library-title');
+            return;
+        }
         unknownLibraryBusy = true;
         _setUnknownLibraryStatus(Helpers.t('help_secret_library_checking'));
         if (button) {
@@ -1378,17 +1551,19 @@ var HelpScreen = (function() {
                             Toast.error(Helpers.t('help_magic_library_chapter_three_failed'));
                             return;
                         }
+                        _setLibraryPendingProof(user, 'chapter3', day, result);
                         if (button) button.textContent = Helpers.t('help_secret_library_waiting_confirmation');
                         _setUnknownLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
                         _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
                             if (proofErr) {
-                                _resetUnknownLibraryAction(button);
-                                _setUnknownLibraryStatus(Helpers.t('help_secret_library_confirmation_pending'));
+                                unknownLibraryBusy = false;
+                                _showLibraryPendingProofAction(button, _setUnknownLibraryStatus);
                                 Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
                                 if (button) button.focus();
                                 return;
                             }
                             unknownLibraryBusy = false;
+                            _clearLibraryPendingProof(user, 'chapter3');
                             _finishSecretLibraryOpen('help_magic_library_chapter_three_success', 'help-unknown-library-title');
                         }, 'chapter3');
                     }
