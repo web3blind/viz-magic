@@ -115,6 +115,13 @@ test('rapid paid chapter queue exposes the same polite status for every chapter'
   assert.ok(/help_library_payment_queued:\s*'Request accepted\./.test(en), 'English queue status should explain the same state');
 });
 
+test('Unknown Maps keeps persistent polite feedback throughout preflight and send failure', function () {
+  assert.ok(/unknownLibraryBusy = true;[\s\S]{0,180}_setUnknownLibraryStatus\(Helpers\.t\('help_secret_library_checking'\)\)/.test(helpJs), 'Unknown Maps should announce preflight immediately');
+  ['help_secret_library_history_check_failed', 'help_magic_library_chapter_three_energy_failed', 'help_magic_library_chapter_three_not_enough', 'help_library_payment_not_sent'].forEach(function(key) {
+    assert.ok(new RegExp("_setUnknownLibraryStatus\\(Helpers\\.t\\('" + key + "'\\)\\)").test(helpJs), 'Unknown Maps should persist ' + key + ' in its live region');
+  });
+});
+
 test('Creators book has ordered headings, labeled pages, and keyboard-safe external links', function () {
   assert.ok(/setAttribute\('aria-label', t\('developers_title'\)\)/.test(developersJs), 'creator route label should follow the selected language');
   assert.ok(/aria-labelledby="creators-book-title"/.test(developersJs), 'creator book should be named by its visible heading');

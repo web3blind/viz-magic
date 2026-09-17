@@ -1104,13 +1104,13 @@ test('magical library restores the original board-game artwork with full lore', 
   const index = read('app/index.html');
   const sw = read('app/sw.js');
 
-  assert.ok(/help_magic_library_title:\s*'Магическая библиотека день первый'/.test(ru), 'RU guide should name the first day Magical Library block');
-  assert.ok(/Магическая библиотека день первый/.test(ru), 'RU guide should include Denis renamed day-one library title');
-  assert.ok(/Magical Library day one/.test(en), 'EN guide should have a translated day-one Magical Library title');
+  assert.ok(/help_magic_library_title:\s*'Магическая библиотека - день первый'/.test(ru), 'RU guide should name the first day Magical Library block with the requested hyphen');
+  assert.ok(/Магическая библиотека - день первый/.test(ru), 'RU guide should include the hyphenated day-one library title');
+  assert.ok(/Magical Library - Day One/.test(en), 'EN guide should have the matching hyphenated day-one Magical Library title');
   assert.ok(/HELP_LIBRARY_MAPS = \[/.test(helpJs), 'Help screen should keep a durable library region list');
   assert.ok(/The Commons of First Light Ур\. 1-10/.test(helpJs), 'first library link should use the requested mixed title');
   assert.ok(/The Void Sanctum Ур\. 101\+/.test(helpJs), 'Magical Library day-one ranges should remain in the restored original state');
-  assert.ok(!/help-library-list[\s\S]*<ol/.test(helpJs), 'library links should not be numbered');
+  assert.ok(/data-library-map=\"' \+ entry\.id \+ '\">' \+ Helpers\.escapeHtml\(\(i \+ 1\) \+ '\. ' \+ entry\.title\)/.test(helpJs), 'day-one Magical Library links should render visible ordinals 1-15');
   assert.ok(/help-library-link/.test(helpJs), 'library entries should be active links/buttons');
   assert.ok(/t\('map_lore_' \+ entry\.id\)/.test(helpJs), 'library modal should show the existing full map description');
   assert.ok(/id="help-library-close"/.test(helpJs), 'library modal should include a Close button');
@@ -2358,6 +2358,10 @@ test('Living Nature Maps use an independent paid chapter and the requested bound
   assert.ok(/help_magic_library_living_nature_title:\s*'Карты живой природы Мира - ветка шестая'/.test(ruJs), 'Living Nature block should separate its sixth-branch phrase with a hyphen');
   assert.ok(/Звери, птицы, морские и речные обитатели здесь далеко не просто фауна - они полноценные участники магических событий\. И некоторые из них очень могущественны\.\.\./.test(ruJs), 'Living Nature block should preserve the requested description');
   assert.ok(/help_living_nature_library_boundary:\s*'Магическая граница'/.test(ruJs), 'Living Nature block should name the boundary');
+  assert.ok(/help_living_nature_map_07_title:\s*'Подземное море четырнадцати огней'/.test(ruJs), 'visible Living Nature map seven should use the promoted underground-sea title');
+  assert.strictEqual(require('crypto').createHash('sha256').update(fs.readFileSync(path.join(root, 'app/assets/library-maps-living-nature/living-nature-map-07.jpg'))).digest('hex'), '546fe115431e8ad49bee659c315f474aebc24a22328b24b87c4a106f800829cd', 'runtime position seven should be the exact promoted S05 JPEG');
+  assert.strictEqual(fs.existsSync(path.join(root, 'media_review/approved-living-nature-maps/living-nature-map-07-underground-sea-fourteen-lights.jpg')), false, 'exact review duplicate should be consolidated into the tracked runtime master');
+  assert.strictEqual(fs.existsSync(path.join(root, 'media_review/approved-living-nature-maps/living-nature-map-07-coast-of-twelve-wayhouses.jpg')), false, 'superseded low-quality map seven source should be deleted');
 
   var firstSource = helpJs.match(/var HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS\s*=\s*\[([\s\S]*?)\];/);
   var boundarySource = helpJs.match(/var HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS\s*=\s*\[([\s\S]*?)\];/);
@@ -2390,6 +2394,15 @@ test('Living Nature Maps use an independent paid chapter and the requested bound
   assert.strictEqual(engine.verifyLibraryUnlockProof({ vmActions: proof.vmActions, awards: [{ initiator: 'alice', receiver: 'denis-skripnik', energy: 999, memo: 'viz://vm/library/chapter6/' + day, txIndex: 13 }] }, 'alice', 'chapter6', day), false, 'chapter six must reject wrong energy');
   const unlockEvent = engine.processLibraryUnlockResult('alice', 900, day, 'chapter6');
   assert.strictEqual(unlockEvent && unlockEvent.type, 'library_chapter_six_unlocked', 'chapter six should emit its own replay event');
+});
+
+test('unpublished map review decisions retain reserves and tombstone deleted versions', function () {
+  assert.strictEqual(fs.existsSync(path.join(root, 'media_review/living-elements/LW-01-G1-integrated-route-reference.jpg')), true, 'S01 should remain a standalone World Map cycle reserve');
+  assert.strictEqual(fs.existsSync(path.join(root, 'media_review/living-elements/LE-09-G2-false-horizons-lattice.jpg')), true, 'S02 should remain an independent future rejected-quality block reserve');
+  assert.strictEqual(fs.existsSync(path.join(root, 'media_review/living-elements/LE-13-G3-five-voices-switchback.jpg')), false, 'S03 image should be deleted');
+  assert.strictEqual(fs.existsSync(path.join(root, 'media_review/living-elements/LE-14-G2-branched-thunder-conductor.jpg')), false, 'S04 image should be deleted');
+  assert.strictEqual(fs.existsSync(path.join(root, 'app/assets/library-maps-uninhabited/uninhabited-map-01.jpg')), true, 'S06 should remain available for the future Uninhabited Maps block');
+  assert.ok(/deleted_by_user/.test(read('media_review/living-elements/LE-13-G3-manifest.json')) && /deleted_by_user/.test(read('media_review/living-elements/LE-14-G2-manifest.json')), 'deleted S03 and S04 manifests should preserve tombstones');
 });
 
 test('Living Elements Maps use numbered links, Awakening, and an independent paid chapter', function () {
@@ -2433,6 +2446,8 @@ test('Living Elements Maps use numbered links, Awakening, and an independent pai
 });
 
 test('all paid map blocks use unified titles and visible ordinals', function () {
+  assert.ok(ruJs.includes("help_magic_library_title: 'Магическая библиотека - день первый'"), 'day-one Magical Library heading should separate the library name and day with a hyphen');
+  assert.ok(enJs.includes("help_magic_library_title: 'Magical Library - Day One'"), 'English day-one Magical Library heading should use the same hyphenated structure');
   [
     "help_magic_library_chapter_two_title: 'Тайные Карты Мира - комната вторая'",
     "help_magic_library_chapter_three_title: 'Неизвестные карты Мира - глава третья'",
@@ -2461,6 +2476,11 @@ test('all paid map blocks use unified titles and visible ordinals', function () 
     assert.ok(/\.number \+ '\. '/.test(line), 'every paid map link should render its visible ordinal: ' + line.trim());
   });
   assert.ok(/var titleText = \(entry\.number \? entry\.number \+ '\. ' : ''\) \+ Helpers\.t\(entry\.titleKey\)/.test(helpJs), 'paid map modals should preserve the visible ordinal and individual title');
+});
+
+test('paid library retries transient entitlement preflight errors before releasing a chapter button', function () {
+  assert.ok(/function _preflightSecretLibraryEntitlementOnce\(user, day, callback, chapter\)/.test(helpJs), 'strict one-shot entitlement verification should remain isolated');
+  assert.ok(/function _preflightSecretLibraryEntitlement\(user, day, callback, chapter, attempt\)[\s\S]{0,1000}_preflightSecretLibraryEntitlementOnce[\s\S]{0,1000}attempt >= 2[\s\S]{0,1000}setTimeout[\s\S]{0,1000}attempt \+ 1/.test(helpJs), 'transient preflight failures should retry twice before returning an error');
 });
 
 test('paid library serializes rapid chapter payments and refreshes the VM backlink for each transaction', function () {
@@ -2517,6 +2537,7 @@ test('paid library confirms a freshly broadcast payment from the live account po
 });
 
 test('all paid library confirmation timeouts release their controls accessibly', function () {
+  assert.ok(/function _finishSecretLibraryOpen\(messageKey, headingId\)[\s\S]{0,300}render\(\)[\s\S]{0,300}heading\.focus\(\)/.test(helpJs), 'successful paid-library recovery should rerender and move focus to the opened chapter heading');
   [
     ['Secret', '_resetSecretLibraryAction\\(confirm\\)', '_setSecretLibraryStatus', 'confirm'],
     ['Unknown', '_resetUnknownLibraryAction\\(button\\)', '_setUnknownLibraryStatus', 'button'],

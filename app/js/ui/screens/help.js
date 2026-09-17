@@ -9,7 +9,7 @@ var HelpScreen = (function() {
     var HELP_UNKNOWN_LIBRARY_ASSET_VERSION = '20260824a';
     var HELP_MIDDLE_LIBRARY_ASSET_VERSION = '20260828a';
     var HELP_ATTRACTION_LIBRARY_ASSET_VERSION = '20260828a';
-    var HELP_LIVING_NATURE_LIBRARY_ASSET_VERSION = '20260907a';
+    var HELP_LIVING_NATURE_LIBRARY_ASSET_VERSION = '20260913b';
     var HELP_LIVING_ELEMENTS_LIBRARY_ASSET_VERSION = '20260911a';
     var secretLibraryBusy = false;
     var unknownLibraryBusy = false;
@@ -282,7 +282,7 @@ var HelpScreen = (function() {
             '<div class="help-library-list">';
         for (var i = 0; i < HELP_LIBRARY_MAPS.length; i++) {
             var entry = HELP_LIBRARY_MAPS[i];
-            html += '<button type="button" class="help-library-link" data-library-map="' + entry.id + '">' + Helpers.escapeHtml(entry.title) + '</button>';
+            html += '<button type="button" class="help-library-link" data-library-map="' + entry.id + '">' + Helpers.escapeHtml((i + 1) + '. ' + entry.title) + '</button>';
         }
         html += '</div></article>';
         return html;
@@ -1011,7 +1011,7 @@ var HelpScreen = (function() {
     }
 
 
-    function _preflightSecretLibraryEntitlement(user, day, callback, chapter) {
+    function _preflightSecretLibraryEntitlementOnce(user, day, callback, chapter) {
         chapter = chapter || 'chapter2';
         if (StateEngine.hasLibraryAccess(user, chapter, day)) {
             callback(null, true);
@@ -1075,6 +1075,23 @@ var HelpScreen = (function() {
                 return data.chapter === chapter && data.day === day;
             }
         );
+    }
+
+    function _preflightSecretLibraryEntitlement(user, day, callback, chapter, attempt) {
+        attempt = Number(attempt || 0);
+        _preflightSecretLibraryEntitlementOnce(user, day, function(err, unlocked) {
+            if (!err) {
+                callback(null, unlocked);
+                return;
+            }
+            if (StateEngine.getLibraryDay() !== day || attempt >= 2) {
+                callback(err);
+                return;
+            }
+            setTimeout(function() {
+                _preflightSecretLibraryEntitlement(user, day, callback, chapter, attempt + 1);
+            }, 750);
+        }, chapter);
     }
 
     function _confirmSecretLibraryBroadcastProof(user, day, result, callback, chapter) {
@@ -1310,6 +1327,7 @@ var HelpScreen = (function() {
         var button = Helpers.$('help-unknown-library-unlock');
         var day = StateEngine.getLibraryDay();
         unknownLibraryBusy = true;
+        _setUnknownLibraryStatus(Helpers.t('help_secret_library_checking'));
         if (button) {
             button.setAttribute('data-idle-label', button.textContent);
             button.disabled = true;
@@ -1319,6 +1337,7 @@ var HelpScreen = (function() {
         _preflightSecretLibraryEntitlement(user, day, function(historyErr, alreadyUnlocked) {
             if (historyErr) {
                 _resetUnknownLibraryAction(button);
+                _setUnknownLibraryStatus(Helpers.t('help_secret_library_history_check_failed'));
                 Toast.error(Helpers.t('help_secret_library_history_check_failed'));
                 return;
             }
@@ -1330,12 +1349,14 @@ var HelpScreen = (function() {
             VizAccount.getAccount(user, function(energyErr, accountData) {
                 if (energyErr || !accountData) {
                     _resetUnknownLibraryAction(button);
+                    _setUnknownLibraryStatus(Helpers.t('help_magic_library_chapter_three_energy_failed'));
                     Toast.error(Helpers.t('help_magic_library_chapter_three_energy_failed'));
                     return;
                 }
                 var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
                 if (currentEnergy < VizMagicConfig.LIBRARY.CHAPTER_THREE_COST) {
                     _resetUnknownLibraryAction(button);
+                    _setUnknownLibraryStatus(Helpers.t('help_magic_library_chapter_three_not_enough'));
                     Toast.error(Helpers.t('help_magic_library_chapter_three_not_enough'));
                     return;
                 }
@@ -1353,6 +1374,7 @@ var HelpScreen = (function() {
                     function(err, result) {
                         if (err) {
                             _resetUnknownLibraryAction(button);
+                            _setUnknownLibraryStatus(Helpers.t('help_library_payment_not_sent'));
                             Toast.error(Helpers.t('help_magic_library_chapter_three_failed'));
                             return;
                         }
