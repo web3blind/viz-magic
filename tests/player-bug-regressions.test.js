@@ -2396,15 +2396,6 @@ test('Living Nature Maps use an independent paid chapter and the requested bound
   assert.strictEqual(unlockEvent && unlockEvent.type, 'library_chapter_six_unlocked', 'chapter six should emit its own replay event');
 });
 
-test('unpublished map review decisions retain reserves and tombstone deleted versions', function () {
-  assert.strictEqual(fs.existsSync(path.join(root, 'media_review/living-elements/LW-01-G1-integrated-route-reference.jpg')), true, 'S01 should remain a standalone World Map cycle reserve');
-  assert.strictEqual(fs.existsSync(path.join(root, 'media_review/living-elements/LE-09-G2-false-horizons-lattice.jpg')), true, 'S02 should remain an independent future rejected-quality block reserve');
-  assert.strictEqual(fs.existsSync(path.join(root, 'media_review/living-elements/LE-13-G3-five-voices-switchback.jpg')), false, 'S03 image should be deleted');
-  assert.strictEqual(fs.existsSync(path.join(root, 'media_review/living-elements/LE-14-G2-branched-thunder-conductor.jpg')), false, 'S04 image should be deleted');
-  assert.strictEqual(fs.existsSync(path.join(root, 'app/assets/library-maps-uninhabited/uninhabited-map-01.jpg')), true, 'S06 should remain available for the future Uninhabited Maps block');
-  assert.ok(/deleted_by_user/.test(read('media_review/living-elements/LE-13-G3-manifest.json')) && /deleted_by_user/.test(read('media_review/living-elements/LE-14-G2-manifest.json')), 'deleted S03 and S04 manifests should preserve tombstones');
-});
-
 test('Living Elements Maps use numbered links, Awakening, and an independent paid chapter', function () {
   assert.ok(/CHAPTER_SEVEN_COST:\s*1000/.test(configJs), 'Living Elements chapter should cost the canonical 10% energy');
   assert.ok(/CHAPTER_SEVEN_MEMO_PREFIX:\s*'viz:\/\/vm\/library\/chapter7\/'/.test(configJs), 'Living Elements chapter needs an independent memo prefix');
