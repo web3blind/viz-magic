@@ -20,6 +20,8 @@ var HelpScreen = (function() {
     var secretLibraryExpiryTimer = null;
     var libraryPreflightQueue = [];
     var libraryPreflightActive = false;
+    var libraryAccountQueue = [];
+    var libraryAccountActive = false;
 
     function _libraryPendingProofKey(user, chapter) {
         return VizMagicConfig.STORAGE_PREFIX + 'library_pending_' + String(user || '') + '_' + String(chapter || '');
@@ -733,7 +735,7 @@ var HelpScreen = (function() {
                 _finishSecretLibraryOpen('help_magic_library_living_nature_already_open', 'help-living-nature-library-title');
                 return;
             }
-            VizAccount.getAccount(user, function(energyErr, accountData) {
+            _getLibraryAccount(user, function(energyErr, accountData) {
                 if (energyErr || !accountData) {
                     _resetLivingNatureLibraryAction(button);
                     Toast.error(Helpers.t('help_magic_library_living_nature_energy_failed'));
@@ -835,7 +837,7 @@ var HelpScreen = (function() {
                 _finishSecretLibraryOpen('help_magic_library_living_elements_already_open', 'help-living-elements-library-title');
                 return;
             }
-            VizAccount.getAccount(user, function(energyErr, accountData) {
+            _getLibraryAccount(user, function(energyErr, accountData) {
                 if (energyErr || !accountData) {
                     _resetLivingElementsLibraryAction(button);
                     Toast.error(Helpers.t('help_magic_library_living_elements_energy_failed'));
@@ -892,9 +894,11 @@ var HelpScreen = (function() {
 
     function _resetMiddleLibraryAction(button) {
         middleLibraryBusy = false;
+        _setMiddleLibraryStatus('');
         if (button) {
             button.disabled = false;
             button.removeAttribute('aria-busy');
+            button.removeAttribute('aria-disabled');
             button.textContent = button.getAttribute('data-idle-label') || Helpers.t('help_magic_library_middle_unlock');
         }
     }
@@ -951,7 +955,7 @@ var HelpScreen = (function() {
                 _finishSecretLibraryOpen('help_magic_library_attraction_already_open', 'help-attraction-library-title');
                 return;
             }
-            VizAccount.getAccount(user, function(energyErr, accountData) {
+            _getLibraryAccount(user, function(energyErr, accountData) {
                 if (energyErr || !accountData) {
                     _resetAttractionLibraryAction(button);
                     Toast.error(Helpers.t('help_magic_library_attraction_energy_failed'));
@@ -1018,9 +1022,11 @@ var HelpScreen = (function() {
             return;
         }
         middleLibraryBusy = true;
+        _setMiddleLibraryStatus(Helpers.t('help_secret_library_checking'));
         if (button) {
             button.setAttribute('data-idle-label', button.textContent);
             button.disabled = true;
+            button.setAttribute('aria-disabled', 'true');
             button.setAttribute('aria-busy', 'true');
             button.textContent = Helpers.t('help_secret_library_checking');
         }
@@ -1035,7 +1041,7 @@ var HelpScreen = (function() {
                 _finishSecretLibraryOpen('help_magic_library_middle_already_open', 'help-middle-library-title');
                 return;
             }
-            VizAccount.getAccount(user, function(energyErr, accountData) {
+            _getLibraryAccount(user, function(energyErr, accountData) {
                 if (energyErr || !accountData) {
                     _resetMiddleLibraryAction(button);
                     Toast.error(Helpers.t('help_magic_library_middle_energy_failed'));
@@ -1253,6 +1259,28 @@ var HelpScreen = (function() {
         });
     }
 
+    function _drainLibraryAccountQueue() {
+        if (libraryAccountActive || !libraryAccountQueue.length) return;
+        libraryAccountActive = true;
+        var task = libraryAccountQueue.shift();
+        try {
+            VizAccount.getAccount(task.user, function(err, accountData) {
+                libraryAccountActive = false;
+                task.callback(err, accountData);
+                _drainLibraryAccountQueue();
+            });
+        } catch (err) {
+            libraryAccountActive = false;
+            task.callback(err);
+            _drainLibraryAccountQueue();
+        }
+    }
+
+    function _getLibraryAccount(user, callback) {
+        libraryAccountQueue.push({ user: user, callback: callback });
+        _drainLibraryAccountQueue();
+    }
+
     function _confirmSecretLibraryBroadcastProof(user, day, result, callback, chapter) {
         chapter = chapter || 'chapter2';
         var blockNum = result ? Number(result.block_num || result.block || 0) : 0;
@@ -1324,9 +1352,11 @@ var HelpScreen = (function() {
 
     function _resetSecretLibraryAction(button) {
         secretLibraryBusy = false;
+        _setSecretLibraryStatus('');
         if (button) {
             button.disabled = false;
             button.removeAttribute('aria-busy');
+            button.removeAttribute('aria-disabled');
             button.textContent = button.getAttribute('data-idle-label') || Helpers.t('help_magic_library_chapter_two_unlock');
         }
     }
@@ -1401,9 +1431,11 @@ var HelpScreen = (function() {
             return;
         }
         secretLibraryBusy = true;
+        _setSecretLibraryStatus(Helpers.t('help_secret_library_checking'));
         if (confirm) {
             confirm.setAttribute('data-idle-label', confirm.textContent);
             confirm.disabled = true;
+            confirm.setAttribute('aria-disabled', 'true');
             confirm.setAttribute('aria-busy', 'true');
             confirm.textContent = Helpers.t('help_secret_library_checking');
         }
@@ -1420,7 +1452,7 @@ var HelpScreen = (function() {
                 return;
             }
 
-            VizAccount.getAccount(user, function(energyErr, accountData) {
+            _getLibraryAccount(user, function(energyErr, accountData) {
                 if (energyErr || !accountData) {
                     _resetSecretLibraryAction(confirm);
                     Toast.error(Helpers.t('help_magic_library_chapter_two_energy_failed'));
@@ -1479,6 +1511,7 @@ var HelpScreen = (function() {
         if (button) {
             button.disabled = false;
             button.removeAttribute('aria-busy');
+            button.removeAttribute('aria-disabled');
             button.textContent = button.getAttribute('data-idle-label') || Helpers.t('help_magic_library_chapter_three_unlock');
         }
     }
@@ -1504,6 +1537,7 @@ var HelpScreen = (function() {
         if (button) {
             button.setAttribute('data-idle-label', button.textContent);
             button.disabled = true;
+            button.setAttribute('aria-disabled', 'true');
             button.setAttribute('aria-busy', 'true');
             button.textContent = Helpers.t('help_secret_library_checking');
         }
@@ -1519,7 +1553,7 @@ var HelpScreen = (function() {
                 _finishSecretLibraryOpen('help_magic_library_chapter_three_already_open', 'help-unknown-library-title');
                 return;
             }
-            VizAccount.getAccount(user, function(energyErr, accountData) {
+            _getLibraryAccount(user, function(energyErr, accountData) {
                 if (energyErr || !accountData) {
                     _resetUnknownLibraryAction(button);
                     _setUnknownLibraryStatus(Helpers.t('help_magic_library_chapter_three_energy_failed'));

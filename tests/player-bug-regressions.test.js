@@ -2474,6 +2474,14 @@ test('paid library retries transient entitlement preflight errors before releasi
   assert.ok(/function _runSecretLibraryPreflight\(user, day, callback, chapter, attempt\)[\s\S]{0,1000}_preflightSecretLibraryEntitlementOnce[\s\S]{0,1000}attempt >= 2[\s\S]{0,1000}setTimeout[\s\S]{0,1000}attempt \+ 1/.test(helpJs), 'transient preflight failures should retry twice before returning an error');
 });
 
+test('paid library serializes account and energy reads before rapid chapter payments', function () {
+  assert.ok(/var libraryAccountQueue = \[\];[\s\S]{0,200}var libraryAccountActive = false;/.test(helpJs), 'paid-library account reads should have a dedicated queue');
+  assert.ok(/function _drainLibraryAccountQueue\(\)[\s\S]{0,900}VizAccount\.getAccount\(task\.user[\s\S]{0,900}task\.callback\(err, accountData\)[\s\S]{0,900}_drainLibraryAccountQueue\(\)/.test(helpJs), 'the account queue should release only after the current account read completes');
+  assert.ok(/function _getLibraryAccount\(user, callback\)[\s\S]{0,400}libraryAccountQueue\.push/.test(helpJs), 'all chapters should share the queued account reader');
+  assert.strictEqual((helpJs.match(/_getLibraryAccount\(user, function\(energyErr, accountData\)/g) || []).length, 6, 'every paid chapter should serialize its account and energy read');
+  assert.strictEqual((helpJs.match(/VizAccount\.getAccount\(user, function\(energyErr, accountData\)/g) || []).length, 0, 'paid chapter handlers must not bypass the account queue');
+});
+
 test('paid library serializes rapid chapter payments and refreshes the VM backlink for each transaction', function () {
   let pointer = 10;
   const sent = [];

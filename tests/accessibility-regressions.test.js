@@ -113,6 +113,12 @@ test('rapid paid chapter queue exposes the same polite status for every chapter'
   });
   assert.ok(/help_library_payment_queued:\s*'Запрос принят\./.test(ru), 'Russian queue status should reassure the user that the request was accepted');
   assert.ok(/help_library_payment_queued:\s*'Request accepted\./.test(en), 'English queue status should explain the same state');
+  ['Secret', 'Unknown', 'Middle', 'Attraction', 'LivingNature', 'LivingElements'].forEach(function (chapter) {
+    const unlockPattern = new RegExp('function _unlock' + chapter + "Library\\(\\)[\\s\\S]{0,1100}setAttribute\\('aria-disabled', 'true'\\)");
+    const resetPattern = new RegExp('function _reset' + chapter + "LibraryAction\\(button\\)[\\s\\S]{0,500}removeAttribute\\('aria-disabled'\\)");
+    assert.ok(unlockPattern.test(helpJs), chapter + ' payment control should expose aria-disabled while busy');
+    assert.ok(resetPattern.test(helpJs), chapter + ' payment control should clear aria-disabled when restored');
+  });
 });
 
 test('accepted paid chapter requests become persistent proof-only actions instead of payable buttons', function () {
