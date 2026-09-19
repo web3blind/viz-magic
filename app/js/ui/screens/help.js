@@ -1144,6 +1144,13 @@ var HelpScreen = (function() {
     }
 
 
+    function _isLibraryHistoryUnavailable(err) {
+        var msg = String((err && (err.message || err.error)) || err || '');
+        return msg.indexOf('timed_out') !== -1 || msg.indexOf('time_timeout') !== -1 ||
+            msg.indexOf('unavailable') !== -1 || msg.indexOf('timeout') !== -1 ||
+            msg.indexOf('timed out') !== -1 || msg.indexOf('unreachable') !== -1;
+    }
+
     function _preflightSecretLibraryEntitlementOnce(user, day, callback, chapter) {
         chapter = chapter || 'chapter2';
         if (StateEngine.hasLibraryAccess(user, chapter, day)) {
@@ -1155,22 +1162,34 @@ var HelpScreen = (function() {
             callback(new Error('library_history_check_unavailable'));
             return;
         }
+        var done = false;
+        function finish(err, unlocked) {
+            if (done) return;
+            done = true;
+            if (budgetTimer) clearTimeout(budgetTimer);
+            callback(err, unlocked);
+        }
+        function onTimeout() {
+            budgetTimer = null;
+            finish(new Error('library_history_check_timed_out'));
+        }
+        var budgetTimer = setTimeout(onTimeout, 1500);
         HistorySource.findAccountAction(
             user,
             VizMagicConfig.PROTOCOLS.VM,
             VizMagicConfig.ACTION_TYPES.LIBRARY_UNLOCK,
             function(historyErr, unlockEvent) {
                 if (historyErr) {
-                    callback(historyErr);
+                    finish(historyErr);
                     return;
                 }
                 if (!unlockEvent || !unlockEvent.blockNum) {
-                    callback(null, false);
+                    finish(null, false);
                     return;
                 }
                 HistorySource.getBlock(unlockEvent.blockNum, function(blockErr, block) {
                     if (blockErr || !block) {
-                        callback(blockErr || new Error('library_proof_block_unavailable'));
+                        finish(blockErr || new Error('library_proof_block_unavailable'));
                         return;
                     }
                     try {
@@ -1187,18 +1206,18 @@ var HelpScreen = (function() {
                             }
                         }
                         if (!hasTodayAction) {
-                            callback(null, false);
+                            finish(null, false);
                             return;
                         }
                         if (!StateEngine.verifyLibraryUnlockProof(processed, user, chapter, day)) {
-                            callback(new Error('library_unlock_proof_invalid'));
+                            finish(new Error('library_unlock_proof_invalid'));
                             return;
                         }
                         StateEngine.processLibraryUnlockResult(user, unlockEvent.blockNum, day, chapter);
                         StateEngine.saveCheckpoint(function() {});
-                        callback(null, true);
+                        finish(null, true);
                     } catch (err) {
-                        callback(err);
+                        finish(err);
                     }
                 });
             },
@@ -1218,12 +1237,20 @@ var HelpScreen = (function() {
                 return;
             }
             if (StateEngine.getLibraryDay() !== day || attempt >= 2) {
+                // A bounded historical lookup must never hold the payment pipeline
+                // hostage: if the source is slow, overrun, or unavailable after the
+                // retry bound, fall through to a direct broadcast for this chapter
+                // instead of leaving the chapter stuck in preflight.
+                if (_isLibraryHistoryUnavailable(err)) {
+                    callback(null, false);
+                    return;
+                }
                 callback(err);
                 return;
             }
             setTimeout(function() {
                 _runSecretLibraryPreflight(user, day, callback, chapter, attempt + 1);
-            }, 750);
+            }, 400);
         }, chapter);
     }
 

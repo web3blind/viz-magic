@@ -2474,6 +2474,15 @@ test('paid library retries transient entitlement preflight errors before releasi
   assert.ok(/function _runSecretLibraryPreflight\(user, day, callback, chapter, attempt\)[\s\S]{0,1000}_preflightSecretLibraryEntitlementOnce[\s\S]{0,1000}attempt >= 2[\s\S]{0,1000}setTimeout[\s\S]{0,1000}attempt \+ 1/.test(helpJs), 'transient preflight failures should retry twice before returning an error');
 });
 
+test('paid library bounds the history preflight so a slow archive cannot hold the payment pipeline', function () {
+  assert.ok(/var budgetTimer = setTimeout\(onTimeout, 1500\)/.test(helpJs), 'each historical entitlement lookup should have a hard 1500 ms budget so a chapter never hangs in preflight');
+  assert.ok(/function onTimeout\(\)[\s\S]{0,120}library_history_check_timed_out/.test(helpJs), 'an overrunning history scan should be bounded, not leak into the payment queue');
+  assert.ok(/function finish\(err, unlocked\)[\s\S]{0,120}if \(done\) return;[\s\S]{0,200}clearTimeout\(budgetTimer\)/.test(helpJs), 'the first completed or timed-out preflight result should win and cancel the budget timer');
+  assert.ok(/function _isLibraryHistoryUnavailable\(err\)[\s\S]{0,300}timed_out|timeout/.test(helpJs), 'the fallback classifier should recognize bounded history-source failures');
+  assert.ok(/if \(_isLibraryHistoryUnavailable\(err\)\)[\s\S]{0,200}callback\(null, false\)/.test(helpJs), 'when history is slow or unavailable after the retry bound, the chapter should fall through to a direct broadcast instead of stopping');
+  assert.ok(/StateEngine\.hasLibraryAccess\(user, chapter, day\)[\s\S]{0,120}callback\(null, true\)/.test(helpJs), 'a locally-known today entitlement must still short-circuit before any broadcast');
+});
+
 test('paid library serializes account and energy reads before rapid chapter payments', function () {
   assert.ok(/var libraryAccountQueue = \[\];[\s\S]{0,200}var libraryAccountActive = false;/.test(helpJs), 'paid-library account reads should have a dedicated queue');
   assert.ok(/function _drainLibraryAccountQueue\(\)[\s\S]{0,900}VizAccount\.getAccount\(task\.user[\s\S]{0,900}task\.callback\(err, accountData\)[\s\S]{0,900}_drainLibraryAccountQueue\(\)/.test(helpJs), 'the account queue should release only after the current account read completes');
