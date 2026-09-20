@@ -1,0 +1,83 @@
+{
+  "schema": "viz-magic-paid-library-live-proof/v1",
+  "verified_at_utc": "2026-09-20T17:14:48Z",
+  "network": "VIZ mainnet",
+  "rpc_node": "https://node.viz.cx/",
+  "account": "ko4evnik",
+  "protocol": "VM",
+  "head_block_at_verification": 83589384,
+  "account_vm_pointer": 83589237,
+  "account_energy_after": 999,
+  "acceptance": {
+    "day": "2026-09-20",
+    "treasury": "denis-skripnik",
+    "energy_per_chapter": 1000,
+    "required_chapters": [
+      "chapter2",
+      "chapter3",
+      "chapter4",
+      "chapter5",
+      "chapter6",
+      "chapter7"
+    ],
+    "same_transaction_required": true,
+    "exactly_one_matching_award_required": true
+  },
+  "result": "all_six_atomic",
+  "transactions": [
+    {
+      "chapter": "chapter2",
+      "block": 83589237,
+      "timestamp": "2026-09-20T17:07:27",
+      "transaction_index": 0,
+      "previous_vm_block": 83589236,
+      "matching_awards": 1,
+      "memo": "viz://vm/library/chapter2/2026-09-20"
+    },
+    {
+      "chapter": "chapter3",
+      "block": 83589236,
+      "timestamp": "2026-09-20T17:07:24",
+      "transaction_index": 0,
+      "previous_vm_block": 83589233,
+      "matching_awards": 1,
+      "memo": "viz://vm/library/chapter3/2026-09-20"
+    },
+    {
+      "chapter": "chapter4",
+      "block": 83589233,
+      "timestamp": "2026-09-20T17:07:15",
+      "transaction_index": 0,
+      "previous_vm_block": 83589231,
+      "matching_awards": 1,
+      "memo": "viz://vm/library/chapter4/2026-09-20"
+    },
+    {
+      "chapter": "chapter5",
+      "block": 83589231,
+      "timestamp": "2026-09-20T17:07:09",
+      "transaction_index": 0,
+      "previous_vm_block": 83589230,
+      "matching_awards": 1,
+      "memo": "viz://vm/library/chapter5/2026-09-20"
+    },
+    {
+      "chapter": "chapter6",
+      "block": 83589230,
+      "timestamp": "2026-09-20T17:07:06",
+      "transaction_index": 0,
+      "previous_vm_block": 83589228,
+      "matching_awards": 1,
+      "memo": "viz://vm/library/chapter6/2026-09-20"
+    },
+    {
+      "chapter": "chapter7",
+      "block": 83589228,
+      "timestamp": "2026-09-20T17:07:00",
+      "transaction_index": 0,
+      "previous_vm_block": 83548626,
+      "matching_awards": 1,
+      "memo": "viz://vm/library/chapter7/2026-09-20"
+    }
+  ]
+}

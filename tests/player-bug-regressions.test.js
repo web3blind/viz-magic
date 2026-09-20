@@ -2491,12 +2491,13 @@ test('paid library serializes account and energy reads before rapid chapter paym
   assert.strictEqual((helpJs.match(/VizAccount\.getAccount\(user, function\(energyErr, accountData\)/g) || []).length, 0, 'paid chapter handlers must not bypass the account queue');
 });
 
-test('paid library serializes rapid chapter payments and refreshes the VM backlink for each transaction', function () {
+test('paid library serializes all six rapid chapter payments and refreshes every VM backlink', function () {
   let pointer = 10;
   const sent = [];
   const callbacks = [];
   const completed = [];
   const timers = [];
+  const chapters = ['chapter2', 'chapter3', 'chapter4', 'chapter5', 'chapter6', 'chapter7'];
   const context = {
     console: { log: function () {} },
     setTimeout: function (fn) { timers.push(fn); },
@@ -2506,7 +2507,11 @@ test('paid library serializes rapid chapter payments and refreshes the VM backli
       LIBRARY: {
         TREASURY: 'denis-skripnik',
         CHAPTER_TWO_COST: 1000, CHAPTER_TWO_MEMO_PREFIX: 'viz://vm/library/chapter2/',
-        CHAPTER_THREE_COST: 1000, CHAPTER_THREE_MEMO_PREFIX: 'viz://vm/library/chapter3/'
+        CHAPTER_THREE_COST: 1000, CHAPTER_THREE_MEMO_PREFIX: 'viz://vm/library/chapter3/',
+        CHAPTER_FOUR_COST: 1000, CHAPTER_FOUR_MEMO_PREFIX: 'viz://vm/library/chapter4/',
+        CHAPTER_FIVE_COST: 1000, CHAPTER_FIVE_MEMO_PREFIX: 'viz://vm/library/chapter5/',
+        CHAPTER_SIX_COST: 1000, CHAPTER_SIX_MEMO_PREFIX: 'viz://vm/library/chapter6/',
+        CHAPTER_SEVEN_COST: 1000, CHAPTER_SEVEN_MEMO_PREFIX: 'viz://vm/library/chapter7/'
       }
     },
     VizAccount: {
@@ -2518,22 +2523,55 @@ test('paid library serializes rapid chapter payments and refreshes the VM backli
   };
   vm.createContext(context);
   vm.runInContext(read('app/js/blockchain/broadcast.js'), context, { filename: 'broadcast.js' });
-  context.VizBroadcast.libraryUnlockChapterAction('chapter2', 1000, '2026-09-13', function (err) { completed.push(['chapter2', err]); });
-  context.VizBroadcast.libraryUnlockChapterAction('chapter3', 1000, '2026-09-13', function (err) { completed.push(['chapter3', err]); });
-  assert.strictEqual(sent.length, 1, 'only the first rapid payment may broadcast immediately');
-  assert.strictEqual(JSON.parse(sent[0].operations[1][1].json).b, 10, 'first payment should use the current VM backlink');
-  callbacks.shift()(null, { block_num: 11 });
-  assert.strictEqual(sent.length, 1, 'the queue must not advance while the account still exposes the stale VM backlink');
-  assert.strictEqual(timers.length, 1, 'the queue should retry the account pointer without blocking forever');
-  pointer = 20;
-  timers.shift()();
-  assert.strictEqual(sent.length, 2, 'second chapter should broadcast automatically after the first pointer advances');
-  assert.strictEqual(JSON.parse(sent[1].operations[1][1].json).b, 20, 'queued payment should refresh its VM backlink instead of reusing stale state');
-  callbacks.shift()(null, { block_num: 21 });
-  pointer = 30;
-  timers.shift()();
-  assert.deepStrictEqual(completed.map(function(item) { return item[0]; }), ['chapter2', 'chapter3']);
-  assert.ok(completed.every(function(item) { return !item[1]; }));
+
+  chapters.forEach(function (chapter) {
+    context.VizBroadcast.libraryUnlockChapterAction(chapter, 1000, '2026-09-20', function (err) {
+      completed.push([chapter, err]);
+    });
+  });
+
+  assert.strictEqual(sent.length, 1, 'only the first of six rapid payments may broadcast immediately');
+  chapters.forEach(function (chapter, index) {
+    const expectedPointer = 10 + (index * 10);
+    const transaction = sent[index];
+    const action = JSON.parse(transaction.operations[1][1].json);
+    assert.strictEqual(action.d.chapter, chapter, 'queued payments should preserve chapter order');
+    assert.strictEqual(action.d.day, '2026-09-20', 'queued payments should preserve the requested access day');
+    assert.strictEqual(action.b, expectedPointer, chapter + ' should use its freshly loaded VM backlink');
+    assert.strictEqual(transaction.operations[0][1].energy, 1000, chapter + ' should preserve the exact energy cost');
+    assert.strictEqual(transaction.operations[0][1].memo, 'viz://vm/library/' + chapter + '/2026-09-20', chapter + ' should preserve its proof memo');
+
+    callbacks.shift()(null, { block_num: expectedPointer + 1 });
+    assert.strictEqual(sent.length, index + 1, 'the queue must wait while the VM pointer is stale after ' + chapter);
+    assert.strictEqual(timers.length, 1, 'the queue should schedule one bounded pointer retry after ' + chapter);
+    pointer = expectedPointer + 10;
+    timers.shift()();
+    if (index < chapters.length - 1) {
+      assert.strictEqual(sent.length, index + 2, 'the next chapter should broadcast after the VM pointer advances');
+    }
+  });
+
+  assert.deepStrictEqual(completed.map(function(item) { return item[0]; }), chapters);
+  assert.ok(completed.every(function(item) { return !item[1]; }), 'all six queued payments should complete without errors');
+});
+
+test('live paid-library proof records all six atomic chapter payments in one VM chain', function () {
+  const proof = JSON.parse(read('tests/fixtures/paid-library-live-proof-2026-09-20.json'));
+  const chapters = ['chapter2', 'chapter3', 'chapter4', 'chapter5', 'chapter6', 'chapter7'];
+  assert.strictEqual(proof.schema, 'viz-magic-paid-library-live-proof/v1');
+  assert.strictEqual(proof.result, 'all_six_atomic');
+  assert.deepStrictEqual(proof.acceptance.required_chapters, chapters);
+  assert.strictEqual(proof.transactions.length, chapters.length);
+  proof.transactions.forEach(function (transaction, index) {
+    assert.strictEqual(transaction.chapter, chapters[index], 'live proof should preserve all six chapters in VM pointer order');
+    assert.strictEqual(transaction.matching_awards, 1, transaction.chapter + ' should have exactly one matching award');
+    assert.strictEqual(transaction.transaction_index, 0, transaction.chapter + ' award and unlock should share transaction index zero');
+    assert.strictEqual(transaction.memo, 'viz://vm/library/' + transaction.chapter + '/2026-09-20');
+    if (index < proof.transactions.length - 1) {
+      assert.strictEqual(transaction.previous_vm_block, proof.transactions[index + 1].block, transaction.chapter + ' should link to the next recorded VM block');
+    }
+  });
+  assert.strictEqual(proof.account_vm_pointer, proof.transactions[0].block, 'account pointer should identify the newest successful chapter payment');
 });
 
 test('paid library confirms a freshly broadcast payment from the live account pointer before archive finality', function () {
