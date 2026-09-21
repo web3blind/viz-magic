@@ -1,0 +1,189 @@
+{
+  "schema": "viz-magic-library-maps-living-forest/v1",
+  "chapter": "chapter8",
+  "title_ru": "Карты живого Леса - тропа восьмая",
+  "count": 15,
+  "copy_mode": "byte-identical-no-reencoding",
+  "maps": [
+    {
+      "position": 1,
+      "source_id": "A01 / LF-01-G1",
+      "source_file": "A01-LF-01-G1.jpg",
+      "runtime_file": "living-forest-map-01.jpg",
+      "sha256": "05680e8de78441e573a62f77e8b0574ee0d508a3b576be30bc36a8ef9850a44b",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1468615
+    },
+    {
+      "position": 2,
+      "source_id": "A06 / LF-07-G1",
+      "source_file": "A06-LF-07-G1.jpg",
+      "runtime_file": "living-forest-map-02.jpg",
+      "sha256": "fbb3781d05835448b0b2244329af58c9ad0b387e60b6cdd97a4232a9dce0170d",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1636817
+    },
+    {
+      "position": 3,
+      "source_id": "A05 / LF-06-G1",
+      "source_file": "A05-LF-06-G1.jpg",
+      "runtime_file": "living-forest-map-03.jpg",
+      "sha256": "b3e97175ff13ffc55dd86f4979a25a3190cec9f26a6c072752a114baaf958dc7",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1475487
+    },
+    {
+      "position": 4,
+      "source_id": "A02 / LF-02-G3",
+      "source_file": "A02-LF-02-G3.jpg",
+      "runtime_file": "living-forest-map-04.jpg",
+      "sha256": "e03bf9177075ff984064c10b2595109ff1b78242458443013fed975d7963d618",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1487724
+    },
+    {
+      "position": 5,
+      "source_id": "A03 / LF-04-G1",
+      "source_file": "A03-LF-04-G1.jpg",
+      "runtime_file": "living-forest-map-05.jpg",
+      "sha256": "f86f4b3e246cf6d419be01abfde9b281aebccf69def88fe650063f21d00c2fb3",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1426664
+    },
+    {
+      "position": 6,
+      "source_id": "A08 / LF-09-G2",
+      "source_file": "A08-LF-09-G2.jpg",
+      "runtime_file": "living-forest-map-06.jpg",
+      "sha256": "2b2c5c919808a830160f3a81de6af52df8fed3eb76a44e310b23a1f01b237692",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1589881
+    },
+    {
+      "position": 7,
+      "source_id": "A09 / LF-10-G4",
+      "source_file": "A09-LF-10-G4.jpg",
+      "runtime_file": "living-forest-map-07.jpg",
+      "sha256": "0914cc921449d73744af80351b02a1bf0ea68658a7a9271a75951f3e4de27318",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1494006
+    },
+    {
+      "position": 8,
+      "source_id": "A07 / LF-08-G2",
+      "source_file": "A07-LF-08-G2.jpg",
+      "runtime_file": "living-forest-map-08.jpg",
+      "sha256": "a9dba6d29c9b984a8096f00832c4962466db8ad483be2db01964fde52011aeed",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1649734
+    },
+    {
+      "position": 9,
+      "source_id": "A16 / LF-17-G1",
+      "source_file": "A16-LF-17-G1.jpg",
+      "runtime_file": "living-forest-map-09.jpg",
+      "sha256": "0b42900ef3823bb6d8c468901ce8858f0eff76008e5ea7ef4390ddd829028211",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1597596
+    },
+    {
+      "position": 10,
+      "source_id": "A11 / LF-12-G9",
+      "source_file": "A11-LF-12-G9.jpg",
+      "runtime_file": "living-forest-map-10.jpg",
+      "sha256": "1995ecbf8b2395df675a8efb3441885f8638a282454b3ad7a35e1b399db452ec",
+      "dimensions": [
+        1060,
+        1484
+      ],
+      "bytes": 742469
+    },
+    {
+      "position": 11,
+      "source_id": "A10 / LF-11-G1",
+      "source_file": "A10-LF-11-G1.jpg",
+      "runtime_file": "living-forest-map-11.jpg",
+      "sha256": "83f520acf23a0d57268f72c4392bc0bd301aac116aa674947c9e3a0f54d86fb0",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1517716
+    },
+    {
+      "position": 12,
+      "source_id": "A12 / LF-13-G3",
+      "source_file": "A12-LF-13-G3.jpg",
+      "runtime_file": "living-forest-map-12.jpg",
+      "sha256": "188a6764ad4efbcce07ef6535e019847f02fab0888d6e49cc338d46d065d4360",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1057819
+    },
+    {
+      "position": 13,
+      "source_id": "A14 / LF-15-G10",
+      "source_file": "A14-LF-15-G10.jpg",
+      "runtime_file": "living-forest-map-13.jpg",
+      "sha256": "41ea9abd9e164b55e889943f318a5a0390c292cc335f252fa9ad0ddc46f30f74",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1534668
+    },
+    {
+      "position": 14,
+      "source_id": "A15 / LF-16-G6",
+      "source_file": "A15-LF-16-G6.jpg",
+      "runtime_file": "living-forest-map-14.jpg",
+      "sha256": "18a9616de53c3e57d6df3e80d89b6838dd2226f983bb69ba89e7d7470ba4ddbc",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1449290
+    },
+    {
+      "position": 15,
+      "source_id": "A04 / LF-05-G2",
+      "source_file": "A04-LF-05-G2.jpg",
+      "runtime_file": "living-forest-map-15.jpg",
+      "sha256": "b2845dfa3515789f015d483f9698c5eb0b090e734efb5ed7582046fbf9c1da9a",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1319433
+    }
+  ]
+}

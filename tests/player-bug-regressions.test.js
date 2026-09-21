@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
@@ -2436,6 +2437,48 @@ test('Living Elements Maps use numbered links, Awakening, and an independent pai
   assert.strictEqual(unlockEvent && unlockEvent.type, 'library_chapter_seven_unlocked', 'chapter seven should emit its own replay event');
 });
 
+test('Living Forest Maps use the approved fifteen-card order and an independent eighth paid chapter', function () {
+  assert.ok(/CHAPTER_EIGHT_COST:\s*1000/.test(configJs), 'Living Forest chapter should cost the canonical 10% energy');
+  assert.ok(/CHAPTER_EIGHT_MEMO_PREFIX:\s*'viz:\/\/vm\/library\/chapter8\/'/.test(configJs), 'Living Forest chapter needs an independent memo prefix');
+  assert.ok(/help_magic_library_living_forest_title:\s*'Карты живого Леса - тропа восьмая'/.test(ruJs), 'Living Forest block should use the requested title exactly');
+  assert.ok(/help_magic_library_living_forest_intro:\s*'В магическом Мире всё живое - и даже деревья, трава и другие растения не исключение'/.test(ruJs), 'Living Forest block should use the requested description exactly');
+  assert.ok(/help_magic_library_living_forest_title:\s*'Living Forest Maps - eighth path'/.test(enJs), 'English Living Forest title should preserve the eighth-path structure');
+
+  var mapSource = helpJs.match(/var HELP_LIVING_FOREST_LIBRARY_MAPS\s*=\s*\[([\s\S]*?)\];/);
+  assert.ok(mapSource, 'Living Forest maps should have one explicit curated list');
+  assert.deepStrictEqual(Array.from(mapSource[1].matchAll(/id:\s*'(\d+)'/g), function (match) { return match[1]; }), ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15'], 'Living Forest map ids should preserve all fifteen approved positions');
+  assert.deepStrictEqual(Array.from(mapSource[1].matchAll(/sourceId:\s*'([^']+)'/g), function (match) { return match[1]; }), ['A01 / LF-01-G1', 'A06 / LF-07-G1', 'A05 / LF-06-G1', 'A02 / LF-02-G3', 'A03 / LF-04-G1', 'A08 / LF-09-G2', 'A09 / LF-10-G4', 'A07 / LF-08-G2', 'A16 / LF-17-G1', 'A11 / LF-12-G9', 'A10 / LF-11-G1', 'A12 / LF-13-G3', 'A14 / LF-15-G10', 'A15 / LF-16-G6', 'A04 / LF-05-G2'], 'Living Forest runtime order should match the final user-curated order');
+  assert.ok(/StateEngine\.hasLibraryAccess\(user, 'chapter8', day\)/.test(helpJs), 'Living Forest maps should use an independent chapter-eight entitlement');
+  assert.ok(/VizMagicConfig\.LIBRARY\.CHAPTER_EIGHT_COST/.test(helpJs) && /libraryUnlockChapterAction\(\s*'chapter8'/.test(helpJs), 'Living Forest unlock should charge chapter eight only');
+  assert.ok(/assets\/library-maps-living-forest\/living-forest-map-' \+ entry\.id \+ '\.jpg/.test(helpJs), 'Living Forest modal should load the curated numbered assets');
+  assert.strictEqual(fs.readdirSync(path.join(root, 'app/assets/library-maps-living-forest')).filter(name => /^living-forest-map-\d{2}\.jpg$/.test(name)).length, 15, 'Living Forest chapter should contain exactly 15 JPEG maps');
+  const assetManifest = JSON.parse(read('app/assets/library-maps-living-forest/manifest.json'));
+  assert.strictEqual(assetManifest.count, 15, 'Living Forest asset manifest should declare all fifteen maps');
+  assert.deepStrictEqual(assetManifest.maps.map(function(entry) { return entry.source_id; }), ['A01 / LF-01-G1', 'A06 / LF-07-G1', 'A05 / LF-06-G1', 'A02 / LF-02-G3', 'A03 / LF-04-G1', 'A08 / LF-09-G2', 'A09 / LF-10-G4', 'A07 / LF-08-G2', 'A16 / LF-17-G1', 'A11 / LF-12-G9', 'A10 / LF-11-G1', 'A12 / LF-13-G3', 'A14 / LF-15-G10', 'A15 / LF-16-G6', 'A04 / LF-05-G2'], 'asset manifest should preserve the approved source order');
+  assetManifest.maps.forEach(function(entry) {
+    const file = fs.readFileSync(path.join(root, 'app/assets/library-maps-living-forest', entry.runtime_file));
+    assert.strictEqual(crypto.createHash('sha256').update(file).digest('hex'), entry.sha256, entry.runtime_file + ' should match its approved SHA-256');
+  });
+  assert.ok(/library-maps-living-forest/.test(swJs), 'service worker should treat Living Forest maps as runtime library images');
+
+  const engineContext = loadMarketplaceStateEngine();
+  const engine = engineContext.StateEngine;
+  const day = '2026-09-20';
+  const proof = {
+    vmActions: [{ sender: 'alice', txIndex: 18, action: { type: 'library.unlock', data: { chapter: 'chapter8', day: day } } }],
+    awards: [{ initiator: 'alice', receiver: 'denis-skripnik', energy: 1000, memo: 'viz://vm/library/chapter8/' + day, txIndex: 18 }]
+  };
+  assert.strictEqual(engine.verifyLibraryUnlockProof(proof, 'alice', 'chapter8', day), true, 'chapter eight should verify its own atomic proof');
+  ['chapter2', 'chapter3', 'chapter4', 'chapter5', 'chapter6', 'chapter7'].forEach(function(chapter) {
+    assert.strictEqual(engine.verifyLibraryUnlockProof(proof, 'alice', chapter, day), false, 'chapter-eight payment must not unlock ' + chapter);
+  });
+  assert.strictEqual(engine.verifyLibraryUnlockProof({ vmActions: proof.vmActions, awards: [] }, 'alice', 'chapter8', day), false, 'chapter eight must fail closed without its award');
+  assert.strictEqual(engine.verifyLibraryUnlockProof({ vmActions: [], awards: proof.awards }, 'alice', 'chapter8', day), false, 'chapter eight must fail closed without its custom action');
+  assert.strictEqual(engine.verifyLibraryUnlockProof({ vmActions: proof.vmActions, awards: [{ initiator: 'alice', receiver: 'denis-skripnik', energy: 999, memo: 'viz://vm/library/chapter8/' + day, txIndex: 18 }] }, 'alice', 'chapter8', day), false, 'chapter eight must reject wrong energy');
+  const unlockEvent = engine.processLibraryUnlockResult('alice', 902, day, 'chapter8');
+  assert.strictEqual(unlockEvent && unlockEvent.type, 'library_chapter_eight_unlocked', 'chapter eight should emit its own replay event');
+});
+
 test('all paid map blocks use unified titles and visible ordinals', function () {
   assert.ok(ruJs.includes("help_magic_library_title: 'Магическая библиотека - день первый'"), 'day-one Magical Library heading should separate the library name and day with a hyphen');
   assert.ok(enJs.includes("help_magic_library_title: 'Magical Library - Day One'"), 'English day-one Magical Library heading should use the same hyphenated structure');
@@ -2455,14 +2498,15 @@ test('all paid map blocks use unified titles and visible ordinals', function () 
     'Middle World Maps - fourth alley',
     'World Attraction Maps - fifth scroll',
     'Living Nature Maps of the World - sixth branch',
-    'Living Elements Maps of the World - seventh echo'
+    'Living Elements Maps of the World - seventh echo',
+    'Living Forest Maps - eighth path'
   ].forEach(function (title) {
     assert.ok(enJs.includes(title), 'missing unified English title: ' + title);
   });
   var paidRenderLines = helpJs.split('\n').filter(function (line) {
-    return line.indexOf("html += '<button") !== -1 && /data-(secret|unknown|middle|attraction|living-nature|living-elements)-library-map/.test(line);
+    return line.indexOf("html += '<button") !== -1 && /data-(secret|unknown|middle|attraction|living-nature|living-elements|living-forest)-library-map/.test(line);
   });
-  assert.strictEqual(paidRenderLines.length, 11, 'all paid list and split-group render paths should be covered');
+  assert.strictEqual(paidRenderLines.length, 12, 'all paid list and split-group render paths should be covered');
   paidRenderLines.forEach(function (line) {
     assert.ok(/\.number \+ '\. '/.test(line), 'every paid map link should render its visible ordinal: ' + line.trim());
   });
@@ -2487,17 +2531,17 @@ test('paid library serializes account and energy reads before rapid chapter paym
   assert.ok(/var libraryAccountQueue = \[\];[\s\S]{0,200}var libraryAccountActive = false;/.test(helpJs), 'paid-library account reads should have a dedicated queue');
   assert.ok(/function _drainLibraryAccountQueue\(\)[\s\S]{0,900}VizAccount\.getAccount\(task\.user[\s\S]{0,900}task\.callback\(err, accountData\)[\s\S]{0,900}_drainLibraryAccountQueue\(\)/.test(helpJs), 'the account queue should release only after the current account read completes');
   assert.ok(/function _getLibraryAccount\(user, callback\)[\s\S]{0,400}libraryAccountQueue\.push/.test(helpJs), 'all chapters should share the queued account reader');
-  assert.strictEqual((helpJs.match(/_getLibraryAccount\(user, function\(energyErr, accountData\)/g) || []).length, 6, 'every paid chapter should serialize its account and energy read');
+  assert.strictEqual((helpJs.match(/_getLibraryAccount\(user, function\(energyErr, accountData\)/g) || []).length, 7, 'every paid chapter should serialize its account and energy read');
   assert.strictEqual((helpJs.match(/VizAccount\.getAccount\(user, function\(energyErr, accountData\)/g) || []).length, 0, 'paid chapter handlers must not bypass the account queue');
 });
 
-test('paid library serializes all six rapid chapter payments and refreshes every VM backlink', function () {
+test('paid library serializes all seven rapid chapter payments and refreshes every VM backlink', function () {
   let pointer = 10;
   const sent = [];
   const callbacks = [];
   const completed = [];
   const timers = [];
-  const chapters = ['chapter2', 'chapter3', 'chapter4', 'chapter5', 'chapter6', 'chapter7'];
+  const chapters = ['chapter2', 'chapter3', 'chapter4', 'chapter5', 'chapter6', 'chapter7', 'chapter8'];
   const context = {
     console: { log: function () {} },
     setTimeout: function (fn) { timers.push(fn); },
@@ -2511,7 +2555,8 @@ test('paid library serializes all six rapid chapter payments and refreshes every
         CHAPTER_FOUR_COST: 1000, CHAPTER_FOUR_MEMO_PREFIX: 'viz://vm/library/chapter4/',
         CHAPTER_FIVE_COST: 1000, CHAPTER_FIVE_MEMO_PREFIX: 'viz://vm/library/chapter5/',
         CHAPTER_SIX_COST: 1000, CHAPTER_SIX_MEMO_PREFIX: 'viz://vm/library/chapter6/',
-        CHAPTER_SEVEN_COST: 1000, CHAPTER_SEVEN_MEMO_PREFIX: 'viz://vm/library/chapter7/'
+        CHAPTER_SEVEN_COST: 1000, CHAPTER_SEVEN_MEMO_PREFIX: 'viz://vm/library/chapter7/',
+        CHAPTER_EIGHT_COST: 1000, CHAPTER_EIGHT_MEMO_PREFIX: 'viz://vm/library/chapter8/'
       }
     },
     VizAccount: {
@@ -2530,7 +2575,7 @@ test('paid library serializes all six rapid chapter payments and refreshes every
     });
   });
 
-  assert.strictEqual(sent.length, 1, 'only the first of six rapid payments may broadcast immediately');
+  assert.strictEqual(sent.length, 1, 'only the first of seven rapid payments may broadcast immediately');
   chapters.forEach(function (chapter, index) {
     const expectedPointer = 10 + (index * 10);
     const transaction = sent[index];
@@ -2552,7 +2597,7 @@ test('paid library serializes all six rapid chapter payments and refreshes every
   });
 
   assert.deepStrictEqual(completed.map(function(item) { return item[0]; }), chapters);
-  assert.ok(completed.every(function(item) { return !item[1]; }), 'all six queued payments should complete without errors');
+  assert.ok(completed.every(function(item) { return !item[1]; }), 'all seven queued payments should complete without errors');
 });
 
 test('live paid-library proof records all six atomic chapter payments in one VM chain', function () {
@@ -2590,7 +2635,8 @@ test('all paid library confirmation timeouts expose proof-only controls accessib
     ['Middle', '_showLibraryPendingProofAction\\(button, _setMiddleLibraryStatus\\)'],
     ['Attraction', '_showLibraryPendingProofAction\\(button, _setAttractionLibraryStatus\\)'],
     ['Living Nature', '_showLibraryPendingProofAction\\(button, _setLivingNatureLibraryStatus\\)'],
-    ['Living Elements', '_showLibraryPendingProofAction\\(button, _setLivingElementsLibraryStatus\\)']
+    ['Living Elements', '_showLibraryPendingProofAction\\(button, _setLivingElementsLibraryStatus\\)'],
+    ['Living Forest', '_showLibraryPendingProofAction\\(button, _setLivingForestLibraryStatus\\)']
   ].forEach(function(spec) {
     assert.ok(new RegExp(spec[1]).test(helpJs), spec[0] + ' timeout should switch to the shared proof-only control');
   });

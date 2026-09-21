@@ -11,12 +11,14 @@ var HelpScreen = (function() {
     var HELP_ATTRACTION_LIBRARY_ASSET_VERSION = '20260828a';
     var HELP_LIVING_NATURE_LIBRARY_ASSET_VERSION = '20260913b';
     var HELP_LIVING_ELEMENTS_LIBRARY_ASSET_VERSION = '20260911a';
+    var HELP_LIVING_FOREST_LIBRARY_ASSET_VERSION = '20260920a';
     var secretLibraryBusy = false;
     var unknownLibraryBusy = false;
     var middleLibraryBusy = false;
     var attractionLibraryBusy = false;
     var livingNatureLibraryBusy = false;
     var livingElementsLibraryBusy = false;
+    var livingForestLibraryBusy = false;
     var secretLibraryExpiryTimer = null;
     var libraryPreflightQueue = [];
     var libraryPreflightActive = false;
@@ -226,6 +228,23 @@ var HelpScreen = (function() {
         { id: '14', number: 14, titleKey: 'help_living_elements_map_14_title', textKey: 'help_living_elements_map_14_text' },
         { id: '15', number: 15, titleKey: 'help_living_elements_map_15_title', textKey: 'help_living_elements_map_15_text' }
     ];
+    var HELP_LIVING_FOREST_LIBRARY_MAPS = [
+        { id: '01', sourceId: 'A01 / LF-01-G1', titleKey: 'help_living_forest_map_01_title', textKey: 'help_living_forest_map_01_text' },
+        { id: '02', sourceId: 'A06 / LF-07-G1', titleKey: 'help_living_forest_map_02_title', textKey: 'help_living_forest_map_02_text' },
+        { id: '03', sourceId: 'A05 / LF-06-G1', titleKey: 'help_living_forest_map_03_title', textKey: 'help_living_forest_map_03_text' },
+        { id: '04', sourceId: 'A02 / LF-02-G3', titleKey: 'help_living_forest_map_04_title', textKey: 'help_living_forest_map_04_text' },
+        { id: '05', sourceId: 'A03 / LF-04-G1', titleKey: 'help_living_forest_map_05_title', textKey: 'help_living_forest_map_05_text' },
+        { id: '06', sourceId: 'A08 / LF-09-G2', titleKey: 'help_living_forest_map_06_title', textKey: 'help_living_forest_map_06_text' },
+        { id: '07', sourceId: 'A09 / LF-10-G4', titleKey: 'help_living_forest_map_07_title', textKey: 'help_living_forest_map_07_text' },
+        { id: '08', sourceId: 'A07 / LF-08-G2', titleKey: 'help_living_forest_map_08_title', textKey: 'help_living_forest_map_08_text' },
+        { id: '09', sourceId: 'A16 / LF-17-G1', titleKey: 'help_living_forest_map_09_title', textKey: 'help_living_forest_map_09_text' },
+        { id: '10', sourceId: 'A11 / LF-12-G9', titleKey: 'help_living_forest_map_10_title', textKey: 'help_living_forest_map_10_text' },
+        { id: '11', sourceId: 'A10 / LF-11-G1', titleKey: 'help_living_forest_map_11_title', textKey: 'help_living_forest_map_11_text' },
+        { id: '12', sourceId: 'A12 / LF-13-G3', titleKey: 'help_living_forest_map_12_title', textKey: 'help_living_forest_map_12_text' },
+        { id: '13', sourceId: 'A14 / LF-15-G10', titleKey: 'help_living_forest_map_13_title', textKey: 'help_living_forest_map_13_text' },
+        { id: '14', sourceId: 'A15 / LF-16-G6', titleKey: 'help_living_forest_map_14_title', textKey: 'help_living_forest_map_14_text' },
+        { id: '15', sourceId: 'A04 / LF-05-G2', titleKey: 'help_living_forest_map_15_title', textKey: 'help_living_forest_map_15_text' }
+    ];
 
     function _numberPaidLibraryGroups(groups) {
         var number = 1;
@@ -243,6 +262,7 @@ var HelpScreen = (function() {
     _numberPaidLibraryGroups([HELP_ATTRACTION_LIBRARY_FIRST_MAPS, HELP_ATTRACTION_LIBRARY_GROWING_MAPS]);
     _numberPaidLibraryGroups([HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS, HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS]);
     _numberPaidLibraryGroups([HELP_LIVING_ELEMENTS_LIBRARY_FIRST_MAPS, HELP_LIVING_ELEMENTS_LIBRARY_AWAKENING_MAPS]);
+    _numberPaidLibraryGroups([HELP_LIVING_FOREST_LIBRARY_MAPS]);
 
     function render() {
         var t = Helpers.t;
@@ -299,6 +319,7 @@ var HelpScreen = (function() {
         _bindAttractionLibrary(el);
         _bindLivingNatureLibrary(el);
         _bindLivingElementsLibrary(el);
+        _bindLivingForestLibrary(el);
         _scheduleSecretLibraryExpiry();
     }
 
@@ -351,7 +372,7 @@ var HelpScreen = (function() {
                     '<h3>' + Helpers.icon('festival', 'section-icon vmagic-breathe') + ' ' + t('help_section_world_months') + '</h3>' +
                     '<p>' + t('help_world_months_text') + '</p>' +
                 '</article>' +
-            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + _renderMiddleLibrary(t) + _renderAttractionLibrary(t) + _renderLivingNatureLibrary(t) + _renderLivingElementsLibrary(t) + '</section>';
+            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + _renderMiddleLibrary(t) + _renderAttractionLibrary(t) + _renderLivingNatureLibrary(t) + _renderLivingElementsLibrary(t) + _renderLivingForestLibrary(t) + '</section>';
     }
 
     function _renderMagicLibrary(t) {
@@ -593,6 +614,37 @@ var HelpScreen = (function() {
         return html;
     }
 
+    function _renderLivingForestLibrary(t) {
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        var day = StateEngine.getLibraryDay();
+        var unlocked = StateEngine.hasLibraryAccess(user, 'chapter8', day);
+        var pending = _getLibraryPendingProof(user, 'chapter8', day);
+        if (unlocked) _clearLibraryPendingProof(user, 'chapter8');
+        var html = '<article class="help-magic-library help-secret-library help-unknown-library help-living-forest-library" aria-labelledby="help-living-forest-library-title">' +
+            '<h3 id="help-living-forest-library-title" tabindex="-1">' + Helpers.icon('leaf', 'section-icon vmagic-breathe') + ' ' + t('help_magic_library_living_forest_title') + '</h3>' +
+            '<p>' + t('help_magic_library_living_forest_intro') + '</p>' +
+            '<p class="help-library-danger">' + t('help_magic_library_living_forest_warning') + '</p>' +
+            '<p id="help-living-forest-library-status" class="help-secret-library-status" role="status" aria-live="polite">' + (livingForestLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_confirmation_pending') : '') + '</p>';
+        if (!unlocked) {
+            var livingForestBusyAttrs = livingForestLibraryBusy ? ' disabled aria-disabled="true" aria-busy="true"' : '';
+            var buttonText = livingForestLibraryBusy ? t('help_secret_library_checking') : pending ? t('help_secret_library_check_access') : t('help_magic_library_living_forest_unlock');
+            html += '<div class="help-secret-library-lock">' +
+                '<p>' + t('help_magic_library_living_forest_locked') + '</p>' +
+                '<button type="button" class="btn btn-primary" id="help-living-forest-library-unlock"' + livingForestBusyAttrs + (pending ? ' data-proof-only="true"' : '') + '>' + buttonText + '</button>' +
+                '</div>';
+        } else {
+            html += '<p class="help-secret-library-midnight" role="status">' + t('help_magic_library_living_forest_opened') + '</p>' +
+                '<div class="help-library-list help-secret-library-list" role="group" aria-label="' + Helpers.escapeHtml(t('help_magic_library_living_forest_title')) + '">';
+            for (var i = 0; i < HELP_LIVING_FOREST_LIBRARY_MAPS.length; i++) {
+                var entry = HELP_LIVING_FOREST_LIBRARY_MAPS[i];
+                html += '<button type="button" class="help-library-link help-secret-library-link help-living-forest-library-link" data-living-forest-library-map="' + entry.id + '">' + Helpers.escapeHtml(entry.number + '. ' + t(entry.titleKey)) + '</button>';
+            }
+            html += '</div>';
+        }
+        html += '</article>';
+        return html;
+    }
+
     function _bindSecretLibrary(el) {
         var unlock = Helpers.$('help-secret-library-unlock');
         if (unlock) unlock.addEventListener('click', _unlockSecretLibrary);
@@ -678,6 +730,21 @@ var HelpScreen = (function() {
                 if (entry) {
                     if (typeof SoundManager !== 'undefined') SoundManager.play('tap');
                     _openLivingElementsLibraryMap(entry);
+                }
+            });
+        }
+    }
+
+    function _bindLivingForestLibrary(el) {
+        var unlock = Helpers.$('help-living-forest-library-unlock');
+        if (unlock) unlock.addEventListener('click', _unlockLivingForestLibrary);
+        var links = el.querySelectorAll('.help-living-forest-library-link');
+        for (var i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function() {
+                var entry = _findLivingForestLibraryEntry(this.getAttribute('data-living-forest-library-map'));
+                if (entry) {
+                    if (typeof SoundManager !== 'undefined') SoundManager.play('tap');
+                    _openLivingForestLibraryMap(entry);
                 }
             });
         }
@@ -887,6 +954,108 @@ var HelpScreen = (function() {
         }, 'chapter7');
     }
 
+    function _setLivingForestLibraryStatus(message) {
+        var status = Helpers.$('help-living-forest-library-status');
+        if (status) status.textContent = message || '';
+    }
+
+    function _resetLivingForestLibraryAction(button) {
+        livingForestLibraryBusy = false;
+        _setLivingForestLibraryStatus('');
+        if (button) {
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+            button.removeAttribute('aria-disabled');
+            button.textContent = button.getAttribute('data-idle-label') || Helpers.t('help_magic_library_living_forest_unlock');
+        }
+    }
+
+    function _unlockLivingForestLibrary() {
+        if (livingForestLibraryBusy) return;
+        var user = VizAccount.getCurrentUser ? VizAccount.getCurrentUser() : '';
+        if (!user) {
+            ModalComponent.hide();
+            Toast.error(Helpers.t('error_no_account'));
+            return;
+        }
+        var button = Helpers.$('help-living-forest-library-unlock');
+        var day = StateEngine.getLibraryDay();
+        if (_getLibraryPendingProof(user, 'chapter8', day)) {
+            _checkLibraryPendingProof(user, 'chapter8', day, button, function(value) {
+                livingForestLibraryBusy = value;
+            }, _setLivingForestLibraryStatus, 'help_magic_library_living_forest_success', 'help-living-forest-library-title');
+            return;
+        }
+        livingForestLibraryBusy = true;
+        _setLivingForestLibraryStatus(Helpers.t('help_secret_library_checking'));
+        if (button) {
+            button.setAttribute('data-idle-label', button.textContent);
+            button.disabled = true;
+            button.setAttribute('aria-disabled', 'true');
+            button.setAttribute('aria-busy', 'true');
+            button.textContent = Helpers.t('help_secret_library_checking');
+        }
+        _preflightSecretLibraryEntitlement(user, day, function(historyErr, alreadyUnlocked) {
+            if (historyErr) {
+                _resetLivingForestLibraryAction(button);
+                Toast.error(Helpers.t('help_secret_library_history_check_failed'));
+                return;
+            }
+            if (alreadyUnlocked) {
+                livingForestLibraryBusy = false;
+                _finishSecretLibraryOpen('help_magic_library_living_forest_already_open', 'help-living-forest-library-title');
+                return;
+            }
+            _getLibraryAccount(user, function(energyErr, accountData) {
+                if (energyErr || !accountData) {
+                    _resetLivingForestLibraryAction(button);
+                    Toast.error(Helpers.t('help_magic_library_living_forest_energy_failed'));
+                    return;
+                }
+                var currentEnergy = VizAccount.calculateCurrentEnergy(accountData);
+                if (currentEnergy < VizMagicConfig.LIBRARY.CHAPTER_EIGHT_COST) {
+                    _resetLivingForestLibraryAction(button);
+                    Toast.error(Helpers.t('help_magic_library_living_forest_not_enough'));
+                    return;
+                }
+                if (StateEngine.getLibraryDay() !== day) {
+                    _resetLivingForestLibraryAction(button);
+                    _unlockLivingForestLibrary();
+                    return;
+                }
+                if (button) button.textContent = Helpers.t('help_library_payment_queued');
+                _setLivingForestLibraryStatus(Helpers.t('help_library_payment_queued'));
+                VizBroadcast.libraryUnlockChapterAction(
+                    'chapter8',
+                    VizMagicConfig.LIBRARY.CHAPTER_EIGHT_COST,
+                    day,
+                    function(err, result) {
+                        if (err) {
+                            _resetLivingForestLibraryAction(button);
+                            Toast.error(Helpers.t('help_magic_library_living_forest_failed'));
+                            return;
+                        }
+                        _setLibraryPendingProof(user, 'chapter8', day, result);
+                        if (button) button.textContent = Helpers.t('help_secret_library_waiting_confirmation');
+                        _setLivingForestLibraryStatus(Helpers.t('help_secret_library_waiting_confirmation'));
+                        _waitForSecretLibraryProof(user, day, result, 0, function(proofErr) {
+                            if (proofErr) {
+                                livingForestLibraryBusy = false;
+                                _showLibraryPendingProofAction(button, _setLivingForestLibraryStatus);
+                                Toast.error(Helpers.t('help_secret_library_confirmation_pending'));
+                                if (button) button.focus();
+                                return;
+                            }
+                            livingForestLibraryBusy = false;
+                            _clearLibraryPendingProof(user, 'chapter8');
+                            _finishSecretLibraryOpen('help_magic_library_living_forest_success', 'help-living-forest-library-title');
+                        }, 'chapter8');
+                    }
+                );
+            });
+        }, 'chapter8');
+    }
+
     function _setMiddleLibraryStatus(message) {
         var status = Helpers.$('help-middle-library-status');
         if (status) status.textContent = message || '';
@@ -1089,6 +1258,13 @@ var HelpScreen = (function() {
                 );
             });
         }, 'chapter4');
+    }
+
+    function _findLivingForestLibraryEntry(id) {
+        for (var i = 0; i < HELP_LIVING_FOREST_LIBRARY_MAPS.length; i++) {
+            if (HELP_LIVING_FOREST_LIBRARY_MAPS[i].id === id) return HELP_LIVING_FOREST_LIBRARY_MAPS[i];
+        }
+        return null;
     }
 
     function _findLivingElementsLibraryEntry(id) {
@@ -1702,13 +1878,19 @@ var HelpScreen = (function() {
         _openPaidLibraryMap(entry, 'chapter7');
     }
 
+    function _openLivingForestLibraryMap(entry) {
+        _openPaidLibraryMap(entry, 'chapter8');
+    }
+
     function _openPaidLibraryMap(entry, chapter) {
         var titleText = (entry.number ? entry.number + '. ' : '') + Helpers.t(entry.titleKey);
         var title = Helpers.escapeHtml(titleText);
         var description = Helpers.t(entry.textKey);
-        var imagePath = chapter === 'chapter7'
-            ? 'assets/library-maps-living-elements/living-elements-map-' + entry.id + '.jpg?v=' + HELP_LIVING_ELEMENTS_LIBRARY_ASSET_VERSION
-            : chapter === 'chapter6'
+        var imagePath = chapter === 'chapter8'
+            ? 'assets/library-maps-living-forest/living-forest-map-' + entry.id + '.jpg?v=' + HELP_LIVING_FOREST_LIBRARY_ASSET_VERSION
+            : chapter === 'chapter7'
+                ? 'assets/library-maps-living-elements/living-elements-map-' + entry.id + '.jpg?v=' + HELP_LIVING_ELEMENTS_LIBRARY_ASSET_VERSION
+                : chapter === 'chapter6'
                 ? 'assets/library-maps-living-nature/living-nature-map-' + entry.id + '.jpg?v=' + HELP_LIVING_NATURE_LIBRARY_ASSET_VERSION
                 : chapter === 'chapter5'
                 ? 'assets/library-maps-attraction/attraction-map-' + entry.id + '.jpg?v=' + HELP_ATTRACTION_LIBRARY_ASSET_VERSION
@@ -1721,11 +1903,12 @@ var HelpScreen = (function() {
             chapter === 'chapter4' ? ' help-middle-library-map-card' :
                 chapter === 'chapter5' ? ' help-attraction-library-map-card' :
                     chapter === 'chapter6' ? ' help-living-nature-library-map-card' :
-                        chapter === 'chapter7' ? ' help-living-elements-library-map-card' : '';
+                        chapter === 'chapter7' ? ' help-living-elements-library-map-card' :
+                            chapter === 'chapter8' ? ' help-living-forest-library-map-card' : '';
         var html = '<div class="help-library-map-card help-secret-library-map-card' + cardClass + '">';
         html += '<div class="lore-map-title">' + Helpers.icon('map', 'region-icon vmagic-breathe') + ' ' + title + '</div>';
         html += '<div class="lore-map-viewport help-library-map-viewport" id="help-library-map-viewport">';
-        var imageAlt = chapter === 'chapter7' ? description : Helpers.t('help_magic_library_image_alt', { name: titleText });
+        var imageAlt = chapter === 'chapter7' || chapter === 'chapter8' ? description : Helpers.t('help_magic_library_image_alt', { name: titleText });
         html += '<img class="lore-map-image help-library-map-image" id="help-library-map-image" src="' + imagePath + '" alt="' + Helpers.escapeHtml(imageAlt) + '" loading="lazy">';
         html += '</div>';
         html += '<p class="lore-map-text help-library-map-text">' + description + '</p>';

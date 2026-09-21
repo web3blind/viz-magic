@@ -61,7 +61,9 @@ var VizMagicConfig = (function() {
         CHAPTER_SIX_COST: 1000,              // 10% energy
         CHAPTER_SIX_MEMO_PREFIX: 'viz://vm/library/chapter6/',
         CHAPTER_SEVEN_COST: 1000,            // 10% energy
-        CHAPTER_SEVEN_MEMO_PREFIX: 'viz://vm/library/chapter7/'
+        CHAPTER_SEVEN_MEMO_PREFIX: 'viz://vm/library/chapter7/',
+        CHAPTER_EIGHT_COST: 1000,            // 10% energy
+        CHAPTER_EIGHT_MEMO_PREFIX: 'viz://vm/library/chapter8/'
     };
 
     /**

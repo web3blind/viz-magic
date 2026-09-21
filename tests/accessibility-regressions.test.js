@@ -105,7 +105,8 @@ test('rapid paid chapter queue exposes the same polite status for every chapter'
     '_setMiddleLibraryStatus',
     '_setAttractionLibraryStatus',
     '_setLivingNatureLibraryStatus',
-    '_setLivingElementsLibraryStatus'
+    '_setLivingElementsLibraryStatus',
+    '_setLivingForestLibraryStatus'
   ];
   setters.forEach(function (setter) {
     const pattern = new RegExp(setter + "\\(Helpers\\.t\\('help_library_payment_queued'\\)\\)");
@@ -113,7 +114,7 @@ test('rapid paid chapter queue exposes the same polite status for every chapter'
   });
   assert.ok(/help_library_payment_queued:\s*'Запрос принят\./.test(ru), 'Russian queue status should reassure the user that the request was accepted');
   assert.ok(/help_library_payment_queued:\s*'Request accepted\./.test(en), 'English queue status should explain the same state');
-  ['Secret', 'Unknown', 'Middle', 'Attraction', 'LivingNature', 'LivingElements'].forEach(function (chapter) {
+  ['Secret', 'Unknown', 'Middle', 'Attraction', 'LivingNature', 'LivingElements', 'LivingForest'].forEach(function (chapter) {
     const unlockPattern = new RegExp('function _unlock' + chapter + "Library\\(\\)[\\s\\S]{0,1100}setAttribute\\('aria-disabled', 'true'\\)");
     const resetPattern = new RegExp('function _reset' + chapter + "LibraryAction\\(button\\)[\\s\\S]{0,500}removeAttribute\\('aria-disabled'\\)");
     assert.ok(unlockPattern.test(helpJs), chapter + ' payment control should expose aria-disabled while busy');
@@ -122,7 +123,7 @@ test('rapid paid chapter queue exposes the same polite status for every chapter'
 });
 
 test('accepted paid chapter requests become persistent proof-only actions instead of payable buttons', function () {
-  const chapters = ['chapter2', 'chapter3', 'chapter4', 'chapter5', 'chapter6', 'chapter7'];
+  const chapters = ['chapter2', 'chapter3', 'chapter4', 'chapter5', 'chapter6', 'chapter7', 'chapter8'];
   assert.ok(/function _setLibraryPendingProof\(user, chapter, day, result\)/.test(helpJs), 'accepted broadcasts should persist an account/chapter/day proof marker');
   assert.ok(/function _getLibraryPendingProof\(user, chapter, day\)/.test(helpJs), 'render and activation should recover the persisted proof marker');
   assert.ok(/function _clearLibraryPendingProof\(user, chapter\)/.test(helpJs), 'verified access or definite pre-acceptance failure should clear the marker');
@@ -197,6 +198,16 @@ test('Living Elements paid chapter is numbered, labelled, keyboard-safe, and ann
   assert.ok(/id="help-living-elements-library-awakening-title"[\s\S]*role="group" aria-labelledby="help-living-elements-library-awakening-title"/.test(helpJs), 'Awakening should label the second map group for screen readers');
   assert.ok(/_finishSecretLibraryOpen\('help_magic_library_living_elements_success', 'help-living-elements-library-title'\)/.test(helpJs), 'focus should return to the Living Elements heading after unlock');
   assert.ok(/Helpers\.escapeHtml\(entry\.number \+ '\. ' \+ t\(entry\.titleKey\)\)/.test(helpJs), 'visible map numbering and title should be included in each button accessible name');
+});
+
+test('Living Forest paid chapter is labelled, keyboard-safe, and announces unlock state', function () {
+  assert.ok(/help-living-forest-library[^>]*aria-labelledby="help-living-forest-library-title"/.test(helpJs), 'Living Forest chapter should be a labelled article');
+  assert.ok(/id="help-living-forest-library-title" tabindex="-1"/.test(helpJs), 'Living Forest heading should accept focus after unlock');
+  assert.ok(/help-living-forest-library-status[\s\S]*role="status" aria-live="polite"/.test(helpJs), 'Living Forest unlock status should be announced');
+  assert.ok(/type="button" class="btn btn-primary" id="help-living-forest-library-unlock"/.test(helpJs), 'locked Living Forest chapter should use a real button');
+  assert.ok(/livingForestBusyAttrs[\s\S]*disabled aria-disabled="true" aria-busy="true"/.test(helpJs), 'Living Forest payment button should retain busy semantics across rerenders');
+  assert.ok(/type="button" class="help-library-link help-secret-library-link help-living-forest-library-link"/.test(helpJs), 'Living Forest map entries should be keyboard-operable buttons');
+  assert.ok(/_finishSecretLibraryOpen\('help_magic_library_living_forest_success', 'help-living-forest-library-title'\)/.test(helpJs), 'focus should return to the Living Forest heading after unlock');
 });
 
 test('core screen fallbacks avoid blank controls and fixture crashes', function () {

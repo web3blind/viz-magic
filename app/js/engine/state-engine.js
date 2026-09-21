@@ -1090,6 +1090,9 @@ var StateEngine = (function() {
         if (chapter === 'chapter7') {
             return { cost: libraryCfg.CHAPTER_SEVEN_COST, memoPrefix: libraryCfg.CHAPTER_SEVEN_MEMO_PREFIX };
         }
+        if (chapter === 'chapter8') {
+            return { cost: libraryCfg.CHAPTER_EIGHT_COST, memoPrefix: libraryCfg.CHAPTER_EIGHT_MEMO_PREFIX };
+        }
         return null;
     }
 
@@ -1105,7 +1108,7 @@ var StateEngine = (function() {
     function _collectLibraryUnlockPayments(awards) {
         var payments = {};
         var libraryCfg = cfg.LIBRARY || {};
-        var chapters = ['chapter2', 'chapter3', 'chapter4', 'chapter5', 'chapter6', 'chapter7'];
+        var chapters = ['chapter2', 'chapter3', 'chapter4', 'chapter5', 'chapter6', 'chapter7', 'chapter8'];
         for (var i = 0; i < awards.length; i++) {
             var award = awards[i] || {};
             if (!award.initiator || !isFinite(Number(award.txIndex))) continue;
@@ -1143,7 +1146,8 @@ var StateEngine = (function() {
                 chapter === 'chapter3' ? 'library_chapter_three_unlocked' :
                 chapter === 'chapter4' ? 'library_chapter_four_unlocked' :
                 chapter === 'chapter5' ? 'library_chapter_five_unlocked' :
-                chapter === 'chapter6' ? 'library_chapter_six_unlocked' : 'library_chapter_seven_unlocked',
+                chapter === 'chapter6' ? 'library_chapter_six_unlocked' :
+                chapter === 'chapter7' ? 'library_chapter_seven_unlocked' : 'library_chapter_eight_unlocked',
             account: account,
             chapter: chapter,
             day: day,
