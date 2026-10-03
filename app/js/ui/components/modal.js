@@ -130,6 +130,7 @@ var ModalComponent = (function() {
         if (lastFocusedElement && lastFocusedElement.focus) {
             lastFocusedElement.focus();
         }
+        Helpers.EventBus.emit('modal:closed');
     }
 
     function _escHandler(e) {

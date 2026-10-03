@@ -34,6 +34,26 @@ var MapScreen = (function() {
         void_sanctum:        'prophecy'
     };
 
+    function getMapIds() {
+        var regions = GameRegions.getAll();
+        var regionIds = [];
+        for (var rid in regions) {
+            if (regions.hasOwnProperty(rid)) regionIds.push(rid);
+        }
+        regionIds.sort(function(a, b) {
+            var ar = regions[a] || {};
+            var br = regions[b] || {};
+            if ((ar.minLevel || 0) !== (br.minLevel || 0)) {
+                return (ar.minLevel || 0) - (br.minLevel || 0);
+            }
+            if ((ar.maxLevel || 0) !== (br.maxLevel || 0)) {
+                return (ar.maxLevel || 0) - (br.maxLevel || 0);
+            }
+            return String(ar.name || a).localeCompare(String(br.name || b));
+        });
+        return regionIds;
+    }
+
     /** School colors for territory display */
     function render() {
         var container = Helpers.$('screen-map');
@@ -61,21 +81,7 @@ var MapScreen = (function() {
         }
 
         var regions = GameRegions.getAll();
-        var regionIds = [];
-        for (var rid in regions) {
-            if (regions.hasOwnProperty(rid)) regionIds.push(rid);
-        }
-        regionIds.sort(function(a, b) {
-            var ar = regions[a] || {};
-            var br = regions[b] || {};
-            if ((ar.minLevel || 0) !== (br.minLevel || 0)) {
-                return (ar.minLevel || 0) - (br.minLevel || 0);
-            }
-            if ((ar.maxLevel || 0) !== (br.maxLevel || 0)) {
-                return (ar.maxLevel || 0) - (br.maxLevel || 0);
-            }
-            return String(ar.name || a).localeCompare(String(br.name || b));
-        });
+        var regionIds = getMapIds();
 
         var html = '';
         html += '<div class="map-screen" role="region" aria-label="' + t('map_title') + '">';
@@ -270,7 +276,7 @@ var MapScreen = (function() {
      * v134: show the painted-map style description of a region in a modal,
      * sized to the in-game tab, with a Close button.
      */
-    function _openLore(regionId) {
+    function _openLore(regionId, context) {
         var region = GameRegions.getRegion(regionId);
         if (!region) return;
         var icon = REGION_ICONS[regionId] || 'map';
@@ -288,6 +294,7 @@ var MapScreen = (function() {
         html += '<div class="modal-actions lore-map-actions"><button type="button" class="btn btn-secondary" id="lore-zoom-toggle">' + t('map_zoom_toggle') + '</button><button type="button" class="btn btn-primary" id="lore-close">' + t('close') + '</button></div>';
         html += '</div>';
         ModalComponent.show(html);
+        HelpScreen.bindWorldViewer(regionId, context);
         var modal = Helpers.$('modal-container');
         var viewport = Helpers.$('lore-map-viewport');
         var zoomBtn = Helpers.$('lore-zoom-toggle');
@@ -428,5 +435,5 @@ var MapScreen = (function() {
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    return { render: render };
+    return { render: render, openLore: _openLore, getMapIds: getMapIds, getMapAssetVersion: function() { return MAP_ASSET_VERSION; } };
 })();

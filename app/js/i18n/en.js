@@ -5,6 +5,28 @@ var LangEN = {
     code: 'en',
     name: 'English',
 
+
+    map_viewer_previous: "Previous",
+    map_viewer_next: "Next",
+    map_viewer_position: "Map {position} of {total}",
+    // Browser-local favorite map references
+    favorites_title: "Favorite World Maps",
+    favorites_local: "Up to 15 maps, even from one chapter. Saved maps remain viewable here while on your list, even after chapter access expires. This is a local selection, not map ownership: only in this browser, separately for each account and guest, with no device sync.",
+    favorites_count: "Favorites: {count} of 15.",
+    favorites_empty: "No favorites yet. Open a map and add it to favorites.",
+    favorites_full: "The limit is 15 maps. Remove one from favorites, then add a new one. The original map stays in place.",
+    favorites_error: "Could not read or save favorites in this browser. The change was not saved.",
+    favorites_remove_named: "Remove from favorites: {name}",
+    favorites_remove: "Remove from favorites",
+    favorites_locked: "The map is no longer saved or access to the original section has expired.",
+    favorites_world_map: "World map: {name}",
+    favorites_add: "Add to favorites",
+    favorites_added: "Map added to favorites.",
+    favorites_removed: "Map removed from favorites. The original map is unchanged.",
+    favorites_duplicate: "This map is already in favorites.",
+    favorites_invalid: "This map is unavailable.",
+    favorites_account_changed: "Account changed. Open the map again.",
+
     // App
     app_name: 'Viz Magic',
     app_tagline: 'In the World of Viz, words hold true power.',

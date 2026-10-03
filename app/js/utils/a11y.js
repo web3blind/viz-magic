@@ -76,7 +76,7 @@ var A11y = (function() {
     function focusFirst(container) {
         if (!container || !container.querySelector) return;
         var focusable = container.querySelector(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
         );
         if (focusable) {
             focusable.focus();
@@ -94,7 +94,7 @@ var A11y = (function() {
         }
 
         var focusableElements = container.querySelectorAll(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
         );
         if (!focusableElements.length) {
             return function() {};
@@ -106,6 +106,18 @@ var A11y = (function() {
         function handler(e) {
             if (e.key !== 'Tab') return;
 
+            // Map paging changes disabled states; zoom can hide controls. Re-query
+            // actual visible controls rather than retaining stale or SVG href nodes.
+            var current = container.querySelectorAll(
+                'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            );
+            var visible = [];
+            for (var i = 0; i < current.length; i++) {
+                if (current[i].getClientRects().length) visible.push(current[i]);
+            }
+            if (!visible.length) return;
+            firstFocusable = visible[0];
+            lastFocusable = visible[visible.length - 1];
             if (e.shiftKey) {
                 if (document.activeElement === firstFocusable) {
                     lastFocusable.focus();

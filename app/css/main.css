@@ -1780,6 +1780,18 @@ body[data-icon-motion="sparkle"] .energy-path-shimmer {
 .help-secret-library-confirm-card p { line-height: 1.5; }
 .help-library-map-card { padding: 4px 2px; }
 .help-library-map-text { display: block; }
+.help-favorite-row { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.help-favorite-row .help-library-link { flex: 1 1 200px; min-width: 0; }
+.help-favorite-row > span { flex-basis: 100%; }
+#map-viewer-position { grid-column: 1 / -1; text-align: center; }
+#help-library-close, #lore-close { grid-column: 1 / -1; }
+.modal.help-library-fullscreen #map-favorite-toggle,
+.modal.lore-map-fullscreen #map-favorite-toggle { grid-column: 1 / -1; }
+#map-viewer-status { margin: 12px 0 0; }
+.modal.help-library-fullscreen .help-library-map-viewport,
+.modal.lore-map-fullscreen .lore-map-viewport { min-height: 0; }
+.modal.help-library-fullscreen #map-viewer-status,
+.modal.lore-map-fullscreen #map-viewer-status { flex: 0 0 auto; margin: 0; padding: 0 10px; background: #05070b; }
 .modal.help-library-fullscreen {
     position: fixed;
     inset: 0;

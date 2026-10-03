@@ -265,6 +265,7 @@ var HelpScreen = (function() {
     _numberPaidLibraryGroups([HELP_LIVING_FOREST_LIBRARY_MAPS]);
 
     function render() {
+        if (checkFavoriteViewer) checkFavoriteViewer();
         var t = Helpers.t;
         var el = Helpers.$('screen-help');
         if (!el) return;
@@ -313,6 +314,7 @@ var HelpScreen = (function() {
         el.innerHTML = html;
         _bindNavLinks(el);
         _bindLibraryLinks(el);
+        _bindFavorites(el);
         _bindSecretLibrary(el);
         _bindUnknownLibrary(el);
         _bindMiddleLibrary(el);
@@ -359,6 +361,255 @@ var HelpScreen = (function() {
         }
     }
 
+    var FAVORITE_GROUPS = {
+        day1: HELP_LIBRARY_MAPS,
+        chapter2: HELP_SECRET_LIBRARY_MAPS,
+        chapter3: HELP_UNKNOWN_LIBRARY_MAPS.concat(HELP_UNKNOWN_LIBRARY_FADING_MAPS),
+        chapter4: HELP_MIDDLE_LIBRARY_REVEALING_MAPS.concat(HELP_MIDDLE_LIBRARY_MAPS),
+        chapter5: HELP_ATTRACTION_LIBRARY_FIRST_MAPS.concat(HELP_ATTRACTION_LIBRARY_GROWING_MAPS),
+        chapter6: HELP_LIVING_NATURE_LIBRARY_FIRST_MAPS.concat(HELP_LIVING_NATURE_LIBRARY_BOUNDARY_MAPS),
+        chapter7: HELP_LIVING_ELEMENTS_LIBRARY_FIRST_MAPS.concat(HELP_LIVING_ELEMENTS_LIBRARY_AWAKENING_MAPS),
+        chapter8: HELP_LIVING_FOREST_LIBRARY_MAPS,
+        world: MapScreen.getMapIds().map(function(id) { return { id: id, title: GameRegions.getRegion(id).name }; })
+    };
+    var favoriteIds = [];
+    Object.keys(FAVORITE_GROUPS).forEach(function(group) {
+        FAVORITE_GROUPS[group].forEach(function(entry) { favoriteIds.push(group + ':' + entry.id); });
+    });
+    MapFavorites.configure(favoriteIds);
+
+    function _favoriteEntry(id) {
+        var parts = id.split(':');
+        var entries = FAVORITE_GROUPS[parts[0]] || [];
+        for (var i = 0; i < entries.length; i++) {
+            if (entries[i].id === parts[1]) return { group: parts[0], entry: entries[i] };
+        }
+        return null;
+    }
+    function _favoriteTitle(item) {
+        if (item.group === 'world') return Helpers.t('favorites_world_map', { name: GameRegions.getRegion(item.entry.id).name });
+        return item.entry.titleKey ? Helpers.t(item.entry.titleKey) : item.entry.title;
+    }
+    function _sourceMapAccess(item) {
+        return item && (item.group === 'day1' || item.group === 'world' ||
+            StateEngine.hasLibraryAccess(VizAccount.getCurrentUser(), item.group, StateEngine.getLibraryDay()));
+    }
+    function _renderFavorites() {
+        var state = MapFavorites.read(VizAccount.getCurrentUser());
+        var t = Helpers.t;
+        var html = '<article class="help-magic-library help-favorites" aria-labelledby="help-favorites-title">' +
+            '<h3 id="help-favorites-title" tabindex="-1">' + t('favorites_title') + '</h3>' +
+            '<p>' + t('favorites_local') + '</p>' +
+            '<p id="help-favorites-status" role="status" aria-live="polite" aria-atomic="true">' +
+            t(state.error ? 'favorites_error' : 'favorites_count', { count: state.ids.length }) + '</p>';
+        html += '<div id="help-favorites-content">';
+        if (!state.ids.length && !state.error) html += '<p>' + t('favorites_empty') + '</p>';
+        if (state.ids.length === 15) html += '<p>' + t('favorites_full') + '</p>';
+        html += '<div class="help-library-list">';
+        for (var i = 0; i < state.ids.length; i++) {
+            var id = state.ids[i];
+            var item = _favoriteEntry(id);
+            if (!item) continue;
+            var title = Helpers.escapeHtml(_favoriteTitle(item));
+            html += '<div class="help-favorite-row"><button type="button" class="help-library-link" data-favorite-open="' + id + '">' + title + '</button>' +
+                '<button type="button" class="btn btn-secondary" data-favorite-remove="' + id + '" aria-label="' + Helpers.escapeHtml(t('favorites_remove_named', { name: _favoriteTitle(item) })) + '">' + t('favorites_remove') + '</button>';
+            html += '</div>';
+        }
+        return html + '</div></div></article>';
+    }
+
+    var favoritesNeedRefresh = false;
+    var checkFavoriteViewer = null;
+    window.addEventListener('storage', function(event) {
+        if (event.key && event.key.indexOf('viz_magic_map_favorites_') !== 0) return;
+        if (checkFavoriteViewer) checkFavoriteViewer();
+        _refreshFavorites();
+    });
+    function _refreshFavorites() {
+        var container = Helpers.$('help-favorites-container');
+        if (!container) return;
+        if (Helpers.$('modal-container').classList.contains('show')) { favoritesNeedRefresh = true; return; }
+        var active = document.activeElement;
+        var openerId = active && active.getAttribute('data-favorite-open');
+        var updated = document.createElement('div');
+        updated.innerHTML = _renderFavorites();
+        Helpers.$('help-favorites-content').innerHTML = updated.querySelector('#help-favorites-content').innerHTML;
+        Helpers.$('help-favorites-status').textContent = updated.querySelector('#help-favorites-status').textContent;
+        _bindFavorites(container);
+        if (openerId) {
+            var restored = container.querySelector('[data-favorite-open="' + openerId + '"]');
+            (restored || Helpers.$('help-favorites-title')).focus();
+        }
+    }
+    Helpers.EventBus.on('modal:closed', function() {
+        checkFavoriteViewer = null;
+        if (favoritesNeedRefresh) { favoritesNeedRefresh = false; _refreshFavorites(); }
+    });
+    function _favoriteStatus(key) {
+        var status = Helpers.$('help-favorites-status');
+        if (status) {
+            var state = MapFavorites.read(VizAccount.getCurrentUser());
+            status.textContent = Helpers.t(key) + (state.error ? '' : ' ' + Helpers.t('favorites_count', { count: state.ids.length }));
+        }
+    }
+    function _bindFavorites(el) {
+        var links = el.querySelectorAll('[data-favorite-open]');
+        for (var i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function() {
+                var id = this.getAttribute('data-favorite-open');
+                _openFavorite(id);
+            });
+        }
+        var removers = el.querySelectorAll('[data-favorite-remove]');
+        for (var j = 0; j < removers.length; j++) {
+            removers[j].addEventListener('click', function() {
+                var id = this.getAttribute('data-favorite-remove');
+                var result = MapFavorites.remove(VizAccount.getCurrentUser(), id);
+                if (checkFavoriteViewer) checkFavoriteViewer();
+                _refreshFavorites();
+                _favoriteStatus('favorites_' + result.status);
+                var replacement = el.querySelector('[data-favorite-remove="' + id + '"]');
+                (replacement || Helpers.$('help-favorites-title')).focus();
+            });
+        }
+    }
+    function _savedFavoriteAccess(id, context) {
+        return context && context.kind === 'favorites' &&
+            context.account === VizAccount.getCurrentUser() &&
+            MapFavorites.read(context.account).ids.indexOf(id) !== -1 && !!_favoriteEntry(id);
+    }
+    function _openFavorite(id) {
+        var context = { kind: 'favorites', account: VizAccount.getCurrentUser(), ids: MapFavorites.read(VizAccount.getCurrentUser()).ids };
+        var item = _favoriteEntry(id);
+        if (!_savedFavoriteAccess(id, context)) { _favoriteStatus('favorites_locked'); return; }
+        if (item.group === 'world') MapScreen.openLore(item.entry.id, context);
+        else if (item.group === 'day1') _openLibraryMap(item.entry, context);
+        else _openPaidLibraryMap(item.entry, item.group, context);
+    }
+    function _mapDescriptor(item) {
+        var e = item.entry;
+        var group = item.group;
+        var title = e.titleKey ? (e.number ? e.number + '. ' : '') + Helpers.t(e.titleKey) : e.title;
+        var description = Helpers.t(e.textKey || 'map_lore_' + e.id);
+        var folders = {
+            chapter2: ['chapter2/secret', HELP_SECRET_LIBRARY_ASSET_VERSION],
+            chapter3: ['chapter3/unknown', HELP_UNKNOWN_LIBRARY_ASSET_VERSION],
+            chapter4: ['middle/middle', HELP_MIDDLE_LIBRARY_ASSET_VERSION],
+            chapter5: ['attraction/attraction', HELP_ATTRACTION_LIBRARY_ASSET_VERSION],
+            chapter6: ['living-nature/living-nature', HELP_LIVING_NATURE_LIBRARY_ASSET_VERSION],
+            chapter7: ['living-elements/living-elements', HELP_LIVING_ELEMENTS_LIBRARY_ASSET_VERSION],
+            chapter8: ['living-forest/living-forest', HELP_LIVING_FOREST_LIBRARY_ASSET_VERSION]
+        };
+        var src;
+        if (group === 'world') {
+            title = GameRegions.getRegion(e.id).name;
+            src = 'assets/maps/map-' + e.id + '.jpg?v=' + MapScreen.getMapAssetVersion();
+        } else if (group === 'day1') src = 'assets/library-maps-v2/map-' + e.id + '.jpg?v=' + HELP_LIBRARY_ASSET_VERSION;
+        else src = 'assets/library-maps-' + folders[group][0] + '-map-' + e.id + '.jpg?v=' + folders[group][1];
+        return { title: title, description: description, src: src, alt: title + '. ' + description };
+    }
+    function _bindMapViewer(id, context) {
+        var originalAccount = VizAccount.getCurrentUser();
+        var item = _favoriteEntry(id);
+        var favoriteContext = context && context.kind === 'favorites' ? context : null;
+        var ids = favoriteContext ? favoriteContext.ids.slice() : FAVORITE_GROUPS[item.group].map(function(e) { return item.group + ':' + e.id; });
+        var index = ids.indexOf(id);
+        var modal = Helpers.$('modal-container');
+        var worldViewer = item.group === 'world';
+        var close = Helpers.$(worldViewer ? 'lore-close' : 'help-library-close');
+        var controls = '<button type="button" class="btn btn-secondary" id="map-favorite-toggle"></button>' +
+            '<button type="button" class="btn btn-secondary" id="map-viewer-prev">' + Helpers.t('map_viewer_previous') + '</button>' +
+            '<button type="button" class="btn btn-secondary" id="map-viewer-next">' + Helpers.t('map_viewer_next') + '</button>' +
+            '<span id="map-viewer-position" tabindex="-1"></span>';
+        close.insertAdjacentHTML('beforebegin', controls);
+        modal.querySelector('.lore-map-card, .help-library-map-card').insertAdjacentHTML('beforeend', '<p id="map-viewer-status" role="status" aria-live="polite" aria-atomic="true"></p>');
+        var toggle = Helpers.$('map-favorite-toggle');
+        var prev = Helpers.$('map-viewer-prev');
+        var next = Helpers.$('map-viewer-next');
+        var position = Helpers.$('map-viewer-position');
+        var status = Helpers.$('map-viewer-status');
+        var title = modal.querySelector('.lore-map-title');
+        title.id = 'map-viewer-title';
+        modal.setAttribute('aria-labelledby', title.id);
+        function toggleState() {
+            var saved = MapFavorites.read(originalAccount).ids.indexOf(ids[index]) !== -1;
+            toggle.textContent = Helpers.t(saved ? 'favorites_remove' : 'favorites_add');
+            toggle.setAttribute('aria-pressed', saved ? 'true' : 'false');
+        }
+        function limitStatus() {
+            return MapFavorites.read(originalAccount).ids.length >= 15 ? Helpers.t('favorites_full') : '';
+        }
+        function draw() {
+            var current = _favoriteEntry(ids[index]);
+            var data = _mapDescriptor(current);
+            title.textContent = data.title;
+            var image = Helpers.$(worldViewer ? 'lore-map-image' : 'help-library-map-image');
+            image.src = data.src; image.alt = data.alt;
+            var text = worldViewer ? Helpers.$('lore-fallback') : modal.querySelector('.help-library-map-text');
+            text.textContent = data.description;
+            if (worldViewer) text.style.display = current.group === 'world' ? 'none' : 'block';
+            if (worldViewer) {
+                var level = modal.querySelector('.lore-map-level');
+                level.style.display = current.group === 'world' ? '' : 'none';
+                if (current.group === 'world') level.textContent = Helpers.t('map_level') + ' ' + GameRegions.getDisplayLevelRange(current.entry.id);
+            }
+            image.style.display = '';
+            var card = modal.querySelector('.lore-map-card, .help-library-map-card');
+            card.classList.toggle('help-secret-library-map-card', current.group.indexOf('chapter') === 0);
+            modal.classList.remove('help-library-fullscreen');
+            modal.classList.remove('lore-map-fullscreen');
+            Helpers.$(worldViewer ? 'lore-map-viewport' : 'help-library-map-viewport').classList.remove('zoomed');
+            prev.disabled = index === 0;
+            next.disabled = index === ids.length - 1;
+            position.textContent = Helpers.t('map_viewer_position', { position: index + 1, total: ids.length });
+            toggleState();
+            status.textContent = limitStatus();
+        }
+        function authorized(target) {
+            if (VizAccount.getCurrentUser() !== originalAccount) {
+                status.textContent = Helpers.t('favorites_account_changed');
+                if (favoriteContext) { favoritesNeedRefresh = true; ModalComponent.hide(); }
+                return false;
+            }
+            // Saved-only display permission belongs exclusively to the Favorites viewer.
+            if (favoriteContext ? (!_savedFavoriteAccess(ids[index], favoriteContext) || !_savedFavoriteAccess(target, favoriteContext)) :
+                (!_sourceMapAccess(_favoriteEntry(ids[index])) || !_sourceMapAccess(_favoriteEntry(target)))) {
+                status.textContent = Helpers.t('favorites_locked');
+                if (favoriteContext && !_savedFavoriteAccess(ids[index], favoriteContext)) { favoritesNeedRefresh = true; ModalComponent.hide(); }
+                return false;
+            }
+            return true;
+        }
+        function move(delta, button) {
+            var target = index + delta;
+            if (target < 0 || target >= ids.length || !authorized(ids[target])) return;
+            index = target;
+            draw();
+            status.textContent = position.textContent + ': ' + title.textContent + (limitStatus() ? '. ' + limitStatus() : '');
+            (button.disabled ? position : button).focus();
+        }
+        prev.addEventListener('click', function() { move(-1, prev); });
+        next.addEventListener('click', function() { move(1, next); });
+        toggle.addEventListener('click', function() {
+            if (!authorized(ids[index])) return;
+            var saved = MapFavorites.read(originalAccount).ids.indexOf(ids[index]) !== -1;
+            var result = saved ? MapFavorites.remove(originalAccount, ids[index]) : MapFavorites.add(originalAccount, ids[index]);
+            toggleState();
+            status.textContent = Helpers.t('favorites_' + result.status) + (result.status === 'added' && limitStatus() ? ' ' + limitStatus() : '');
+            _refreshFavorites();
+            if (checkFavoriteViewer) checkFavoriteViewer();
+            if (favoriteContext && result.status === 'removed') _favoriteStatus('favorites_removed');
+        });
+        checkFavoriteViewer = favoriteContext ? function() {
+            if (!authorized(ids[index])) return;
+            var currentId = ids[index];
+            ids = MapFavorites.read(originalAccount).ids;
+            index = ids.indexOf(currentId);
+            draw();
+        } : null;
+        draw();
+    }
+
     function _renderLorePages(t) {
         return '<section class="help-lore-pages" aria-label="' + t('help_lore_label') + '">' +
             '<h2 class="help-book-chapter">' + Helpers.icon('spark', 'section-icon vmagic-breathe') + ' ' + t('help_lore_title') + '</h2>' +
@@ -372,7 +623,7 @@ var HelpScreen = (function() {
                     '<h3>' + Helpers.icon('festival', 'section-icon vmagic-breathe') + ' ' + t('help_section_world_months') + '</h3>' +
                     '<p>' + t('help_world_months_text') + '</p>' +
                 '</article>' +
-            '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + _renderMiddleLibrary(t) + _renderAttractionLibrary(t) + _renderLivingNatureLibrary(t) + _renderLivingElementsLibrary(t) + _renderLivingForestLibrary(t) + '</section>';
+            '</div><div id="help-favorites-container">' + _renderFavorites() + '</div>' + _renderMagicLibrary(t) + _renderSecretLibrary(t) + _renderUnknownLibrary(t) + _renderMiddleLibrary(t) + _renderAttractionLibrary(t) + _renderLivingNatureLibrary(t) + _renderLivingElementsLibrary(t) + _renderLivingForestLibrary(t) + '</section>';
     }
 
     function _renderMagicLibrary(t) {
@@ -1816,7 +2067,8 @@ var HelpScreen = (function() {
         return null;
     }
 
-    function _openLibraryMap(entry) {
+    function _openLibraryMap(entry, context, group) {
+        group = group || 'day1';
         var title = Helpers.escapeHtml(entry.title);
         var description = Helpers.t('map_lore_' + entry.id);
         var html = '<div class="help-library-map-card">';
@@ -1828,6 +2080,7 @@ var HelpScreen = (function() {
         html += '<div class="modal-actions lore-map-actions help-library-map-actions"><button type="button" class="btn btn-secondary" id="help-library-zoom-toggle">' + Helpers.t('map_zoom_toggle') + '</button><button type="button" class="btn btn-primary" id="help-library-close">' + Helpers.t('close') + '</button></div>';
         html += '</div>';
         ModalComponent.show(html);
+        _bindMapViewer(group + ':' + entry.id, context);
         var modal = Helpers.$('modal-container');
         var viewport = Helpers.$('help-library-map-viewport');
         var zoomBtn = Helpers.$('help-library-zoom-toggle');
@@ -1882,7 +2135,9 @@ var HelpScreen = (function() {
         _openPaidLibraryMap(entry, 'chapter8');
     }
 
-    function _openPaidLibraryMap(entry, chapter) {
+    function _openPaidLibraryMap(entry, chapter, context) {
+        if (context && context.kind === 'favorites' ? !_savedFavoriteAccess(chapter + ':' + entry.id, context) :
+            !_sourceMapAccess({ group: chapter, entry: entry })) return;
         var titleText = (entry.number ? entry.number + '. ' : '') + Helpers.t(entry.titleKey);
         var title = Helpers.escapeHtml(titleText);
         var description = Helpers.t(entry.textKey);
@@ -1915,6 +2170,7 @@ var HelpScreen = (function() {
         html += '<div class="modal-actions lore-map-actions help-library-map-actions"><button type="button" class="btn btn-secondary" id="help-library-zoom-toggle">' + Helpers.t('map_zoom_toggle') + '</button><button type="button" class="btn btn-primary" id="help-library-close">' + Helpers.t('close') + '</button></div>';
         html += '</div>';
         ModalComponent.show(html);
+        _bindMapViewer(chapter + ':' + entry.id, context);
         var modal = Helpers.$('modal-container');
         var viewport = Helpers.$('help-library-map-viewport');
         var zoomBtn = Helpers.$('help-library-zoom-toggle');
@@ -1946,5 +2202,5 @@ var HelpScreen = (function() {
         if (viewport) viewport.classList.remove('zoomed');
     }
 
-    return { render: render };
+    return { render: render, bindWorldViewer: function(id, context) { _bindMapViewer('world:' + id, context); } };
 })();
