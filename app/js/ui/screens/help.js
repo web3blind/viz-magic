@@ -522,7 +522,7 @@ var HelpScreen = (function() {
             '<button type="button" class="btn btn-secondary" id="map-viewer-next">' + Helpers.t('map_viewer_next') + '</button>' +
             '<span id="map-viewer-position" tabindex="-1"></span>';
         close.insertAdjacentHTML('beforebegin', controls);
-        modal.querySelector('.lore-map-card, .help-library-map-card').insertAdjacentHTML('beforeend', '<p id="map-viewer-status" role="status" aria-live="polite" aria-atomic="true"></p>');
+        modal.querySelector('.lore-map-card, .help-library-map-card').insertAdjacentHTML('beforeend', '<p id="map-viewer-status"' + (favoriteContext ? ' class="sr-only"' : '') + ' role="status" aria-live="polite" aria-atomic="true"></p>');
         var toggle = Helpers.$('map-favorite-toggle');
         var prev = Helpers.$('map-viewer-prev');
         var next = Helpers.$('map-viewer-next');
@@ -537,7 +537,7 @@ var HelpScreen = (function() {
             toggle.setAttribute('aria-pressed', saved ? 'true' : 'false');
         }
         function limitStatus() {
-            return MapFavorites.read(originalAccount).ids.length >= 15 ? Helpers.t('favorites_full') : '';
+            return !favoriteContext && MapFavorites.read(originalAccount).ids.length >= 15 ? Helpers.t('favorites_full') : '';
         }
         function draw() {
             var current = _favoriteEntry(ids[index]);
@@ -568,14 +568,17 @@ var HelpScreen = (function() {
         function authorized(target) {
             if (VizAccount.getCurrentUser() !== originalAccount) {
                 status.textContent = Helpers.t('favorites_account_changed');
-                if (favoriteContext) { favoritesNeedRefresh = true; ModalComponent.hide(); }
+                if (favoriteContext) { Toast.error(status.textContent); favoritesNeedRefresh = true; ModalComponent.hide(); }
                 return false;
             }
             // Saved-only display permission belongs exclusively to the Favorites viewer.
             if (favoriteContext ? (!_savedFavoriteAccess(ids[index], favoriteContext) || !_savedFavoriteAccess(target, favoriteContext)) :
                 (!_sourceMapAccess(_favoriteEntry(ids[index])) || !_sourceMapAccess(_favoriteEntry(target)))) {
                 status.textContent = Helpers.t('favorites_locked');
-                if (favoriteContext && !_savedFavoriteAccess(ids[index], favoriteContext)) { favoritesNeedRefresh = true; ModalComponent.hide(); }
+                if (favoriteContext) {
+                    Toast.error(status.textContent);
+                    if (!_savedFavoriteAccess(ids[index], favoriteContext)) { favoritesNeedRefresh = true; ModalComponent.hide(); }
+                }
                 return false;
             }
             return true;
@@ -597,7 +600,9 @@ var HelpScreen = (function() {
             toggleState();
             status.textContent = Helpers.t('favorites_' + result.status) + (result.status === 'added' && limitStatus() ? ' ' + limitStatus() : '');
             _refreshFavorites();
-            if (checkFavoriteViewer) checkFavoriteViewer();
+            if (favoriteContext && result.status === 'error') Toast.error(status.textContent);
+            else if (favoriteContext && result.status === 'removed') { favoritesNeedRefresh = true; ModalComponent.hide(); }
+            else if (checkFavoriteViewer) checkFavoriteViewer();
             if (favoriteContext && result.status === 'removed') _favoriteStatus('favorites_removed');
         });
         checkFavoriteViewer = favoriteContext ? function() {

@@ -143,6 +143,7 @@ async function run() {
         await otherTab.evaluate(function() { localStorage.setItem('viz_magic_map_favorites_account:favorites-qa', JSON.stringify(['day1:commons_first_light'])); });
         await page.waitForFunction(function() { return !document.getElementById('modal-container').classList.contains('show'); }, { timeout: 2000 });
         assert.equal(await page.$('[data-favorite-open="chapter3:01"]'), null, 'stale saved opener removed');
+        assert.match(await page.$$eval('#toast-container .toast-error', function(nodes) { return nodes.map(function(el) { return el.textContent; }).join(' '); }), /Карта больше не сохранена/, 'revoked favorite access visibly explained');
         await otherTab.close();
         await page.evaluate(function() { StateEngine.getLibraryDay = window.qaDay; });
         console.log('PASS legitimately saved paid card after expiry; original chapter locked; saved-only paging; removal/cross-tab stale viewer revoked');
@@ -264,7 +265,9 @@ async function run() {
             HelpScreen.render();
         });
         await page.focus('[data-favorite-open="world:commons_first_light"]'); await page.keyboard.press('Enter');
+        assert.equal(await page.$eval('#map-viewer-status', function(el) { return el.classList.contains('sr-only') && el.textContent === ''; }), true, 'world favorite starts without visible footer below capacity');
         await page.focus('#map-viewer-next'); await page.keyboard.press('Space');
+        assert.equal(await page.$eval('#map-viewer-status', function(el) { return el.classList.contains('sr-only') && !/Лимит/.test(el.textContent); }), true, 'mixed favorite paging has no visible footer');
         assert.match(await page.$eval('#lore-map-image', function(el) { return el.getAttribute('src'); }), /chapter2\/secret-map-01/);
         assert.notEqual(await page.$eval('#lore-fallback', function(el) { return getComputedStyle(el).display; }), 'none', 'paid description remains visible in mixed favorite viewer');
         assert.equal(await page.$eval('#map-viewer-position', function(el) { return el.textContent; }), 'Карта 2 из 3');
@@ -294,12 +297,51 @@ async function run() {
         await page.evaluate(function() { window.qaDay = StateEngine.getLibraryDay; StateEngine.getLibraryDay = function() { return '2000-01-01'; }; HelpScreen.render(); });
         assert.equal(await page.$$eval('[data-secret-library-map]', function(n) { return n.length; }), 0);
         await page.focus('[data-favorite-open="' + sameChapter[0] + '"]'); await page.keyboard.press('Enter');
+        console.log('OBSERVED favorite footer at capacity: ' + await page.$eval('#map-viewer-status', function(el) { return el.textContent; }));
+        assert.equal(await page.$eval('#map-viewer-status', function(el) { return el.textContent; }), '', 'Favorites initial draw has no repeated limit explanation');
         for (var fi = 0; fi < 15; fi++) {
             if (fi) { await page.focus('#map-viewer-next'); await page.keyboard.press('Space'); }
+            var footer = await page.$eval('#map-viewer-status', function(el) {
+                var css = getComputedStyle(el);
+                return { text: el.textContent, live: el.getAttribute('aria-live'), role: el.getAttribute('role'), clipped: css.position === 'absolute' && css.width === '1px' && css.height === '1px' && css.overflow === 'hidden' };
+            });
+            assert.equal(footer.clipped, true, 'Favorite modal has no visible footer below Close');
+            assert.equal(footer.live, 'polite');
+            assert.equal(footer.role, 'status');
+            assert.doesNotMatch(footer.text, /Лимит|Удалите одну|Исходная карта/);
+            if (fi) assert.match(footer.text, new RegExp('Карта ' + (fi + 1) + ' из 15:'), 'paging still announces card for screen readers');
             assert.equal(await page.$eval('#map-viewer-position', function(el) { return el.textContent; }), 'Карта ' + (fi + 1) + ' из 15');
             assert.match(await page.$eval('#help-library-map-image', function(el) { return el.getAttribute('src'); }), new RegExp('secret-map-' + sameChapter[fi].split(':')[1]));
         }
+        var favoriteClient = await page.createCDPSession();
+        var favoriteAx = await favoriteClient.send('Accessibility.getFullAXTree');
+        var favoriteDom = await favoriteClient.send('DOM.getDocument');
+        var favoriteStatusNode = await favoriteClient.send('DOM.querySelector', { nodeId: favoriteDom.root.nodeId, selector: '#map-viewer-status' });
+        var favoriteStatusDom = await favoriteClient.send('DOM.describeNode', { nodeId: favoriteStatusNode.nodeId });
+        assert.ok(favoriteAx.nodes.some(function(n) { return n.backendDOMNodeId === favoriteStatusDom.node.backendNodeId && !n.ignored && n.role.value === 'status' && (n.properties || []).some(function(p) { return p.name === 'live' && p.value.value === 'polite'; }); }), 'exact clipped favorite status remains in AX tree');
+        if (process.env.MAP_QA_SCREENSHOTS === '1') {
+            fs.writeFileSync('media_review/favorites-qa/footer-free-favorites-ax.json', JSON.stringify(favoriteAx, null, 2));
+            await page.$eval('#help-library-close', function(el) { el.scrollIntoView({ block: 'end' }); });
+            await page.screenshot({ path: 'media_review/favorites-qa/footer-free-favorites-360.png' });
+        }
+        await favoriteClient.detach();
+        await page.focus('#help-library-close'); await page.keyboard.press('Tab');
+        assert.equal(await page.evaluate(function() { return document.activeElement.id; }), 'help-library-zoom-toggle');
+        await page.keyboard.down('Shift'); await page.keyboard.press('Tab'); await page.keyboard.up('Shift');
+        assert.equal(await page.evaluate(function() { return document.activeElement.id; }), 'help-library-close');
+        await page.evaluate(function() {
+            window.qaStorageSet = Storage.prototype.setItem;
+            Storage.prototype.setItem = function(k, v) { if (k.indexOf('viz_magic_map_favorites_') === 0) throw Error('quota'); return window.qaStorageSet.call(this, k, v); };
+        });
+        await page.focus('#map-favorite-toggle'); await page.keyboard.press('Space');
+        assert.match(await page.$eval('#map-viewer-status', function(el) { return el.textContent; }), /Изменение не сохранено/, 'failed favorite removal retains live error');
+        await page.waitForSelector('#toast-container .toast-error.show');
+        assert.match(await page.$eval('#toast-container .toast-error', function(el) { return el.textContent; }), /Изменение не сохранено/, 'error also visibly shown, not silently clipped');
+        assert.deepEqual(await page.evaluate(function() { return MapFavorites.read('single-chapter-qa').ids; }), sameChapter);
+        await page.evaluate(function() { Storage.prototype.setItem = window.qaStorageSet; });
         await page.keyboard.press('Escape');
+        assert.equal(await page.evaluate(function() { return document.activeElement.getAttribute('data-favorite-open'); }), sameChapter[0]);
+        console.log('PASS Favorites footer absent on all 15 cards; clipped polite AX status, Tab/Shift+Tab/Escape and visible storage error');
         await page.focus('[data-library-map="commons_first_light"]'); await page.keyboard.press('Enter');
         await page.focus('#map-favorite-toggle'); await page.keyboard.press('Space');
         assert.deepEqual(await page.evaluate(function() { return MapFavorites.read('single-chapter-qa').ids; }), sameChapter, 'total cap still 15, not 15 per chapter');
