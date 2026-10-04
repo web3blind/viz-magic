@@ -44,6 +44,28 @@ async function run() {
                 var el = document.getElementById('screen-help'); el.classList.add('active'); el.removeAttribute('aria-hidden');
             }, user);
         }
+        async function viewerOrder(experiment) {
+            var order = await page.$eval('.help-library-map-card', function(card) {
+                return Array.from(card.children).filter(function(el) { return el.id !== 'map-viewer-status'; }).map(function(el) {
+                    if (el.classList.contains('lore-map-title')) return 'title';
+                    if (el.classList.contains('help-library-map-text')) return 'text';
+                    if (el.classList.contains('help-library-map-actions')) return 'actions';
+                    if (el.classList.contains('help-library-map-viewport')) return 'viewport';
+                    return el.tagName;
+                });
+            });
+            assert.deepEqual(order, experiment ? ['title', 'text', 'actions', 'viewport'] : ['title', 'viewport', 'text', 'actions'], 'source day1 experiment only; exact DOM reading order');
+            assert.deepEqual(await page.$$eval('.help-library-map-actions > *', function(nodes) { return nodes.map(function(el) { return el.id; }); }), ['help-library-zoom-toggle', 'map-favorite-toggle', 'map-viewer-prev', 'map-viewer-next', 'map-viewer-position', 'help-library-close']);
+            assert.equal(await page.$$eval('#help-library-map-image', function(nodes) { return nodes.length; }), 1);
+            if (experiment) {
+                assert.equal(await page.$eval('.help-day-one-source-map-card', function(card) {
+                    var text = card.querySelector('.help-library-map-text').getBoundingClientRect();
+                    var actions = card.querySelector('.help-library-map-actions').getBoundingClientRect();
+                    var viewport = card.querySelector('.help-library-map-viewport').getBoundingClientRect();
+                    return text.bottom <= actions.top && actions.bottom <= viewport.top;
+                }), true, 'visual text/actions/image order matches DOM');
+            }
+        }
         await help('favorites-qa');
         assert.ok(await page.$('#help-favorites-title'), 'favorite list exists before day-one library');
         assert.equal(await page.evaluate(function() { return !!(document.getElementById('help-favorites-title').compareDocumentPosition(document.getElementById('help-magic-library-title')) & Node.DOCUMENT_POSITION_FOLLOWING); }), true);
@@ -51,6 +73,7 @@ async function run() {
         await page.focus('[data-library-map="commons_first_light"]');
         await page.keyboard.press('Enter');
         assert.ok(await page.$('#map-favorite-toggle'), 'viewer exposes native favorite control');
+        await viewerOrder(true);
         await page.keyboard.press('Tab');
         await page.keyboard.press('Space');
         assert.equal(await page.evaluate(function() { return MapFavorites.read('favorites-qa').ids.length; }), 1);
@@ -107,6 +130,7 @@ async function run() {
         });
         assert.equal(await page.$$eval('[data-unknown-library-map]', function(n) { return n.length; }), 0, 'original chapter remains locked');
         await page.focus('[data-favorite-open="chapter3:01"]'); await page.keyboard.press('Enter');
+        await viewerOrder(false);
         assert.equal(await page.$eval('#modal-container', function(el) { return el.classList.contains('show'); }), true, 'saved paid card opens after expiry');
         assert.equal(await page.$eval('#map-viewer-position', function(el) { return el.textContent; }), 'Карта 2 из 2');
         assert.equal(await page.$eval('#map-viewer-next', function(el) { return el.disabled; }), true, 'unsaved chapter neighbor is not reachable');
@@ -125,6 +149,7 @@ async function run() {
         await paidClient.detach();
         await page.focus('#map-viewer-prev'); await page.keyboard.press('Space');
         assert.equal(await page.$eval('#map-viewer-position', function(el) { return el.textContent; }), 'Карта 1 из 2');
+        await viewerOrder(false); // Saved day-one stays in Favorites layout.
         await page.focus('#map-viewer-next'); await page.keyboard.press('Enter');
         assert.match(await page.$eval('#help-library-map-image', function(el) { return el.getAttribute('src'); }), /chapter3\/unknown-map-01/);
         await page.focus('#map-favorite-toggle'); await page.keyboard.press('Space');
@@ -182,6 +207,7 @@ async function run() {
                 assert.ok(state.alt.length > 40);
                 await page.waitForFunction(function() { var img = document.querySelector('#modal-container img'); return img.complete && img.naturalWidth > 0; }, { timeout: 10000 });
                 assert.equal(state.pos, 'Карта ' + (i + 1) + ' из 15');
+                await viewerOrder(group === 'library');
                 if (i && i < 14) assert.equal(state.focus, 'map-viewer-next');
             }
             assert.equal(await page.$eval('#map-viewer-next', function(el) { return el.disabled; }), true);
@@ -201,6 +227,18 @@ async function run() {
             assert.equal(await page.evaluate(function() { return document.activeElement.id; }), 'help-library-close');
             await page.keyboard.press('Escape');
             assert.equal(await page.evaluate(function(attr) { return document.activeElement.getAttribute(attr); }, attr), expected[0].id);
+            if (group === 'library') {
+                await page.focus('[' + attr + '="' + expected[14].id + '"]'); await page.keyboard.press('Space');
+                await viewerOrder(true);
+                assert.equal(await page.$eval('#map-viewer-position', function(el) { return el.textContent; }), 'Карта 15 из 15');
+                if (process.env.MAP_QA_SCREENSHOTS === '1') {
+                    fs.mkdirSync('media_review/favorites-qa', { recursive: true });
+                    await page.$eval('#modal-container', function(el) { el.scrollTop = 0; });
+                    await page.screenshot({ path: 'media_review/favorites-qa/day-one-last-360.png' });
+                }
+                await page.keyboard.press('Escape');
+                assert.equal(await page.evaluate(function() { return document.activeElement.getAttribute('data-library-map'); }), expected[14].id);
+            }
             evidence.push({ group: group, maps: expected.length, orderAndBoundaries: true, focusRestored: true });
         }
         console.log('PASS every library viewer approved order, content/alt, boundaries, zoom, Tab trap, Escape focus: ' + JSON.stringify(evidence));
@@ -208,9 +246,36 @@ async function run() {
         // Accessible tree: native controls, named dialog and polite status.
         await page.evaluate(function() { localStorage.removeItem('viz_magic_map_favorites_account:favorites-qa'); HelpScreen.render(); });
         await page.focus('[data-library-map="commons_first_light"]'); await page.keyboard.press('Enter');
+        await viewerOrder(true);
+        if (process.env.MAP_QA_SCREENSHOTS === '1') {
+            fs.mkdirSync('media_review/favorites-qa', { recursive: true });
+            await page.$eval('#modal-container', function(el) { el.scrollTop = 0; });
+            await page.screenshot({ path: 'media_review/favorites-qa/day-one-first-360.png' });
+        }
         var client = await page.createCDPSession();
         var ax = await client.send('Accessibility.getFullAXTree');
         var axNodes = ax.nodes.filter(function(n) { return !n.ignored; });
+        var byId = new Map(ax.nodes.map(function(n) { return [n.nodeId, n]; }));
+        var readingOrder = [];
+        function visitAX(id) {
+            var n = byId.get(id);
+            if (!n) return;
+            if (!n.ignored) readingOrder.push({ role: n.role.value, name: n.name && n.name.value });
+            (n.childIds || []).forEach(visitAX);
+        }
+        visitAX(ax.nodes.find(function(n) { return !n.ignored && n.role.value === 'dialog'; }).nodeId);
+        var descriptionText = await page.$eval('.help-library-map-text', function(el) { return el.textContent; });
+        var descriptionIndex = readingOrder.findIndex(function(n) { return n.role === 'StaticText' && n.name === descriptionText; });
+        var imageIndex = readingOrder.findIndex(function(n) { return n.role === 'image'; });
+        assert.ok(descriptionIndex >= 0 && imageIndex > descriptionIndex, 'AX description before image');
+        ['Увеличить','Добавить в избранное','Предыдущая','Следующая','Закрыть'].forEach(function(name) {
+            var index = readingOrder.findIndex(function(n) { return n.role === 'button' && n.name === name; });
+            assert.ok(index > descriptionIndex && index < imageIndex, 'AX control between description and image: ' + name);
+        });
+        if (process.env.MAP_QA_SCREENSHOTS === '1') {
+            fs.mkdirSync('media_review/favorites-qa', { recursive: true });
+            fs.writeFileSync('media_review/favorites-qa/day-one-source-ax.json', JSON.stringify({ tree: ax, readingOrder: readingOrder }, null, 2));
+        }
         assert.ok(axNodes.some(function(n) { return n.role && n.role.value === 'dialog' && n.name.value.includes('Commons'); }));
         ['Добавить в избранное','Следующая','Предыдущая','Закрыть'].forEach(function(name) {
             assert.ok(axNodes.some(function(n) { return n.role && n.role.value === 'button' && n.name.value === name; }), 'AX button ' + name);
@@ -231,6 +296,15 @@ async function run() {
             await page.screenshot({ path: 'media_review/favorites-qa/modal-360.png' });
         }
         await page.focus('#help-library-zoom-toggle'); await page.keyboard.press('Enter');
+        assert.equal(await page.$eval('.help-day-one-source-map-card', function(card) {
+            var actions = card.querySelector('.help-library-map-actions').getBoundingClientRect();
+            var viewport = card.querySelector('.help-library-map-viewport').getBoundingClientRect();
+            return actions.top >= 0 && actions.bottom <= viewport.top && viewport.height > 0 && viewport.bottom <= innerHeight;
+        }), true, 'fullscreen actions visible above pannable image');
+        for (var control of ['map-favorite-toggle', 'map-viewer-next', 'help-library-close']) {
+            await page.focus('#' + control);
+            assert.equal(await page.$eval('#' + control, function(el) { var r = el.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth; }), true, 'fullscreen usable control ' + control);
+        }
         if (process.env.MAP_QA_SCREENSHOTS === '1') await page.screenshot({ path: 'media_review/favorites-qa/fullscreen-360.png' });
         var pan = await page.$eval('#help-library-map-viewport', function(el) { return { width: el.clientWidth, scroll: el.scrollWidth }; });
         assert.ok(pan.scroll > pan.width, 'zoom preserves horizontal pan');
@@ -247,6 +321,7 @@ async function run() {
         var worldIds = await page.$$eval('[data-lore-region]', function(nodes) { return nodes.map(function(el) { return el.getAttribute('data-lore-region'); }); });
         assert.equal(worldIds.length, 15);
         await page.focus('[data-lore-region="' + worldIds[0] + '"]'); await page.keyboard.press('Enter');
+        assert.deepEqual(await page.$eval('.lore-map-card', function(card) { return Array.from(card.children).map(function(el) { return el.id || el.className; }); }), ['map-viewer-title', 'lore-map-level', 'lore-map-viewport', 'lore-fallback', 'modal-actions lore-map-actions', 'map-viewer-status'], 'world viewer DOM layout unchanged');
         for (var wi = 0; wi < worldIds.length; wi++) {
             if (wi) { await page.focus('#map-viewer-next'); await page.keyboard.press('Space'); }
             assert.ok((await page.$eval('#lore-map-image', function(el) { return el.getAttribute('src'); })).includes('map-' + worldIds[wi] + '.jpg'));
