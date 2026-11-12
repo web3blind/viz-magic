@@ -26,7 +26,7 @@ function safeNum(value, fallback) {
 }
 
 function pathParts(reqUrl) {
-    return url.parse(reqUrl, true).pathname.replace(/\/+/g, '/').split('/').filter(Boolean);
+    return url.parse(reqUrl, true).pathname.replace(/\/+/g, '/').split('/').filter(Boolean).map(decodeURIComponent);
 }
 
 function memberCount(guild) {
@@ -47,8 +47,8 @@ function ensureGuildShell(guilds, guildId, sender, blockNum) {
         createdBlock: Number(blockNum) || 0,
         level: 1,
         xp: 0,
-        members: {},
-        invites: {},
+        members: Object.create(null),
+        invites: Object.create(null),
         announcements: [],
         isPlaceholder: true
     };
@@ -74,6 +74,17 @@ function applyGuildEvent(guilds, listings, event) {
     var type = event && event.type || payload.t || payload.type || '';
     var sender = event && event.sender || '';
     var blockNum = event && event.blockNum || 0;
+    // Replay also sees previously archived payloads: validate before keys or coercions.
+    if (!data || typeof data !== 'object' || Array.isArray(data) || typeof sender !== 'string') return;
+    var textFields = ['guild_id', 'id', 'guildId'];
+    if (type === 'guild.create') textFields = textFields.concat(['name', 'tag']);
+    if (type === 'guild.invite' || type === 'guild.promote') textFields.push('target');
+    if (type === 'guild.promote') textFields.push('rank');
+    if (type === 'guild.announce') textFields.push('text');
+    for (var fieldIndex = 0; fieldIndex < textFields.length; fieldIndex += 1) {
+        var field = data[textFields[fieldIndex]];
+        if (field !== undefined && field !== null && typeof field !== 'string') return;
+    }
     var guildId = data.guild_id || data.id || data.guildId;
     var guild = null;
 
@@ -91,8 +102,8 @@ function applyGuildEvent(guilds, listings, event) {
             createdBlock: Number(blockNum) || 0,
             level: 1,
             xp: 0,
-            members: {},
-            invites: {},
+            members: Object.create(null),
+            invites: Object.create(null),
             announcements: [],
             isPlaceholder: false
         };
@@ -104,6 +115,7 @@ function applyGuildEvent(guilds, listings, event) {
 
     if (type === 'guild.listing') {
         if (!guildId || !data.created_block) return;
+        if (typeof data.created_block !== 'number' && typeof data.created_block !== 'string') return;
         listings[guildId] = { guild_id: guildId, created_block: Number(data.created_block) || 0, sender: sender, blockNum: Number(blockNum) || 0 };
         return;
     }
@@ -133,8 +145,8 @@ function applyGuildEvent(guilds, listings, event) {
 
 function buildGuildDirectory(archive, options) {
     var rows = archive.queryEventsByTypePrefix('guild.', options || {});
-    var guilds = {};
-    var listings = {};
+    var guilds = Object.create(null);
+    var listings = Object.create(null);
     for (var i = 0; i < rows.length; i += 1) applyGuildEvent(guilds, listings, rows[i]);
     var list = [];
     Object.keys(guilds).forEach(function(id) {
@@ -208,7 +220,14 @@ function createServer(options) {
         }
 
         var parsedUrl = url.parse(req.url, true);
-        var parts = pathParts(req.url);
+        var parts;
+        try {
+            parts = pathParts(req.url);
+        } catch (err) {
+            if (!(err instanceof URIError)) throw err;
+            json(res, 400, { error: 'invalid_path_encoding' });
+            return;
+        }
         if (parts[0] === 'archive-mirror') parts.shift();
 
         if (parts.length === 1 && parts[0] === 'health') {
@@ -326,7 +345,7 @@ function createServer(options) {
         }
 
         if (parts.length === 5 && parts[0] === 'v1' && parts[1] === 'magic' && parts[2] === 'account' && parts[4] === 'history') {
-            var magicAccount = decodeURIComponent(parts[3]);
+            var magicAccount = parts[3];
             var magicEvents = archive.queryEvents({
                 account: magicAccount, protocol: 'VT',
                 start: safeNum(parsedUrl.query.start || parsedUrl.query.from, 0),
@@ -367,8 +386,8 @@ function createServer(options) {
         }
 
         if (parts.length === 6 && parts[0] === 'v1' && parts[1] === 'account' && parts[3] === 'protocol' && parts[5] === 'actions') {
-            var account = decodeURIComponent(parts[2]);
-            var protocol = decodeURIComponent(parts[4]);
+            var account = parts[2];
+            var protocol = parts[4];
             var rows = archive.queryEvents({
                 account: account,
                 protocol: protocol,
@@ -381,8 +400,8 @@ function createServer(options) {
         }
 
         if (parts.length === 6 && parts[0] === 'v1' && parts[1] === 'account' && parts[3] === 'protocol' && parts[5] === 'latest') {
-            var latestAccount = decodeURIComponent(parts[2]);
-            var latestProtocol = decodeURIComponent(parts[4]);
+            var latestAccount = parts[2];
+            var latestProtocol = parts[4];
             var latestRows = archive.queryEvents({ account: latestAccount, protocol: latestProtocol, limit: 1 });
             json(res, 200, { account: latestAccount, protocol: latestProtocol, latest: latestRows.length ? latestRows[latestRows.length - 1] : null });
             return;

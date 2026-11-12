@@ -949,7 +949,7 @@ var DuelScreen = (function() {
         var user = VizAccount.getCurrentUser();
         if (!user) return false;
         var round = duel.currentRound || duelState.currentRound || 1;
-        return _hasCurrentUserCommitted(duel, user, round);
+        return _hasCurrentUserCommitted(duel, user, round) && _hasOpponentCommitted(duel, user, round);
     }
 
     function _mapRoundResults(duel, user) {
@@ -984,6 +984,7 @@ var DuelScreen = (function() {
         var round = duel.currentRound || duelState.currentRound || 1;
         if (!user || _hasCurrentUserRevealed(duel, user, round)) return;
         if (!_hasCurrentUserCommitted(duel, user, round)) return;
+        if (!_hasOpponentCommitted(duel, user, round)) return;
 
         duelState.pendingAction = 'reveal';
         duelState.phase = 'waiting';

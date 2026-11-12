@@ -284,7 +284,7 @@ var GuildScreen = (function() {
                 html += '</div>';
                 var currentCharacter = StateEngine.getCharacter(user);
                 var canRequestJoin = currentCharacter && currentCharacter.level >= GUILD_JOIN_MIN_LEVEL;
-                html += '<button class="btn btn-primary btn-sm guild-join-btn" data-guild="' + g.id + '" ';
+                html += '<button class="btn btn-primary btn-sm guild-join-btn" data-guild="' + _esc(g.id) + '" ';
                 if (!canRequestJoin) html += 'disabled aria-disabled="true" ';
                 html += 'aria-label="' + t('guild_join') + ' ' + _esc(g.name) + '">';
                 html += canRequestJoin ? t('guild_join') : t('guild_join_locked', { level: GUILD_JOIN_MIN_LEVEL });

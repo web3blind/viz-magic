@@ -64,6 +64,9 @@ var ActionValidator = (function() {
         }
 
         var data = action.data || {};
+        if (typeof data.class !== 'string') {
+            return { valid: false, error: 'invalid_class' };
+        }
         if (!data.class || !cfg.CLASSES[data.class.toUpperCase()]) {
             // Check if valid class name
             var validClasses = Object.values(cfg.CLASSES);
@@ -71,7 +74,7 @@ var ActionValidator = (function() {
                 return { valid: false, error: 'invalid_class' };
             }
         }
-        if (!data.name || data.name.length < 1 || data.name.length > 50) {
+        if (typeof data.name !== 'string' || data.name.length < 1 || data.name.length > 50) {
             return { valid: false, error: 'invalid_name' };
         }
 

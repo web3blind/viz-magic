@@ -33,10 +33,12 @@ function collectAccountsFromPayload(payload, accounts) {
 
 function normalizeCustom(block, blockNum, txIndex, opIndex, opData) {
     var protocol = opData && opData.id;
-    if (!GAME_PROTOCOLS[protocol]) return null;
+    if (typeof protocol !== 'string' || !Object.prototype.hasOwnProperty.call(GAME_PROTOCOLS, protocol)) return null;
     var sender = getSender(opData);
     var parsed = parseJsonMaybe(opData.json);
     var actionType = parsed && (parsed.t || parsed.type || parsed.action || parsed.event || parsed.p) || 'custom';
+    // Unknown string names remain indexable; structured names cannot bind to SQLite.
+    if (typeof actionType !== 'string') return null;
     var accounts = [];
     uniquePush(accounts, sender);
     collectAccountsFromPayload(parsed, accounts);

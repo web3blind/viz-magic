@@ -269,8 +269,8 @@ var ArenaScreen = (function() {
                 '<strong>' + Helpers.escapeHtml(ch.challenger) + ' ' + (t('arena_challenges_you') || 'вызывает вас на дуэль!') + '</strong>' +
                 '<span> (блок ' + ch.blockNum + ')</span>' +
                 '<button class="btn btn-primary btn-sm arena-accept-chain-btn" ' +
-                    'data-combat-ref="' + ch.blockNum + '" data-opponent="' + ch.challenger + '" ' +
-                    'data-strategy-hash="' + (ch.strategyHash || '') + '">' +
+                    'data-combat-ref="' + _escapeAttribute(ch.blockNum) + '" data-opponent="' + _escapeAttribute(ch.challenger) + '" ' +
+                    'data-strategy-hash="' + _escapeAttribute(ch.strategyHash || '') + '">' +
                     (t('duel_accept') || 'Принять') + '</button>' +
                 '</div>';
         }
@@ -461,8 +461,8 @@ var ArenaScreen = (function() {
                     levelText +
                 '</span>' +
                 '<button class="btn btn-primary btn-sm arena-challenge-btn" ' +
-                    'data-account="' + p.account + '" ' +
-                    'aria-label="' + (t('arena_challenge_player', { name: p.name }) || p.name) + '">' +
+                    'data-account="' + _escapeAttribute(p.account) + '" ' +
+                    'aria-label="' + _escapeAttribute(t('arena_challenge_player', { name: p.name }) || p.name) + '">' +
                     (t('duel_challenge') || 'Вызвать') + '</button>' +
                 '</div>';
         }
@@ -470,9 +470,14 @@ var ArenaScreen = (function() {
         return html;
     }
 
+    function _escapeAttribute(value) {
+        // Helpers.escapeHtml escapes text nodes, not attribute delimiters.
+        return Helpers.escapeHtml(String(value)).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     function _renderAccountAvatar(url, name, extraClass) {
         if (!url) return '<span class="account-avatar default-avatar ' + (extraClass || '') + ' vmagic-breathe" aria-hidden="true">🧙</span>';
-        return '<img class="account-avatar vmagic-breathe ' + (extraClass || '') + '" src="' + Helpers.escapeHtml(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
+        return '<img class="account-avatar vmagic-breathe ' + (extraClass || '') + '" src="' + _escapeAttribute(url) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
     }
 
     function _renderHistory(container) {

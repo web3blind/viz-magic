@@ -44,7 +44,8 @@ var DailyLeaderboard = (function() {
             }
 
             DailyLeaderboardStorage.getMeta(function(metaErr, meta) {
-                if (!metaErr && meta) {
+                // Rebuild only this derived cache; never reset canonical game state.
+                if (!metaErr && meta && meta.paidProofRules === 2) {
                     _snapshot = _normalizeMeta(meta);
                 }
                 _initialized = true;
@@ -339,7 +340,12 @@ var DailyLeaderboard = (function() {
         };
 
         _primeCharactersForActions(ctx, vmActions, processed.blockNum, function() {
+            // Use the same transaction-bound, one-use proof rules as StateEngine.
+            var verifier = ActionProof.createVerifier(processed.awards || [], processed.blockNum);
             for (var i = 0; i < vmActions.length; i++) {
+                var record = vmActions[i];
+                if (ActionProof.isPaidAction(record.action) &&
+                    !verifier.verify(record.sender, record.txIndex, record.action).valid) continue;
                 _applyVmAction(ctx, processed, vmActions[i], blockContrib);
             }
 
@@ -474,6 +480,7 @@ var DailyLeaderboard = (function() {
     function _finalizeSnapshot(ctx, startBlock, endBlock, callback) {
         var rows = _buildRows(ctx.players || {});
         var meta = {
+            paidProofRules: 2,
             ready: true,
             loading: false,
             buildInProgress: false,
@@ -576,6 +583,7 @@ var DailyLeaderboard = (function() {
     function _persistProgressMeta(startBlock, endBlock, lastScannedBlock, progressPct, players, characters, callback) {
         callback = callback || function() {};
         DailyLeaderboardStorage.setMeta({
+            paidProofRules: 2,
             ready: false,
             loading: false,
             buildInProgress: true,
