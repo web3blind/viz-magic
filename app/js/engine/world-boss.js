@@ -216,6 +216,21 @@ var WorldBoss = (function() {
      * @param {Object} bossState
      * @returns {Array} [{account, damage, share, xpReward, items}]
      */
+    // Pure schedule selection shared by the reducer and its payment requirement.
+    function getAttackBoss(worldState, blockNum) {
+        var playerCount = Object.keys(worldState.characters || {}).length;
+        var spawnBlock = blockNum;
+        var bossEvent = null;
+        if (typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) {
+            bossEvent = WorldEvents.checkWorldBossWindow(blockNum);
+            if (bossEvent && bossEvent.spawnBlock) spawnBlock = bossEvent.spawnBlock;
+        }
+        var scheduledBoss = spawnBoss(spawnBlock, playerCount, BOSS_ACCOUNT);
+        var boss = worldState.worldBoss;
+        if (!boss || !boss.active || (bossEvent && (boss.spawnBlock !== spawnBlock || boss.maxHp !== scheduledBoss.maxHp || boss.currentHp > scheduledBoss.maxHp))) return scheduledBoss;
+        return boss;
+    }
+
     function distributeLoot(bossState) {
         if (!bossState || !bossState.defeated || bossState.lootDistributed) return [];
         var distributions = calculateLootDistribution(bossState);
@@ -301,6 +316,7 @@ var WorldBoss = (function() {
         defeatBoss: defeatBoss,
         calculateLootDistribution: calculateLootDistribution,
         distributeLoot: distributeLoot,
+        getAttackBoss: getAttackBoss,
         getBossStatus: getBossStatus,
         getDefaultState: getDefaultState
     };

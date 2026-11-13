@@ -160,7 +160,7 @@ var GuildProtocol = (function() {
             t: AT.SIEGE_COMMIT,
             d: {
                 siege_ref: siegeRef,
-                energy: energy | 0
+                energy: energy
             }
         };
     }

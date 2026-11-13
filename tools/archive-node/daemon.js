@@ -108,6 +108,7 @@ async function runForever() {
                 console.log('archive-node tick head=' + head + ' irreversible=' + irreversibleHead + ' indexedBlocks=' + result.indexedBlocks + ' indexedEvents=' + result.indexedEvents + ' last=' + result.lastIndexedBlock);
             }
         } catch (err) {
+            archive.setStatus({ ok: false, service: 'viz-magic-game-archive', mode: 'error', lastError: err && err.message || String(err) });
             console.error('archive-node tick failed: ' + (err && err.stack || err));
         }
         await sleep(cfg.pollIntervalMs);

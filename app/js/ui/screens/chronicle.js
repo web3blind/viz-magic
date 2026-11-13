@@ -408,6 +408,8 @@ var ChronicleScreen = (function() {
 
     function _updateLocalBlessingQuestProgress(account) {
         var state = StateEngine.getState();
+        // New paid-quest decisions use only progress from ordered chain replay.
+        if (state && VizMagicConfig.SECURITY_V3 && VizMagicConfig.SECURITY_V3.isActive(Number(state.headBlock || 0) + 1)) return;
         var user = VizAccount.getCurrentUser();
         if (!state || !user || !account || !state.quests || !state.quests[user] || typeof QuestSystem === 'undefined') return;
         // v133: per-day unique key — same mage counts once per day, not once ever.

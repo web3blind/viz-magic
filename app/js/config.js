@@ -247,6 +247,28 @@ var VizMagicConfig = (function() {
         GUILD_LISTING:  'guild.listing'
     };
 
+    // Fixed future chain height, selected from matching live node observations.
+    // Zero remains an explicitly disabled configuration for compatibility tests.
+    var SECURITY_V3 = {
+        ACTIVATION_BLOCK: 85901633,
+        isActive: function(blockNum) {
+            return this.ACTIVATION_BLOCK > 0 && Number(blockNum) >= this.ACTIVATION_BLOCK;
+        },
+        timestampMs: function(timestamp) {
+            if (typeof timestamp !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z)?$/.test(timestamp)) return NaN;
+            return Date.parse(timestamp.replace(/Z$/, '') + 'Z');
+        },
+        checkpointCompatible: function(state) {
+            var affected = this.isActive(state.headBlock);
+            var records = state.processedOperations || {};
+            for (var key in records) {
+                if (Object.prototype.hasOwnProperty.call(records, key) && this.isActive(Number(key.split(':')[1]))) affected = true;
+            }
+            return (!affected && !state.securityRulesVersion) ||
+                (state.securityRulesVersion === 3 && state.securityActivationBlock === this.ACTIVATION_BLOCK);
+        }
+    };
+
     /** Asset formatting helpers */
     var ASSETS = {
         VIZ_PRECISION:    3,
@@ -274,6 +296,7 @@ var VizMagicConfig = (function() {
     };
 
     return {
+        SECURITY_V3: SECURITY_V3,
         NODES: NODES,
         HISTORY_ARCHIVE_MIRRORS: HISTORY_ARCHIVE_MIRRORS,
         PROTOCOLS: PROTOCOLS,

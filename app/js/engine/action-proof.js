@@ -12,15 +12,54 @@ var ActionProof = (function() {
         return cfg.PAID_ACTIONS || {};
     }
 
-    function isPaidAction(action) {
+    function _v3Requirement(action, state, sender, blockNum) {
+        var data = action && action.data || {};
+        var AT = cfg.ACTION_TYPES;
+        if (action.type === AT.BOSS_ATTACK) {
+            var boss = state && typeof WorldBoss !== 'undefined' && WorldBoss.getAttackBoss
+                ? WorldBoss.getAttackBoss(state, Number(blockNum || state.headBlock || 0)) : state && state.worldBoss;
+            return { receiver: boss && boss.author || (typeof WorldBoss !== 'undefined' ? WorldBoss.BOSS_ACCOUNT : ''), energy: 200, memo: 'viz://vm/boss/v3/attack' };
+        }
+        if (action.type === AT.QUEST_ABANDON) {
+            var quests = state && state.quests && state.quests[sender];
+            var active = quests && quests.active || [];
+            for (var q = 0; q < active.length; q++) {
+                if (active[q].id === data.quest_id && QuestSystem.getQuestProgressTotal(active[q]) <= 0) {
+                    return { receiver: 'denis-skripnik', energy: 100, memo: 'viz://vm/quest/v3/forfeit/' + data.quest_id };
+                }
+            }
+            return null;
+        }
+        if (action.type === AT.SIEGE_COMMIT) {
+            var territories = state && state.territories || {};
+            if (!Number.isInteger(data.energy) || data.energy < 1 || data.energy > 10000) return null;
+            for (var region in territories) {
+                if (!Object.prototype.hasOwnProperty.call(territories, region)) continue;
+                var sieges = territories[region].activeSieges || [];
+                for (var i = 0; i < sieges.length; i++) {
+                    if (sieges[i].ref === data.siege_ref && sieges[i].state === 'active') {
+                        var anchor = TerritorySystem.TERRITORY_ANCHORS[region];
+                        return anchor ? { receiver: anchor, energy: data.energy, memo: 'viz://vm/siege/v3/' + data.siege_ref + '/' + data.energy } : null;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    function isPaidAction(action, blockNum, state, sender) {
         var type = action ? action.type : '';
         var data = action && action.data ? action.data : {};
         var AT = cfg.ACTION_TYPES || {};
+        if ((cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum))) {
+            if (type === AT.SIEGE_COMMIT || type === AT.BOSS_ATTACK) return true;
+            if (type === AT.QUEST_ABANDON) return !!_v3Requirement(action, state, sender);
+        }
         return type === AT.HUNT || type === AT.HUNT_ARMAGEDDON ||
             (type === AT.MOVE && Number(data.energy || 0) > 0);
     }
 
-    function getRequirement(action) {
+    function getRequirement(action, state, sender, blockNum) {
         var data = action && action.data ? action.data : {};
         var type = action ? action.type : '';
         var paid = _paidConfig();
@@ -29,6 +68,9 @@ var ActionProof = (function() {
         var energy = 0;
         var memo = '';
 
+        if (type === AT.BOSS_ATTACK || type === AT.SIEGE_COMMIT || type === AT.QUEST_ABANDON) {
+            return _v3Requirement(action, state, sender, blockNum);
+        }
         if (type === AT.HUNT) {
             var creature = typeof GameCreatures !== 'undefined' && GameCreatures.getCreature
                 ? GameCreatures.getCreature(data.creature)
@@ -62,16 +104,16 @@ var ActionProof = (function() {
         var source = Array.isArray(awards) ? awards : [];
         var activation = Number(_paidConfig().V2_ACTIVATION_BLOCK || 0);
 
-        function verify(sender, txIndex, action) {
+        function verify(sender, txIndex, action, state) {
             var version = Number(action && action.version || 1);
-            if (version < 2 && Number(blockNum) < activation) {
+            if (version < 2 && Number(blockNum) < activation && !(cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum))) {
                 return { valid: true, legacy: true, error: null };
             }
             if (version < 2) {
                 return { valid: false, legacy: false, error: 'paid_action_v2_required' };
             }
 
-            var requirement = getRequirement(action);
+            var requirement = getRequirement(action, state, sender, blockNum);
             if (!requirement) {
                 return { valid: false, legacy: false, error: 'paid_action_requirement_invalid' };
             }

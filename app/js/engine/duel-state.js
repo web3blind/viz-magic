@@ -68,8 +68,16 @@ var DuelStateManager = (function() {
     /**
      * Handle a challenge action.
      */
+    function _strictDuel(duel) {
+        // Creation height, not accept/reveal height: pre-fork active/pending duels
+        // keep their original commitments and completion rules.
+        return (cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(duel.createdBlock));
+    }
+
     function _handleChallenge(sender, data, blockNum, duels, worldState) {
         var challengeRef = String(blockNum);
+        if ((cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum)) &&
+                (!/^[a-f0-9]{64}$/.test(data.strategy_hash || '') || duels.pending[challengeRef] || duels.active[challengeRef])) return [];
 
         // Cannot challenge yourself
         if (sender === data.target) return [];
@@ -118,6 +126,7 @@ var DuelStateManager = (function() {
         if (!duel) return [];
         if (duel.target !== sender) return [];
         if (blockNum > duel.deadlineBlock) return [];
+        if (_strictDuel(duel) && !/^[a-f0-9]{64}$/.test(data.strategy_hash || '')) return [];
 
         _ensureCharacterStub(worldState, duel.challenger);
         _ensureCharacterStub(worldState, duel.target);
@@ -156,6 +165,11 @@ var DuelStateManager = (function() {
 
         var round = data.round;
         if (round < 2 || round > duel.rounds) return [];
+
+        if (_strictDuel(duel) && (!Number.isInteger(round) || round !== duel.currentRound ||
+                !/^[a-f0-9]{64}$/.test(data.strategy_hash || '') ||
+                (duel.commits[round] && duel.commits[round][sender === duel.challenger ? 'A' : 'B']) ||
+                blockNum > duel.revealDeadline)) return [];
 
         // Determine which player
         var side = null;
@@ -197,6 +211,17 @@ var DuelStateManager = (function() {
         else if (sender === duel.target) side = 'B';
         if (!side) return [];
 
+        if (_strictDuel(duel)) {
+            var commits = duel.commits[round] || {};
+            var strategy = data.strategy;
+            if (!Number.isInteger(round) || round !== duel.currentRound || !commits.A || !commits.B ||
+                    (duel.reveals[round] && duel.reveals[round][side]) || blockNum > duel.revealDeadline ||
+                    !strategy || Object.keys(strategy).sort().join(',') !== 'energy,intent,salt,spell' ||
+                    typeof strategy.intent !== 'string' || cfg.INTENTS[strategy.intent.toUpperCase()] !== strategy.intent ||
+                    typeof strategy.spell !== 'string' || !Number.isInteger(strategy.energy) || strategy.energy < 0 || strategy.energy > 10000 ||
+                    typeof strategy.salt !== 'string' || !/^[a-f0-9]{32}$/.test(strategy.salt) ||
+                    DuelSystem.generateCommitHashSync(strategy) !== commits[side]) return [];
+        }
         // Store revealed strategy
         if (!duel.reveals[round]) {
             duel.reveals[round] = {};
@@ -213,7 +238,7 @@ var DuelStateManager = (function() {
 
         // Check if both reveals are in for this round
         if (duel.reveals[round].A && duel.reveals[round].B) {
-            events = events.concat(_resolveRound(duel, round, blockHash, worldState));
+            events = events.concat(_resolveRound(duel, round, blockHash, worldState, blockNum));
         }
 
         return events;
@@ -222,7 +247,7 @@ var DuelStateManager = (function() {
     /**
      * Resolve a round when both reveals are in.
      */
-    function _resolveRound(duel, round, blockHash, worldState) {
+    function _resolveRound(duel, round, blockHash, worldState, resolvedBlock) {
         var events = [];
         var charA = worldState.characters[duel.challenger] || {};
         var charB = worldState.characters[duel.target] || {};
@@ -272,10 +297,11 @@ var DuelStateManager = (function() {
         var duelOver = (winsA >= 2 || winsB >= 2 || duel.roundResults.length >= duel.rounds);
 
         if (duelOver) {
-            events = events.concat(_completeDuel(duel, winsA, winsB, worldState, blockNum));
+            events = events.concat(_completeDuel(duel, winsA, winsB, worldState, resolvedBlock));
         } else {
             // Advance to next round
             duel.currentRound = round + 1;
+            if (_strictDuel(duel)) duel.revealDeadline = resolvedBlock + REVEAL_TIMEOUT_BLOCKS;
         }
 
         return events;

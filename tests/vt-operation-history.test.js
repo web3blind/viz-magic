@@ -9,10 +9,14 @@ var indexer = require('../tools/archive-node/indexer');
 var parser = require('../tools/archive-node/parser');
 var storeMod = require('../tools/archive-node/storage');
 
+function blockId(number) {
+    return number.toString(16).padStart(8, '0') + '1'.repeat(32);
+}
+
 function fixtureBlock(number) {
     var intent = number === 100 ? 'award-history' : 'missing-history';
     return {
-        previous: 'previous-' + number,
+        previous: blockId(number - 1),
         timestamp: '2026-09-06T12:00:00',
         transactions: [{ operations: [
             ['award', { initiator: 'alice', receiver: 'null', energy: 250, custom_sequence: 0, memo: 'viz://vt/mint/v1/' + intent, beneficiaries: [] }],
@@ -36,7 +40,7 @@ function listenFixture() {
                 if (api === 'database_api' && method === 'get_block') {
                     result = fixtureBlock(number);
                 } else if (api === 'block_info' && method === 'get_block_info') {
-                    result = [{ block_id: 'canonical-' + number, block_size: 1, average_block_size: 1, aslot: number, last_irreversible_block_num: number }];
+                    result = [{ block_id: blockId(number), timestamp: fixtureBlock(number).timestamp, block_size: 1, average_block_size: 1, aslot: number, last_irreversible_block_num: number }];
                 } else if (api === 'operation_history' && method === 'get_ops_in_block' && number === 100) {
                     var block = fixtureBlock(number);
                     result = [
@@ -57,7 +61,7 @@ function listenFixture() {
 
 (function strictVirtualReceiptParsing() {
     var block = fixtureBlock(100);
-    block.block_id = 'canonical-100';
+    block.block_id = blockId(100);
     block.transactions[0].transaction_id = 'canonical-tx-100';
     var source = { trx_id: 'canonical-tx-100', block: 100, trx_in_block: 0, op_in_trx: 0, virtual_op: 0, op: block.transactions[0].operations[0] };
     function receipt(overrides) {
@@ -92,7 +96,7 @@ function listenFixture() {
         assert.strictEqual(result.indexedBlocks, 1);
         var store = new storeMod.ArchiveStore(tmp);
         var record = store.getBlockRecord(100);
-        assert.strictEqual(record.block_id, 'canonical-100');
+        assert.strictEqual(record.block_id, blockId(100));
         assert.strictEqual(record.virtualComplete, true);
         assert.strictEqual(record.block.transactions[0].transaction_id, 'canonical-tx-100');
         assert.strictEqual(record.block.virtual_operations.length, 1);

@@ -334,6 +334,17 @@ var WorldBossScreen = (function() {
 
                     // Broadcast boss attack to blockchain
                     var actionData = VMProtocol.createBossAttackAction('attack');
+                    if (VizMagicConfig.SECURITY_V3.isActive(Number(StateEngine.getState().headBlock || 0) + 1)) {
+                        // gameAction sends the canonical 200bp award + VM op atomically.
+                        VizBroadcast.gameAction(actionData, function(err) {
+                            attackBtn.disabled = false;
+                            if (err) { Toast.error(Helpers.t('error_network')); return; }
+                            SoundManager.play('boss_roar');
+                            _schedulePostAttackRefresh();
+                            render();
+                        });
+                        return;
+                    }
                     VizBroadcast.gameAction(actionData, function(gameErr) {
                         if (gameErr) {
                             attackBtn.disabled = false;

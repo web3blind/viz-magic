@@ -1,0 +1,12 @@
+{
+  "sourceNodes": ["https://api.viz.world/", "https://node.viz.cx/"],
+  "dataDir": "REPLACE_WITH_DISTINCT_NEW_TAIL_DIRECTORY",
+  "legacyDataDirs": ["REPLACE_WITH_FROZEN_OLD_DATABASE_DIRECTORY"],
+  "startBlock": "REPLACE_WITH_FRESH_VERIFIED_LIB_AT_CUTOVER",
+  "autoGapRollover": true,
+  "virtualReceiptStartBlock": 83500000,
+  "requestDelayMs": 120,
+  "timeoutMs": 8000,
+  "pollIntervalMs": 5000,
+  "maxBlocksPerTick": 500
+}

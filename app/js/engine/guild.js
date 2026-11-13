@@ -191,8 +191,13 @@ var GuildSystem = (function() {
         if (!guild || guild.members[account]) return false;
 
         // Check membership rules
-        if (guild.charter.membership === MEMBERSHIP.INVITE) {
+        if (guild.charter.membership === MEMBERSHIP.INVITE ||
+                ((cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum)) && guild.charter.membership === MEMBERSHIP.APPROVAL)) {
             if (!guild.invites[account]) return false;
+            if ((cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum))) {
+                var inviter = guild.members[guild.invites[account].inviter];
+                if (!inviter || !(RANK_AUTHORITY[inviter.rank] >= RANK_AUTHORITY[RANKS.WARDEN])) return false;
+            }
         }
 
         guild.members[account] = {

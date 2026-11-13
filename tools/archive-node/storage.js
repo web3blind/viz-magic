@@ -35,11 +35,22 @@ function writeJsonAtomic(file, data) {
     fs.renameSync(tmp, file);
 }
 
-function ArchiveStore(rootDir) {
+function ArchiveStore(rootDir, options) {
     this.rootDir = rootDir || path.join(process.cwd(), 'data', 'archive-node');
-    ensureDir(this.rootDir);
+    this.readOnly = !!(options && options.readOnly);
+    if (!this.readOnly) ensureDir(this.rootDir);
     this.dbPath = path.join(this.rootDir, 'archive.sqlite');
-    this.db = new DatabaseSync(this.dbPath);
+    this.db = new DatabaseSync(this.dbPath, { readOnly: this.readOnly });
+    if (this.readOnly) {
+        // Fail closed on incompatible legacy schemas; never migrate or write metadata.
+        try {
+            this.db.prepare('SELECT block_num, virtual_complete, raw_json FROM blocks LIMIT 0').all();
+            this.db.prepare('SELECT tx_id, virtual_op, accounts_json FROM events LIMIT 0').all();
+            this.db.prepare('SELECT event_id, account, protocol, block_num FROM event_accounts LIMIT 0').all();
+            if (this._getMeta('schema_version', 0) !== 3) throw new Error('readonly archive requires schema version 3');
+        } catch (err) { this.db.close(); throw err; }
+        return;
+    }
     this.db.exec('PRAGMA journal_mode = WAL');
     this.db.exec('PRAGMA synchronous = NORMAL');
     this.db.exec('PRAGMA temp_store = MEMORY');
@@ -318,6 +329,14 @@ ArchiveStore.prototype.putBlockWithEvents = function(blockNum, block, sourceNode
             'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)'
         ].join(' ')).run(bn, blockId, previous, timestamp, sourceNode || '', now, events.length, metadata && metadata.virtualComplete ? 1 : 0, JSON.stringify(storedBlock));
         this._insertEventsUnsafe(events);
+        if (metadata && metadata.advanceCursor) {
+            if (metadata.missingRange) {
+                var gaps = this._getMeta('missing_ranges', []);
+                gaps.push(metadata.missingRange);
+                this._setMeta('missing_ranges', gaps);
+            }
+            this.setCursor(bn);
+        }
         this.db.exec('COMMIT');
     } catch (err) {
         this.db.exec('ROLLBACK');
@@ -355,6 +374,12 @@ ArchiveStore.prototype.queryEvents = function(options) {
     var params = [];
     var where = ['e.block_num >= ?', 'e.block_num <= ?'];
     params.push(start, end);
+    if (options.before) {
+        var before = options.before;
+        if (!Array.isArray(before) || before.length !== 5 || !before.slice(0, 4).every(Number.isSafeInteger) || typeof before[4] !== 'string') throw new Error('invalid event cursor');
+        where.push('(e.block_num, e.tx_index, e.op_index, e.virtual_op, e.id) < (?, ?, ?, ?, ?)');
+        params.push.apply(params, before);
+    }
     var sql = 'SELECT e.* FROM events e';
     if (options.account && options.protocol) {
         sql += ' JOIN event_accounts ea ON ea.event_id = e.id';
@@ -369,7 +394,7 @@ ArchiveStore.prototype.queryEvents = function(options) {
         options.protocols.forEach(function(protocol) { params.push(String(protocol)); });
     }
     sql += ' WHERE ' + where.join(' AND ');
-    sql += ' ORDER BY e.block_num DESC, e.tx_index DESC, e.op_index DESC, e.virtual_op DESC LIMIT ?';
+    sql += ' ORDER BY e.block_num DESC, e.tx_index DESC, e.op_index DESC, e.virtual_op DESC, e.id DESC LIMIT ?';
     params.push(limit);
     var stmt = this.db.prepare(sql);
     var rows = stmt.all.apply(stmt, params);

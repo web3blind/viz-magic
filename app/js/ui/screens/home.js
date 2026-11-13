@@ -351,7 +351,7 @@ var HomeScreen = (function() {
         var weather = WorldEvents.getCurrentWeather ? WorldEvents.getCurrentWeather(blockNum) : null;
         var skyText = sky ? (t(sky.summaryKey) + (sky.twistText ? ' ' + sky.twistText : '')) : '';
         var effect = weather ? _formatWeatherEffect(weather, t) : '';
-        var bonuses = WorldEvents.getSeasonalBonuses ? WorldEvents.getSeasonalBonuses(blockNum) : null;
+        var bonuses = WorldEvents.getSeasonalBonuses ? WorldEvents.getSeasonalBonuses(0) : null;
         var dominantBonus = bonuses && bonuses[season.dominant] !== undefined ? bonuses[season.dominant] : season.dominantBonus;
         var secondaryBonus = bonuses && bonuses[season.secondary] !== undefined ? bonuses[season.secondary] : season.secondaryBonus;
         var festival = WorldEvents.getCurrentFestival ? WorldEvents.getCurrentFestival(blockNum) : null;

@@ -274,7 +274,7 @@ var VMProtocol = (function() {
     function createSiegeCommitAction(siegeRef, energy) {
         return {
             t: AT.SIEGE_COMMIT,
-            d: { siege_ref: siegeRef, energy: energy | 0 }
+            d: { siege_ref: siegeRef, energy: energy }
         };
     }
 

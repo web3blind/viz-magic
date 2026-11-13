@@ -10,6 +10,7 @@ var QuestsScreen = (function() {
     var QUEST_PENALTY_ACCOUNT = 'denis-skripnik';
 
     function render() {
+        _reconcilePendingAbandons();
         var t = Helpers.t;
         var el = Helpers.$('screen-quests');
         if (!el) return;
@@ -422,6 +423,52 @@ var QuestsScreen = (function() {
         });
     }
 
+    // UI-only guards. Canonical polling owns all world mutation and checkpoints.
+    var pendingAbandons = {};
+
+    function _reconcilePendingAbandons() {
+        var state = StateEngine.getState();
+        Object.keys(pendingAbandons).forEach(function(key) {
+            var pending = pendingAbandons[key];
+            var quests = pending.user && state.quests && state.quests[pending.user];
+            if (pending.broadcasted && Number(state.headBlock || 0) >= pending.startHead && quests && Array.isArray(quests.active) &&
+                    !quests.active.some(function(quest) { return quest.id === pending.questId; })) {
+                delete pendingAbandons[key];
+                return;
+            }
+            if (!pending.blockNum && pending.broadcasted && !pending.lookupBusy) _confirmAbandonBlock(pending.user, pending.questId, null);
+            if (pending.blockNum && Number(state.headBlock || 0) >= pending.blockNum) {
+                // A rejected action leaves the quest active and eligible for retry.
+                delete pendingAbandons[key];
+            }
+        });
+    }
+
+    function _confirmAbandonBlock(user, questId, result) {
+        var key = user + ':' + questId;
+        var pending = pendingAbandons[key];
+        if (!pending) return;
+        pending.broadcasted = true;
+        pending.user = user;
+        pending.questId = questId;
+        pending.blockNum = Number(result && (result.block_num || (result.action && result.action.block_num)) || 0);
+        if (!pending.blockNum && typeof HistorySource !== 'undefined') {
+            // Read-only discovery; never replay a future block from a UI callback.
+            pending.lookupBusy = true;
+            var matchesAbandon = function(candidate) {
+                var payload = candidate && candidate.payload;
+                var data = payload && (payload.data || payload.d);
+                return !!(data && data.quest_id === questId && Number(candidate.blockNum) > pending.startHead);
+            };
+            HistorySource.findAccountAction(user, VizMagicConfig.PROTOCOLS.VM, VizMagicConfig.ACTION_TYPES.QUEST_ABANDON, function(err, candidate) {
+                pending.lookupBusy = false;
+                if (pendingAbandons[key] !== pending) return;
+                if (!err && matchesAbandon(candidate)) pending.blockNum = Number(candidate.blockNum);
+                if (pending.blockNum) _reconcilePendingAbandons();
+            }, matchesAbandon);
+        }
+    }
+
     function _sendAbandonPenalty(penaltyEnergy, callback) {
         var memo = 'viz://vm/quest/forfeit — ' + Helpers.t('quest_abandon_penalty_memo');
         VizBroadcast.award(QUEST_PENALTY_ACCOUNT, penaltyEnergy, 0, memo, [], callback || function() {});
@@ -450,13 +497,28 @@ var QuestsScreen = (function() {
             }
         }
 
+        var broadcastUser = VizAccount.getCurrentUser();
+        var pendingKey = broadcastUser + ':' + questId;
+        _reconcilePendingAbandons();
+        var guardedAbandon = kind === 'abandon' && cfg.SECURITY_V3.isActive(Number(StateEngine.getState().headBlock || 0) + 1);
+        if (kind === 'abandon' && pendingAbandons[pendingKey]) return;
+        if (guardedAbandon) pendingAbandons[pendingKey] = { startHead: Number(StateEngine.getState().headBlock || 0), blockNum: 0 };
+
         VizBroadcast.questAction(type, data, function(err, result) {
             if (err) {
+                if (guardedAbandon) delete pendingAbandons[pendingKey];
                 Toast.error(Helpers.t('error_network'));
                 return;
             }
 
             var user = VizAccount.getCurrentUser();
+            if (kind === 'abandon' && (cfg.SECURITY_V3.isActive(Number(StateEngine.getState().headBlock || 0) + 1) ||
+                    cfg.SECURITY_V3.isActive(result && result.block_num))) {
+                // No optimistic removal/checkpoint: only real block replay confirms.
+                if (!pendingAbandons[pendingKey]) pendingAbandons[pendingKey] = { startHead: Number(StateEngine.getState().headBlock || 0), blockNum: 0 };
+                _confirmAbandonBlock(broadcastUser, questId, result);
+                return;
+            }
             var currentHead = StateEngine.getState().headBlock || 0;
             var finalBlockNum =
                 (result && result.block_num) ||

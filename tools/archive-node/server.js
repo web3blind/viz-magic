@@ -3,10 +3,11 @@
 var http = require('http');
 var url = require('url');
 var path = require('path');
-var storeMod = require('./storage');
-var indexer = require('./indexer');
 
-function json(res, status, payload, extraHeaders) {
+var indexer = require('./indexer');
+var federation = require('./federation');
+
+function sendJson(res, status, payload, extraHeaders) {
     var headers = {
         'Content-Type': 'application/json; charset=utf-8',
         'Access-Control-Allow-Origin': '*',
@@ -174,7 +175,7 @@ function buildHealth(archive, startedAt, nowMs) {
     var caughtUp = Number.isSafeInteger(lastIndexed) && lastIndexed > 0 &&
         Number.isSafeInteger(lastIrreversible) && lastIrreversible > 0 && lastIndexed === lastIrreversible;
     var healthy = status.ok !== false && status.mode !== 'error' && !stale && caughtUp;
-    return {
+    var health = {
         ok: healthy,
         stale: stale,
         caughtUp: caughtUp,
@@ -191,6 +192,47 @@ function buildHealth(archive, startedAt, nowMs) {
         storage: 'sqlite',
         readOnly: true
     };
+    if (archive.getCoverage) {
+        Object.assign(health, archive.getCoverage());
+        health.liveCaughtUp = caughtUp && !!health.liveRange && health.liveRange.end === lastIndexed;
+        health.ok = healthy && health.liveCaughtUp;
+        health.healthMeaning = 'fresh collection through observed LIB, not historical recovery';
+    }
+    return health;
+}
+
+function historyResponse(archive, target, status, payload) {
+    if (!archive.getCoverage || status >= 500) return { status: status, payload: payload };
+    var coverage = archive.getCoverage();
+    Object.assign(payload, coverage);
+    var parsed = url.parse(target, true);
+    var limit = safeNum(parsed.query.limit, /guilds/.test(parsed.pathname) ? 50000 : /magic/.test(parsed.pathname) ? 100 : 500);
+    var rows = payload.actions || payload.events;
+    if ((rows && !/\/events\/block\//.test(parsed.pathname)) || payload.guilds) {
+        var count = rows ? rows.length : payload.sourceEvents;
+        payload.paginationExhausted = count < Math.min(limit, payload.guilds ? 50000 : 5000);
+        payload.complete = coverage.historyComplete && payload.paginationExhausted && payload.complete !== false;
+        if (rows) {
+            var first = rows[0];
+            payload.nextCursor = !payload.paginationExhausted && first ? Buffer.from(JSON.stringify([first.blockNum, first.txIndex, first.opIndex, first.virtualOp || 0, first.id])).toString('base64url') : null;
+            // A block-only continuation would silently discard same-block receipts.
+            if ('nextEnd' in payload) payload.nextEnd = null;
+        }
+    }
+    if (/\/range$/.test(parsed.pathname) && status === 200) {
+        var start = Math.max(1, safeNum(parsed.query.start || parsed.query.from, coverage.retainedHistoryStartBlock));
+        var end = safeNum(parsed.query.end || parsed.query.to, Number(archive.getCursor().lastIndexedBlock));
+        var gaps = archive.missingRanges(start, end);
+        if (gaps.length) return { status: 409, payload: Object.assign(payload, { error: 'history_incomplete', complete: false, missingRanges: gaps }) };
+        // This flag certifies requested-range coverage, not page exhaustion.
+        // Existing clients hydrate boundary blocks before requesting the next page.
+        payload.complete = archive.isBlockRangeComplete(start, end);
+    }
+    if (status === 404 && payload.error === 'block_not_indexed' && payload.blockNum) {
+        var absent = archive.missingRanges(payload.blockNum, payload.blockNum);
+        return { status: 409, payload: Object.assign(payload, { error: 'history_incomplete', complete: false, missingRanges: absent }) };
+    }
+    return { status: status, payload: payload };
 }
 
 function virtualBlockComplete(archive, record) {
@@ -202,10 +244,16 @@ function createServer(options) {
     options = options || {};
     var startedAt = Date.now();
     var cfg = options.config || indexer.loadConfig(options.configPath || path.join(__dirname, 'config.json'));
+    cfg = Object.assign({ dataDir: options.store && options.store.rootDir, startBlock: 1 }, cfg);
     if (options.dataDir) cfg.dataDir = options.dataDir;
-    var archive = options.store || new storeMod.ArchiveStore(cfg.dataDir);
+    var archive = federation.openArchive(cfg, options.store, options.legacyStores);
 
     return http.createServer(function(req, res) {
+        function json(res, status, payload, headers) {
+            var response = historyResponse(archive, req.url, status, payload);
+            sendJson(res, response.status, response.payload, headers);
+        }
+        try {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'content-type');
@@ -220,6 +268,16 @@ function createServer(options) {
         }
 
         var parsedUrl = url.parse(req.url, true);
+        var before = null;
+        if (archive.getCoverage && parsedUrl.query.before) {
+            try {
+                before = JSON.parse(Buffer.from(String(parsedUrl.query.before), 'base64url').toString());
+                if (!Array.isArray(before) || before.length !== 5 || !before.slice(0, 4).every(Number.isSafeInteger) || typeof before[4] !== 'string') throw new Error('invalid cursor');
+            } catch (cursorError) {
+                json(res, 400, { error: 'invalid_event_cursor' });
+                return;
+            }
+        }
         var parts;
         try {
             parts = pathParts(req.url);
@@ -318,6 +376,7 @@ function createServer(options) {
                 return;
             }
             var events = archive.queryEvents({
+                before: before,
                 start: safeNum(parsedUrl.query.start || parsedUrl.query.from, 0),
                 end: safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647),
                 account: accountFilter || null,
@@ -347,6 +406,7 @@ function createServer(options) {
         if (parts.length === 5 && parts[0] === 'v1' && parts[1] === 'magic' && parts[2] === 'account' && parts[4] === 'history') {
             var magicAccount = parts[3];
             var magicEvents = archive.queryEvents({
+                before: before,
                 account: magicAccount, protocol: 'VT',
                 start: safeNum(parsedUrl.query.start || parsedUrl.query.from, 0),
                 end: safeNum(parsedUrl.query.end || parsedUrl.query.to, 2147483647),
@@ -389,6 +449,7 @@ function createServer(options) {
             var account = parts[2];
             var protocol = parts[4];
             var rows = archive.queryEvents({
+                before: before,
                 account: account,
                 protocol: protocol,
                 start: safeNum(parsedUrl.query.start || parsedUrl.query.from, 0),
@@ -408,6 +469,9 @@ function createServer(options) {
         }
 
         json(res, 404, { error: 'not_found' }, { 'Cache-Control': 'no-store' });
+        } catch (err) {
+            sendJson(res, 503, { error: 'archive_read_failed', complete: false, historyComplete: false }, { 'Cache-Control': 'no-store' });
+        }
     });
 }
 

@@ -102,6 +102,10 @@ var StateEngine = (function() {
                 var checkpointSchema = checkpoint && checkpoint.state
                     ? Number(checkpoint.state.checkpointSchemaVersion || 1)
                     : 0;
+                if (checkpoint && checkpoint.state && !(!cfg.SECURITY_V3 || cfg.SECURITY_V3.checkpointCompatible(checkpoint.state))) {
+                    callback(new Error('security_v3_checkpoint_unverified'), worldState);
+                    return;
+                }
                 if (checkpoint && checkpoint.state && checkpointSchema <= CHECKPOINT_SCHEMA_VERSION) {
                     worldState = _normalizeWorldState(checkpoint.state);
                     worldState.checkpointSchemaVersion = CHECKPOINT_SCHEMA_VERSION;
@@ -220,6 +224,10 @@ var StateEngine = (function() {
                 blockNum < Number(worldState.authoritativeOperationFloor)) {
             return events;
         }
+        if (!(!cfg.SECURITY_V3 || cfg.SECURITY_V3.checkpointCompatible(worldState))) throw new Error('security_v3_checkpoint_unverified');
+        if ((cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum)) && !Number.isFinite(cfg.SECURITY_V3.timestampMs(processedBlock.timestamp))) {
+            throw new Error('security_v3_block_timestamp_required');
+        }
         var blockHash = processedBlock.blockHash;
         var huntEntropy = processedBlock.huntEntropy || blockHash;
 
@@ -254,8 +262,8 @@ var StateEngine = (function() {
                 // steal the award already used by this processed operation.
                 if (entry.kind === 'vm' && paidActionVerifier &&
                         typeof ActionProof !== 'undefined' &&
-                        ActionProof.isPaidAction(entry.record && entry.record.action)) {
-                    paidActionVerifier.verify(entry.record.sender, entry.record.txIndex, entry.record.action);
+                        ActionProof.isPaidAction(entry.record && entry.record.action, blockNum, worldState, entry.record.sender)) {
+                    paidActionVerifier.verify(entry.record.sender, entry.record.txIndex, entry.record.action, worldState);
                 }
                 continue;
             }
@@ -264,9 +272,9 @@ var StateEngine = (function() {
 
             if (entry.kind === 'vm') {
                 var vmAction = entry.record;
-                var isPaid = typeof ActionProof !== 'undefined' && ActionProof.isPaidAction(vmAction.action);
+                var isPaid = typeof ActionProof !== 'undefined' && ActionProof.isPaidAction(vmAction.action, blockNum, worldState, vmAction.sender);
                 var paidProof = paidActionVerifier && isPaid
-                    ? paidActionVerifier.verify(vmAction.sender, vmAction.txIndex, vmAction.action)
+                    ? paidActionVerifier.verify(vmAction.sender, vmAction.txIndex, vmAction.action, worldState)
                     : null;
                 if (isPaid && paidProof && paidProof.error === 'paid_action_proof_missing') {
                     // An archive/RPC response may be incomplete. Do not consume the
@@ -287,7 +295,8 @@ var StateEngine = (function() {
                         )],
                         paidProof,
                         vmAction.txIndex,
-                        vmAction.opIndex
+                        vmAction.opIndex,
+                        processedBlock.timestamp
                     );
                 }
             } else if (entry.kind === 've') {
@@ -316,6 +325,10 @@ var StateEngine = (function() {
             _syncMarketplaceState();
         }
 
+        if ((cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum))) {
+            worldState.securityRulesVersion = 3;
+            worldState.securityActivationBlock = cfg.SECURITY_V3.ACTIVATION_BLOCK;
+        }
         if (options.runMaintenance === false) return events;
 
         var maintenanceKey = String(blockNum);
@@ -446,7 +459,7 @@ var StateEngine = (function() {
     /**
      * Process a single game action
      */
-    function _processGameAction(sender, action, blockNum, blockHash, huntEntropy, libraryPaymentVerified, paidProof, txIndex, opIndex) {
+    function _processGameAction(sender, action, blockNum, blockHash, huntEntropy, libraryPaymentVerified, paidProof, txIndex, opIndex, blockTimestamp) {
         var events = [];
 
         // Validate the action
@@ -460,7 +473,7 @@ var StateEngine = (function() {
             return events;
         }
 
-        if (typeof ActionProof !== 'undefined' && ActionProof.isPaidAction(action) && (!paidProof || !paidProof.valid)) {
+        if (typeof ActionProof !== 'undefined' && ActionProof.isPaidAction(action, blockNum, worldState, sender) && (!paidProof || !paidProof.valid)) {
             console.log('StateEngine: Paid action proof rejected for', sender, action.type);
             return events;
         }
@@ -470,7 +483,9 @@ var StateEngine = (function() {
                 events = events.concat(_handleCharAttune(sender, action.data, blockNum));
                 break;
             case AT.HUNT:
-                events = events.concat(_handleHunt(sender, action.data, blockNum, huntEntropy || blockHash));
+                events = events.concat((cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum))
+                    ? _handleHunt(sender, action.data, blockNum, huntEntropy || blockHash, blockTimestamp)
+                    : _handleHunt(sender, action.data, blockNum, huntEntropy || blockHash));
                 break;
             case AT.HUNT_ARMAGEDDON:
                 events = events.concat(_handleHuntArmageddon(sender, action.data, blockNum));
@@ -576,7 +591,7 @@ var StateEngine = (function() {
                 events = events.concat(_handleQuestComplete(sender, action.data, blockNum));
                 break;
             case 'quest.abandon':
-                events = events.concat(_handleQuestAbandon(sender, action.data, blockNum));
+                events = events.concat(_handleQuestAbandon(sender, action.data, blockNum, paidProof));
                 break;
 
             // --- Phase 5: Boss attack ---
@@ -759,7 +774,7 @@ var StateEngine = (function() {
     /**
      * Handle hunt action
      */
-    function _handleHunt(sender, data, blockNum, blockHash) {
+    function _handleHunt(sender, data, blockNum, blockHash, blockTimestamp) {
         var character = worldState.characters[sender];
         if (!character) return [];
 
@@ -774,7 +789,7 @@ var StateEngine = (function() {
         var result = CombatSystem.resolveHunt(
             character, creature, spell,
             blockHash, blockNum,
-            combatEnergy
+            combatEnergy, blockTimestamp
         );
 
         // Apply results
@@ -1681,12 +1696,16 @@ var StateEngine = (function() {
         return [{ type: 'quest_completed', account: sender, questId: data.quest_id, rewards: result.rewards, blockNum: blockNum }];
     }
 
-    function _handleQuestAbandon(sender, data, blockNum) {
+    function _handleQuestAbandon(sender, data, blockNum, paidProof) {
+        if ((cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum))) {
+            var requirement = ActionProof.getRequirement({ type: AT.QUEST_ABANDON, data: data }, worldState, sender);
+            if (requirement && (!paidProof || !paidProof.valid)) return [];
+        }
         if (typeof QuestSystem === 'undefined') return [];
         _ensureQuests(sender);
         var result = QuestSystem.abandonQuest(data.quest_id, worldState.quests[sender]);
         if (!result || !result.success) return [];
-        return [{
+        var event = {
             type: 'quest_abandoned',
             account: sender,
             questId: data.quest_id,
@@ -1694,7 +1713,9 @@ var StateEngine = (function() {
             progressTotal: result.progressTotal || 0,
             penaltyEnergy: data && data.penalty_energy ? (data.penalty_energy | 0) : 0,
             blockNum: blockNum
-        }];
+        };
+        if (cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum)) event.penaltyEnergy = result.hadProgress ? 0 : 100;
+        return [event];
     }
 
     function _handleBossAttack(sender, data, blockNum, blockHash) {
@@ -1703,16 +1724,20 @@ var StateEngine = (function() {
         // Auto-spawn/reset the public boss from the deterministic schedule.
         // This repairs browsers that first entered the window after spawn or
         // after local checkpoints skipped earlier boss.attack events.
-        var playerCount = Object.keys(worldState.characters).length;
-        var spawnBlock = blockNum;
-        var bossEvent = null;
-        if (typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) {
-            bossEvent = WorldEvents.checkWorldBossWindow(blockNum);
-            if (bossEvent && bossEvent.spawnBlock) spawnBlock = bossEvent.spawnBlock;
-        }
-        var scheduledBoss = WorldBoss.spawnBoss(spawnBlock, playerCount, WorldBoss.BOSS_ACCOUNT);
-        if (!worldState.worldBoss || !worldState.worldBoss.active || (bossEvent && (worldState.worldBoss.spawnBlock !== spawnBlock || worldState.worldBoss.maxHp !== scheduledBoss.maxHp || worldState.worldBoss.currentHp > scheduledBoss.maxHp))) {
-            worldState.worldBoss = scheduledBoss;
+        if ((cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum))) {
+            worldState.worldBoss = WorldBoss.getAttackBoss(worldState, blockNum);
+        } else {
+            var playerCount = Object.keys(worldState.characters).length;
+            var spawnBlock = blockNum;
+            var bossEvent = null;
+            if (typeof WorldEvents !== 'undefined' && WorldEvents.checkWorldBossWindow) {
+                bossEvent = WorldEvents.checkWorldBossWindow(blockNum);
+                if (bossEvent && bossEvent.spawnBlock) spawnBlock = bossEvent.spawnBlock;
+            }
+            var scheduledBoss = WorldBoss.spawnBoss(spawnBlock, playerCount, WorldBoss.BOSS_ACCOUNT);
+            if (!worldState.worldBoss || !worldState.worldBoss.active || (bossEvent && (worldState.worldBoss.spawnBlock !== spawnBlock || worldState.worldBoss.maxHp !== scheduledBoss.maxHp || worldState.worldBoss.currentHp > scheduledBoss.maxHp))) {
+                worldState.worldBoss = scheduledBoss;
+            }
         }
 
         var character = worldState.characters[sender] || null;
@@ -1895,7 +1920,8 @@ var StateEngine = (function() {
      * @param {number} playerEnergy - actual energy from chain (0-10000)
      * @returns {Object|null} result with {victory, xpGained, loot, hpRemaining, creatureLevel, critical, damageDealt, damageTaken, levelsGained}
      */
-    function processHuntResult(account, creatureId, spellId, blockHash, blockNum, playerEnergy) {
+    function processHuntResult(account, creatureId, spellId, blockHash, blockNum, playerEnergy, blockTimestamp) {
+        if (cfg.SECURITY_V3 && (cfg.SECURITY_V3.isActive(blockNum) || cfg.SECURITY_V3.isActive(worldState.headBlock))) return null;
         var character = worldState.characters[account];
         if (!character) return null;
         var creature = GameCreatures.getCreature(creatureId);
@@ -1903,7 +1929,7 @@ var StateEngine = (function() {
         if (!creature || !spell) return null;
 
         var combatEnergy = playerEnergy || spell.manaCost || cfg.ENERGY.MIN_HUNT_COST;
-        var result = CombatSystem.resolveHunt(character, creature, spell, blockHash, blockNum, combatEnergy);
+        var result = CombatSystem.resolveHunt(character, creature, spell, blockHash, blockNum, combatEnergy, blockTimestamp);
 
         if (result.victory) {
             var xpResult = CharacterSystem.addXp(character, result.xpGained, blockNum);
@@ -1962,6 +1988,7 @@ var StateEngine = (function() {
      * @returns {Object|null}
      */
     function processMoveResult(account, zoneId, blockNum) {
+        if (cfg.SECURITY_V3 && (cfg.SECURITY_V3.isActive(blockNum) || cfg.SECURITY_V3.isActive(worldState.headBlock))) return null;
         if (!zoneId) return null;
         var events = _handleMove(account, { zone: zoneId }, blockNum || 0);
         if (!events.length) return null;
@@ -2039,6 +2066,7 @@ var StateEngine = (function() {
     }
 
     function processQuestAbandonResult(account, questId, blockNum, penaltyEnergy) {
+        if (cfg.SECURITY_V3 && (cfg.SECURITY_V3.isActive(blockNum) || cfg.SECURITY_V3.isActive(worldState.headBlock))) return null;
         var events = _handleQuestAbandon(account, { quest_id: questId, penalty_energy: penaltyEnergy || 0 }, blockNum || 0);
         if (!events.length) return null;
         return events[0];

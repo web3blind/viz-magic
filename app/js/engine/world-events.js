@@ -598,9 +598,9 @@ var WorldEvents = (function() {
         return out;
     }
 
-    function getCurrentSeason(blockNum) {
-        var seasonIndex = _getMoscowSeasonIndex();
-        return _copySeasonWithDailyVariation(SEASONS[seasonIndex], _getMoscowDayIndex());
+    function getCurrentSeason(blockNum, nowMs) {
+        var seasonIndex = _getMoscowSeasonIndex(nowMs);
+        return _copySeasonWithDailyVariation(SEASONS[seasonIndex], _getMoscowDayIndex(nowMs));
     }
 
     /**
@@ -625,8 +625,13 @@ var WorldEvents = (function() {
      * @param {number} blockNum
      * @returns {Object} map of school → bonus (x1000 additive)
      */
-    function getSeasonalBonuses(blockNum) {
-        var season = getCurrentSeason(blockNum);
+    function getSeasonalBonuses(blockNum, timestamp) {
+        var ms;
+        if ((cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum))) {
+            ms = cfg.SECURITY_V3.timestampMs(timestamp);
+            if (!Number.isFinite(ms)) throw new Error('security_v3_block_timestamp_required');
+        }
+        var season = getCurrentSeason(blockNum, ms);
         var bonuses = {};
         bonuses[season.dominant] = season.dominantBonus;
         bonuses[season.secondary] = season.secondaryBonus;
@@ -757,8 +762,15 @@ var WorldEvents = (function() {
         return out;
     }
 
-    function getCurrentWeather(blockNum) {
-        var day = _getMoscowDayIndex();
+    function getCombatWeather(blockNum, timestamp) {
+        if (!(cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(blockNum))) return getCurrentWeather(blockNum);
+        var ms = cfg.SECURITY_V3.timestampMs(timestamp);
+        if (!Number.isFinite(ms)) throw new Error('security_v3_block_timestamp_required');
+        return getCurrentWeather(blockNum, ms);
+    }
+
+    function getCurrentWeather(blockNum, nowMs) {
+        var day = _getMoscowDayIndex(nowMs);
         var idx = day % WEATHER.length;
         if (idx < 0) idx = 0;
         return _copyWeatherWithDailyVariation(WEATHER[idx], day);
@@ -954,6 +966,7 @@ var WorldEvents = (function() {
         getCurrentSeason: getCurrentSeason,
         getSeasonalBonuses: getSeasonalBonuses,
         getCurrentWeather: getCurrentWeather,
+        getCombatWeather: getCombatWeather,
         getCurrentSky: getCurrentSky,
         getForecastVariantCount: getForecastVariantCount,
         getFestivalVariantCount: getFestivalVariantCount,

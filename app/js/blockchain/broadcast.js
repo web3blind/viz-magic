@@ -215,6 +215,15 @@ var VizBroadcast = (function() {
      * @param {Function} callback - (err, result)
      */
     function gameAction(actionData, callback) {
+        var state = typeof StateEngine !== 'undefined' ? StateEngine.getState() : null;
+        var sender = VizAccount.getCurrentUser();
+        if (state && typeof ActionProof !== 'undefined' && ActionProof.isPaidAction({ type: actionData.t, data: actionData.d || {} },
+                Number(state.headBlock || 0) + 1, state, sender) &&
+                (cfg.SECURITY_V3 && cfg.SECURITY_V3.isActive(Number(state.headBlock || 0) + 1)) &&
+                [cfg.ACTION_TYPES.BOSS_ATTACK, cfg.ACTION_TYPES.SIEGE_COMMIT, cfg.ACTION_TYPES.QUEST_ABANDON].indexOf(actionData.t) !== -1) {
+            _paidGameAction(actionData, callback);
+            return;
+        }
         var user = VizAccount.getCurrentUser();
         if (!user) {
             callback(new Error('not_logged_in'));
@@ -416,7 +425,8 @@ var VizBroadcast = (function() {
             return;
         }
         var parsedAction = { type: actionData.t, version: 2, data: actionData.d || {} };
-        var requirement = typeof ActionProof !== 'undefined' ? ActionProof.getRequirement(parsedAction) : null;
+        var state = typeof StateEngine !== 'undefined' ? StateEngine.getState() : null;
+        var requirement = typeof ActionProof !== 'undefined' ? ActionProof.getRequirement(parsedAction, state, user, Number(state && state.headBlock || 0) + 1) : null;
         if (!requirement) {
             callback(new Error('paid_action_requirement_invalid'));
             return;

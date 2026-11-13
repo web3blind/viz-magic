@@ -412,7 +412,7 @@ var DailyLeaderboard = (function() {
         var spell = GameSpells.getSpell(data.spell);
         if (!creature || !spell) return;
 
-        var result = CombatSystem.resolveHunt(character, creature, spell, processed.blockHash || '', processed.blockNum, VizMagicConfig.ENERGY.MAX);
+        var result = CombatSystem.resolveHunt(character, creature, spell, processed.blockHash || '', processed.blockNum, VizMagicConfig.ENERGY.MAX, processed.timestamp);
         if (!result || !result.victory) return;
 
         CharacterSystem.addXp(character, result.xpGained, processed.blockNum);

@@ -4,6 +4,8 @@ var fs = require('fs');
 var path = require('path');
 var storeMod = require('./storage');
 var parser = require('./parser');
+var federation = require('./federation');
+var liveRange = require('./live-range');
 
 var DEFAULT_CONFIG = {
     sourceNodes: ['https://api.viz.world/', 'https://node.viz.cx/'],
@@ -26,7 +28,7 @@ function loadConfig(file) {
     if (process.env.ARCHIVE_NODE_NODES) out.sourceNodes = process.env.ARCHIVE_NODE_NODES.split(',').map(function(x) { return x.trim(); }).filter(Boolean);
     if (process.env.ARCHIVE_NODE_START_BLOCK) out.startBlock = Number(process.env.ARCHIVE_NODE_START_BLOCK);
     if (process.env.ARCHIVE_NODE_MAX_BLOCKS) out.maxBlocksPerRun = Number(process.env.ARCHIVE_NODE_MAX_BLOCKS);
-    return out;
+    return federation.validateConfig(out);
 }
 
 function parseArgs(argv) {
@@ -65,8 +67,10 @@ function rpcFetchBlock(nodeUrl, blockNum, timeoutMs) {
         }).then(function(payload) {
             done = true;
             clearTimeout(timer);
+            if (!payload || payload.error) throw new Error('raw block RPC unavailable');
             var block = payload && (payload.result || payload.block || (payload.data && payload.data.block));
-            if (!block || !block.transactions) throw new Error('empty block');
+            if (!block || !Array.isArray(block.transactions)) throw new Error('missing raw block');
+            if (typeof block.timestamp !== 'string' || !block.timestamp || !Number.isFinite(Date.parse(block.timestamp))) throw new Error('block timestamp unavailable');
             resolve(block);
         }).catch(function(err) {
             done = true;
@@ -132,15 +136,42 @@ function rpcFetchBlockId(nodeUrl, blockNum, timeoutMs) {
     return rpcFetch(nodeUrl, 'block_info', 'get_block_info', [blockNum, 1], timeoutMs, 'block identity unavailable').then(function(rows) {
         var info = rows && rows[0];
         var blockId = info && info.block_id;
-        if (!blockId) throw new Error('block identity unavailable');
-        return { blockId: String(blockId), timestamp: String(info.timestamp || '') };
+        if (typeof blockId !== 'string' || !/^[0-9a-f]{40}$/.test(blockId) || parseInt(blockId.slice(0, 8), 16) !== Number(blockNum) || /^0+$/.test(blockId)) throw new Error('block identity unavailable or wrong height');
+        if (typeof info.timestamp !== 'string' || !info.timestamp || !Number.isFinite(Date.parse(info.timestamp))) throw new Error('block identity timestamp unavailable');
+        return { blockId: blockId, timestamp: info.timestamp };
     });
+}
+
+async function fetchBlockBundle(nodes, blockNum, timeoutMs, requireReceipts) {
+    var lastErr;
+    for (var node of nodes) {
+        try {
+            var block = await rpcFetchBlock(node, blockNum, timeoutMs);
+            var events;
+            if (requireReceipts) {
+                var rows = await rpcFetchOperations(node, blockNum, timeoutMs);
+                var identity = await rpcFetchBlockId(node, blockNum, timeoutMs);
+                if (block.timestamp !== identity.timestamp || (block.block_id && block.block_id !== identity.blockId)) throw new Error('block identity mismatch');
+                block.block_id = identity.blockId;
+                parser.bindOperationHistory(block, blockNum, rows);
+                events = parser.extractGameEvents(block, blockNum).concat(parser.extractVirtualEvents(block, blockNum, rows));
+            } else events = parser.extractGameEvents(block, blockNum);
+            return { block: block, node: node, events: events, virtualComplete: !!requireReceipts };
+        } catch (err) { lastErr = err; }
+    }
+    throw lastErr || new Error('no complete block bundle available');
 }
 
 async function indexRange(options) {
     var cfg = options.config || DEFAULT_CONFIG;
+    federation.validateConfig(cfg);
     var archive = options.store || new storeMod.ArchiveStore(cfg.dataDir);
     var cursor = archive.getCursor();
+    var segmented = !!((cfg.legacyDataDirs || []).length || cfg.autoGapRollover);
+    if (segmented) federation.validateWritableTail(cfg, archive);
+    var expected = Math.max(Number(cursor.lastIndexedBlock || 0) + 1, Number(cfg.startBlock || 1));
+    if (segmented && options.from && Number(options.from) !== expected) throw new Error('new live range must remain contiguous');
+    if (segmented && cursor.lastIndexedBlock && !archive.hasBlock(cursor.lastIndexedBlock)) throw new Error('live cursor block missing');
     var start = Number(options.from || cursor.lastIndexedBlock + 1 || cfg.startBlock || 1);
     if (start < Number(cfg.startBlock || 1)) start = Number(cfg.startBlock || 1);
     var end = options.to ? Number(options.to) : null;
@@ -160,22 +191,18 @@ async function indexRange(options) {
         if (end && start > end) break;
         if (maxBlocks && indexed >= maxBlocks) break;
         try {
-            var fetched = await fetchBlockFromNodes(cfg.sourceNodes, start, cfg.timeoutMs);
-            var events = parser.extractGameEvents(fetched.block, start);
-            var virtualComplete = false;
-            if (start >= virtualReceiptStartBlock) {
-                var operationRows = await rpcFetchOperations(fetched.node, start, cfg.timeoutMs);
-                var blockIdentity = await rpcFetchBlockId(fetched.node, start, cfg.timeoutMs);
-                if (blockIdentity.timestamp && String(fetched.block.timestamp || '') !== blockIdentity.timestamp) {
-                    throw new Error('block identity mismatch');
-                }
-                fetched.block.block_id = blockIdentity.blockId;
-                parser.bindOperationHistory(fetched.block, start, operationRows);
-                events = parser.extractGameEvents(fetched.block, start).concat(parser.extractVirtualEvents(fetched.block, start, operationRows));
-                virtualComplete = true;
+            var fetched, gap = null;
+            try {
+                fetched = await fetchBlockBundle(cfg.sourceNodes, start, cfg.timeoutMs, segmented || start >= virtualReceiptStartBlock);
+            } catch (fetchError) {
+                if (!cfg.autoGapRollover) throw fetchError;
+                var rollover = await liveRange.findRollover(cfg, start, end, rpcFetch, fetchBlockBundle);
+                start = rollover.start;
+                fetched = rollover.bundle;
+                gap = rollover.missingRange;
             }
-            archive.putBlockWithEvents(start, fetched.block, fetched.node, events, { virtualComplete: virtualComplete });
-            archive.setCursor(start);
+            var events = fetched.events;
+            archive.putBlockWithEvents(start, fetched.block, fetched.node, events, { virtualComplete: fetched.virtualComplete, advanceCursor: true, missingRange: gap });
             indexed += 1;
             eventCount += events.length;
             if (indexed % 25 === 0 || events.length) {
@@ -217,6 +244,7 @@ module.exports = {
     rpcFetchBlock: rpcFetchBlock,
     rpcFetchOperations: rpcFetchOperations,
     rpcFetchBlockId: rpcFetchBlockId,
+    fetchBlockBundle: fetchBlockBundle,
     fetchBlockFromNodes: fetchBlockFromNodes,
     indexRange: indexRange
 };

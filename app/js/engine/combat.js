@@ -20,7 +20,7 @@ var CombatSystem = (function() {
      * @param {number} playerEnergy - current energy 0-10000
      * @returns {Object} CombatResult
      */
-    function resolveHunt(player, creature, spell, blockHash, blockNum, playerEnergy) {
+    function resolveHunt(player, creature, spell, blockHash, blockNum, playerEnergy, blockTimestamp) {
         // Determine creature level from block hash
         var creatureLevel = _creatureLevelFromHash(blockHash, creature.minLevel, creature.maxLevel);
 
@@ -30,7 +30,7 @@ var CombatSystem = (function() {
         // Calculate element modifier, including the current in-world season.
         var elemMod = GameFormulas.elementModifier(spell.school, creature.school);
         if (typeof WorldEvents !== 'undefined' && WorldEvents.getSeasonalBonuses) {
-            var seasonBonuses = WorldEvents.getSeasonalBonuses(blockNum || 0);
+            var seasonBonuses = WorldEvents.getSeasonalBonuses(blockNum || 0, blockTimestamp);
             elemMod += seasonBonuses[spell.school] || 0;
         }
         var templeBlessing = (typeof StateEngine !== 'undefined' && StateEngine.getTempleBlessing) ?
@@ -73,7 +73,7 @@ var CombatSystem = (function() {
         var creatureDefense = GameFormulas.calculateDefense(creatureStats.res, creatureLevel);
 
         // Magical weather affects hunt danger. This keeps the home forecast meaningful.
-        var weather = (typeof WorldEvents !== 'undefined' && WorldEvents.getCurrentWeather) ? WorldEvents.getCurrentWeather(blockNum || 0) : null;
+        var weather = (typeof WorldEvents !== 'undefined' && WorldEvents.getCurrentWeather) ? WorldEvents.getCombatWeather(blockNum || 0, blockTimestamp) : null;
         if (weather && weather.creatureAttackMod) {
             creatureStats.attack = Math.max(1, Math.floor(creatureStats.attack * weather.creatureAttackMod / 1000));
         }
