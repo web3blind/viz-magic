@@ -137,8 +137,13 @@ function rpcFetchBlockId(nodeUrl, blockNum, timeoutMs) {
         var info = rows && rows[0];
         var blockId = info && info.block_id;
         if (typeof blockId !== 'string' || !/^[0-9a-f]{40}$/.test(blockId) || parseInt(blockId.slice(0, 8), 16) !== Number(blockNum) || /^0+$/.test(blockId)) throw new Error('block identity unavailable or wrong height');
-        if (typeof info.timestamp !== 'string' || !info.timestamp || !Number.isFinite(Date.parse(info.timestamp))) throw new Error('block identity timestamp unavailable');
-        return { blockId: blockId, timestamp: info.timestamp };
+        // Native block_info has no timestamp; the signed raw block supplies it.
+        var timestamp = null;
+        if (Object.prototype.hasOwnProperty.call(info, 'timestamp')) {
+            if (typeof info.timestamp !== 'string' || !info.timestamp || !Number.isFinite(Date.parse(info.timestamp))) throw new Error('block identity timestamp unavailable');
+            timestamp = info.timestamp;
+        }
+        return { blockId: blockId, timestamp: timestamp };
     });
 }
 
@@ -151,7 +156,7 @@ async function fetchBlockBundle(nodes, blockNum, timeoutMs, requireReceipts) {
             if (requireReceipts) {
                 var rows = await rpcFetchOperations(node, blockNum, timeoutMs);
                 var identity = await rpcFetchBlockId(node, blockNum, timeoutMs);
-                if (block.timestamp !== identity.timestamp || (block.block_id && block.block_id !== identity.blockId)) throw new Error('block identity mismatch');
+                if ((identity.timestamp !== null && block.timestamp !== identity.timestamp) || (block.block_id && block.block_id !== identity.blockId)) throw new Error('block identity mismatch');
                 block.block_id = identity.blockId;
                 parser.bindOperationHistory(block, blockNum, rows);
                 events = parser.extractGameEvents(block, blockNum).concat(parser.extractVirtualEvents(block, blockNum, rows));

@@ -41,7 +41,7 @@ function response(method, args) {
     var n = args[0];
     if (method === 'get_block') return block(n);
     if (method === 'get_ops_in_block') return [];
-    if (method === 'get_block_info') return [{ block_id: id(n), timestamp: block(n).timestamp }];
+    if (method === 'get_block_info') return [{ block_id: id(n), block_size: 1, average_block_size: 1, aslot: n, last_irreversible_block_num: n }];
     return null;
 }
 
@@ -115,7 +115,7 @@ test('same-node bundle rejects invalid identities, timestamps, null raw and miss
         function(m, a) { return m === 'get_block_info' ? [{ block_id: '0'.repeat(40), timestamp: block(10).timestamp }] : response(m, a); },
         function(m, a) { return m === 'get_block_info' ? [{ block_id: id(9), timestamp: block(10).timestamp }] : response(m, a); },
         function(m, a) { return m === 'get_block_info' ? [{ block_id: 'bad', timestamp: block(10).timestamp }] : response(m, a); },
-        function(m, a) { return m === 'get_block_info' ? [{ block_id: id(10) }] : response(m, a); },
+        function(m, a) { return m === 'get_block_info' ? [{ block_id: id(10), timestamp: null }] : response(m, a); },
         function(m, a) { return m === 'get_block_info' ? [{ block_id: id(10), timestamp: '2026-11-12T00:00:00' }] : response(m, a); }
     ];
     for (var badCase of badCases) {
